@@ -13,7 +13,6 @@ TARGETS     = $(DIST)/twsnmpfc.exe $(DIST)/twsnmpfc.app $(DIST)/twsnmpfc $(DIST)
 GO_PKGROOT  = ./...
 
 ### PHONY ターゲットのビルドルール
-
 all: $(TARGETS)
 test:
 	env GOOS=$(GOOS) $(GO_TEST) $(GO_PKGROOT)
@@ -24,7 +23,6 @@ zip: $(TARGETS)
 	$(ZIP) $(DIST)/twsnmpfc.zip $(TARGETS)
 
 ### 実行ファイルのビルドルール
-
 $(DIST)/twsnmpfc.exe: statik/statik.go
 	env GO111MODULE=on GOOS=windows GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
 $(DIST)/twsnmpfc.app: statik/statik.go
