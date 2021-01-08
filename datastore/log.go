@@ -92,7 +92,7 @@ type logFilterParamEnt struct {
 	RegexFilter *regexp.Regexp
 }
 
-func parseFilter(f string) string {
+func ParseFilter(f string) string {
 	f = strings.TrimSpace(f)
 	if f == "``" {
 		return ""
@@ -128,7 +128,7 @@ func getFilterParams(filter *LogFilterEnt) *logFilterParamEnt {
 	if filter.Filter == "" {
 		return ret
 	}
-	fs := parseFilter(filter.Filter)
+	fs := ParseFilter(filter.Filter)
 	ret.RegexFilter, err = regexp.Compile(fs)
 	if err != nil {
 		log.Printf("getFilterParams err=%v", err)

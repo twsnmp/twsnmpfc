@@ -9,6 +9,10 @@ import (
 	"sync"
 	"time"
 
+	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
+	client "github.com/influxdata/influxdb1-client/v2"
+
+	gomibdb "github.com/twsnmp/go-mibdb"
 	"go.etcd.io/bbolt"
 )
 
@@ -27,6 +31,7 @@ type DataStore struct {
 	Lines            sync.Map
 	Pollings         sync.Map
 	PollingTemplates map[string]*PollingTemplateEnt
+	MIBDB            *gomibdb.MIBDB
 	stopBackup       bool
 	nextBackup       int64
 	dbBackupSize     int64
@@ -34,6 +39,9 @@ type DataStore struct {
 	dstTx            *bbolt.Tx
 	eventLogCh       chan EventLogEnt
 	delCount         int
+
+	influxc   client.Client
+	muInfluxc sync.Mutex
 }
 
 const (

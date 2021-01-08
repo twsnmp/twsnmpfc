@@ -204,8 +204,8 @@ func GetSSHPublicKey(key string) (string, error) {
 	return fmt.Sprintf("%s %s", strings.TrimSpace(string(ssh.MarshalAuthorizedKey(pubkey))), comment), nil
 }
 
-// getRawKeyPem : 暗号化を解除した秘密鍵のPEMを取得する
-func getRawKeyPem(p string) string {
+// GetRawKeyPem : 暗号化を解除した秘密鍵のPEMを取得する
+func GetRawKeyPem(p string) string {
 	priv, err := getRSAKeyFromPEM(p)
 	if err != nil {
 		return ""
