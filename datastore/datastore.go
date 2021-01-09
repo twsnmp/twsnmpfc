@@ -12,6 +12,7 @@ import (
 	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
 	client "github.com/influxdata/influxdb1-client/v2"
 
+	"github.com/oschwald/geoip2-golang"
 	gomibdb "github.com/twsnmp/go-mibdb"
 	"go.etcd.io/bbolt"
 )
@@ -31,17 +32,31 @@ type DataStore struct {
 	Lines            sync.Map
 	Pollings         sync.Map
 	PollingTemplates map[string]*PollingTemplateEnt
-	MIBDB            *gomibdb.MIBDB
-	stopBackup       bool
-	nextBackup       int64
-	dbBackupSize     int64
-	dstDB            *bbolt.DB
-	dstTx            *bbolt.Tx
-	eventLogCh       chan EventLogEnt
-	delCount         int
+	// Report
+	devices    map[string]*DeviceEnt
+	users      map[string]*UserEnt
+	flows      map[string]*FlowEnt
+	servers    map[string]*ServerEnt
+	dennyRules map[string]bool
+	allowRules map[string]*AllowRuleEnt
+
+	MIBDB        *gomibdb.MIBDB
+	stopBackup   bool
+	nextBackup   int64
+	dbBackupSize int64
+	dstDB        *bbolt.DB
+	dstTx        *bbolt.Tx
+	eventLogCh   chan EventLogEnt
+	delCount     int
 
 	influxc   client.Client
 	muInfluxc sync.Mutex
+
+	protMap    map[int]string
+	serviceMap map[string]string
+	geoip      *geoip2.Reader
+	geoipMap   map[string]string
+	ouiMap     map[string]string
 }
 
 const (
@@ -242,19 +257,26 @@ type DBBackupParamEnt struct {
 
 func NewDataStore() *DataStore {
 	return &DataStore{
+		devices:          make(map[string]*DeviceEnt),
+		users:            make(map[string]*UserEnt),
+		flows:            make(map[string]*FlowEnt),
+		servers:          make(map[string]*ServerEnt),
+		dennyRules:       make(map[string]bool),
+		allowRules:       make(map[string]*AllowRuleEnt),
 		eventLogCh:       make(chan EventLogEnt, 100),
 		PollingTemplates: make(map[string]*PollingTemplateEnt),
+		protMap: map[int]string{
+			1:   "icmp",
+			2:   "igmp",
+			6:   "tcp",
+			8:   "egp",
+			17:  "udp",
+			112: "vrrp",
+		},
+		serviceMap: make(map[string]string),
+		geoipMap:   make(map[string]string),
+		ouiMap:     make(map[string]string),
 	}
-}
-
-func CheckDB(path string) error {
-	var err error
-	d, err := bbolt.Open(path, 0600, nil)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	return nil
 }
 
 func (ds *DataStore) OpenDB(path string) error {
