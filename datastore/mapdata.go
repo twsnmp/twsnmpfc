@@ -135,6 +135,12 @@ func (ds *DataStore) FindNodeFromIP(ip string) *NodeEnt {
 	return ret
 }
 
+func (ds *DataStore) ForEachNodes(f func(*NodeEnt) bool) {
+	ds.Nodes.Range(func(_, p interface{}) bool {
+		return f(p.(*NodeEnt))
+	})
+}
+
 func (ds *DataStore) AddLine(l *LineEnt) error {
 	for {
 		l.ID = makeKey()

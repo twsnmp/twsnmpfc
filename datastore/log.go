@@ -498,6 +498,60 @@ func (ds *DataStore) DeleteAIReesult(id string) error {
 	})
 }
 
+func (ds *DataStore) SaveLogBuffer(logBuffer []*LogEnt) {
+	if ds.db == nil {
+		log.Printf("saveLogBuffer DB Not open")
+		return
+	}
+	_ = ds.db.Batch(func(tx *bbolt.Tx) error {
+		syslog := tx.Bucket([]byte("syslog"))
+		netflow := tx.Bucket([]byte("netflow"))
+		ipfix := tx.Bucket([]byte("ipfix"))
+		trap := tx.Bucket([]byte("trap"))
+		arplog := tx.Bucket([]byte("arplog"))
+		for _, l := range logBuffer {
+			k := fmt.Sprintf("%016x", l.Time)
+			s, err := json.Marshal(l)
+			if err != nil {
+				return err
+			}
+			ds.logSize += int64(len(s))
+			if len(s) > 100 {
+				s = compressLog(s)
+			}
+			ds.compLogSize += int64(len(s))
+			switch l.Type {
+			case "syslog":
+				_ = syslog.Put([]byte(k), []byte(s))
+			case "netflow":
+				_ = netflow.Put([]byte(k), []byte(s))
+			case "ipfix":
+				_ = ipfix.Put([]byte(k), []byte(s))
+			case "trap":
+				_ = trap.Put([]byte(k), []byte(s))
+			case "arplog":
+				_ = arplog.Put([]byte(k), []byte(s))
+			}
+		}
+		return nil
+	})
+}
+
+func compressLog(s []byte) []byte {
+	var b bytes.Buffer
+	f, _ := flate.NewWriter(&b, flate.DefaultCompression)
+	if _, err := f.Write(s); err != nil {
+		return s
+	}
+	if err := f.Flush(); err != nil {
+		return s
+	}
+	if err := f.Close(); err != nil {
+		return s
+	}
+	return b.Bytes()
+}
+
 func deCompressLog(s []byte) []byte {
 	r := flate.NewReader(bytes.NewBuffer(s))
 	d, err := ioutil.ReadAll(r)

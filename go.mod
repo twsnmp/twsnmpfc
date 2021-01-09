@@ -18,6 +18,7 @@ require (
 	github.com/rakyll/statik v0.1.7
 	github.com/robertkrimen/otto v0.0.0-20200922221731-ef014fd054ac
 	github.com/signalsciences/ipv4 v1.4.0
+	github.com/tehmaze/netflow v0.0.0-20170921210347-852af103667f // indirect
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
 	github.com/twsnmp/gosnmp v1.28.4
 	github.com/vjeantet/grok v1.0.1
@@ -26,5 +27,6 @@ require (
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
+	gopkg.in/mcuadros/go-syslog.v2 v2.3.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 )

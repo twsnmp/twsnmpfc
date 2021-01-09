@@ -52,11 +52,13 @@ type DataStore struct {
 	influxc   client.Client
 	muInfluxc sync.Mutex
 
-	protMap    map[int]string
-	serviceMap map[string]string
-	geoip      *geoip2.Reader
-	geoipMap   map[string]string
-	ouiMap     map[string]string
+	protMap     map[int]string
+	serviceMap  map[string]string
+	geoip       *geoip2.Reader
+	geoipMap    map[string]string
+	ouiMap      map[string]string
+	logSize     int64
+	compLogSize int64
 }
 
 const (
