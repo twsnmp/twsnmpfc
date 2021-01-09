@@ -21,25 +21,30 @@ type DataStore struct {
 	db          *bbolt.DB
 	prevDBStats bbolt.Stats
 	dbOpenTime  time.Time
-	// Data on Memory
-	MapConf          MapConfEnt
-	NotifyConf       NotifyConfEnt
-	InfluxdbConf     InfluxdbConfEnt
-	RestAPIConf      RestAPIConfEnt
-	DiscoverConf     DiscoverConfEnt
-	DBStats          DBStatsEnt
-	Nodes            sync.Map
-	Lines            sync.Map
-	Pollings         sync.Map
-	PollingTemplates map[string]*PollingTemplateEnt
-	// Report
+	// Conf Data on Memory
+	MapConf      MapConfEnt
+	NotifyConf   NotifyConfEnt
+	InfluxdbConf InfluxdbConfEnt
+	RestAPIConf  RestAPIConfEnt
+	DiscoverConf DiscoverConfEnt
+	DBStats      DBStatsEnt
+	// Map Data on Memory not export
+	nodes            sync.Map
+	lines            sync.Map
+	pollings         sync.Map
+	pollingTemplates map[string]*PollingTemplateEnt
+	// Report Data on Memory not export
 	devices    map[string]*DeviceEnt
 	users      map[string]*UserEnt
 	flows      map[string]*FlowEnt
 	servers    map[string]*ServerEnt
 	dennyRules map[string]bool
 	allowRules map[string]*AllowRuleEnt
-
+	// MAP Changed check
+	stateChangedNodes sync.Map
+	lastLogAdded      time.Time
+	lastNodeChanged   time.Time
+	//
 	MIBDB        *gomibdb.MIBDB
 	stopBackup   bool
 	nextBackup   int64
@@ -266,7 +271,7 @@ func NewDataStore() *DataStore {
 		dennyRules:       make(map[string]bool),
 		allowRules:       make(map[string]*AllowRuleEnt),
 		eventLogCh:       make(chan EventLogEnt, 100),
-		PollingTemplates: make(map[string]*PollingTemplateEnt),
+		pollingTemplates: make(map[string]*PollingTemplateEnt),
 		protMap: map[int]string{
 			1:   "icmp",
 			2:   "igmp",

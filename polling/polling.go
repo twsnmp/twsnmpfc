@@ -36,11 +36,10 @@ import (
 )
 
 type Polling struct {
-	ds                   *datastore.DataStore
-	ping                 *ping.Ping
-	report               *report.Report
-	pollingStateChangeCh chan *datastore.PollingEnt
-	doPollingCh          chan bool
+	ds          *datastore.DataStore
+	ping        *ping.Ping
+	report      *report.Report
+	doPollingCh chan bool
 }
 
 const (
@@ -63,41 +62,94 @@ func NewPolling(ctx context.Context, ds *datastore.DataStore, report *report.Rep
 	return p, nil
 }
 
+func (p *Polling) pollNowNode(nodeID string) {
+	n := p.ds.GetNode(nodeID)
+	if n == nil {
+		return
+	}
+	p.ds.ForEachPollings(func(pe *datastore.PollingEnt) bool {
+		if pe.NodeID == nodeID && pe.State != "normal" {
+			pe.State = "unknown"
+			pe.NextTime = 0
+			p.ds.AddEventLog(datastore.EventLogEnt{
+				Type:     "user",
+				Level:    pe.State,
+				NodeID:   pe.NodeID,
+				NodeName: n.Name,
+				Event:    "ポーリング再確認:" + pe.Name,
+			})
+			p.ds.UpdatePolling(pe)
+		}
+		return true
+	})
+	p.ds.SetNodeStateChanged(n.ID)
+	p.doPollingCh <- true
+}
+
+func (p *Polling) CheckAllPoll() {
+	p.ds.ForEachPollings(func(pe *datastore.PollingEnt) bool {
+		if pe.State != "normal" {
+			pe.State = "unknown"
+			pe.NextTime = 0
+			n := p.ds.GetNode(pe.NodeID)
+			if n == nil {
+				return true
+			}
+			p.ds.AddEventLog(datastore.EventLogEnt{
+				Type:     "user",
+				Level:    pe.State,
+				NodeID:   pe.NodeID,
+				NodeName: n.Name,
+				Event:    "ポーリング再確認:" + pe.Name,
+			})
+			p.ds.SetNodeStateChanged(n.ID)
+			p.ds.UpdatePolling(pe)
+		}
+		return true
+	})
+	p.doPollingCh <- true
+}
+
+// pollingBackend :  ポーリングのバックグランド処理
 func (p *Polling) pollingBackend(ctx context.Context) {
 	time.Sleep(time.Millisecond * 100)
+	timer := time.NewTicker(time.Second * 30)
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case <-timer.C:
+			p.checkPolling()
 		case <-p.doPollingCh:
-			{
-				now := time.Now().UnixNano()
-				list := []*datastore.PollingEnt{}
-				p.ds.Pollings.Range(func(_, v interface{}) bool {
-					p := v.(*datastore.PollingEnt)
-					if p.NextTime < (now + (10 * 1000 * 1000 * 1000)) {
-						list = append(list, p)
-					}
-					return true
-				})
-				if len(list) < 1 {
-					continue
-				}
-				log.Printf("doPolling=%d NumGoroutine=%d", len(list), runtime.NumGoroutine())
-				sort.Slice(list, func(i, j int) bool {
-					return list[i].NextTime < list[j].NextTime
-				})
-				for i := 0; i < len(list); i++ {
-					startTime := list[i].NextTime
-					if startTime < now {
-						startTime = now
-					}
-					list[i].NextTime = startTime + (int64(list[i].PollInt) * 1000 * 1000 * 1000)
-					go p.doPolling(list[i], startTime)
-					time.Sleep(time.Millisecond * 2)
-				}
-			}
+			p.checkPolling()
 		}
+	}
+}
+
+func (p *Polling) checkPolling() {
+	now := time.Now().UnixNano()
+	list := []*datastore.PollingEnt{}
+	p.ds.ForEachPollings(func(p *datastore.PollingEnt) bool {
+		if p.NextTime < (now + (10 * 1000 * 1000 * 1000)) {
+			list = append(list, p)
+		}
+		return true
+	})
+	if len(list) < 1 {
+		return
+	}
+	log.Printf("doPolling=%d NumGoroutine=%d", len(list), runtime.NumGoroutine())
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].NextTime < list[j].NextTime
+	})
+	for i := 0; i < len(list); i++ {
+		startTime := list[i].NextTime
+		if startTime < now {
+			startTime = now
+		}
+		list[i].NextTime = startTime + (int64(list[i].PollInt) * 1000 * 1000 * 1000)
+		go p.doPolling(list[i], startTime)
+		time.Sleep(time.Millisecond * 2)
 	}
 }
 
@@ -180,11 +232,10 @@ func (p *Polling) setPollingState(pe *datastore.PollingEnt, newState string) {
 	}
 	if sendEvent {
 		nodeName := "unknown"
-		if in, ok := p.ds.Nodes.Load(pe.NodeID); ok {
-			n := in.(*datastore.NodeEnt)
+		if n := p.ds.GetNode(pe.NodeID); n != nil {
 			nodeName = n.Name
 		}
-		p.pollingStateChangeCh <- pe
+		p.ds.SetNodeStateChanged(pe.NodeID)
 		p.ds.AddEventLog(datastore.EventLogEnt{
 			Type:     "polling",
 			Level:    pe.State,

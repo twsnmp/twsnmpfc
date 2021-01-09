@@ -144,7 +144,6 @@ func (p *Polling) sshConnectToHost(pe *datastore.PollingEnt, port string) (*ssh.
 				if err := p.ds.UpdateNode(n); err != nil {
 					log.Printf("sshConnectToHost err=%v", err)
 				}
-				p.pollingStateChangeCh <- pe
 				return nil
 			}
 		//ssh.InsecureIgnoreHostKey()

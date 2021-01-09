@@ -257,7 +257,7 @@ func (ds *DataStore) loadPollingTemplateFromDB() error {
 		_ = b.ForEach(func(k, v []byte) error {
 			var pt PollingTemplateEnt
 			if err := json.Unmarshal(v, &pt); err == nil {
-				ds.PollingTemplates[pt.ID] = &pt
+				ds.pollingTemplates[pt.ID] = &pt
 			}
 			return nil
 		})
@@ -280,7 +280,7 @@ func (ds *DataStore) AddPollingTemplate(pt *PollingTemplateEnt) error {
 		return ErrDBNotOpen
 	}
 	pt.ID = getSha1KeyForTemplate(pt.Name + ":" + pt.Type + ":" + pt.NodeType + ":" + pt.Polling)
-	if _, ok := ds.PollingTemplates[pt.ID]; ok {
+	if _, ok := ds.pollingTemplates[pt.ID]; ok {
 		return fmt.Errorf("duplicate template")
 	}
 	s, err := json.Marshal(pt)
@@ -291,7 +291,7 @@ func (ds *DataStore) AddPollingTemplate(pt *PollingTemplateEnt) error {
 		b := tx.Bucket([]byte("pollingTemplates"))
 		return b.Put([]byte(pt.ID), s)
 	})
-	ds.PollingTemplates[pt.ID] = pt
+	ds.pollingTemplates[pt.ID] = pt
 	return nil
 }
 
@@ -299,13 +299,13 @@ func (ds *DataStore) UpdatePollingTemplate(pt *PollingTemplateEnt) error {
 	if ds.db == nil {
 		return ErrDBNotOpen
 	}
-	if _, ok := ds.PollingTemplates[pt.ID]; !ok {
+	if _, ok := ds.pollingTemplates[pt.ID]; !ok {
 		return ErrInvalidID
 	}
 	newID := getSha1KeyForTemplate(pt.Name + ":" + pt.Type + ":" + pt.NodeType + ":" + pt.Polling)
 	if newID != pt.ID {
 		// 更新後に同じ内容のテンプレートがないか確認する
-		if _, ok := ds.PollingTemplates[newID]; ok {
+		if _, ok := ds.pollingTemplates[newID]; ok {
 			return fmt.Errorf("duplicate template")
 		}
 	}
@@ -319,13 +319,13 @@ func (ds *DataStore) DeletePollingTemplate(id string) error {
 	if ds.db == nil {
 		return ErrDBNotOpen
 	}
-	if _, ok := ds.PollingTemplates[id]; !ok {
+	if _, ok := ds.pollingTemplates[id]; !ok {
 		return ErrInvalidID
 	}
 	_ = ds.db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingTemplates"))
 		return b.Delete([]byte(id))
 	})
-	delete(ds.PollingTemplates, id)
+	delete(ds.pollingTemplates, id)
 	return nil
 }
