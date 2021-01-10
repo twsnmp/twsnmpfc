@@ -216,13 +216,6 @@ type DiscoverConfEnt struct {
 	Y        int
 }
 
-type AIResult struct {
-	PollingID string
-	LastTime  int64
-	LossData  [][]float64
-	ScoreData [][]float64
-}
-
 type DBStatsEnt struct {
 	Time             string
 	Size             int64

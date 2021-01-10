@@ -42,13 +42,6 @@ type Polling struct {
 	doPollingCh chan bool
 }
 
-const (
-	LogModeNone = iota
-	LogModeAlways
-	LogModeOnChange
-	LogModeAI
-)
-
 func NewPolling(ctx context.Context, ds *datastore.DataStore, report *report.Report, ping *ping.Ping, tlsCsv io.ReadCloser) (*Polling, error) {
 	if tlsCsv != nil {
 		loadTLSParamsMap(tlsCsv)
@@ -195,13 +188,13 @@ func (p *Polling) doPolling(pe *datastore.PollingEnt, startTime int64) {
 		p.doPollingTWSNMP(pe)
 	}
 	p.ds.UpdatePolling(pe)
-	if pe.LogMode == LogModeAlways || pe.LogMode == LogModeAI || (pe.LogMode == LogModeOnChange && oldState != pe.State) {
+	if pe.LogMode == datastore.LogModeAlways || pe.LogMode == datastore.LogModeAI || (pe.LogMode == datastore.LogModeOnChange && oldState != pe.State) {
 		if err := p.ds.AddPollingLog(pe); err != nil {
 			log.Printf("addPollingLog err=%v %#v", err, pe)
 		}
 	}
 	if p.ds.InfluxdbConf.PollingLog != "" {
-		if p.ds.InfluxdbConf.PollingLog == "all" || pe.LogMode != LogModeNone {
+		if p.ds.InfluxdbConf.PollingLog == "all" || pe.LogMode != datastore.LogModeNone {
 			_ = p.ds.SendPollingLogToInfluxdb(pe)
 		}
 	}

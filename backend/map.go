@@ -11,7 +11,7 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func (b *BackEnd) mapBackend(ctx context.Context) {
+func (b *Backend) mapBackend(ctx context.Context) {
 	b.clearPollingState()
 	b.ds.ForEachNodes(func(n *datastore.NodeEnt) bool {
 		b.updateNodeState(n)
@@ -51,7 +51,7 @@ func (b *BackEnd) mapBackend(ctx context.Context) {
 	}
 }
 
-func (b *BackEnd) clearPollingState() {
+func (b *Backend) clearPollingState() {
 	b.ds.ForEachPollings(func(p *datastore.PollingEnt) bool {
 		if p.State == "repair" {
 			p.State = "unknown"
@@ -61,7 +61,7 @@ func (b *BackEnd) clearPollingState() {
 	})
 }
 
-func (b *BackEnd) updateNodeState(n *datastore.NodeEnt) {
+func (b *Backend) updateNodeState(n *datastore.NodeEnt) {
 	n.State = "unknown"
 	b.ds.ForEachPollings(func(p *datastore.PollingEnt) bool {
 		if p.NodeID != n.ID {
@@ -90,7 +90,7 @@ func (b *BackEnd) updateNodeState(n *datastore.NodeEnt) {
 	})
 }
 
-func (b *BackEnd) updateLineState() {
+func (b *Backend) updateLineState() {
 	b.ds.ForEachLines(func(l *datastore.LineEnt) bool {
 		if p := b.ds.GetPolling(l.PollingID1); p != nil {
 			l.State1 = p.State
@@ -106,7 +106,7 @@ func (b *BackEnd) updateLineState() {
 	})
 }
 
-func (b *BackEnd) checkNewVersion() {
+func (b *Backend) checkNewVersion() {
 	if !b.ds.NotifyConf.CheckUpdate || b.versionCheckState > 1 {
 		return
 	}
