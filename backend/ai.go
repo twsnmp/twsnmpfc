@@ -104,10 +104,9 @@ func (b *Backend) aiBackend(ctx context.Context) {
 		case <-b.aiDone:
 			aiBusy = false
 		case <-timer.C:
-			if aiBusy {
-				continue
+			if !aiBusy {
+				aiBusy = b.checkAI()
 			}
-			aiBusy = b.checkAI()
 		}
 	}
 }
@@ -340,6 +339,10 @@ func getStateNum(s string) float64 {
 }
 
 func (b *Backend) sendAIReq(req *aiReq) {
+	defer func() {
+		// 終了を知らせる
+		b.aiDone <- true
+	}()
 	var res datastore.AIResult
 	// ここでAI分析コンテナにリクエストを送信する。
 	if len(res.ScoreData) < 1 {
@@ -347,6 +350,7 @@ func (b *Backend) sendAIReq(req *aiReq) {
 	}
 	if err := b.ds.SaveAIResultToDB(&res); err != nil {
 		log.Printf("saveAIResultToDB err=%v", err)
+		return
 	}
 	pe := b.ds.GetPolling(req.PollingID)
 	if pe == nil {
