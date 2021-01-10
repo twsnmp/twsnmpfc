@@ -57,11 +57,13 @@ type DataStore struct {
 	influxc   client.Client
 	muInfluxc sync.Mutex
 
-	protMap     map[int]string
-	serviceMap  map[string]string
-	geoip       *geoip2.Reader
-	geoipMap    map[string]string
-	ouiMap      map[string]string
+	protMap    map[int]string
+	serviceMap map[string]string
+	geoip      *geoip2.Reader
+	geoipMap   map[string]string
+	ouiMap     map[string]string
+	tlsCSMap   map[string]string
+
 	logSize     int64
 	compLogSize int64
 }
@@ -276,6 +278,7 @@ func NewDataStore() *DataStore {
 		serviceMap: make(map[string]string),
 		geoipMap:   make(map[string]string),
 		ouiMap:     make(map[string]string),
+		tlsCSMap:   make(map[string]string),
 	}
 }
 

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/rakyll/statik/fs"
-	mibdb "github.com/twsnmp/go-mibdb"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/ping"
 	_ "github.com/twsnmp/twsnmpfc/statik"
@@ -54,20 +53,14 @@ func TestDiscover(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	mib, err := mibdb.NewMIBDBFromStr(string(s), "")
-	if err != nil {
-		t.Fatal(err)
-	}
 	ds.MapConf.Community = "public"
 	ds.DiscoverConf.StartIP = "192.168.1.1"
 	ds.DiscoverConf.EndIP = "192.168.1.2"
 	ds.DiscoverConf.Retry = 1
 	ds.DiscoverConf.Timeout = 2
 	ds.DiscoverConf.SnmpMode = "snmpv1"
-	d, err := NewDiscover(ds, p, mib)
-	if err != nil {
-		t.Fatal(err)
-	}
+	ds.LoadMIBDB(string(s))
+	d := NewDiscover(ds, p)
 	err = d.StartDiscover()
 	if err != nil {
 		t.Fatal(err)

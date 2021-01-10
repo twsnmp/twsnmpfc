@@ -6,7 +6,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/csv"
 	"fmt"
 	"io"
 	"log"
@@ -251,7 +250,7 @@ func (p *Polling) doPollingTLS(pe *datastore.PollingEnt) {
 	}
 	pe.LastVal = float64(rTime)
 	if ok {
-		lr = getTLSConnectioStateInfo(n.Name, &cs)
+		lr = p.getTLSConnectioStateInfo(n.Name, &cs)
 		lr["rtt"] = fmt.Sprintf("%f", pe.LastVal)
 		if mode == "expire" {
 			var d int
@@ -281,29 +280,6 @@ func (p *Polling) doPollingTLS(pe *datastore.PollingEnt) {
 	}
 }
 
-var tlsCSMap = make(map[string]string)
-
-func loadTLSParamsMap(file io.ReadCloser) {
-	defer file.Close()
-	reader := csv.NewReader(file)
-	for {
-		line, err := reader.Read()
-		if err != nil {
-			break
-		}
-		if len(line) < 2 {
-			continue
-		}
-		id := strings.Replace(line[0], ",", "", 1)
-		id = strings.Replace(id, "0x", "", 2)
-		id = strings.ToLower(id)
-		name := line[1]
-		if strings.HasPrefix(name, "TLS_") {
-			tlsCSMap[id] = name
-		}
-	}
-}
-
 func getServerCert(host string, cs *tls.ConnectionState) *x509.Certificate {
 	for _, cl := range cs.VerifiedChains {
 		for _, c := range cl {
@@ -320,7 +296,7 @@ func getServerCert(host string, cs *tls.ConnectionState) *x509.Certificate {
 	return nil
 }
 
-func getTLSConnectioStateInfo(host string, cs *tls.ConnectionState) map[string]string {
+func (p *Polling) getTLSConnectioStateInfo(host string, cs *tls.ConnectionState) map[string]string {
 	ret := make(map[string]string)
 	switch cs.Version {
 	case tls.VersionSSL30:
@@ -337,7 +313,7 @@ func getTLSConnectioStateInfo(host string, cs *tls.ConnectionState) map[string]s
 		ret["version"] = "Unknown"
 	}
 	id := fmt.Sprintf("%04x", cs.CipherSuite)
-	if n, ok := tlsCSMap[id]; ok {
+	if n, ok := p.ds.GetCipherSuiteName(id); ok {
 		ret["cipherSuite"] = n
 	} else {
 		ret["cipherSuite"] = id

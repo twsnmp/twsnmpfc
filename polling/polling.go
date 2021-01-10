@@ -23,7 +23,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"runtime"
 	"sort"
@@ -42,17 +41,14 @@ type Polling struct {
 	doPollingCh chan bool
 }
 
-func NewPolling(ctx context.Context, ds *datastore.DataStore, report *report.Report, ping *ping.Ping, tlsCsv io.ReadCloser) (*Polling, error) {
-	if tlsCsv != nil {
-		loadTLSParamsMap(tlsCsv)
-	}
+func NewPolling(ctx context.Context, ds *datastore.DataStore, report *report.Report, ping *ping.Ping) *Polling {
 	p := &Polling{
 		ds:     ds,
 		ping:   ping,
 		report: report,
 	}
 	go p.pollingBackend(ctx)
-	return p, nil
+	return p
 }
 
 func (p *Polling) pollNowNode(nodeID string) {

@@ -23,7 +23,7 @@ type Report struct {
 	badIPs         map[string]int64
 }
 
-func NewReport(ctx context.Context, ds *datastore.DataStore) (*Report, error) {
+func NewReport(ctx context.Context, ds *datastore.DataStore) *Report {
 	r := &Report{
 		ds:             ds,
 		deviceReportCh: make(chan *deviceReportEnt, 100),
@@ -32,7 +32,7 @@ func NewReport(ctx context.Context, ds *datastore.DataStore) (*Report, error) {
 		badIPs:         make(map[string]int64),
 	}
 	go r.reportBackend(ctx)
-	return r, nil
+	return r
 }
 
 func (r *Report) reportBackend(ctx context.Context) {

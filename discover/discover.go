@@ -23,8 +23,8 @@ import (
 // GRID : 自動発見時にノードを配置する間隔
 const GRID = 90
 
-// DiscoverEnt : 自動発見の
-type DiscoverEnt struct {
+// Discover : 自動発見の
+type Discover struct {
 	ds        *datastore.DataStore
 	ping      *ping.Ping
 	mib       *mibdb.MIBDB
@@ -51,24 +51,23 @@ type discoverInfoEnt struct {
 	Y           int
 }
 
-func NewDiscover(ds *datastore.DataStore, ping *ping.Ping, mib *mibdb.MIBDB) (*DiscoverEnt, error) {
-	d := &DiscoverEnt{
+func NewDiscover(ds *datastore.DataStore, ping *ping.Ping) *Discover {
+	d := &Discover{
 		ds:   ds,
 		ping: ping,
-		mib:  mib,
 	}
-	return d, nil
+	return d
 }
 
 // StopDiscover : 自動発見を停止する
-func (d *DiscoverEnt) StopDiscover() {
+func (d *Discover) StopDiscover() {
 	for d.Running {
 		d.Stop = true
 		time.Sleep(time.Millisecond * 100)
 	}
 }
 
-func (d *DiscoverEnt) StartDiscover() error {
+func (d *Discover) StartDiscover() error {
 	if d.Running {
 		return fmt.Errorf("discover already runnning")
 	}
@@ -154,7 +153,7 @@ func (d *DiscoverEnt) StartDiscover() error {
 	return nil
 }
 
-func (d *DiscoverEnt) discoverGetSnmpInfo(t string, dent *discoverInfoEnt) {
+func (d *Discover) discoverGetSnmpInfo(t string, dent *discoverInfoEnt) {
 	agent := &gosnmp.GoSNMP{
 		Target:             t,
 		Port:               161,
@@ -217,7 +216,7 @@ func (d *DiscoverEnt) discoverGetSnmpInfo(t string, dent *discoverInfoEnt) {
 	})
 }
 
-func (d *DiscoverEnt) addFoundNode(dent discoverInfoEnt) {
+func (d *Discover) addFoundNode(dent discoverInfoEnt) {
 	n := datastore.NodeEnt{
 		Name:  dent.HostName,
 		IP:    dent.IP,
