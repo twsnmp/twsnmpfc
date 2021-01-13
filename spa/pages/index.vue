@@ -3,77 +3,59 @@
     <v-col cols="12" sm="8" md="6">
       <div class="text-center">
         <logo />
-        <vuetify-logo />
       </div>
       <v-card>
-        <v-card-title class="headline">
-          Welcome to the Vuetify + Nuxt.js template
-        </v-card-title>
+        <v-card-title class="headline">ようこそ TWSNMP FC</v-card-title>
         <v-card-text>
           <p>
-            Vuetify is a progressive Material Design component framework for
-            Vue.js. It was designed to empower developers to create amazing
-            applications.
-          </p>
-          <p>
-            For more information on Vuetify, check out the
+            TWSNMP FCはコンテナ環境で動作するネットワーク管理ソフトです。<br />
+            使い方は
             <a
-              href="https://vuetifyjs.com"
+              href="https://note.com/twsnmp"
               target="_blank"
               rel="noopener noreferrer"
-            >
-              documentation </a
-            >.
-          </p>
-          <p>
-            If you have questions, please join the official
+              >マニュアル</a
+            >にあります。<br />
+            ソースコードは
             <a
-              href="https://chat.vuetifyjs.com/"
+              href="https://github.com/twsnmp/twsnmpfc"
               target="_blank"
               rel="noopener noreferrer"
               title="chat"
             >
-              discord </a
-            >.
-          </p>
-          <p>
-            Find a bug? Report it on the github
+              GitHUB </a
+            >にあります。<br />
+            バグを発見したら
             <a
-              href="https://github.com/vuetifyjs/vuetify/issues"
+              href="https://github.com/twsnmp/twsnmpfc/issues"
               target="_blank"
               rel="noopener noreferrer"
               title="contribute"
             >
-              issue board </a
-            >.
+              GitHubのissue </a
+            >でお知らせください。
           </p>
-          <p>
-            Thank you for developing with Vuetify and I look forward to bringing
-            more exciting features in the future.
-          </p>
+          <p>TWSNMP FCを利用いただきありがとうございます。</p>
           <div class="text-xs-right">
-            <em><small>&mdash; John Leider</small></em>
+            <em><small>&mdash; Masayuki Yamai</small></em>
           </div>
           <hr class="my-3" />
           <a
-            href="https://nuxtjs.org/"
+            href="https://lhx98.linkclub.jp/twise.co.jp/"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Nuxt Documentation
-          </a>
-          <br />
-          <a
-            href="https://github.com/nuxt/nuxt.js"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Nuxt GitHub
+            Twise Labo.
           </a>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="primary" nuxt to="/inspire"> Continue </v-btn>
+          <v-btn v-if="!isAuthenticated" color="primary" to="/login">
+            ログイン
+          </v-btn>
+          <v-btn v-if="isAuthenticated" color="primary" to="/map">
+            マップ
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-col>
@@ -82,12 +64,16 @@
 
 <script>
 import Logo from '~/components/Logo.vue'
-import VuetifyLogo from '~/components/VuetifyLogo.vue'
 
 export default {
+  auth: false,
   components: {
     Logo,
-    VuetifyLogo,
+  },
+  computed: {
+    isAuthenticated() {
+      return this.$auth.loggedIn
+    },
   },
 }
 </script>

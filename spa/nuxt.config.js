@@ -9,8 +9,8 @@ export default {
 
   // Global page headers (https://go.nuxtjs.dev/config-head)
   head: {
-    titleTemplate: '%s - spa',
-    title: 'spa',
+    titleTemplate: '%s - TWSNMP FC',
+    title: 'TWSNMP FC',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -40,8 +40,29 @@ export default {
   modules: [
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
+    '@nuxtjs/auth-next',
   ],
-
+  auth: {
+    // Options
+    strategies: {
+      local: {
+        token: {
+          property: 'token',
+          // required: true,
+          // type: 'Bearer'
+        },
+        user: {
+          property: false,
+          // autoFetch: true
+        },
+        endpoints: {
+          login: { url: 'login', method: 'post' },
+          user: { url: 'api/me', method: 'get' },
+          logout: false,
+        },
+      },
+    },
+  },
   // Axios module configuration (https://go.nuxtjs.dev/config-axios)
   axios: {},
 
@@ -63,7 +84,9 @@ export default {
       },
     },
   },
-
+  router: {
+    middleware: ['auth'],
+  },
   // Build Configuration (https://go.nuxtjs.dev/config-build)
   build: {},
 }

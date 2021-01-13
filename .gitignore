@@ -15,3 +15,7 @@
 # vendor/
 dist/
 statik/
+tmp/
+
+#Mac OS
+.DS_Store

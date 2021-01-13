@@ -10,7 +10,7 @@ import (
 )
 
 type loginEnt struct {
-	Name     string `json:"name" form:"name" query:"name"`
+	UserID   string `json:"userid" form:"userid" query:"userid"`
 	Password string `json:"password" form:"password" query:"password"`
 }
 
@@ -20,8 +20,8 @@ func login(c echo.Context) error {
 		return echo.ErrUnauthorized
 	}
 	api := c.Get("api").(*WebAPI)
-	// とりあえずのパスワード認証
-	if le.Name != "test" || le.Password != "test" {
+	// パスワード認証
+	if le.UserID != "test" || le.Password != "test" {
 		return echo.ErrUnauthorized
 	}
 
@@ -29,8 +29,7 @@ func login(c echo.Context) error {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
-	claims["name"] = le.Name
-	claims["admin"] = true
+	claims["userid"] = le.UserID
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 
 	t, err := token.SignedString([]byte(api.Password))
@@ -42,18 +41,16 @@ func login(c echo.Context) error {
 	})
 }
 
-type testResEnt struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	NickName string `json:"nickname"`
+type meResEnt struct {
+	ID     int    `json:"id"`
+	UserID string `json:"userid"`
 }
 
-func apiTest(c echo.Context) error {
-	r := new(testResEnt)
+func apiMe(c echo.Context) error {
+	r := new(meResEnt)
 	r.ID = 1
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
-	r.Name = claims["name"].(string)
-	r.NickName = "Test User"
+	r.UserID = claims["userid"].(string)
 	return c.JSON(http.StatusOK, r)
 }

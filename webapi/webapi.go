@@ -36,7 +36,7 @@ func Init(e *echo.Echo, p *WebAPI) {
 	// JWT保護されたRoute
 	r := e.Group("/api")
 	r.Use(middleware.JWT([]byte(p.Password)))
-	r.GET("/test", apiTest)
+	r.GET("/me", apiMe)
 
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
 }
