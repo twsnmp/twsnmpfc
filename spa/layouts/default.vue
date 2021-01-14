@@ -1,15 +1,15 @@
 <template>
   <v-app>
     <v-navigation-drawer
-      v-model="drawer"
-      :mini-variant="miniVariant"
+      v-model="menu"
+      :mini-variant="miniMenu"
       clipped
       fixed
       app
     >
       <v-list>
         <v-list-item
-          v-for="(item, i) in items"
+          v-for="(item, i) in mainMenus"
           :key="i"
           :to="item.to"
           router
@@ -22,19 +22,69 @@
             <v-list-item-title v-text="item.title" />
           </v-list-item-content>
         </v-list-item>
+        <v-list-group no-action prepend-icon="mdi-chart-box" :value="false">
+          <template v-slot:activator>
+            <v-list-item-title>レポート</v-list-item-title>
+          </template>
+          <v-list-item
+            v-for="(item, i) in reportMenus"
+            :key="i"
+            :to="item.to"
+            router
+            exact
+          >
+            <v-list-item-action>
+              <v-icon>{{ item.icon }}</v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title v-text="item.title" />
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-group>
+        <v-list-group no-action prepend-icon="mdi-view-list" :value="false">
+          <template v-slot:activator>
+            <v-list-item-title>ログ</v-list-item-title>
+          </template>
+          <v-list-item
+            v-for="(item, i) in logMenus"
+            :key="i"
+            :to="item.to"
+            router
+            exact
+          >
+            <v-list-item-action>
+              <v-icon>{{ item.icon }}</v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title v-text="item.title" />
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-group>
+        <v-list-group no-action prepend-icon="mdi-cogs" :value="false">
+          <template v-slot:activator>
+            <v-list-item-title>設定</v-list-item-title>
+          </template>
+          <v-list-item
+            v-for="(item, i) in confMenus"
+            :key="i"
+            :to="item.to"
+            router
+            exact
+          >
+            <v-list-item-action>
+              <v-icon>{{ item.icon }}</v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title v-text="item.title" />
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-group>
       </v-list>
     </v-navigation-drawer>
     <v-app-bar app>
-      <v-app-bar-nav-icon
-        v-if="isAuthenticated"
-        @click.stop="drawer = !drawer"
-      />
-      <v-btn
-        v-if="isAuthenticated"
-        icon
-        @click.stop="miniVariant = !miniVariant"
-      >
-        <v-icon>mdi-{{ `chevron-${miniVariant ? 'right' : 'left'}` }}</v-icon>
+      <v-app-bar-nav-icon v-if="isAuthenticated" @click.stop="menu = !menu" />
+      <v-btn v-if="isAuthenticated" icon @click.stop="miniMenu = !miniMenu">
+        <v-icon>mdi-{{ `chevron-${miniMenu ? 'right' : 'left'}` }}</v-icon>
       </v-btn>
       <v-toolbar-title v-text="title" />
       <v-spacer />
@@ -44,12 +94,10 @@
       <v-btn v-if="isAuthenticated" @click="logout">
         <v-icon>mdi-logout</v-icon>
       </v-btn>
-      <v-btn
-        v-if="isAuthenticated"
-        icon
-        @click.stop="rightDrawer = !rightDrawer"
-      >
-        <v-icon>mdi-menu</v-icon>
+      <v-btn v-if="isAuthenticated" icon @click.stop="notify = !notify">
+        <v-badge color="red" content="6" overlap>
+          <v-icon>mdi-bell</v-icon>
+        </v-badge>
       </v-btn>
     </v-app-bar>
     <v-main>
@@ -59,7 +107,7 @@
     </v-main>
     <v-navigation-drawer
       v-if="isAuthenticated"
-      v-model="rightDrawer"
+      v-model="notify"
       right
       temporary
       fixed
@@ -83,21 +131,107 @@
 export default {
   data() {
     return {
-      drawer: false,
-      items: [
+      menu: false,
+      mainMenus: [
         {
           icon: 'mdi-apps',
           title: 'ようこそ',
           to: '/',
         },
         {
-          icon: 'mdi-chart-bubble',
+          icon: 'mdi-lan',
           title: 'マップ',
           to: '/map',
         },
+        {
+          icon: 'mdi-laptop',
+          title: 'ノード',
+          to: '/nodes',
+        },
+        {
+          icon: 'mdi-lan-check',
+          title: 'ポーリング',
+          to: '/pollings',
+        },
+        {
+          icon: 'mdi-file-find',
+          title: '自動発見',
+          to: '/discover',
+        },
       ],
-      miniVariant: false,
-      rightDrawer: false,
+      reportMenus: [
+        {
+          icon: 'mdi-devices',
+          title: 'デバイス',
+          to: '/report/devices',
+        },
+        {
+          icon: 'mdi-account-check',
+          title: 'ユーザー',
+          to: '/report/users',
+        },
+        {
+          icon: 'mdi-server',
+          title: 'サーバー',
+          to: '/report/servers',
+        },
+        {
+          icon: 'mdi-link',
+          title: 'フロー',
+          to: '/report/flows',
+        },
+      ],
+      logMenus: [
+        {
+          icon: 'mdi-calendar-check',
+          title: 'イベントログ',
+          to: '/log/log',
+        },
+        {
+          icon: 'mdi-calendar-text',
+          title: 'syslog',
+          to: '/log/syslog',
+        },
+        {
+          icon: 'mdi-alert',
+          title: 'SNMP TRAP',
+          to: '/log/snmptrap',
+        },
+        {
+          icon: 'mdi-check-network',
+          title: 'Netflow',
+          to: '/log/netflow',
+        },
+        {
+          icon: 'mdi-check-network-outline',
+          title: 'IPFIX',
+          to: '/log/ipfix',
+        },
+      ],
+      confMenus: [
+        {
+          icon: 'mdi-cog',
+          title: 'マップ設定',
+          to: '/conf/map',
+        },
+        {
+          icon: 'mdi-email-send',
+          title: '通知設定',
+          to: '/conf/notify',
+        },
+        {
+          icon: 'mdi-link',
+          title: '拡張設定',
+          to: '/conf/ext',
+        },
+        {
+          icon: 'mdi-database-cog',
+          title: 'DB情報',
+          to: '/conf/dbinfo',
+        },
+      ],
+      miniMenu: false,
+      notify: false,
       title: 'TWSNMP FC',
     }
   },
