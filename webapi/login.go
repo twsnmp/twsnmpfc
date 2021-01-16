@@ -9,13 +9,13 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type loginEnt struct {
+type loginWebAPI struct {
 	UserID   string `json:"userid" form:"userid" query:"userid"`
 	Password string `json:"password" form:"password" query:"password"`
 }
 
 func login(c echo.Context) error {
-	le := new(loginEnt)
+	le := new(loginWebAPI)
 	if err := c.Bind(le); err != nil {
 		return echo.ErrUnauthorized
 	}
@@ -41,13 +41,13 @@ func login(c echo.Context) error {
 	})
 }
 
-type meResEnt struct {
+type meWebAPI struct {
 	ID     int    `json:"id"`
 	UserID string `json:"userid"`
 }
 
-func apiMe(c echo.Context) error {
-	r := new(meResEnt)
+func getMe(c echo.Context) error {
+	r := new(meWebAPI)
 	r.ID = 1
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)

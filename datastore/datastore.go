@@ -66,6 +66,9 @@ type DataStore struct {
 
 	logSize     int64
 	compLogSize int64
+	//
+	GeoIPPath string
+	GrokPath  string
 }
 
 const (
@@ -163,33 +166,6 @@ type LogEnt struct {
 	Time int64 // UnixNano()
 	Type string
 	Log  string
-}
-
-// MapConfEnt :  マップ設定
-type MapConfEnt struct {
-	MapName        string
-	PollInt        int
-	Timeout        int
-	Retry          int
-	LogDays        int
-	LogDispSize    int
-	NodeSort       string
-	SnmpMode       string
-	Community      string
-	User           string
-	Password       string
-	PublicKey      string
-	PrivateKey     string
-	TLSCert        string
-	EnableSyslogd  bool
-	EnableTrapd    bool
-	EnableNetflowd bool
-	BackImg        string
-	GeoIPPath      string
-	GrokPath       string
-	ArpWatchLevel  string
-	AILevel        string
-	AIThreshold    int
 }
 
 type NotifyConfEnt struct {

@@ -11,6 +11,28 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+// MapConfEnt :  マップ設定
+type MapConfEnt struct {
+	MapName        string
+	PollInt        int
+	Timeout        int
+	Retry          int
+	LogDays        int
+	LogDispSize    int
+	SnmpMode       string
+	Community      string
+	User           string
+	Password       string
+	PublicKey      string
+	PrivateKey     string
+	TLSCert        string
+	EnableSyslogd  bool
+	EnableTrapd    bool
+	EnableNetflowd bool
+	AILevel        string
+	AIThreshold    int
+}
+
 func (ds *DataStore) initConf() {
 	ds.MapConf.Community = "public"
 	ds.MapConf.PollInt = 60
@@ -18,10 +40,11 @@ func (ds *DataStore) initConf() {
 	ds.MapConf.Timeout = 1
 	ds.MapConf.LogDispSize = 5000
 	ds.MapConf.LogDays = 14
-	ds.MapConf.ArpWatchLevel = "info"
 	ds.MapConf.AILevel = "info"
 	ds.MapConf.AIThreshold = 81
 	ds.MapConf.Community = "public"
+	ds.MapConf.User = "twsnmp"
+	ds.MapConf.Password = "twsnmp"
 	ds.DiscoverConf.Retry = 1
 	ds.DiscoverConf.Timeout = 1
 	ds.NotifyConf.InsecureSkipVerify = true

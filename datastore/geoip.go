@@ -13,11 +13,11 @@ func (ds *DataStore) OpenGeoIP() {
 		ds.geoip.Close()
 		ds.geoip = nil
 	}
-	if ds.MapConf.GeoIPPath == "" {
+	if ds.GeoIPPath == "" {
 		return
 	}
 	var err error
-	ds.geoip, err = geoip2.Open(ds.MapConf.GeoIPPath)
+	ds.geoip, err = geoip2.Open(ds.GeoIPPath)
 	if err != nil {
 		log.Printf("Geoip open err=%v", err)
 	}
