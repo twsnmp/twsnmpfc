@@ -7,7 +7,11 @@ import (
 	"strings"
 )
 
-func (ds *DataStore) LoadServiceMap(f io.Reader) error {
+func (ds *DataStore) loadServiceMap(f io.ReadCloser) {
+	if f == nil {
+		return
+	}
+	defer f.Close()
 	s := bufio.NewScanner(f)
 	for s.Scan() {
 		l := strings.TrimSpace(s.Text())
@@ -25,7 +29,6 @@ func (ds *DataStore) LoadServiceMap(f io.Reader) error {
 		}
 		ds.serviceMap[f[1]] = sn
 	}
-	return nil
 }
 
 func (ds *DataStore) GetServiceName(prot, port int) (string, bool) {

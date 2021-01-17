@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func (ds *DataStore) LoadTLSCihperNameMap(f io.ReadCloser) {
+func (ds *DataStore) loadTLSCihperNameMap(f io.ReadCloser) {
 	if f == nil {
 		return
 	}

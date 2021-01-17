@@ -33,6 +33,32 @@ type MapConfEnt struct {
 	AIThreshold    int
 }
 
+type NotifyConfEnt struct {
+	MailServer         string
+	User               string
+	Password           string
+	InsecureSkipVerify bool
+	MailTo             string
+	MailFrom           string
+	Subject            string
+	Interval           int
+	Level              string
+	Report             string
+	ExecCmd            string
+	CheckUpdate        bool
+	NotifyRepair       bool
+}
+
+type DiscoverConfEnt struct {
+	SnmpMode string
+	StartIP  string
+	EndIP    string
+	Timeout  int
+	Retry    int
+	X        int
+	Y        int
+}
+
 func (ds *DataStore) initConf() {
 	ds.MapConf.Community = "public"
 	ds.MapConf.PollInt = 60

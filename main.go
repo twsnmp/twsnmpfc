@@ -22,14 +22,14 @@ import (
 )
 
 // From ENV or Command Args
-var dbPath string
+var dataStorePath string
 var password string
 var port string
 
 const version = "1000"
 
 func init() {
-	flag.StringVar(&dbPath, "dbpath", "./twsnmpfc.twdb", "Path to DB file")
+	flag.StringVar(&dataStorePath, "datastore", "./tmp", "Path to Data Store directory")
 	flag.StringVar(&password, "password", "twsnmpfc!", "Master Password")
 	flag.StringVar(&port, "port", "8080", "port")
 	flag.VisitAll(func(f *flag.Flag) {
@@ -46,7 +46,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	ds := datastore.NewDataStore()
+	ds := datastore.NewDataStore(dataStorePath, statikFS)
 	pi := ping.NewPing(ctx)
 	di := discover.NewDiscover(ds, pi)
 	rp := report.NewReport(ctx, ds)

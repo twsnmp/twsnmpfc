@@ -4,6 +4,9 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/rakyll/statik/fs"
+	_ "github.com/twsnmp/twsnmpfc/statik"
 )
 
 func getTmpDBFile() (string, error) {
@@ -15,16 +18,16 @@ func getTmpDBFile() (string, error) {
 }
 
 func TestDataStore(t *testing.T) {
-	indb, err := getTmpDBFile()
+	statikFS, err := fs.New()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(indb)
-	ds := NewDataStore()
-	err = ds.OpenDB(indb)
+	td, err := ioutil.TempDir("", "twsnmpfc_test")
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer os.RemoveAll(td)
+	ds := NewDataStore(td, statikFS)
 	ds.MapConf.MapName = "Test123"
 	if err := ds.SaveMapConfToDB(); err != nil {
 		t.Fatal(err)

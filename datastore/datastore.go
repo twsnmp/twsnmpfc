@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -66,9 +68,6 @@ type DataStore struct {
 
 	logSize     int64
 	compLogSize int64
-	//
-	GeoIPPath string
-	GrokPath  string
 }
 
 const (
@@ -87,54 +86,6 @@ var (
 	ErrInvalidID     = fmt.Errorf("invalid id")
 )
 
-type NodeEnt struct {
-	ID        string
-	Name      string
-	Descr     string
-	Icon      string
-	State     string
-	X         int
-	Y         int
-	IP        string
-	MAC       string
-	SnmpMode  string
-	Community string
-	User      string
-	Password  string
-	PublicKey string
-	URL       string
-	Type      string
-	AddrMode  string
-}
-
-type LineEnt struct {
-	ID         string
-	NodeID1    string
-	PollingID1 string
-	State1     string
-	NodeID2    string
-	PollingID2 string
-	State2     string
-}
-
-type PollingEnt struct {
-	ID         string
-	Name       string
-	NodeID     string
-	Type       string
-	Polling    string
-	Level      string
-	PollInt    int
-	Timeout    int
-	Retry      int
-	LogMode    int
-	NextTime   int64
-	LastTime   int64
-	LastResult string
-	LastVal    float64
-	State      string
-}
-
 type PollingTemplateEnt struct {
 	ID       string
 	Name     string
@@ -143,55 +94,6 @@ type PollingTemplateEnt struct {
 	Level    string
 	NodeType string
 	Descr    string
-}
-
-type EventLogEnt struct {
-	Time     int64 // UnixNano()
-	Type     string
-	Level    string
-	NodeName string
-	NodeID   string
-	Event    string
-}
-
-type PollingLogEnt struct {
-	Time      int64 // UnixNano()
-	PollingID string
-	State     string
-	NumVal    float64
-	StrVal    string
-}
-
-type LogEnt struct {
-	Time int64 // UnixNano()
-	Type string
-	Log  string
-}
-
-type NotifyConfEnt struct {
-	MailServer         string
-	User               string
-	Password           string
-	InsecureSkipVerify bool
-	MailTo             string
-	MailFrom           string
-	Subject            string
-	Interval           int
-	Level              string
-	Report             string
-	ExecCmd            string
-	CheckUpdate        bool
-	NotifyRepair       bool
-}
-
-type DiscoverConfEnt struct {
-	SnmpMode string
-	StartIP  string
-	EndIP    string
-	Timeout  int
-	Retry    int
-	X        int
-	Y        int
 }
 
 type DBStatsEnt struct {
@@ -233,8 +135,8 @@ type DBBackupParamEnt struct {
 	BackupFile string
 }
 
-func NewDataStore() *DataStore {
-	return &DataStore{
+func NewDataStore(dspath string, fs http.FileSystem) *DataStore {
+	ds := &DataStore{
 		devices:          make(map[string]*DeviceEnt),
 		users:            make(map[string]*UserEnt),
 		flows:            make(map[string]*FlowEnt),
@@ -255,6 +157,69 @@ func NewDataStore() *DataStore {
 		geoipMap:   make(map[string]string),
 		ouiMap:     make(map[string]string),
 		tlsCSMap:   make(map[string]string),
+	}
+	ds.InitDataStore(dspath, fs)
+	return ds
+}
+
+func (ds *DataStore) InitDataStore(dspath string, fs http.FileSystem) {
+	if dspath == "" {
+		log.Println("No DataStore Path Skip Init")
+		return
+	}
+	// BBoltをオープン
+	if err := ds.OpenDB(filepath.Join(dspath, "twsnmpfc.db")); err != nil {
+		log.Fatalf("InitDataStore OpenDB err=%v", err)
+	}
+	// MIBDB
+	if r, err := os.Open(filepath.Join(dspath, "mib.txt")); err == nil {
+		ds.loadMIBDB(r)
+	} else {
+		if r, err := fs.Open("/conf/mib.txt"); err == nil {
+			ds.loadMIBDB(r)
+		} else {
+			log.Fatalf("InitDataStore MIBDB err=%v", err)
+		}
+	}
+	// 拡張MIBの読み込み
+	ds.loadExtMIBs(filepath.Join(dspath, "extmibs"))
+	// サービスの定義ファイル、ユーザー指定があれば利用、なければ内蔵
+	if r, err := os.Open(filepath.Join(dspath, "services.txt")); err == nil {
+		ds.loadServiceMap(r)
+	} else {
+		if r, err := fs.Open("/conf/services.txt"); err == nil {
+			ds.loadServiceMap(r)
+		} else {
+			log.Fatalf("InitDataStore services.txt err=%v", err)
+		}
+	}
+	// OUIの定義
+	if r, err := os.Open(filepath.Join(dspath, "oui.txt")); err == nil {
+		ds.loadOUIMap(r)
+	} else {
+		if r, err := fs.Open("/conf/oui.txt"); err == nil {
+			ds.loadOUIMap(r)
+		} else {
+			log.Fatalf("InitDataStore oui.txt err=%v", err)
+		}
+	}
+	// TLS暗号名の定義
+	if r, err := os.Open(filepath.Join(dspath, "tlsparams.csv")); err == nil {
+		ds.loadTLSCihperNameMap(r)
+	} else {
+		if r, err := fs.Open("/conf/tlsparams.csv"); err == nil {
+			ds.loadTLSCihperNameMap(r)
+		} else {
+			log.Fatalf("InitDataStore tlsparams.csv err=%v", err)
+		}
+	}
+	p := filepath.Join(dspath, "geoip.mmdb")
+	if _, err := os.Stat(p); err == nil {
+		ds.openGeoIP(p)
+	}
+	p = filepath.Join(dspath, "grok.txt")
+	if _, err := os.Stat(p); err == nil {
+		ds.loadGrokMap(p)
 	}
 }
 
@@ -287,7 +252,7 @@ func (ds *DataStore) OpenDB(path string) error {
 
 func (ds *DataStore) initDB() error {
 	buckets := []string{"config", "nodes", "lines", "pollings", "logs", "pollingLogs",
-		"syslog", "trap", "netflow", "ipfix", "arplog", "mibdb", "arp", "ai", "report", "pollingTemplates"}
+		"syslog", "trap", "netflow", "ipfix", "arp", "ai", "report", "pollingTemplates"}
 	reports := []string{"devices", "users", "flows", "servers", "allows", "dennys"}
 	ds.initConf()
 	return ds.db.Update(func(tx *bbolt.Tx) error {

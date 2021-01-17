@@ -3,7 +3,6 @@ package discover
 import (
 	"context"
 	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 
@@ -26,31 +25,13 @@ func TestDiscover(t *testing.T) {
 	p := ping.NewPing(ctx)
 	defer cancel()
 	time.Sleep(time.Second * 1)
-	dbf, err := getTmpDBFile()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(dbf)
-	ds := datastore.NewDataStore()
-	err = ds.OpenDB(dbf)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ds.MapConf.MapName = "Test123"
-	if err := ds.SaveMapConfToDB(); err != nil {
-		t.Fatal(err)
-	}
 	statikFS, err := fs.New()
 	if err != nil {
 		t.Fatal(err)
 	}
-	r, err := statikFS.Open("/conf/mib.txt")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer r.Close()
-	s, err := ioutil.ReadAll(r)
-	if err != nil {
+	ds := datastore.NewDataStore("./tmp", statikFS)
+	ds.MapConf.MapName = "Test123"
+	if err := ds.SaveMapConfToDB(); err != nil {
 		t.Fatal(err)
 	}
 	ds.MapConf.Community = "public"
@@ -59,7 +40,6 @@ func TestDiscover(t *testing.T) {
 	ds.DiscoverConf.Retry = 1
 	ds.DiscoverConf.Timeout = 2
 	ds.DiscoverConf.SnmpMode = "snmpv1"
-	ds.LoadMIBDB(string(s))
 	d := NewDiscover(ds, p)
 	err = d.StartDiscover()
 	if err != nil {

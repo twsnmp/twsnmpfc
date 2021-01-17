@@ -8,18 +8,11 @@ import (
 	"github.com/oschwald/geoip2-golang"
 )
 
-func (ds *DataStore) OpenGeoIP() {
-	if ds.geoip != nil {
-		ds.geoip.Close()
-		ds.geoip = nil
-	}
-	if ds.GeoIPPath == "" {
-		return
-	}
+func (ds *DataStore) openGeoIP(path string) {
 	var err error
-	ds.geoip, err = geoip2.Open(ds.GeoIPPath)
+	ds.geoip, err = geoip2.Open(path)
 	if err != nil {
-		log.Printf("Geoip open err=%v", err)
+		log.Printf("OpenGeoIP err=%v", err)
 	}
 }
 

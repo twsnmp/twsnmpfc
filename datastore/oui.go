@@ -10,8 +10,8 @@ import (
 // Download oui.txt from
 // http://standards-oui.ieee.org/oui/oui.txt
 
-// LoadOUIMap : Load OUI Data from io.Reader
-func (ds *DataStore) LoadOUIMap(f io.Reader) error {
+// LoadOUIMap : Load OUI Data from io.ReadCloser
+func (ds *DataStore) loadOUIMap(f io.ReadCloser) {
 	s := bufio.NewScanner(f)
 	for s.Scan() {
 		l := strings.TrimSpace(s.Text())
@@ -24,7 +24,6 @@ func (ds *DataStore) LoadOUIMap(f io.Reader) error {
 		}
 		ds.ouiMap[f[0]] = strings.Join(f[3:], " ")
 	}
-	return nil
 }
 
 // FindVendor : Find Vendor Name from MAC Address

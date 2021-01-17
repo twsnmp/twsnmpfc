@@ -23,6 +23,29 @@ const (
 	LogModeAI
 )
 
+type EventLogEnt struct {
+	Time     int64 // UnixNano()
+	Type     string
+	Level    string
+	NodeName string
+	NodeID   string
+	Event    string
+}
+
+type PollingLogEnt struct {
+	Time      int64 // UnixNano()
+	PollingID string
+	State     string
+	NumVal    float64
+	StrVal    string
+}
+
+type LogEnt struct {
+	Time int64 // UnixNano()
+	Type string
+	Log  string
+}
+
 type LogFilterEnt struct {
 	StartTime string
 	EndTime   string
@@ -382,7 +405,7 @@ func (ds *DataStore) deleteOldLogs() {
 		log.Println("mapConf.LogDays < 1 ")
 		return
 	}
-	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix", "arplog"}
+	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix"}
 	for _, b := range buckets {
 		if err := ds.deleteOldLog(b, ds.MapConf.LogDays); err != nil {
 			log.Printf("deleteOldLog err=%v", err)
@@ -461,7 +484,6 @@ func (ds *DataStore) SaveLogBuffer(logBuffer []*LogEnt) {
 		netflow := tx.Bucket([]byte("netflow"))
 		ipfix := tx.Bucket([]byte("ipfix"))
 		trap := tx.Bucket([]byte("trap"))
-		arplog := tx.Bucket([]byte("arplog"))
 		for _, l := range logBuffer {
 			k := fmt.Sprintf("%016x", l.Time)
 			s, err := json.Marshal(l)
@@ -482,8 +504,6 @@ func (ds *DataStore) SaveLogBuffer(logBuffer []*LogEnt) {
 				_ = ipfix.Put([]byte(k), []byte(s))
 			case "trap":
 				_ = trap.Put([]byte(k), []byte(s))
-			case "arplog":
-				_ = arplog.Put([]byte(k), []byte(s))
 			}
 		}
 		return nil

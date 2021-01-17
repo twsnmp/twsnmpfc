@@ -7,6 +7,54 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+type NodeEnt struct {
+	ID        string
+	Name      string
+	Descr     string
+	Icon      string
+	State     string
+	X         int
+	Y         int
+	IP        string
+	MAC       string
+	SnmpMode  string
+	Community string
+	User      string
+	Password  string
+	PublicKey string
+	URL       string
+	Type      string
+	AddrMode  string
+}
+
+type LineEnt struct {
+	ID         string
+	NodeID1    string
+	PollingID1 string
+	State1     string
+	NodeID2    string
+	PollingID2 string
+	State2     string
+}
+
+type PollingEnt struct {
+	ID         string
+	Name       string
+	NodeID     string
+	Type       string
+	Polling    string
+	Level      string
+	PollInt    int
+	Timeout    int
+	Retry      int
+	LogMode    int
+	NextTime   int64
+	LastTime   int64
+	LastResult string
+	LastVal    float64
+	State      string
+}
+
 func (ds *DataStore) loadMapDataFromDB() error {
 	if ds.db == nil {
 		return ErrDBNotOpen
