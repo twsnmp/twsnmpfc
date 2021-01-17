@@ -26,18 +26,18 @@ func (l *Logger) snmptrapd(stopCh chan bool) {
 		if l.ds.MapConf.SnmpMode == "v3auth" {
 			tl.Params.MsgFlags = gosnmp.AuthNoPriv
 			tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 l.ds.MapConf.User,
+				UserName:                 l.ds.MapConf.SnmpUser,
 				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: l.ds.MapConf.Password,
+				AuthenticationPassphrase: l.ds.MapConf.SnmpPassword,
 			}
 		} else {
 			tl.Params.MsgFlags = gosnmp.AuthPriv
 			tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 l.ds.MapConf.User,
+				UserName:                 l.ds.MapConf.SnmpUser,
 				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: l.ds.MapConf.Password,
+				AuthenticationPassphrase: l.ds.MapConf.SnmpPassword,
 				PrivacyProtocol:          gosnmp.AES,
-				PrivacyPassphrase:        l.ds.MapConf.Password,
+				PrivacyPassphrase:        l.ds.MapConf.SnmpPassword,
 			}
 		}
 	}

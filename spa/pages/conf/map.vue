@@ -22,6 +22,13 @@
       </v-alert>
       <v-card-text>
         <v-text-field v-model="mapconf.MapName" label="マップ名" required />
+        <v-text-field v-model="mapconf.UserID" label="ユーザーID" required />
+        <v-text-field
+          v-model="mapconf.Password"
+          type="password"
+          label="パスワード"
+          required
+        />
         <v-slider
           v-model="mapconf.PollInt"
           label="ポーリング間隔(Sec)"
@@ -86,13 +93,20 @@
         >
         </v-select>
         <v-text-field
+          v-if="mapconf.SnmpMode == ''"
           v-model="mapconf.Community"
           label="Community名"
           required
         />
-        <v-text-field v-model="mapconf.User" label="ユーザー" required />
         <v-text-field
-          v-model="mapconf.Password"
+          v-if="mapconf.SnmpMode != ''"
+          v-model="mapconf.SnmpUser"
+          label="ユーザーID"
+          required
+        />
+        <v-text-field
+          v-if="mapconf.SnmpMode != ''"
+          v-model="mapconf.SnmpPassword"
           type="password"
           label="パスワード"
           required
@@ -175,6 +189,8 @@ export default {
     return {
       mapconf: {
         MapName: '',
+        UserID: '',
+        Password: '',
         PollInt: 60,
         Timeout: 1,
         Retry: 1,
@@ -182,8 +198,8 @@ export default {
         LogDispSize: 1000,
         SnmpMode: '',
         Community: 'public',
-        User: '',
-        Password: '',
+        SnmpUser: '',
+        SnmpPassword: '',
         EnableSyslogd: false,
         EnableTrapd: false,
         EnableNetflowd: false,
@@ -246,14 +262,15 @@ export default {
     }
   },
   methods: {
-    async submit() {
-      const r = await this.$axios
+    submit() {
+      this.$axios
         .post('/api/conf/map', this.mapconf)
+        .then((r) => {
+          this.saved = true
+        })
         .catch((e) => {
           this.error = true
         })
-      console.log(r)
-      this.saved = true
     },
   },
 }

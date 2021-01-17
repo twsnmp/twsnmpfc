@@ -38,7 +38,7 @@ func (ds *DataStore) loadExtMIBs(root string) {
 	filepath.Walk(root,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				log.Printf("loadExtMIBs prevent panic by handling failure accessing a path %q: %v\n", path, err)
+				log.Printf("loadExtMIBs path %q: %v\n", path, err)
 				return err
 			}
 			if info.IsDir() {

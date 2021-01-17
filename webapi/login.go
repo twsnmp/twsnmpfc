@@ -22,7 +22,7 @@ func login(c echo.Context) error {
 	}
 	api := c.Get("api").(*WebAPI)
 	// パスワード認証
-	if le.UserID != api.DataStore.MapConf.User ||
+	if le.UserID != api.DataStore.MapConf.UserID ||
 		!security.PasswordVerify(api.DataStore.MapConf.Password, le.Password) {
 		return echo.ErrUnauthorized
 	}

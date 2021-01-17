@@ -9,6 +9,8 @@ import (
 
 type mapConfWebAPI struct {
 	MapName        string
+	UserID         string
+	Password       string
 	PollInt        int
 	Timeout        int
 	Retry          int
@@ -16,8 +18,8 @@ type mapConfWebAPI struct {
 	LogDispSize    int
 	SnmpMode       string
 	Community      string
-	User           string
-	Password       string
+	SnmpUser       string
+	SnmpPassword   string
 	EnableSyslogd  bool
 	EnableTrapd    bool
 	EnableNetflowd bool
@@ -29,6 +31,8 @@ func getMapConf(c echo.Context) error {
 	api := c.Get("api").(*WebAPI)
 	r := new(mapConfWebAPI)
 	r.MapName = api.DataStore.MapConf.MapName
+	r.UserID = api.DataStore.MapConf.UserID
+	//	r.Password = api.DataStore.MapConf.Password
 	r.PollInt = api.DataStore.MapConf.PollInt
 	r.Timeout = api.DataStore.MapConf.Timeout
 	r.Retry = api.DataStore.MapConf.Retry
@@ -36,8 +40,8 @@ func getMapConf(c echo.Context) error {
 	r.LogDispSize = api.DataStore.MapConf.LogDispSize
 	r.SnmpMode = api.DataStore.MapConf.SnmpMode
 	r.Community = api.DataStore.MapConf.Community
-	r.User = api.DataStore.MapConf.User
-	//	r.Password = api.DataStore.MapConf.Password
+	r.SnmpUser = api.DataStore.MapConf.SnmpUser
+	//	r.SnmpPassword = api.DataStore.MapConf.SmmpPassword
 	r.EnableSyslogd = api.DataStore.MapConf.EnableSyslogd
 	r.EnableTrapd = api.DataStore.MapConf.EnableTrapd
 	r.EnableNetflowd = api.DataStore.MapConf.EnableNetflowd
@@ -53,6 +57,10 @@ func postMapConf(c echo.Context) error {
 	}
 	api := c.Get("api").(*WebAPI)
 	api.DataStore.MapConf.MapName = mc.MapName
+	api.DataStore.MapConf.UserID = mc.UserID
+	if mc.Password != "" {
+		api.DataStore.MapConf.Password = security.PasswordHash(mc.Password)
+	}
 	api.DataStore.MapConf.PollInt = mc.PollInt
 	api.DataStore.MapConf.Timeout = mc.Timeout
 	api.DataStore.MapConf.Retry = mc.Retry
@@ -60,9 +68,9 @@ func postMapConf(c echo.Context) error {
 	api.DataStore.MapConf.LogDispSize = mc.LogDispSize
 	api.DataStore.MapConf.SnmpMode = mc.SnmpMode
 	api.DataStore.MapConf.Community = mc.Community
-	api.DataStore.MapConf.User = mc.User
-	if mc.Password != "" {
-		api.DataStore.MapConf.Password = security.PasswordHash(mc.Password)
+	api.DataStore.MapConf.SnmpUser = mc.SnmpUser
+	if mc.SnmpPassword != "" {
+		api.DataStore.MapConf.SnmpPassword = mc.SnmpPassword
 	}
 	api.DataStore.MapConf.EnableSyslogd = mc.EnableSyslogd
 	api.DataStore.MapConf.EnableTrapd = mc.EnableTrapd

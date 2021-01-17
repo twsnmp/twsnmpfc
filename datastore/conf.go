@@ -14,6 +14,8 @@ import (
 // MapConfEnt :  マップ設定
 type MapConfEnt struct {
 	MapName        string
+	UserID         string
+	Password       string
 	PollInt        int
 	Timeout        int
 	Retry          int
@@ -21,8 +23,8 @@ type MapConfEnt struct {
 	LogDispSize    int
 	SnmpMode       string
 	Community      string
-	User           string
-	Password       string
+	SnmpUser       string
+	SnmpPassword   string
 	PublicKey      string
 	PrivateKey     string
 	TLSCert        string
@@ -69,7 +71,7 @@ func (ds *DataStore) initConf() {
 	ds.MapConf.AILevel = "info"
 	ds.MapConf.AIThreshold = 81
 	ds.MapConf.Community = "public"
-	ds.MapConf.User = "twsnmp"
+	ds.MapConf.UserID = "twsnmp"
 	ds.MapConf.Password = security.PasswordHash("twsnmp")
 	ds.DiscoverConf.Retry = 1
 	ds.DiscoverConf.Timeout = 1

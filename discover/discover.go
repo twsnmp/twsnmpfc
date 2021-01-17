@@ -171,18 +171,18 @@ func (d *Discover) discoverGetSnmpInfo(t string, dent *discoverInfoEnt) {
 		if d.ds.MapConf.SnmpMode == "v3auth" {
 			agent.MsgFlags = gosnmp.AuthNoPriv
 			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 d.ds.MapConf.User,
+				UserName:                 d.ds.MapConf.SnmpUser,
 				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: d.ds.MapConf.Password,
+				AuthenticationPassphrase: d.ds.MapConf.SnmpPassword,
 			}
 		} else {
 			agent.MsgFlags = gosnmp.AuthPriv
 			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 d.ds.MapConf.User,
+				UserName:                 d.ds.MapConf.SnmpUser,
 				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: d.ds.MapConf.Password,
+				AuthenticationPassphrase: d.ds.MapConf.SnmpPassword,
 				PrivacyProtocol:          gosnmp.AES,
-				PrivacyPassphrase:        d.ds.MapConf.Password,
+				PrivacyPassphrase:        d.ds.MapConf.SnmpPassword,
 			}
 		}
 	}
@@ -234,8 +234,8 @@ func (d *Discover) addFoundNode(dent discoverInfoEnt) {
 	}
 	if dent.SysObjectID != "" {
 		n.SnmpMode = d.ds.MapConf.SnmpMode
-		n.User = d.ds.MapConf.User
-		n.Password = d.ds.MapConf.Password
+		n.User = d.ds.MapConf.SnmpUser
+		n.Password = d.ds.MapConf.SnmpPassword
 		n.Community = d.ds.MapConf.Community
 		n.Icon = "hdd"
 	}
