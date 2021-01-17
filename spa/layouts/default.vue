@@ -1,12 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer
-      v-model="menu"
-      :mini-variant="miniMenu"
-      clipped
-      fixed
-      app
-    >
+    <v-navigation-drawer v-model="menu" clipped fixed app>
       <v-list>
         <v-list-item
           v-for="(item, i) in mainMenus"
@@ -83,9 +77,6 @@
     </v-navigation-drawer>
     <v-app-bar app>
       <v-app-bar-nav-icon v-if="isAuthenticated" @click.stop="menu = !menu" />
-      <v-btn v-if="isAuthenticated" icon @click.stop="miniMenu = !miniMenu">
-        <v-icon>mdi-{{ `chevron-${miniMenu ? 'right' : 'left'}` }}</v-icon>
-      </v-btn>
       <v-toolbar-title v-text="title" />
       <v-spacer />
       <v-btn v-if="!isAuthenticated" to="/login">
@@ -230,7 +221,6 @@ export default {
           to: '/conf/dbinfo',
         },
       ],
-      miniMenu: false,
       notify: false,
       title: 'TWSNMP FC',
     }

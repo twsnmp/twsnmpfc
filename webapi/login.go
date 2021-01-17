@@ -7,11 +7,12 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
+	"github.com/twsnmp/twsnmpfc/security"
 )
 
 type loginWebAPI struct {
-	UserID   string `json:"userid" form:"userid" query:"userid"`
-	Password string `json:"password" form:"password" query:"password"`
+	UserID   string `json:"UserID" form:"UserID" query:"UserID"`
+	Password string `json:"Password" form:"Password" query:"Password"`
 }
 
 func login(c echo.Context) error {
@@ -21,7 +22,8 @@ func login(c echo.Context) error {
 	}
 	api := c.Get("api").(*WebAPI)
 	// パスワード認証
-	if le.UserID != "test" || le.Password != "test" {
+	if le.UserID != api.DataStore.MapConf.User ||
+		!security.PasswordVerify(api.DataStore.MapConf.Password, le.Password) {
 		return echo.ErrUnauthorized
 	}
 

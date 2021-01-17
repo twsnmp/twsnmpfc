@@ -8,8 +8,13 @@
     </v-card-title>
     <v-card-text>
       <v-form>
-        <v-text-field v-model="login.userid" label="ユーザID" required />
-        <v-text-field v-model="login.password" label="パスワード" required />
+        <v-text-field v-model="login.UserID" label="ユーザID" required />
+        <v-text-field
+          v-model="login.Password"
+          type="password"
+          label="パスワード"
+          required
+        />
         <v-btn block color="primary" dark @click="submit">
           ログイン
           <v-icon>mdi-login</v-icon>
@@ -25,8 +30,8 @@ export default {
   data() {
     return {
       login: {
-        userid: '',
-        password: '',
+        UserId: '',
+        Password: '',
       },
       error: false,
     }
@@ -45,5 +50,3 @@ export default {
   },
 }
 </script>
-
-<style></style>

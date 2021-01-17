@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -216,4 +217,18 @@ func GetRawKeyPem(p string) string {
 		Bytes: x509.MarshalPKCS1PrivateKey(priv),
 	}
 	return string(pem.EncodeToMemory(block))
+}
+
+// PasswordHash : パスワードハッシュを作る
+func PasswordHash(pw string) string {
+	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	if err != nil {
+		return ""
+	}
+	return string(hash)
+}
+
+// PasswordVerify : パスワードがハッシュにマッチするかどうかを調べる
+func PasswordVerify(hash, pw string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(pw)) == nil
 }

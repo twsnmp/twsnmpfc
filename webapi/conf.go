@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/twsnmp/twsnmpfc/security"
 )
 
 type mapConfWebAPI struct {
@@ -61,7 +62,7 @@ func postMapConf(c echo.Context) error {
 	api.DataStore.MapConf.Community = mc.Community
 	api.DataStore.MapConf.User = mc.User
 	if mc.Password != "" {
-		api.DataStore.MapConf.Password = mc.Password
+		api.DataStore.MapConf.Password = security.PasswordHash(mc.Password)
 	}
 	api.DataStore.MapConf.EnableSyslogd = mc.EnableSyslogd
 	api.DataStore.MapConf.EnableTrapd = mc.EnableTrapd

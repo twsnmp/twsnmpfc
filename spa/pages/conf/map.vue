@@ -91,7 +91,12 @@
           required
         />
         <v-text-field v-model="mapconf.User" label="ユーザー" required />
-        <v-text-field v-model="mapconf.Password" label="パスワード" required />
+        <v-text-field
+          v-model="mapconf.Password"
+          type="password"
+          label="パスワード"
+          required
+        />
         <v-select
           v-model="mapconf.AILevel"
           :items="aiLevelList"
@@ -175,7 +180,7 @@ export default {
         Retry: 1,
         LogDays: 14,
         LogDispSize: 1000,
-        SnmpMode: 'snmpv2c',
+        SnmpMode: '',
         Community: 'public',
         User: '',
         Password: '',
@@ -188,15 +193,15 @@ export default {
       snmpModeList: [
         {
           text: 'SNMPv2c',
-          value: 'snmpv2c',
+          value: '',
         },
         {
           text: 'SNMPv3認証',
-          value: 'snmpv3auth',
+          value: 'v3auth',
         },
         {
           text: 'SNMPv3認証暗号化',
-          value: 'snmpv3authpriv',
+          value: 'v3authpriv',
         },
       ],
       aiLevelList: [

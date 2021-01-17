@@ -70,7 +70,7 @@ func (ds *DataStore) initConf() {
 	ds.MapConf.AIThreshold = 81
 	ds.MapConf.Community = "public"
 	ds.MapConf.User = "twsnmp"
-	ds.MapConf.Password = "twsnmp"
+	ds.MapConf.Password = security.PasswordHash("twsnmp")
 	ds.DiscoverConf.Retry = 1
 	ds.DiscoverConf.Timeout = 1
 	ds.NotifyConf.InsecureSkipVerify = true
