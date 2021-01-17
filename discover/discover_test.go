@@ -3,6 +3,7 @@ package discover
 import (
 	"context"
 	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -29,7 +30,12 @@ func TestDiscover(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ds := datastore.NewDataStore("./tmp", statikFS)
+	td, err := ioutil.TempDir("", "twsnmpfc_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(td)
+	ds := datastore.NewDataStore(td, statikFS)
 	ds.MapConf.MapName = "Test123"
 	if err := ds.SaveMapConfToDB(); err != nil {
 		t.Fatal(err)
@@ -39,11 +45,11 @@ func TestDiscover(t *testing.T) {
 	ds.DiscoverConf.EndIP = "192.168.1.2"
 	ds.DiscoverConf.Retry = 1
 	ds.DiscoverConf.Timeout = 2
-	ds.DiscoverConf.SnmpMode = "snmpv1"
 	d := NewDiscover(ds, p)
 	err = d.StartDiscover()
 	if err != nil {
 		t.Fatal(err)
 	}
+	time.Sleep(time.Second * 15)
 	t.Log("Done")
 }

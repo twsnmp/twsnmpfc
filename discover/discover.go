@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/signalsciences/ipv4"
-	mibdb "github.com/twsnmp/go-mibdb"
 	"github.com/twsnmp/gosnmp"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/ping"
@@ -25,11 +24,16 @@ const GRID = 90
 
 // Discover : 自動発見の
 type Discover struct {
-	ds        *datastore.DataStore
-	ping      *ping.Ping
-	mib       *mibdb.MIBDB
+	ds   *datastore.DataStore
+	ping *ping.Ping
+	Stat DiscoverStat
+	Stop bool
+	X    int
+	Y    int
+}
+
+type DiscoverStat struct {
 	Running   bool
-	Stop      bool
 	Total     uint32
 	Sent      uint32
 	Found     uint32
@@ -37,8 +41,6 @@ type Discover struct {
 	Progress  uint32
 	StartTime int64
 	EndTime   int64
-	X         int
-	Y         int
 }
 
 type discoverInfoEnt struct {
@@ -61,14 +63,14 @@ func NewDiscover(ds *datastore.DataStore, ping *ping.Ping) *Discover {
 
 // StopDiscover : 自動発見を停止する
 func (d *Discover) StopDiscover() {
-	for d.Running {
+	for d.Stat.Running {
 		d.Stop = true
 		time.Sleep(time.Millisecond * 100)
 	}
 }
 
 func (d *Discover) StartDiscover() error {
-	if d.Running {
+	if d.Stat.Running {
 		return fmt.Errorf("discover already runnning")
 	}
 	sip, err := ipv4.FromDots(d.ds.DiscoverConf.StartIP)
@@ -88,13 +90,13 @@ func (d *Discover) StartDiscover() error {
 		Event: fmt.Sprintf("自動発見開始 %s - %s", d.ds.DiscoverConf.StartIP, d.ds.DiscoverConf.EndIP),
 	})
 	d.Stop = false
-	d.Total = eip - sip + 1
-	d.Sent = 0
-	d.Found = 0
-	d.Snmp = 0
-	d.Running = true
-	d.StartTime = time.Now().UnixNano()
-	d.EndTime = 0
+	d.Stat.Total = eip - sip + 1
+	d.Stat.Sent = 0
+	d.Stat.Found = 0
+	d.Stat.Snmp = 0
+	d.Stat.Running = true
+	d.Stat.StartTime = time.Now().UnixNano()
+	d.Stat.EndTime = 0
 	d.X = (1 + d.ds.DiscoverConf.X/GRID) * GRID
 	d.Y = (1 + d.ds.DiscoverConf.Y/GRID) * GRID
 	var mu sync.Mutex
@@ -102,8 +104,8 @@ func (d *Discover) StartDiscover() error {
 	go func() {
 		for ; sip <= eip && !d.Stop; sip++ {
 			sem <- true
-			d.Sent++
-			d.Progress = (100 * d.Sent) / d.Total
+			d.Stat.Sent++
+			d.Stat.Progress = (100 * d.Stat.Sent) / d.Stat.Total
 			go func(ip uint32) {
 				defer func() {
 					<-sem
@@ -125,14 +127,14 @@ func (d *Discover) StartDiscover() error {
 					mu.Lock()
 					dent.X = d.X
 					dent.Y = d.Y
-					d.Found++
+					d.Stat.Found++
 					d.X += GRID
 					if d.X > GRID*10 {
 						d.X = GRID
 						d.Y += GRID
 					}
 					if dent.SysName != "" {
-						d.Snmp++
+						d.Stat.Snmp++
 					}
 					d.addFoundNode(dent)
 					mu.Unlock()
@@ -142,8 +144,8 @@ func (d *Discover) StartDiscover() error {
 		for len(sem) > 0 {
 			time.Sleep(time.Millisecond * 10)
 		}
-		d.Running = false
-		d.EndTime = time.Now().UnixNano()
+		d.Stat.Running = false
+		d.Stat.EndTime = time.Now().UnixNano()
 		d.ds.AddEventLog(datastore.EventLogEnt{
 			Type:  "system",
 			Level: "info",
@@ -165,7 +167,7 @@ func (d *Discover) discoverGetSnmpInfo(t string, dent *discoverInfoEnt) {
 		ExponentialTimeout: true,
 		MaxOids:            gosnmp.MaxOids,
 	}
-	if d.ds.DiscoverConf.SnmpMode != "" {
+	if d.ds.MapConf.SnmpMode != "" {
 		agent.Version = gosnmp.Version3
 		agent.SecurityModel = gosnmp.UserSecurityModel
 		if d.ds.MapConf.SnmpMode == "v3auth" {
@@ -192,21 +194,21 @@ func (d *Discover) discoverGetSnmpInfo(t string, dent *discoverInfoEnt) {
 		return
 	}
 	defer agent.Conn.Close()
-	oids := []string{d.mib.NameToOID("sysName"), d.mib.NameToOID("sysObjectID")}
+	oids := []string{d.ds.MIBDB.NameToOID("sysName"), d.ds.MIBDB.NameToOID("sysObjectID")}
 	result, err := agent.GetNext(oids)
 	if err != nil {
 		log.Printf("discoverGetSnmpInfo err=%v", err)
 		return
 	}
 	for _, variable := range result.Variables {
-		if d.mib.OIDToName(variable.Name) == "sysName.0" {
+		if d.ds.MIBDB.OIDToName(variable.Name) == "sysName.0" {
 			dent.SysName = variable.Value.(string)
-		} else if d.mib.OIDToName(variable.Name) == "sysObjectID.0" {
+		} else if d.ds.MIBDB.OIDToName(variable.Name) == "sysObjectID.0" {
 			dent.SysObjectID = variable.Value.(string)
 		}
 	}
-	_ = agent.Walk(d.mib.NameToOID("ifType"), func(variable gosnmp.SnmpPDU) error {
-		a := strings.Split(d.mib.OIDToName(variable.Name), ".")
+	_ = agent.Walk(d.ds.MIBDB.NameToOID("ifType"), func(variable gosnmp.SnmpPDU) error {
+		a := strings.Split(d.ds.MIBDB.OIDToName(variable.Name), ".")
 		if len(a) == 2 &&
 			a[0] == "ifType" &&
 			gosnmp.ToBigInt(variable.Value).Int64() == 6 {

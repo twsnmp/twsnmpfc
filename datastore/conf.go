@@ -52,13 +52,12 @@ type NotifyConfEnt struct {
 }
 
 type DiscoverConfEnt struct {
-	SnmpMode string
-	StartIP  string
-	EndIP    string
-	Timeout  int
-	Retry    int
-	X        int
-	Y        int
+	StartIP string
+	EndIP   string
+	Timeout int
+	Retry   int
+	X       int
+	Y       int
 }
 
 func (ds *DataStore) initConf() {
