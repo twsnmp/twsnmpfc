@@ -1,24 +1,79 @@
 <template>
-  <v-card v-if="$fetchState.pending" max-width="500" class="mx-auto">
-    <v-alert type="info">
-      読み込み中.....
-      <v-progress-circular indeterminate color="primary"></v-progress-circular>
-    </v-alert>
-  </v-card>
-  <v-card v-else-if="$fetchState.error" max-width="500" class="mx-auto">
+  <v-card v-if="$fetchState.error" max-width="500" class="mx-auto">
     <v-alert type="error" dense> 自動発見の設定を取得できません </v-alert>
     <v-card-actions>
       <v-btn color="primary" dark @click="$fetch"> 再試行 </v-btn>
     </v-card-actions>
   </v-card>
   <v-card v-else-if="discover.Stat.Running" max-width="600" class="mx-auto">
-    <v-alert type="info" dense>
-      自動発見を実行中です。{{ discover.Stat.Progress }}%完了:
-      {{ discover.Stat.Found }}/{{ discover.Stat.Total }}
-    </v-alert>
+    <v-card-title primary-title> 自動発見 </v-card-title>
+    <v-list-item three-line>
+      <v-list-item-content>
+        <v-list-item-title>実行状況</v-list-item-title>
+        <v-list-item-subtitle>
+          <v-progress-linear
+            v-model="foundRate"
+            :buffer-value="progress"
+            height="20"
+            stream
+          ></v-progress-linear>
+        </v-list-item-subtitle>
+        <v-list-item-subtitle>
+          全アドレス:{{ discover.Stat.Total }} / 送信済み:{{
+            discover.Stat.Sent
+          }}
+          / 発見:{{ discover.Stat.Found }} 経過時間:{{ time }}秒 / 速度{{
+            speed
+          }}件/秒
+        </v-list-item-subtitle>
+      </v-list-item-content>
+    </v-list-item>
+    <v-list-item three-line>
+      <v-list-item-content>
+        <v-list-item-title>SNMPノード</v-list-item-title>
+        <v-list-item-subtitle>
+          <v-progress-linear v-model="snmpRate" height="20"></v-progress-linear>
+        </v-list-item-subtitle>
+        <v-list-item-subtitle>
+          発見数:{{ discover.Stat.Snmp }}
+        </v-list-item-subtitle>
+      </v-list-item-content>
+    </v-list-item>
+    <v-list-item three-line>
+      <v-list-item-content>
+        <v-list-item-title>Webサーバー</v-list-item-title>
+        <v-list-item-subtitle>
+          <v-progress-linear v-model="webRate" height="20"></v-progress-linear>
+        </v-list-item-subtitle>
+        <v-list-item-subtitle>
+          発見数:{{ discover.Stat.Web }}
+        </v-list-item-subtitle>
+      </v-list-item-content>
+    </v-list-item>
+    <v-list-item three-line>
+      <v-list-item-content>
+        <v-list-item-title>メールサーバー</v-list-item-title>
+        <v-list-item-subtitle>
+          <v-progress-linear v-model="mailRate" height="20"></v-progress-linear>
+        </v-list-item-subtitle>
+        <v-list-item-subtitle>
+          発見数:{{ discover.Stat.Mail }}
+        </v-list-item-subtitle>
+      </v-list-item-content>
+    </v-list-item>
+    <v-list-item three-line>
+      <v-list-item-content>
+        <v-list-item-title>SSHサーバー</v-list-item-title>
+        <v-list-item-subtitle>
+          <v-progress-linear v-model="sshRate" height="20"></v-progress-linear>
+        </v-list-item-subtitle>
+        <v-list-item-subtitle>
+          発見数:{{ discover.Stat.SSH }}
+        </v-list-item-subtitle>
+      </v-list-item-content>
+    </v-list-item>
     <v-card-actions>
-      <v-btn color="primary" dark @click="$fetch"> 更新 </v-btn>
-      <v-btn color="error" dark @click="stop"> 停止 </v-btn>
+      <v-btn color="error" :disabled="reqStop" dark @click="stop"> 停止 </v-btn>
     </v-card-actions>
   </v-card>
   <v-card v-else max-width="600" class="mx-auto">
@@ -91,13 +146,67 @@ export default {
         Stat: {
           Running: false,
           Total: 0,
-          Progress: 0,
+          Sent: 0,
           Found: 0,
           Snmp: 0,
+          Web: 0,
+          Mail: 0,
+          SSH: 0,
+          StartTime: 0,
+          Now: 0,
         },
       },
       error: false,
+      reqStop: false,
     }
+  },
+  computed: {
+    progress() {
+      if (!this.discover.Stat.Total) {
+        return 0
+      }
+      return (100 * this.discover.Stat.Sent) / this.discover.Stat.Total
+    },
+    foundRate() {
+      if (!this.discover.Stat.Total) {
+        return 0
+      }
+      return (100 * this.discover.Stat.Found) / this.discover.Stat.Total
+    },
+    snmpRate() {
+      if (!this.discover.Stat.Found) {
+        return 0
+      }
+      return (100 * this.discover.Stat.Snmp) / this.discover.Stat.Found
+    },
+    webRate() {
+      if (!this.discover.Stat.Found) {
+        return 0
+      }
+      return (100 * this.discover.Stat.Web) / this.discover.Stat.Found
+    },
+    mailRate() {
+      if (!this.discover.Stat.Found) {
+        return 0
+      }
+      return (100 * this.discover.Stat.Mail) / this.discover.Stat.Found
+    },
+    sshRate() {
+      if (!this.discover.Stat.Found) {
+        return 0
+      }
+      return (100 * this.discover.Stat.SSH) / this.discover.Stat.Found
+    },
+    time() {
+      return this.discover.Stat.Now - this.discover.Stat.StartTime
+    },
+    speed() {
+      const diff = this.discover.Stat.Now - this.discover.Stat.StartTime
+      if (!diff) {
+        return 0
+      }
+      return (this.discover.Stat.Sent / diff).toFixed(2)
+    },
   },
   activated() {
     if (this.$fetchState.timestamp <= Date.now() - 10000) {
@@ -109,21 +218,23 @@ export default {
       this.$axios
         .post('/api/discover/start', this.discover.Conf)
         .then((r) => {
-          this.$fetch()
+          this.reqStop = false
+          this.discover.Stat.Running = true
+          this.update()
         })
         .catch((e) => {
           this.error = true
         })
     },
     stop() {
-      this.$axios
-        .post('/api/discover/stop', {})
-        .then((r) => {
-          this.$fetch()
-        })
-        .catch((e) => {
-          this.error = true
-        })
+      this.reqStop = true
+      this.$axios.post('/api/discover/stop', {})
+    },
+    update() {
+      if (this.discover.Stat.Running) {
+        this.$fetch()
+        setTimeout(this.update, 1000 * 10)
+      }
     },
   },
 }

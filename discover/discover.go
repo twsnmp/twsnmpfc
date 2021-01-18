@@ -38,9 +38,11 @@ type DiscoverStat struct {
 	Sent      uint32
 	Found     uint32
 	Snmp      uint32
-	Progress  uint32
+	Web       uint32
+	Mail      uint32
+	SSH       uint32
 	StartTime int64
-	EndTime   int64
+	Now       int64
 }
 
 type discoverInfoEnt struct {
@@ -49,6 +51,7 @@ type discoverInfoEnt struct {
 	SysName     string
 	SysObjectID string
 	IfIndexList []string
+	ServerList  map[string]bool
 	X           int
 	Y           int
 }
@@ -94,9 +97,12 @@ func (d *Discover) StartDiscover() error {
 	d.Stat.Sent = 0
 	d.Stat.Found = 0
 	d.Stat.Snmp = 0
+	d.Stat.Web = 0
+	d.Stat.Mail = 0
+	d.Stat.SSH = 0
 	d.Stat.Running = true
-	d.Stat.StartTime = time.Now().UnixNano()
-	d.Stat.EndTime = 0
+	d.Stat.StartTime = time.Now().Unix()
+	d.Stat.Now = d.Stat.StartTime
 	d.X = (1 + d.ds.DiscoverConf.X/GRID) * GRID
 	d.Y = (1 + d.ds.DiscoverConf.Y/GRID) * GRID
 	var mu sync.Mutex
@@ -105,7 +111,7 @@ func (d *Discover) StartDiscover() error {
 		for ; sip <= eip && !d.Stop; sip++ {
 			sem <- true
 			d.Stat.Sent++
-			d.Stat.Progress = (100 * d.Stat.Sent) / d.Stat.Total
+			d.Stat.Now = time.Now().Unix()
 			go func(ip uint32) {
 				defer func() {
 					<-sem
@@ -119,11 +125,13 @@ func (d *Discover) StartDiscover() error {
 					dent := discoverInfoEnt{
 						IP:          ipstr,
 						IfIndexList: []string{},
+						ServerList:  make(map[string]bool),
 					}
 					if names, err := net.LookupAddr(ipstr); err == nil && len(names) > 0 {
 						dent.HostName = names[0]
 					}
-					d.discoverGetSnmpInfo(ipstr, &dent)
+					d.getSnmpInfo(ipstr, &dent)
+					d.checkServer(&dent)
 					mu.Lock()
 					dent.X = d.X
 					dent.Y = d.Y
@@ -136,7 +144,16 @@ func (d *Discover) StartDiscover() error {
 					if dent.SysName != "" {
 						d.Stat.Snmp++
 					}
-					d.addFoundNode(dent)
+					if dent.ServerList["http"] || dent.ServerList["https"] {
+						d.Stat.Web++
+					}
+					if dent.ServerList["smtp"] || dent.ServerList["imap"] || dent.ServerList["pop3"] {
+						d.Stat.Mail++
+					}
+					if dent.ServerList["ssh"] {
+						d.Stat.SSH++
+					}
+					d.addFoundNode(&dent)
 					mu.Unlock()
 				}
 			}(sip)
@@ -145,7 +162,6 @@ func (d *Discover) StartDiscover() error {
 			time.Sleep(time.Millisecond * 10)
 		}
 		d.Stat.Running = false
-		d.Stat.EndTime = time.Now().UnixNano()
 		d.ds.AddEventLog(datastore.EventLogEnt{
 			Type:  "system",
 			Level: "info",
@@ -155,15 +171,15 @@ func (d *Discover) StartDiscover() error {
 	return nil
 }
 
-func (d *Discover) discoverGetSnmpInfo(t string, dent *discoverInfoEnt) {
+func (d *Discover) getSnmpInfo(t string, dent *discoverInfoEnt) {
 	agent := &gosnmp.GoSNMP{
 		Target:             t,
 		Port:               161,
 		Transport:          "udp",
 		Community:          d.ds.MapConf.Community,
 		Version:            gosnmp.Version2c,
-		Timeout:            time.Duration(2) * time.Second,
-		Retries:            1,
+		Timeout:            time.Duration(d.ds.DiscoverConf.Timeout) * time.Second,
+		Retries:            d.ds.DiscoverConf.Retry,
 		ExponentialTimeout: true,
 		MaxOids:            gosnmp.MaxOids,
 	}
@@ -218,7 +234,7 @@ func (d *Discover) discoverGetSnmpInfo(t string, dent *discoverInfoEnt) {
 	})
 }
 
-func (d *Discover) addFoundNode(dent discoverInfoEnt) {
+func (d *Discover) addFoundNode(dent *discoverInfoEnt) {
 	n := datastore.NodeEnt{
 		Name:  dent.HostName,
 		IP:    dent.IP,
@@ -252,6 +268,10 @@ func (d *Discover) addFoundNode(dent discoverInfoEnt) {
 		NodeName: n.Name,
 		Event:    "自動発見により追加",
 	})
+	d.addPollingToNode(dent, &n)
+}
+
+func (d *Discover) addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 	p := &datastore.PollingEnt{
 		NodeID:  n.ID,
 		Name:    "PING監視",
@@ -265,6 +285,54 @@ func (d *Discover) addFoundNode(dent discoverInfoEnt) {
 	if err := d.ds.AddPolling(p); err != nil {
 		log.Printf("discover AddPolling err=%v", err)
 		return
+	}
+	for s := range dent.ServerList {
+		name := ""
+		ptype := ""
+		polling := ""
+		switch s {
+		case "http":
+			name = "HTTPサーバー監視"
+			ptype = "http"
+			polling = "http://" + n.IP
+		case "https":
+			name = "HTTPSサーバー監視"
+			ptype = "https"
+			polling = "https://" + n.IP
+		case "smtp":
+			name = "SMTPサーバー監視"
+			ptype = "tcp"
+			polling = "25"
+		case "pop3":
+			name = "POP3サーバー監視"
+			ptype = "tcp"
+			polling = "110"
+		case "imap":
+			name = "IMAPサーバー監視"
+			ptype = "tcp"
+			polling = "143"
+		case "ssh":
+			name = "IMAPサーバー監視"
+			ptype = "tcp"
+			polling = "22"
+		default:
+			continue
+		}
+		p = &datastore.PollingEnt{
+			NodeID:  n.ID,
+			Name:    name,
+			Type:    ptype,
+			Polling: polling,
+			Level:   "low",
+			State:   "unknown",
+			PollInt: d.ds.MapConf.PollInt,
+			Timeout: d.ds.MapConf.Timeout,
+			Retry:   d.ds.MapConf.Retry,
+		}
+		if err := d.ds.AddPolling(p); err != nil {
+			log.Printf("discover AddPolling err=%v", err)
+			return
+		}
 	}
 	if dent.SysObjectID == "" {
 		return
@@ -301,4 +369,30 @@ func (d *Discover) addFoundNode(dent discoverInfoEnt) {
 			return
 		}
 	}
+}
+
+// サーバーの確認
+func (d *Discover) checkServer(dent *discoverInfoEnt) {
+	checkList := map[string]string{
+		"http":  "80",
+		"https": "443",
+		"pop3":  "110",
+		"imap":  "143",
+		"smtp":  "25",
+		"ssh":   "22",
+	}
+	for s, p := range checkList {
+		if d.doTCPConnect(dent.IP + ":" + p) {
+			dent.ServerList[s] = true
+		}
+	}
+}
+
+func (d *Discover) doTCPConnect(dst string) bool {
+	conn, err := net.DialTimeout("tcp", dst, time.Duration(d.ds.DiscoverConf.Timeout)*time.Second)
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+	return true
 }

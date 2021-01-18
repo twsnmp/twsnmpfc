@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -24,14 +25,17 @@ func getDiscover(c echo.Context) error {
 func postDiscoverStart(c echo.Context) error {
 	dc := new(datastore.DiscoverConfEnt)
 	if err := c.Bind(dc); err != nil {
+		log.Printf("postDiscoverStart err=%v", err)
 		return echo.ErrBadRequest
 	}
 	api := c.Get("api").(*WebAPI)
 	api.DataStore.DiscoverConf = *dc
 	if err := api.DataStore.SaveDiscoverConfToDB(); err != nil {
+		log.Printf("postDiscoverStart err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if err := api.Discover.StartDiscover(); err != nil {
+		log.Printf("postDiscoverStart err=%v", err)
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
