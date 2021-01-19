@@ -42,6 +42,7 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.GET("/discover", getDiscover)
 	r.POST("/discover/start", postDiscoverStart)
 	r.POST("/discover/stop", postDiscoverStop)
+	r.GET("/nodes", getNodes)
 
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
 }
