@@ -26,6 +26,11 @@ type WebAPI struct {
 	Password  string
 }
 
+// 削除のためにIDだけ受け取る
+type idWebAPI struct {
+	ID string
+}
+
 func Init(e *echo.Echo, p *WebAPI) {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
@@ -43,6 +48,8 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.POST("/discover/start", postDiscoverStart)
 	r.POST("/discover/stop", postDiscoverStop)
 	r.GET("/nodes", getNodes)
+	r.POST("/node/delete", postNodeDelete)
+	r.POST("/node/update", postNodeUpdate)
 
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
 }

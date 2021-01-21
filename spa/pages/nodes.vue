@@ -12,6 +12,12 @@
           hide-details
         ></v-text-field>
       </v-card-title>
+      <v-alert :value="deleteError" type="error" dense dismissible>
+        ノードを削除できませんでした
+      </v-alert>
+      <v-alert :value="updateError" type="error" dense dismissible>
+        ノードを変更できませんでした
+      </v-alert>
       <v-data-table :headers="headers" :items="nodes" :search="search" dense>
         <template v-slot:[`item.State`]="{ item }">
           <v-icon :color="getStateColor(item.State)">{{
@@ -20,30 +26,40 @@
           {{ getStateName(item.State) }}
         </template>
         <template v-slot:[`item.actions`]="{ item }">
-          <v-icon small class="mr-2" @click="editItem(item)">
+          <v-icon small class="mr-2" @click="editNodeFunc(item)">
             mdi-pencil
           </v-icon>
-          <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+          <v-icon small @click="deleteNodeFunc(item)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
     </v-card>
-    <v-dialog v-model="dialog" max-width="500px">
+    <v-dialog v-model="editDialog" max-width="500px">
       <v-card>
         <v-card-title>
           <span class="headline">ノード編集</span>
         </v-card-title>
         <v-card-text>
-          <v-text-field v-model="editedItem.Name" label="名前"></v-text-field>
-          <v-text-field
-            v-model="editedItem.IP"
-            label="IPアドレス"
-          ></v-text-field>
-          <v-text-field v-model="editedItem.Descr" label="説明"></v-text-field>
+          <v-text-field v-model="editNode.Name" label="名前"></v-text-field>
+          <v-text-field v-model="editNode.IP" label="IPアドレス"></v-text-field>
+          <v-text-field v-model="editNode.Descr" label="説明"></v-text-field>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="close">キャンセル</v-btn>
-          <v-btn color="blue darken-1" text @click="save">保存</v-btn>
+          <v-btn color="normal" dark @click="closeEdit">キャンセル</v-btn>
+          <v-btn color="primary" dark @click="doUpdateNode">保存</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="deleteDialog" max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ノード削除</span>
+        </v-card-title>
+        <v-card-text> ノード{{ deleteNode.Name }}を削除しますか？ </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="closeDelete">キャンセル</v-btn>
+          <v-btn color="error" @click="doDeleteNode">削除</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -57,13 +73,14 @@ export default {
   },
   data() {
     return {
-      dialog: false,
-      editedIndex: -1,
-      editedItem: {
-        Name: '',
-        Descr: '',
-        IP: '',
-      },
+      editDialog: false,
+      deleteDialog: false,
+      editIndex: -1,
+      deleteIndex: -1,
+      deleteError: false,
+      updateError: false,
+      editNode: {},
+      deleteNode: {},
       search: '',
       headers: [
         {
@@ -122,29 +139,47 @@ export default {
           return 'comment-question-outline'
       }
     },
-    editItem(item) {
-      this.editedIndex = this.nodes.indexOf(item)
-      this.editedItem = Object.assign({}, item)
-      this.dialog = true
+    editNodeFunc(item) {
+      this.editIndex = this.nodes.indexOf(item)
+      this.editNode = Object.assign({}, item)
+      this.editDialog = true
     },
-
-    deleteItem(item) {
-      const index = this.nodes.indexOf(item)
-      confirm('このノードを削除しますか?') && this.nodes.splice(index, 1)
+    deleteNodeFunc(item) {
+      this.deleteIndex = this.nodes.indexOf(item)
+      this.deleteNode = Object.assign({}, item)
+      this.deleteDialog = true
     },
-
-    close() {
-      this.dialog = false
+    doDeleteNode() {
+      this.nodes.splice(this.deleteIndex, 1)
+      this.$axios
+        .post('/api/node/delete', { ID: this.deleteNode.ID })
+        .catch((e) => {
+          this.deleteError = true
+          this.$fetch()
+        })
+      this.closeDelete()
+    },
+    closeDelete() {
+      this.deleteDialog = false
       this.$nextTick(() => {
-        this.editedIndex = -1
+        this.deleteIndex = -1
       })
     },
-
-    save() {
-      if (this.editedIndex > -1) {
-        Object.assign(this.nodes[this.editedIndex], this.editedItem)
+    closeEdit() {
+      this.editDialog = false
+      this.$nextTick(() => {
+        this.editIndex = -1
+      })
+    },
+    doUpdateNode() {
+      if (this.editIndex > -1) {
+        Object.assign(this.nodes[this.editIndex], this.editNode)
+        this.$axios.post('/api/node/update', this.editNode).catch((e) => {
+          this.updateError = true
+          this.$fetch()
+        })
       }
-      this.close()
+      this.closeEdit()
     },
   },
 }
