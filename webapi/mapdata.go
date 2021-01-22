@@ -54,3 +54,59 @@ func postNodeUpdate(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
+
+type pollingsWebAPI struct {
+	Pollings []*datastore.PollingEnt
+	NodeList []selectEntWebAPI
+}
+
+func getPollings(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	r := pollingsWebAPI{}
+	api.DataStore.ForEachNodes(func(n *datastore.NodeEnt) bool {
+		r.NodeList = append(r.NodeList, selectEntWebAPI{Text: n.Name, Value: n.ID})
+		return true
+	})
+	api.DataStore.ForEachPollings(func(p *datastore.PollingEnt) bool {
+		r.Pollings = append(r.Pollings, p)
+		return true
+	})
+	return c.JSON(http.StatusOK, r)
+}
+
+func postPollingDelete(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	id := new(idWebAPI)
+	if err := c.Bind(id); err != nil {
+		log.Printf("postPollingDelete err=%v", err)
+		return echo.ErrBadRequest
+	}
+	if err := api.DataStore.DeletePolling(id.ID); err != nil {
+		log.Printf("postPollingDelete err=%v", err)
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postPollingUpdate(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	pu := new(datastore.PollingEnt)
+	if err := c.Bind(pu); err != nil {
+		log.Printf("postNodeUpdate err=%v", err)
+		return echo.ErrBadRequest
+	}
+	p := api.DataStore.GetPolling(pu.ID)
+	if p == nil {
+		log.Printf("postPollingUpdate Node not found ID=%s", pu.ID)
+		return echo.ErrBadRequest
+	}
+	p.Name = pu.Name
+	p.NodeID = pu.NodeID
+	p.Polling = pu.Polling
+	log.Printf("polling=%#v", p)
+	if err := api.DataStore.UpdatePolling(p); err != nil {
+		log.Printf("postNodeUpdate err=%v", err)
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
