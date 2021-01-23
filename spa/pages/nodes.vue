@@ -20,10 +20,10 @@
       </v-alert>
       <v-data-table :headers="headers" :items="nodes" :search="search" dense>
         <template v-slot:[`item.State`]="{ item }">
-          <v-icon :color="getStateColor(item.State)">{{
-            getIconName(item.Icon)
+          <v-icon :color="$getStateColor(item.State)">{{
+            $getIconName(item.Icon)
           }}</v-icon>
-          {{ getStateName(item.State) }}
+          {{ $getStateName(item.State) }}
         </template>
         <template v-slot:[`item.actions`]="{ item }">
           <v-icon small class="mr-2" @click="editNodeFunc(item)">
@@ -36,11 +36,40 @@
     <v-dialog v-model="editDialog" max-width="500px">
       <v-card>
         <v-card-title>
-          <span class="headline">ノード編集</span>
+          <span class="headline">ノード設定</span>
         </v-card-title>
         <v-card-text>
           <v-text-field v-model="editNode.Name" label="名前"></v-text-field>
           <v-text-field v-model="editNode.IP" label="IPアドレス"></v-text-field>
+          <v-select v-model="editNode.Icon" :items="$iconList" label="アイコン">
+          </v-select>
+          <v-select
+            v-model="editNode.AddrMode"
+            :items="$addrModeList"
+            label="アドレスモード"
+          >
+          </v-select>
+          <v-select
+            v-model="editNode.SnmpMode"
+            :items="$snmpModeList"
+            label="SNMPモード"
+          >
+          </v-select>
+          <v-text-field
+            v-model="editNode.Community"
+            label="Community"
+          ></v-text-field>
+          <v-text-field v-model="editNode.User" label="ユーザー"></v-text-field>
+          <v-text-field
+            v-model="editNode.Password"
+            type="password"
+            label="パスワード"
+          ></v-text-field>
+          <v-text-field
+            v-model="editNode.PublicKey"
+            label="公開鍵"
+          ></v-text-field>
+          <v-text-field v-model="editNode.URL" label="URL"></v-text-field>
           <v-text-field v-model="editNode.Descr" label="説明"></v-text-field>
         </v-card-text>
         <v-card-actions>
@@ -83,10 +112,7 @@ export default {
       deleteNode: {},
       search: '',
       headers: [
-        {
-          text: '状態',
-          value: 'State',
-        },
+        { text: '状態', value: 'State' },
         { text: '名前', value: 'Name' },
         { text: 'IPアドレス', value: 'IP' },
         { text: 'MACアドレス', value: 'MAC' },
@@ -97,48 +123,6 @@ export default {
     }
   },
   methods: {
-    getStateColor(state) {
-      switch (state) {
-        case 'high':
-          return 'red'
-        case 'low':
-          return 'pink'
-        case 'warn':
-          return 'yellow'
-        case 'repair':
-          return 'blue'
-        case 'normal':
-          return 'green'
-        default:
-          return 'gray'
-      }
-    },
-    getStateName(state) {
-      switch (state) {
-        case 'high':
-          return '重度'
-        case 'low':
-          return '軽度'
-        case 'warn':
-          return '注意'
-        case 'repair':
-          return '復帰'
-        case 'normal':
-          return '正常'
-        default:
-          return '不明'
-      }
-    },
-    getIconName(icon) {
-      switch (icon) {
-        case 'desktop':
-          return 'mdi-desktop-mac'
-        case 'hdd':
-          return 'mdi-router-network'
-        default:
-          return 'comment-question-outline'
-      }
-    },
     editNodeFunc(item) {
       this.editIndex = this.nodes.indexOf(item)
       this.editNode = Object.assign({}, item)

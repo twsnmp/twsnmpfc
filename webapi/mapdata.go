@@ -39,6 +39,7 @@ func postNodeUpdate(c echo.Context) error {
 		log.Printf("postNodeUpdate err=%v", err)
 		return echo.ErrBadRequest
 	}
+	// ここで入力チェック
 	n := api.DataStore.GetNode(nu.ID)
 	if n == nil {
 		log.Printf("postNodeUpdate Node not found ID=%s", nu.ID)
@@ -47,7 +48,15 @@ func postNodeUpdate(c echo.Context) error {
 	n.Name = nu.Name
 	n.Descr = nu.Descr
 	n.IP = nu.IP
-	log.Printf("node=%#v", n)
+	n.Icon = nu.Icon
+	n.SnmpMode = nu.SnmpMode
+	n.Community = nu.Community
+	n.User = nu.User
+	n.Password = nu.Password
+	n.PublicKey = nu.PublicKey
+	n.URL = nu.URL
+	n.Type = nu.Type
+	n.AddrMode = nu.AddrMode
 	if err := api.DataStore.UpdateNode(n); err != nil {
 		log.Printf("postNodeUpdate err=%v", err)
 		return echo.ErrBadRequest
@@ -95,6 +104,7 @@ func postPollingUpdate(c echo.Context) error {
 		log.Printf("postNodeUpdate err=%v", err)
 		return echo.ErrBadRequest
 	}
+	// ここで入力データのチェックをする
 	p := api.DataStore.GetPolling(pu.ID)
 	if p == nil {
 		log.Printf("postPollingUpdate Node not found ID=%s", pu.ID)
@@ -102,8 +112,15 @@ func postPollingUpdate(c echo.Context) error {
 	}
 	p.Name = pu.Name
 	p.NodeID = pu.NodeID
+	p.Type = pu.Type
 	p.Polling = pu.Polling
-	log.Printf("polling=%#v", p)
+	p.Level = pu.Level
+	p.PollInt = pu.PollInt
+	p.Timeout = pu.Timeout
+	p.Retry = pu.Retry
+	p.LogMode = pu.LogMode
+	p.NextTime = 0
+	p.State = "unknown"
 	if err := api.DataStore.UpdatePolling(p); err != nil {
 		log.Printf("postNodeUpdate err=%v", err)
 		return echo.ErrBadRequest

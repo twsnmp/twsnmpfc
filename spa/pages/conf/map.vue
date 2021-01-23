@@ -1,11 +1,5 @@
 <template>
-  <v-card v-if="$fetchState.pending" max-width="500" class="mx-auto">
-    <v-alert type="info">
-      読み込み中.....
-      <v-progress-circular indeterminate color="primary"></v-progress-circular>
-    </v-alert>
-  </v-card>
-  <v-card v-else-if="$fetchState.error" max-width="500" class="mx-auto">
+  <v-card v-if="$fetchState.error" max-width="500" class="mx-auto">
     <v-alert type="error" dense> マップ設定を取得できません </v-alert>
     <v-card-actions>
       <v-btn color="primary" dark @click="$fetch"> 再試行 </v-btn>
@@ -88,7 +82,7 @@
         </v-slider>
         <v-select
           v-model="mapconf.SnmpMode"
-          :items="snmpModeList"
+          :items="$snmpModeList"
           label="SNMPモード"
         >
         </v-select>
@@ -113,28 +107,30 @@
         />
         <v-select
           v-model="mapconf.AILevel"
-          :items="aiLevelList"
+          :items="$levelList"
           label="AI障害判定レベル"
         >
         </v-select>
         <v-select
           v-model="mapconf.AIThreshold"
-          :items="aiThList"
+          :items="$aiThList"
           label="AI閾値"
         >
         </v-select>
-        <v-switch
-          v-model="mapconf.EnableSyslogd"
-          label="syslogを受信する"
-        ></v-switch>
-        <v-switch
-          v-model="mapconf.EnableTrapd"
-          label="SNMP TRAPを受信する"
-        ></v-switch>
-        <v-switch
-          v-model="mapconf.EnableNetflowd"
-          label="NetFlowを受信する"
-        ></v-switch>
+        <v-row justify="space-around">
+          <v-switch
+            v-model="mapconf.EnableSyslogd"
+            label="syslog受信"
+          ></v-switch>
+          <v-switch
+            v-model="mapconf.EnableTrapd"
+            label="SNMP TRAP受信"
+          ></v-switch>
+          <v-switch
+            v-model="mapconf.EnableNetflowd"
+            label="NetFlow受信"
+          ></v-switch>
+        </v-row>
         <v-slider
           v-model="mapconf.LogDispSize"
           label="ログ表示件数"
@@ -206,52 +202,6 @@ export default {
         AILevel: 'high',
         AIThreshold: 81,
       },
-      snmpModeList: [
-        {
-          text: 'SNMPv2c',
-          value: '',
-        },
-        {
-          text: 'SNMPv3認証',
-          value: 'v3auth',
-        },
-        {
-          text: 'SNMPv3認証暗号化',
-          value: 'v3authpriv',
-        },
-      ],
-      aiLevelList: [
-        {
-          text: '重度',
-          value: 'high',
-        },
-        {
-          text: '軽度',
-          value: 'low',
-        },
-        {
-          text: '注意',
-          value: 'warn',
-        },
-        {
-          text: '情報',
-          value: 'info',
-        },
-      ],
-      aiThList: [
-        {
-          text: '0.01%以下',
-          value: 88,
-        },
-        {
-          text: '0.1%以下',
-          value: 81,
-        },
-        {
-          text: '1%以下',
-          value: 74,
-        },
-      ],
       error: false,
       saved: false,
     }
