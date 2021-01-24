@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <v-row justify="center">
     <v-card>
       <v-card-title>
         ノードリスト
@@ -92,7 +92,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+  </v-row>
 </template>
 
 <script>

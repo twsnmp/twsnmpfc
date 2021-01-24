@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rakyll/statik/fs"
@@ -46,7 +48,12 @@ func main() {
 		log.Fatalln(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	ds := datastore.NewDataStore(dataStorePath, statikFS)
+	ds := datastore.NewDataStore(ctx, dataStorePath, statikFS)
+	ds.AddEventLog(&datastore.EventLogEnt{
+		Type:  "system",
+		Level: "info",
+		Event: "TWSNMP FC起動",
+	})
 	pi := ping.NewPing(ctx)
 	di := discover.NewDiscover(ds, pi)
 	rp := report.NewReport(ctx, ds)
@@ -63,8 +70,26 @@ func main() {
 	}
 	e := echo.New()
 	webapi.Init(e, w)
-	if err := e.Start(":" + port); err != nil {
-		log.Println(err)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	go func() {
+		if err := e.Start(":" + port); err != nil {
+			log.Println(err)
+		}
+	}()
+	log.Println("Sig")
+	sig := <-quit
+	log.Println(sig)
+	ds.AddEventLog(&datastore.EventLogEnt{
+		Type:  "system",
+		Level: "info",
+		Event: "TWSNMP FC停止",
+	})
+	ctxStopWeb, cancelWeb := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelWeb()
+	if err := e.Shutdown(ctxStopWeb); err != nil {
+		log.Printf("webui shutdown err=%v", err)
 	}
 	cancel()
+	time.Sleep(time.Second * 2)
 }

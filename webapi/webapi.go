@@ -59,6 +59,7 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.GET("/pollings", getPollings)
 	r.POST("/polling/delete", postPollingDelete)
 	r.POST("/polling/update", postPollingUpdate)
+	r.POST("/eventlogs", postEventLogs)
 
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
 }

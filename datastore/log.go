@@ -53,66 +53,71 @@ type LogFilterEnt struct {
 	LogType   string
 }
 
-func (ds *DataStore) AddEventLog(e EventLogEnt) {
+func (ds *DataStore) AddEventLog(e *EventLogEnt) {
 	e.Time = time.Now().UnixNano()
+	log.Printf("log=%v", e)
 	ds.eventLogCh <- e
 }
 
-func (ds *DataStore) GetEventLogList(startID string, n int) []EventLogEnt {
-	ret := []EventLogEnt{}
+func (ds *DataStore) ForEachEventLog(st, et int64, f func(*EventLogEnt) bool) error {
 	if ds.db == nil {
-		return ret
+		return ErrDBNotOpen
 	}
-	_ = ds.db.View(func(tx *bbolt.Tx) error {
+	sk := fmt.Sprintf("%016x", st)
+	return ds.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("logs"))
 		if b == nil {
 			return nil
 		}
 		c := b.Cursor()
 		i := 0
-		for k, v := c.Last(); k != nil && i < n && string(k) != startID; k, v = c.Prev() {
+		j := 0
+		for k, v := c.Seek([]byte(sk)); k != nil && i < ds.MapConf.LogDispSize; k, v = c.Next() {
 			var e EventLogEnt
 			err := json.Unmarshal(v, &e)
+			j++
 			if err != nil {
-				log.Printf("getEventLogList err=%v", err)
 				continue
 			}
-			ret = append(ret, e)
+			if e.Time < st {
+				continue
+			}
+			if e.Time > et {
+				break
+			}
+			f(&e)
 			i++
 		}
+		if i >= ds.MapConf.LogDispSize {
+			return fmt.Errorf("max log size over %d", i)
+		}
+		log.Printf("i=%d j=%d size=%d", i, j, ds.MapConf.LogDispSize)
 		return nil
 	})
-	return ret
 }
 
-func (ds *DataStore) GetNodeEventLogs(nodeID string) []EventLogEnt {
-	ret := []EventLogEnt{}
+func (ds *DataStore) ForEachLastEventLog(skey string, f func(*EventLogEnt) bool) error {
 	if ds.db == nil {
-		return ret
+		return ErrDBNotOpen
 	}
-	_ = ds.db.View(func(tx *bbolt.Tx) error {
+	return ds.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("logs"))
 		if b == nil {
 			return nil
 		}
 		c := b.Cursor()
 		i := 0
-		for k, v := c.Last(); k != nil && i < 1000; k, v = c.Prev() {
+		for k, v := c.Last(); k != nil && i < ds.MapConf.LogDispSize && string(k) != skey; k, v = c.Prev() {
 			var e EventLogEnt
 			err := json.Unmarshal(v, &e)
 			if err != nil {
-				log.Printf("getNodeEventLogs err=%v", err)
 				continue
 			}
-			if nodeID != e.NodeID {
-				continue
-			}
-			ret = append(ret, e)
+			f(&e)
 			i++
 		}
 		return nil
 	})
-	return ret
 }
 
 type logFilterParamEnt struct {
@@ -416,49 +421,43 @@ func (ds *DataStore) deleteOldLogs() {
 	}
 }
 
-func (ds *DataStore) EventLogger(ctx context.Context) {
+func (ds *DataStore) eventLogger(ctx context.Context) {
+	log.Println("Start EventLogger")
 	timer1 := time.NewTicker(time.Minute * 2)
 	timer2 := time.NewTicker(time.Second * 5)
-	list := []EventLogEnt{}
+	list := []*EventLogEnt{}
 	for {
 		select {
 		case <-ctx.Done():
-			{
-				if len(list) > 0 {
-					ds.saveLogList(list)
-				}
-				timer1.Stop()
-				timer2.Stop()
-				return
+			if len(list) > 0 {
+				ds.saveLogList(list)
 			}
+			timer1.Stop()
+			timer2.Stop()
+			return
 		case e := <-ds.eventLogCh:
-			{
-				list = append(list, e)
-				if len(list) > 100 {
-					ds.saveLogList(list)
-					list = []EventLogEnt{}
-				}
+			list = append(list, e)
+			if len(list) > 100 {
+				ds.saveLogList(list)
+				list = []*EventLogEnt{}
 			}
 		case <-timer1.C:
-			{
-				ds.deleteOldLogs()
-			}
+			ds.deleteOldLogs()
 		case <-timer2.C:
-			{
-				if len(list) > 0 {
-					ds.saveLogList(list)
-					list = []EventLogEnt{}
-				}
+			if len(list) > 0 {
+				ds.saveLogList(list)
+				list = []*EventLogEnt{}
 			}
 		}
 	}
 }
 
-func (ds *DataStore) saveLogList(list []EventLogEnt) {
+func (ds *DataStore) saveLogList(list []*EventLogEnt) {
 	if ds.db == nil {
 		return
 	}
-	_ = ds.db.Batch(func(tx *bbolt.Tx) error {
+	log.Printf("saveLogList len=%d", len(list))
+	ds.db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("logs"))
 		for _, e := range list {
 			s, err := json.Marshal(e)

@@ -2,6 +2,7 @@
 package datastore
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -53,7 +54,7 @@ type DataStore struct {
 	dbBackupSize int64
 	dstDB        *bbolt.DB
 	dstTx        *bbolt.Tx
-	eventLogCh   chan EventLogEnt
+	eventLogCh   chan *EventLogEnt
 	delCount     int
 
 	influxc   client.Client
@@ -135,7 +136,7 @@ type DBBackupParamEnt struct {
 	BackupFile string
 }
 
-func NewDataStore(dspath string, fs http.FileSystem) *DataStore {
+func NewDataStore(ctx context.Context, dspath string, fs http.FileSystem) *DataStore {
 	ds := &DataStore{
 		devices:          make(map[string]*DeviceEnt),
 		users:            make(map[string]*UserEnt),
@@ -143,7 +144,7 @@ func NewDataStore(dspath string, fs http.FileSystem) *DataStore {
 		servers:          make(map[string]*ServerEnt),
 		dennyRules:       make(map[string]bool),
 		allowRules:       make(map[string]*AllowRuleEnt),
-		eventLogCh:       make(chan EventLogEnt, 100),
+		eventLogCh:       make(chan *EventLogEnt, 100),
 		pollingTemplates: make(map[string]*PollingTemplateEnt),
 		protMap: map[int]string{
 			1:   "icmp",
@@ -159,6 +160,7 @@ func NewDataStore(dspath string, fs http.FileSystem) *DataStore {
 		tlsCSMap:   make(map[string]string),
 	}
 	ds.InitDataStore(dspath, fs)
+	go ds.eventLogger(ctx)
 	return ds
 }
 
@@ -278,12 +280,6 @@ func (ds *DataStore) CloseDB() {
 	if ds.db == nil {
 		return
 	}
-	ds.saveLogList([]EventLogEnt{{
-		Type:  "system",
-		Level: "info",
-		Time:  time.Now().UnixNano(),
-		Event: "TWSNMP終了",
-	}})
 	ds.db.Close()
 	ds.db = nil
 }
@@ -330,7 +326,7 @@ func (ds *DataStore) UpdateDBStats() {
 		ds.nextBackup += (24 * 3600 * 1000 * 1000 * 1000)
 		go func() {
 			log.Printf("Backup start = %s", ds.DBStats.BackupFile)
-			ds.AddEventLog(EventLogEnt{
+			ds.AddEventLog(&EventLogEnt{
 				Type:  "system",
 				Level: "info",
 				Event: "バックアップ開始:" + ds.DBStats.BackupFile,
@@ -339,7 +335,7 @@ func (ds *DataStore) UpdateDBStats() {
 				log.Printf("backupDB err=%v", err)
 			}
 			log.Printf("Backup end = %s", ds.DBStats.BackupFile)
-			ds.AddEventLog(EventLogEnt{
+			ds.AddEventLog(&EventLogEnt{
 				Type:  "system",
 				Level: "info",
 				Event: "バックアップ終了:" + ds.DBStats.BackupFile,

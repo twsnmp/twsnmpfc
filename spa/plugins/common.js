@@ -1,52 +1,27 @@
+const stateList = [
+  { text: '重度', color: 'red', icon: 'mdi-alert-circle', value: 'high' },
+  { text: '軽度', color: 'pink', icon: 'mdi-alert-circle', value: 'low' },
+  { text: '注意', color: 'yellow', icon: 'mdi-alert', value: 'warn' },
+  { text: '正常', color: 'green', icon: 'mdi-check-circle', value: 'normal' },
+  { text: '復帰', color: 'blue', icon: 'mdi-autorenew', value: 'repair' },
+  { text: '情報', color: 'blue', icon: 'mdi-information', value: 'info' },
+]
+const stateMap = {}
+
+stateList.forEach((e) => {
+  stateMap[e.value] = e
+})
+
 const getStateColor = (state) => {
-  switch (state) {
-    case 'high':
-      return 'red'
-    case 'low':
-      return 'pink'
-    case 'warn':
-      return 'yellow'
-    case 'repair':
-      return 'blue'
-    case 'normal':
-      return 'green'
-    default:
-      return 'gray'
-  }
+  return stateMap[state] ? stateMap[state].color : 'gray'
 }
 
 const getStateName = (state) => {
-  switch (state) {
-    case 'high':
-      return '重度'
-    case 'low':
-      return '軽度'
-    case 'warn':
-      return '注意'
-    case 'repair':
-      return '復帰'
-    case 'normal':
-      return '正常'
-    default:
-      return '不明'
-  }
+  return stateMap[state] ? stateMap[state].text : '不明'
 }
 
 const getStateIconName = (state) => {
-  switch (state) {
-    case 'high':
-      return 'mdi-alert-circle'
-    case 'low':
-      return 'mdi-alert-circle'
-    case 'warn':
-      return 'mdi-alert'
-    case 'repair':
-      return 'mdi-autorenew'
-    case 'normal':
-      return 'mdi-information'
-    default:
-      return 'comment-question-outline'
-  }
+  return stateMap[state] ? stateMap[state].icon : 'mdi-comment-question-outline'
 }
 
 const levelList = [
@@ -54,6 +29,20 @@ const levelList = [
   { text: '軽度', value: 'low' },
   { text: '注意', value: 'warn' },
   { text: '情報', value: 'info' },
+]
+
+const filterEventLevelList = [
+  { text: '指定しない', value: '' },
+  { text: '重度以上', value: 'high' },
+  { text: '軽度以上', value: 'low' },
+  { text: '注意以上', value: 'warn' },
+]
+
+const filterEventTypeList = [
+  { text: '指定しない', value: '' },
+  { text: 'システム', value: 'system' },
+  { text: 'ポーリング', value: 'polling' },
+  { text: 'AI分析', value: 'ai' },
 ]
 
 const typeList = [
@@ -142,4 +131,6 @@ export default (context, inject) => {
   inject('addrModeList', addrModeList)
   inject('snmpModeList', snmpModeList)
   inject('aiThList', aiThList)
+  inject('filterEventLevelList', filterEventLevelList)
+  inject('filterEventTypeList', filterEventTypeList)
 }

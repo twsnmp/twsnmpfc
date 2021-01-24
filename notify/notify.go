@@ -95,7 +95,7 @@ func (n *Notify) checkExecCmd() {
 			log.Printf("execNotifyCmd err=%v", err)
 			r = fmt.Sprintf("エラー=%v", err)
 		}
-		n.ds.AddEventLog(datastore.EventLogEnt{
+		n.ds.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
 			Level: "info",
 			Event: fmt.Sprintf("外部通知コマンド実行 レベル=%d %s", execLevel, r),
@@ -122,7 +122,11 @@ func (n *Notify) execNotifyCmd(level int) error {
 }
 
 func (n *Notify) checkNotify(lastLog string) string {
-	list := n.ds.GetEventLogList(lastLog, 1000)
+	list := []*datastore.EventLogEnt{}
+	n.ds.ForEachLastEventLog(lastLog, func(l *datastore.EventLogEnt) bool {
+		list = append(list, l)
+		return true
+	})
 	if len(list) > 0 {
 		nl := getLevelNum(n.ds.NotifyConf.Level)
 		if nl == 3 {
@@ -163,7 +167,7 @@ func (n *Notify) checkNotify(lastLog string) string {
 				log.Printf("sendMail err=%v", err)
 				r = fmt.Sprintf("失敗 エラー=%v", err)
 			}
-			n.ds.AddEventLog(datastore.EventLogEnt{
+			n.ds.AddEventLog(&datastore.EventLogEnt{
 				Type:  "system",
 				Level: "info",
 				Event: fmt.Sprintf("通知メール送信 %s", r),
@@ -176,7 +180,7 @@ func (n *Notify) checkNotify(lastLog string) string {
 				log.Printf("sendMail err=%v", err)
 				r = fmt.Sprintf("失敗 エラー=%v", err)
 			}
-			n.ds.AddEventLog(datastore.EventLogEnt{
+			n.ds.AddEventLog(&datastore.EventLogEnt{
 				Type:  "system",
 				Level: "info",
 				Event: fmt.Sprintf("復帰通知メール送信 %s", r),
@@ -396,7 +400,11 @@ func (n *Notify) SendReport() {
 	body = append(body, "【現在のマップ情報】")
 	body = append(body, n.getMapInfo()...)
 	body = append(body, "")
-	list := n.ds.GetEventLogList("", 5000)
+	list := []*datastore.EventLogEnt{}
+	n.ds.ForEachLastEventLog("", func(l *datastore.EventLogEnt) bool {
+		list = append(list, l)
+		return true
+	})
 	high := 0
 	low := 0
 	warn := 0
@@ -438,7 +446,7 @@ func (n *Notify) SendReport() {
 	if err := n.SendMail(fmt.Sprintf("TWSNMP定期レポート %s", time.Now().Format(time.RFC3339)), strings.Join(body, "\r\n")); err != nil {
 		log.Printf("sendMail err=%v", err)
 	} else {
-		n.ds.AddEventLog(datastore.EventLogEnt{
+		n.ds.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
 			Level: "info",
 			Event: "定期レポートメール送信",

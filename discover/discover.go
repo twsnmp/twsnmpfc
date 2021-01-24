@@ -87,7 +87,7 @@ func (d *Discover) StartDiscover() error {
 	if sip > eip {
 		return fmt.Errorf("discover start ip > end ip")
 	}
-	d.ds.AddEventLog(datastore.EventLogEnt{
+	d.ds.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
 		Level: "info",
 		Event: fmt.Sprintf("自動発見開始 %s - %s", d.ds.DiscoverConf.StartIP, d.ds.DiscoverConf.EndIP),
@@ -162,7 +162,7 @@ func (d *Discover) StartDiscover() error {
 			time.Sleep(time.Millisecond * 10)
 		}
 		d.Stat.Running = false
-		d.ds.AddEventLog(datastore.EventLogEnt{
+		d.ds.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
 			Level: "info",
 			Event: fmt.Sprintf("自動発見終了 %s - %s", d.ds.DiscoverConf.StartIP, d.ds.DiscoverConf.EndIP),
@@ -261,7 +261,7 @@ func (d *Discover) addFoundNode(dent *discoverInfoEnt) {
 		log.Printf("discover AddNode err=%v", err)
 		return
 	}
-	d.ds.AddEventLog(datastore.EventLogEnt{
+	d.ds.AddEventLog(&datastore.EventLogEnt{
 		Type:     "discover",
 		Level:    "info",
 		NodeID:   n.ID,

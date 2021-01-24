@@ -35,7 +35,7 @@ func TestDiscover(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(td)
-	ds := datastore.NewDataStore(td, statikFS)
+	ds := datastore.NewDataStore(ctx, td, statikFS)
 	ds.MapConf.MapName = "Test123"
 	if err := ds.SaveMapConfToDB(); err != nil {
 		t.Fatal(err)

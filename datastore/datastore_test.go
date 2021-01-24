@@ -1,6 +1,7 @@
 package datastore
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -18,6 +19,7 @@ func getTmpDBFile() (string, error) {
 }
 
 func TestDataStore(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
 	statikFS, err := fs.New()
 	if err != nil {
 		t.Fatal(err)
@@ -27,11 +29,12 @@ func TestDataStore(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(td)
-	ds := NewDataStore(td, statikFS)
+	ds := NewDataStore(ctx, td, statikFS)
 	ds.MapConf.MapName = "Test123"
 	if err := ds.SaveMapConfToDB(); err != nil {
 		t.Fatal(err)
 	}
+	defer cancel()
 	backdb, err := getTmpDBFile()
 	if err != nil {
 		t.Fatal(err)

@@ -60,7 +60,7 @@ func (p *Polling) pollNowNode(nodeID string) {
 		if pe.NodeID == nodeID && pe.State != "normal" {
 			pe.State = "unknown"
 			pe.NextTime = 0
-			p.ds.AddEventLog(datastore.EventLogEnt{
+			p.ds.AddEventLog(&datastore.EventLogEnt{
 				Type:     "user",
 				Level:    pe.State,
 				NodeID:   pe.NodeID,
@@ -84,7 +84,7 @@ func (p *Polling) CheckAllPoll() {
 			if n == nil {
 				return true
 			}
-			p.ds.AddEventLog(datastore.EventLogEnt{
+			p.ds.AddEventLog(&datastore.EventLogEnt{
 				Type:     "user",
 				Level:    pe.State,
 				NodeID:   pe.NodeID,
@@ -225,7 +225,7 @@ func (p *Polling) setPollingState(pe *datastore.PollingEnt, newState string) {
 			nodeName = n.Name
 		}
 		p.ds.SetNodeStateChanged(pe.NodeID)
-		p.ds.AddEventLog(datastore.EventLogEnt{
+		p.ds.AddEventLog(&datastore.EventLogEnt{
 			Type:     "polling",
 			Level:    pe.State,
 			NodeID:   pe.NodeID,

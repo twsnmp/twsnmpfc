@@ -124,7 +124,7 @@ func (b *Backend) checkNewVersion() {
 	}
 	if strings.Contains(string(ba), "#TWSNMPVEROK#") {
 		if b.versionCheckState == 0 {
-			b.ds.AddEventLog(datastore.EventLogEnt{
+			b.ds.AddEventLog(&datastore.EventLogEnt{
 				Type:  "system",
 				Level: "info",
 				Event: "TWSNMPのバージョンは最新です。",
@@ -133,7 +133,7 @@ func (b *Backend) checkNewVersion() {
 		}
 		return
 	}
-	b.ds.AddEventLog(datastore.EventLogEnt{
+	b.ds.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
 		Level: "warn",
 		Event: "TWSNMPの新しいバージョンがあります。",

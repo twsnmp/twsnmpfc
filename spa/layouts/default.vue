@@ -176,7 +176,7 @@ export default {
         {
           icon: 'mdi-calendar-check',
           title: 'イベントログ',
-          to: '/log/log',
+          to: '/log/eventlog',
         },
         {
           icon: 'mdi-calendar-text',

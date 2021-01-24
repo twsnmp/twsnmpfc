@@ -363,7 +363,7 @@ func (b *Backend) sendAIReq(req *aiReq) {
 	if len(res.ScoreData) > 0 {
 		ls := res.ScoreData[len(res.ScoreData)-1][1]
 		if ls > float64(b.ds.MapConf.AIThreshold) {
-			b.ds.AddEventLog(datastore.EventLogEnt{
+			b.ds.AddEventLog(&datastore.EventLogEnt{
 				Type:     "ai",
 				Level:    b.ds.MapConf.AILevel,
 				NodeID:   pe.NodeID,
