@@ -15,7 +15,8 @@
     "@nuxtjs/auth-next": "^5.0.0-1610115973.9fdaa66",
     "@nuxtjs/axios": "^5.12.5",
     "core-js": "^3.6.5",
-    "nuxt": "^2.14.6"
+    "nuxt": "^2.14.6",
+    "p5": "^1.2.0"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config": "^3.1.0",
