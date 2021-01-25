@@ -93,20 +93,33 @@ const aiThList = [
   { text: '1%以下', value: 74 },
 ]
 
+/* eslint prettier/prettier: 0 */
 const iconList = [
-  { text: 'デスクトップ', icon: 'mdi-desktop-mac', value: 'desktop' },
-  { text: 'ラップトップ', icon: 'mdi-laptop', value: 'laptop' },
-  { text: 'タブレット', icon: 'mdi-tablet-ipad', value: 'tablet' },
-  { text: 'サーバー', icon: 'mdi-server', value: 'server' },
-  { text: 'ネットワーク機器', icon: 'mdi-ip-network', value: 'hdd' },
-  { text: 'IP機器', icon: 'mdi-ip-network', value: 'ip' },
-  { text: 'ネットワーク', icon: 'mdi-lan', value: 'network' },
-  { text: '無線LAN', icon: 'mdi-wifi', value: 'wifi' },
-  { text: 'クラウド', icon: 'mdi-cloud', value: 'cloud' },
-  { text: 'プリンター', icon: 'mdi-printer', value: 'printer' },
-  { text: 'モバイル', icon: 'mdi-cellphone', value: 'cellphone' },
-  { text: 'ルーター', icon: 'mdi-router', value: 'router' },
-  { text: 'WEB', icon: 'mdi-desktop-mac', value: 'web' },
+  {
+    text: 'デスクトップ',
+    icon: 'mdi-desktop-mac',
+    value: 'desktop',
+    code: 0xF01C4,
+  },
+  {
+    text: '古いデスクトップ',
+    icon: 'mdi-desktop-classic',
+    value: 'desktop-classic',
+    code: 0xF07C0,
+  },
+  { text: 'ラップトップ', icon: 'mdi-laptop', value: 'laptop' ,code: 0xF0322},
+  { text: 'タブレット', icon: 'mdi-tablet-ipad', value: 'tablet' ,code:0xF04F8},
+  { text: 'サーバー', icon: 'mdi-server', value: 'server' ,code: 0xF048B},
+  { text: 'ネットワーク機器', icon: 'mdi-ip-network', value: 'hdd' ,code: 0xF0A60},
+  { text: 'IP機器', icon: 'mdi-ip-network', value: 'ip' ,code: 0xF0A60},
+  { text: 'ネットワーク', icon: 'mdi-lan', value: 'network' ,code: 0xF0317},
+  { text: '無線LAN', icon: 'mdi-wifi', value: 'wifi' ,code: 0xF05A9},
+  { text: 'クラウド', icon: 'mdi-cloud', value: 'cloud' ,code: 0xF015F },
+  { text: 'プリンター', icon: 'mdi-printer', value: 'printer' ,code: 0xF042A},
+  { text: 'モバイル', icon: 'mdi-cellphone', value: 'cellphone' ,code: 0xF011C},
+  { text: 'ルーター', icon: 'mdi-router', value: 'router' ,code: 0xF11E2},
+  { text: 'WEB', icon: 'mdi-web', value: 'web' ,code: 0xF059F},
+  { text: 'Database', icon: 'mdi-database', value: 'db' ,code: 0xF01BC},
 ]
 
 const iconMap = {}
@@ -116,7 +129,7 @@ iconList.forEach((e) => {
 })
 
 const getIconName = (icon) => {
-  return iconMap[icon] ? iconMap[icon] : 'comment-question-outline'
+  return iconMap[icon] ? iconMap[icon] : 'mdi-comment-question-outline'
 }
 
 export default (context, inject) => {
@@ -128,6 +141,7 @@ export default (context, inject) => {
   inject('typeList', typeList)
   inject('levelList', levelList)
   inject('iconList', iconList)
+  inject('stateList', stateList)
   inject('addrModeList', addrModeList)
   inject('snmpModeList', snmpModeList)
   inject('aiThList', aiThList)
