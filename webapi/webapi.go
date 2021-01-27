@@ -55,6 +55,9 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.GET("/nodes", getNodes)
 	r.POST("/node/delete", postNodeDelete)
 	r.POST("/node/update", postNodeUpdate)
+	r.GET("/map", getMap)
+	r.POST("/map/update", postMapUpdate)
+	r.POST("/map/delete", postMapDelete)
 
 	r.GET("/pollings", getPollings)
 	r.POST("/polling/delete", postPollingDelete)

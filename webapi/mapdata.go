@@ -3,10 +3,88 @@ package webapi
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
+
+type mapWebAPI struct {
+	LastUpdate int64
+	MapConf    *datastore.MapConfEnt
+	Nodes      map[string]*datastore.NodeEnt
+	Lines      []*datastore.LineEnt
+	Pollings   map[string][]*datastore.PollingEnt
+}
+
+func getMap(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	r := &mapWebAPI{
+		MapConf:  &api.DataStore.MapConf,
+		Nodes:    make(map[string]*datastore.NodeEnt),
+		Lines:    []*datastore.LineEnt{},
+		Pollings: make(map[string][]*datastore.PollingEnt),
+	}
+	api.DataStore.ForEachNodes(func(n *datastore.NodeEnt) bool {
+		r.Nodes[n.ID] = n
+		return true
+	})
+	api.DataStore.ForEachLines(func(l *datastore.LineEnt) bool {
+		r.Lines = append(r.Lines, l)
+		return true
+	})
+	api.DataStore.ForEachPollings(func(p *datastore.PollingEnt) bool {
+		r.Pollings[p.NodeID] = append(r.Pollings[p.NodeID], p)
+		return true
+	})
+	r.LastUpdate = time.Now().Unix()
+	return c.JSON(http.StatusOK, r)
+}
+
+type nodePosWebAPI struct {
+	ID string
+	X  int
+	Y  int
+}
+
+func postMapUpdate(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	list := []nodePosWebAPI{}
+	if err := c.Bind(&list); err != nil {
+		log.Printf("postNodePosUpdate err=%v", err)
+		return echo.ErrBadRequest
+	}
+	for _, nu := range list {
+		n := api.DataStore.GetNode(nu.ID)
+		if n == nil {
+			log.Printf("postNodePosUpdate Node not found ID=%s", nu.ID)
+			return echo.ErrBadRequest
+		}
+		n.X = nu.X
+		n.Y = nu.Y
+		if err := api.DataStore.UpdateNode(n); err != nil {
+			log.Printf("postNodePosUpdate err=%v", err)
+			return echo.ErrBadRequest
+		}
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postMapDelete(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	list := []string{}
+	if err := c.Bind(&list); err != nil {
+		log.Printf("postMapDelete err=%v", err)
+		return echo.ErrBadRequest
+	}
+	for _, id := range list {
+		if err := api.DataStore.DeleteNode(id); err != nil {
+			log.Printf("postMapDelete err=%v", err)
+			return echo.ErrBadRequest
+		}
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
 
 func getNodes(c echo.Context) error {
 	api := c.Get("api").(*WebAPI)

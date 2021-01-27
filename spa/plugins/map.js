@@ -6,11 +6,8 @@ let mapRedraw = true
 
 let mapCallBack
 
-let nodes = {
-  1: { Name: 'test', X: 100, Y: 100, Icon: 'desktop', State: 'high', ID: 1 },
-  2: { Name: 'test2', X: 180, Y: 100, Icon: 'router', State: 'repair', ID: 2 },
-}
-let lines = [{ NodeID1: 1, NodeID2: 2, State1: 'high', State2: 'repair' }]
+let nodes = {}
+let lines = []
 
 const iconCodeMap = {}
 
@@ -22,17 +19,17 @@ const setIconCodeMap = (list) => {
   iconCodeMap.unknown = String.fromCodePoint(0xF0A39)
 }
 
-const setNodesData = (n) => {
+const setNodes = (n) => {
   nodes = n
   mapRedraw = true
 }
 
-const setLinesData = (l) => {
+const setLines = (l) => {
   lines = l
   mapRedraw = true
 }
 
-const setMapCallBack = (cb) => {
+const setCallback = (cb) => {
   mapCallBack = cb
 }
 
@@ -296,14 +293,8 @@ const mapMain = (p5) => {
         Cmd: 'deleteNodes',
         Param: selectedNodes,
       })
+      selectedNodes.length = 0
     }
-    console.log('deleteNodes')
-    selectedNodes.forEach((id) => {
-      if (nodes[id]) {
-        delete nodes[id]
-      }
-    })
-    mapRedraw = true
   }
   // Nodeの位置を保存する
   const updateNodesPos = () => {
@@ -324,7 +315,7 @@ const mapMain = (p5) => {
         Param: list,
       })
     }
-    console.log('updateNodePos',list)
+    console.log('updateNodesPos',list)
     draggedNodes.length = 0
   }
   const showNode = () => {
@@ -363,7 +354,7 @@ export default (context, inject) => {
   inject('showMAP', showMAP)
   inject('setIconCodeMap', setIconCodeMap)
   inject('setStateColorMap', setStateColorMap)
-  inject('setNodesData', setNodesData)
-  inject('setLinesData', setLinesData)
-  inject('setMapCallBack', setMapCallBack)
+  inject('setNodes', setNodes)
+  inject('setLines', setLines)
+  inject('setCallback', setCallback)
 }
