@@ -1,6 +1,30 @@
 <template>
   <v-row>
     <v-card class="mx-auto">
+      <v-card-title>
+        管理マップ - {{ map.MapConf.MapName }}
+        <v-spacer></v-spacer>
+        <v-row dense>
+          <v-col cols="10">
+            <v-select
+              v-model="selectedNodeID"
+              :items="nodeList"
+              label="ノード"
+              single-line
+              hide-details
+              @change="$selectNode"
+            ></v-select>
+          </v-col>
+          <v-col align-self="end">
+            <v-btn icon @click="$fetch()">
+              <v-icon>mdi-cached</v-icon>
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-card-title>
+      <v-alert :value="deleteError" type="error" dense dismissible>
+        ノードを削除できませんでした
+      </v-alert>
       <div id="map"></div>
     </v-card>
     <v-dialog v-model="deleteDialog" max-width="500px">
@@ -25,18 +49,30 @@ export default {
     this.map = await this.$axios.$get('/api/map')
     this.$setNodes(this.map.Nodes)
     this.$setLines(this.map.Lines)
+    Object.keys(this.map.Nodes).forEach((k) => {
+      this.nodeList.push({
+        text: this.map.Nodes[k].Name,
+        value: k,
+      })
+    })
   },
   data() {
     return {
       nodeDialog: false,
       lineDialog: false,
       deleteDialog: false,
-      nodeError: false,
+      deleteError: false,
       lineError: false,
+      selectedNodeID: '',
       showNode: {},
       editLine: {},
+      nodeList: [],
       deleteNodes: [],
-      map: {},
+      map: {
+        Nodes: {},
+        Lines: [],
+        MapConf: { MapName: '' },
+      },
     }
   },
   mounted() {

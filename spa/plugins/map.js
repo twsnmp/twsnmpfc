@@ -8,6 +8,7 @@ let mapCallBack
 
 let nodes = {}
 let lines = []
+const selectedNodes = []
 
 const iconCodeMap = {}
 
@@ -56,7 +57,6 @@ const mapMain = (p5) => {
   let lastMouseY
   let dragMode  = 0 // 0 : None , 1: Select , 2 :Move
   const draggedNodes = []
-  const selectedNodes = []
 
   p5.setup = () => {
     p5.createCanvas(MAP_SIZE_X, MAP_SIZE_Y)
@@ -171,6 +171,7 @@ const mapMain = (p5) => {
     } else if (setSelectNode(false)) {
       mapRedraw = true
     }
+    console.log("mousePressed",p5.mouseY)
     lastMouseX = p5.mouseX
     lastMouseY = p5.mouseY
     startMouseX = p5.mouseX
@@ -180,6 +181,7 @@ const mapMain = (p5) => {
   }
 
   p5.mouseClicked = () => {
+    console.log("mouseClicked",p5.mouseY)
     return false
   }
 
@@ -315,14 +317,12 @@ const mapMain = (p5) => {
         Param: list,
       })
     }
-    console.log('updateNodesPos',list)
     draggedNodes.length = 0
   }
   const showNode = () => {
     if (selectedNodes.length !== 1 ){
       return
     }
-    console.log('showNode')
     if (mapCallBack) {
       mapCallBack({
         Cmd: 'showNode',
@@ -334,7 +334,6 @@ const mapMain = (p5) => {
     if (selectedNodes.length !== 2 ){
       return
     }
-    console.log("editLine")
     if (mapCallBack) {
       mapCallBack({
         Cmd: 'editLine',
@@ -350,6 +349,14 @@ const showMAP = (div) => {
   new P5(mapMain, div) // eslint-disable-line no-new
 }
 
+const selectNode = (id) => {
+  if( nodes[id] ) {
+    selectedNodes.length = 0
+    selectedNodes.push(id)
+    mapRedraw = true
+  }
+}
+
 export default (context, inject) => {
   inject('showMAP', showMAP)
   inject('setIconCodeMap', setIconCodeMap)
@@ -357,4 +364,5 @@ export default (context, inject) => {
   inject('setNodes', setNodes)
   inject('setLines', setLines)
   inject('setCallback', setCallback)
+  inject('selectNode', selectNode)
 }
