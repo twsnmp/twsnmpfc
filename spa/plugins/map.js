@@ -59,11 +59,12 @@ const mapMain = (p5) => {
   const draggedNodes = []
 
   p5.setup = () => {
-    p5.createCanvas(MAP_SIZE_X, MAP_SIZE_Y)
+    const c = p5.createCanvas(MAP_SIZE_X, MAP_SIZE_Y)
+    c.mousePressed(canvasMousePressed)
   }
 
   p5.draw = () => {
-    if (! mapRedraw){
+    if (!mapRedraw){
       return
     }
     mapRedraw = false
@@ -135,13 +136,6 @@ const mapMain = (p5) => {
   }
 
   p5.mouseDragged = () => {
-    if (
-      p5.winMouseX < 32 ||
-      p5.winMouseY < 32 ||
-      p5.winMouseY > p5.windowHeight * 0.75
-    ) {
-      return true
-    }
     if (dragMode === 0) {
       if (selectedNodes.length > 0 ){
         dragMode = 2
@@ -159,7 +153,7 @@ const mapMain = (p5) => {
     return true
   }
 
-  p5.mousePressed = () => {
+  const canvasMousePressed = () => {
     if (
       p5.keyIsDown(p5.SHIFT) &&
       selectedNodes.length === 1 &&
@@ -171,18 +165,12 @@ const mapMain = (p5) => {
     } else if (setSelectNode(false)) {
       mapRedraw = true
     }
-    console.log("mousePressed",p5.mouseY)
     lastMouseX = p5.mouseX
     lastMouseY = p5.mouseY
     startMouseX = p5.mouseX
     startMouseY = p5.mouseY
     dragMode = 0
     return true
-  }
-
-  p5.mouseClicked = () => {
-    console.log("mouseClicked",p5.mouseY)
-    return false
   }
 
   p5.mouseReleased = () => {
@@ -201,9 +189,6 @@ const mapMain = (p5) => {
   }
 
   p5.keyReleased = () => {
-    if (!p5.focused) {
-      return false
-    }
     if (p5.keyCode === p5.DELETE || p5.keyCode === p5.BACKSPACE) {
       // Delete
       deleteNodes()
