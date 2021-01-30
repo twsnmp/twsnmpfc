@@ -20,14 +20,9 @@ const setIconCodeMap = (list) => {
   iconCodeMap.unknown = String.fromCodePoint(0xF0A39)
 }
 
-const setNodes = (n) => {
-  nodes = n
-  mapRedraw = true
-}
-
-const setLines = (l) => {
-  lines = l
-  mapRedraw = true
+const setMAP = (m) => {
+  nodes = m.Nodes
+  lines = m.Lines
 }
 
 const setCallback = (cb) => {
@@ -330,8 +325,24 @@ const mapMain = (p5) => {
   }
 }
 
+let  hasMAP = false
+
 const showMAP = (div) => {
+  mapRedraw = true
+  if (hasMAP) {
+    return
+  }
   new P5(mapMain, div) // eslint-disable-line no-new
+  hasMAP = true
+}
+
+const refreshMAP = () => {
+  if (mapCallBack) {
+    mapCallBack({
+      Cmd: 'refresh',
+      Param: '',
+    })
+  }
 }
 
 const selectNode = (id) => {
@@ -346,8 +357,8 @@ export default (context, inject) => {
   inject('showMAP', showMAP)
   inject('setIconCodeMap', setIconCodeMap)
   inject('setStateColorMap', setStateColorMap)
-  inject('setNodes', setNodes)
-  inject('setLines', setLines)
+  inject('setMAP', setMAP)
   inject('setCallback', setCallback)
   inject('selectNode', selectNode)
+  inject('refreshMAP', refreshMAP)
 }

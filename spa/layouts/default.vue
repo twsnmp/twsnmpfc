@@ -79,6 +79,18 @@
       <v-app-bar-nav-icon v-if="isAuthenticated" @click.stop="menu = !menu" />
       <v-toolbar-title v-text="title" />
       <v-spacer />
+      <v-select
+        v-if="showMAP"
+        v-model="selectedNodeID"
+        :items="nodeList"
+        label="ノード"
+        single-line
+        hide-details
+        @change="$selectNode"
+      ></v-select>
+      <v-btn v-if="showMAP" icon @click="$refreshMAP()">
+        <v-icon>mdi-cached</v-icon>
+      </v-btn>
       <v-btn v-if="!isAuthenticated" to="/login">
         <v-icon>mdi-login</v-icon>
       </v-btn>
@@ -93,6 +105,7 @@
     </v-app-bar>
     <v-main>
       <v-container>
+        <div v-show="showMAP" id="map"></div>
         <nuxt />
       </v-container>
     </v-main>
@@ -222,12 +235,21 @@ export default {
         },
       ],
       notify: false,
-      title: 'TWSNMP FC',
+      selectedNodeID: '',
     }
   },
   computed: {
     isAuthenticated() {
       return this.$auth.loggedIn
+    },
+    showMAP() {
+      return this.$route.path === '/map'
+    },
+    title() {
+      return this.$store.state.map.title
+    },
+    nodeList() {
+      return this.$store.state.map.nodeList
     },
   },
   methods: {
@@ -237,3 +259,11 @@ export default {
   },
 }
 </script>
+
+<style>
+#map {
+  width: 100%;
+  height: 800px;
+  overflow: scroll;
+}
+</style>
