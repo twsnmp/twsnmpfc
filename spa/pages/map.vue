@@ -21,6 +21,9 @@
         <v-card-title>
           <span class="headline">ノード設定</span>
         </v-card-title>
+        <v-alert :value="editNodeError" type="error" dense dismissible>
+          ノードの保存に失敗しました
+        </v-alert>
         <v-card-text>
           <v-text-field v-model="editNode.Name" label="名前"></v-text-field>
           <v-text-field v-model="editNode.IP" label="IPアドレス"></v-text-field>
@@ -57,7 +60,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="normal" dark @click="edirNodeDialog = false"
+          <v-btn color="normal" dark @click="editNodeDialog = false"
             >キャンセル</v-btn
           >
           <v-btn color="primary" dark @click="doUpdateNode">保存</v-btn>
@@ -69,6 +72,9 @@
         <v-card-title>
           <span class="headline">ライン編集</span>
         </v-card-title>
+        <v-alert :value="lineError" type="error" dense dismissible>
+          ラインの保存に失敗しました
+        </v-alert>
         <v-card-text>
           <v-text-field
             v-model="editLine.NodeName1"
@@ -160,7 +166,7 @@ export default {
     return {
       showNodeDialog: false,
       editNodeDialog: false,
-      nodeError: false,
+      editNodeError: false,
       lineDialog: false,
       lineError: false,
       deleteDialog: false,
@@ -189,7 +195,7 @@ export default {
       return this.pollingList(this.editLine.NodeID1)
     },
     pollingList2() {
-      return this.pollingList(this.editLine.NodeID1)
+      return this.pollingList(this.editLine.NodeID2)
     },
   },
   mounted() {
@@ -216,6 +222,14 @@ export default {
       return l
     },
     callback(r) {
+      if (
+        this.deleteDialog ||
+        this.showNodeDialog ||
+        this.lineDialog ||
+        this.editNodeDialog
+      ) {
+        return
+      }
       switch (r.Cmd) {
         case 'updateNodesPos':
           this.$axios.post('/api/map/update', r.Param)
@@ -269,12 +283,12 @@ export default {
         .post('/api/node/update', this.editNode)
         .then(() => {
           this.$fetch()
+          this.editNodeDialog = false
         })
         .catch((e) => {
-          this.updateError = true
+          this.editNodeError = true
           this.$fetch()
         })
-      this.showNodeDialog = false
     },
     showEditNodeDialog() {
       this.showNodeDialog = false
@@ -288,24 +302,24 @@ export default {
         .post('/api/line/add', this.editLine)
         .then(() => {
           this.$fetch()
+          this.lineDialog = false
         })
         .catch((e) => {
           this.lineError = true
           this.$fetch()
         })
-      this.lineDialog = false
     },
     deleteLine() {
       this.$axios
         .post('/api/line/delete', this.editLine)
         .then(() => {
           this.$fetch()
+          this.lineDialog = false
         })
         .catch((e) => {
           this.lineError = true
           this.$fetch()
         })
-      this.lineDialog = false
     },
   },
 }

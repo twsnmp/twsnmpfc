@@ -23,6 +23,7 @@ const setIconCodeMap = (list) => {
 const setMAP = (m) => {
   nodes = m.Nodes
   lines = m.Lines
+  mapRedraw = true
 }
 
 const setCallback = (cb) => {

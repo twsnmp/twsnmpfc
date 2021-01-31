@@ -58,6 +58,8 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.GET("/map", getMap)
 	r.POST("/map/update", postMapUpdate)
 	r.POST("/map/delete", postMapDelete)
+	r.POST("/line/delete", postLineDelete)
+	r.POST("/line/add", postLineAdd)
 
 	r.GET("/pollings", getPollings)
 	r.POST("/polling/delete", postPollingDelete)

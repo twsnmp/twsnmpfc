@@ -244,6 +244,16 @@ func (ds *DataStore) DeleteLine(lineID string) error {
 	return nil
 }
 
+func (ds *DataStore) GetLine(lineID string) *LineEnt {
+	if ds.db == nil {
+		return nil
+	}
+	if n, ok := ds.lines.Load(lineID); ok {
+		return n.(*LineEnt)
+	}
+	return nil
+}
+
 // ForEachLines : Line毎の処理
 func (ds *DataStore) ForEachLines(f func(*LineEnt) bool) {
 	ds.lines.Range(func(_, v interface{}) bool {

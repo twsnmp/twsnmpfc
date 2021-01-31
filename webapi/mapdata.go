@@ -142,6 +142,54 @@ func postNodeUpdate(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
+func postLineDelete(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	l := new(datastore.LineEnt)
+	if err := c.Bind(l); err != nil {
+		log.Printf("postLineDelete err=%v", err)
+		return echo.ErrBadRequest
+	}
+	if err := api.DataStore.DeleteLine(l.ID); err != nil {
+		log.Printf("postLineDelete err=%v", err)
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postLineAdd(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	lu := new(datastore.LineEnt)
+	if err := c.Bind(lu); err != nil {
+		log.Printf("postLineAdd err=%v", err)
+		return echo.ErrBadRequest
+	}
+	if p := api.DataStore.GetPolling(lu.PollingID1); p != nil {
+		lu.State1 = p.State
+	}
+	if p := api.DataStore.GetPolling(lu.PollingID2); p != nil {
+		lu.State2 = p.State
+	}
+	l := api.DataStore.GetLine(lu.ID)
+	if l == nil {
+		if err := api.DataStore.AddLine(lu); err != nil {
+			log.Printf("postLineAdd err=%v", err)
+			return echo.ErrBadRequest
+		}
+	} else {
+		l.NodeID1 = lu.NodeID1
+		l.NodeID2 = lu.NodeID2
+		l.PollingID1 = lu.PollingID1
+		l.PollingID2 = lu.PollingID2
+		l.State1 = lu.State1
+		l.State2 = lu.State2
+		if err := api.DataStore.UpdateLine(l); err != nil {
+			log.Printf("postLineAdd err=%v", err)
+			return echo.ErrBadRequest
+		}
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
 type pollingsWebAPI struct {
 	Pollings []*datastore.PollingEnt
 	NodeList []selectEntWebAPI
