@@ -12,6 +12,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/rakyll/statik/fs"
+	"github.com/twsnmp/twsnmpfc/notify"
 	_ "github.com/twsnmp/twsnmpfc/statik"
 
 	"github.com/twsnmp/twsnmpfc/backend"
@@ -59,9 +60,11 @@ func main() {
 	rp := report.NewReport(ctx, ds)
 	po := polling.NewPolling(ctx, ds, rp, pi)
 	be := backend.NewBackEnd(ctx, ds, version)
+	nt := notify.NewNotify(ctx, ds)
 	w := &webapi.WebAPI{
 		DataStore: ds,
 		Backend:   be,
+		Notify:    nt,
 		Report:    rp,
 		Discover:  di,
 		Polling:   po,

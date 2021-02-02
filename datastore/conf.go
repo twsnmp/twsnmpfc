@@ -45,8 +45,7 @@ type NotifyConfEnt struct {
 	Subject            string
 	Interval           int
 	Level              string
-	Report             string
-	ExecCmd            string
+	Report             bool
 	CheckUpdate        bool
 	NotifyRepair       bool
 }

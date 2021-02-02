@@ -10,6 +10,7 @@ import (
 	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/discover"
+	"github.com/twsnmp/twsnmpfc/notify"
 	"github.com/twsnmp/twsnmpfc/ping"
 	"github.com/twsnmp/twsnmpfc/polling"
 	"github.com/twsnmp/twsnmpfc/report"
@@ -18,6 +19,7 @@ import (
 type WebAPI struct {
 	DataStore *datastore.DataStore
 	Backend   *backend.Backend
+	Notify    *notify.Notify
 	Report    *report.Report
 	Ping      *ping.Ping
 	Polling   *polling.Polling
@@ -49,6 +51,9 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.GET("/me", getMe)
 	r.GET("/conf/map", getMapConf)
 	r.POST("/conf/map", postMapConf)
+	r.GET("/conf/notify", getNotifyConf)
+	r.POST("/conf/notify", postNotifyConf)
+	r.POST("/notify/test", postNotifyTest)
 	r.GET("/discover", getDiscover)
 	r.POST("/discover/start", postDiscoverStart)
 	r.POST("/discover/stop", postDiscoverStop)

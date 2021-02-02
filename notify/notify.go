@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"net/smtp"
 	"net/url"
-	"os/exec"
 	"runtime"
 	"strings"
 	"time"
@@ -52,10 +51,9 @@ func (n *Notify) notifyBackend(ctx context.Context) {
 				i = 0
 				lastLog = n.checkNotify(lastLog)
 			}
-			n.checkExecCmd()
-			if n.ds.NotifyConf.Report == "send" && lastSendReport.Day() != time.Now().Day() {
+			if n.ds.NotifyConf.Report && lastSendReport.Day() != time.Now().Day() {
 				lastSendReport = time.Now()
-				n.SendReport()
+				n.sendReport()
 			}
 		}
 	}
@@ -71,54 +69,6 @@ func getLevelNum(l string) int {
 		return 2
 	}
 	return 3
-}
-
-func (n *Notify) checkExecCmd() {
-	if n.ds.NotifyConf.ExecCmd == "" {
-		return
-	}
-	execLevel := 3
-	n.ds.ForEachNodes(func(node *datastore.NodeEnt) bool {
-		ns := getLevelNum(node.State)
-		if execLevel > ns {
-			execLevel = ns
-			if ns == 0 {
-				return false
-			}
-		}
-		return true
-	})
-	if execLevel != n.lastExecLevel {
-		err := n.execNotifyCmd(execLevel)
-		r := ""
-		if err != nil {
-			log.Printf("execNotifyCmd err=%v", err)
-			r = fmt.Sprintf("エラー=%v", err)
-		}
-		n.ds.AddEventLog(&datastore.EventLogEnt{
-			Type:  "system",
-			Level: "info",
-			Event: fmt.Sprintf("外部通知コマンド実行 レベル=%d %s", execLevel, r),
-		})
-		n.lastExecLevel = execLevel
-	}
-}
-
-func (n *Notify) execNotifyCmd(level int) error {
-	cl := strings.Split(n.ds.NotifyConf.ExecCmd, " ")
-	if len(cl) < 1 {
-		return nil
-	}
-	strLevel := fmt.Sprintf("%d", level)
-	if len(cl) == 1 {
-		return exec.Command(cl[0]).Start()
-	}
-	for i, v := range cl {
-		if v == "$level" {
-			cl[i] = strLevel
-		}
-	}
-	return exec.Command(cl[0], cl[1:]...).Start()
 }
 
 func (n *Notify) checkNotify(lastLog string) string {
@@ -161,7 +111,7 @@ func (n *Notify) checkNotify(lastLog string) string {
 			body = append(body, fmt.Sprintf("%s,%s,%s,%s,%s", l.Level, ts, l.Type, l.NodeName, l.Event))
 		}
 		if len(body) > 0 {
-			err := n.SendMail(n.ds.NotifyConf.Subject, strings.Join(body, "\r\n"))
+			err := n.sendMail(n.ds.NotifyConf.Subject, strings.Join(body, "\r\n"))
 			r := ""
 			if err != nil {
 				log.Printf("sendMail err=%v", err)
@@ -174,7 +124,7 @@ func (n *Notify) checkNotify(lastLog string) string {
 			})
 		}
 		if len(repair) > 0 {
-			err := n.SendMail(n.ds.NotifyConf.Subject+"(復帰)", strings.Join(repair, "\r\n"))
+			err := n.sendMail(n.ds.NotifyConf.Subject+"(復帰)", strings.Join(repair, "\r\n"))
 			r := ""
 			if err != nil {
 				log.Printf("sendMail err=%v", err)
@@ -191,7 +141,7 @@ func (n *Notify) checkNotify(lastLog string) string {
 	return lastLog
 }
 
-func (n *Notify) SendMail(subject, body string) error {
+func (n *Notify) sendMail(subject, body string) error {
 	if n.ds.NotifyConf.MailServer == "" || n.ds.NotifyConf.MailFrom == "" || n.ds.NotifyConf.MailTo == "" {
 		return nil
 	}
@@ -247,7 +197,7 @@ func convNewline(str, nlcode string) string {
 	).Replace(str)
 }
 
-func sendTestMail(testConf *datastore.NotifyConfEnt) error {
+func (n *Notify) SendTestMail(testConf *datastore.NotifyConfEnt) error {
 	tlsconfig := &tls.Config{
 		ServerName:         testConf.MailServer,
 		InsecureSkipVerify: testConf.InsecureSkipVerify,
@@ -394,7 +344,7 @@ func calcHash(msg string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (n *Notify) SendReport() {
+func (n *Notify) sendReport() {
 	body := []string{}
 	logs := []string{}
 	body = append(body, "【現在のマップ情報】")
@@ -443,7 +393,7 @@ func (n *Notify) SendReport() {
 	body = append(body, "")
 	body = append(body, "【最新24時間のログ】")
 	body = append(body, logs...)
-	if err := n.SendMail(fmt.Sprintf("TWSNMP定期レポート %s", time.Now().Format(time.RFC3339)), strings.Join(body, "\r\n")); err != nil {
+	if err := n.sendMail(fmt.Sprintf("TWSNMP定期レポート %s", time.Now().Format(time.RFC3339)), strings.Join(body, "\r\n")); err != nil {
 		log.Printf("sendMail err=%v", err)
 	} else {
 		n.ds.AddEventLog(&datastore.EventLogEnt{
