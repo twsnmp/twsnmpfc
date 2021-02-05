@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card>
+    <v-card style="width: 100%">
       <v-card-title>
         イベントログ
         <v-spacer></v-spacer>
@@ -12,6 +12,7 @@
           hide-details
         ></v-text-field>
       </v-card-title>
+      <div id="logCountChart" style="width: 100%; height: 200px"></div>
       <v-data-table
         :headers="headers"
         :items="logs"
@@ -201,6 +202,7 @@ export default {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = t.toLocaleString()
     })
+    this.$showLogCountChart(this.logs)
   },
   data() {
     return {
@@ -222,14 +224,18 @@ export default {
       },
       search: '',
       headers: [
-        { text: '状態', value: 'Level' },
-        { text: '発生日時', value: 'TimeStr' },
-        { text: '種別', value: 'Type' },
-        { text: '関連ノード', value: 'NodeName' },
-        { text: 'イベント', value: 'Event' },
+        { text: '状態', value: 'Level', width: '10%' },
+        { text: '発生日時', value: 'TimeStr', width: '15%' },
+        { text: '種別', value: 'Type', width: '10%' },
+        { text: '関連ノード', value: 'NodeName', width: '15%' },
+        { text: 'イベント', value: 'Event', width: '50%' },
       ],
       logs: [],
     }
+  },
+  mounted() {
+    this.$makeLogCountChart('logCountChart')
+    this.$showLogCountChart(this.logs)
   },
   methods: {
     doFilter() {

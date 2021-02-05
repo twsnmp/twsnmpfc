@@ -24,7 +24,11 @@ export default {
   css: [],
 
   // Plugins to run before rendering page (https://go.nuxtjs.dev/config-plugins)
-  plugins: ['@/plugins/common.js', '@/plugins/map.js'],
+  plugins: [
+    '@/plugins/common.js',
+    '@/plugins/map.js',
+    '@/plugins/echarts/logcount.js',
+  ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)
   components: true,
