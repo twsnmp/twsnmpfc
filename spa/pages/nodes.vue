@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card>
+    <v-card style="width: 100%">
       <v-card-title>
         ノードリスト
         <v-spacer></v-spacer>
@@ -112,12 +112,12 @@ export default {
       deleteNode: {},
       search: '',
       headers: [
-        { text: '状態', value: 'State' },
-        { text: '名前', value: 'Name' },
-        { text: 'IPアドレス', value: 'IP' },
-        { text: 'MACアドレス', value: 'MAC' },
-        { text: '説明', value: 'Descr' },
-        { text: '操作', value: 'actions' },
+        { text: '状態', value: 'State', width: '10%' },
+        { text: '名前', value: 'Name', width: '20%' },
+        { text: 'IPアドレス', value: 'IP', width: '10%' },
+        { text: 'MACアドレス', value: 'MAC', width: '10%' },
+        { text: '説明', value: 'Descr', width: '40%' },
+        { text: '操作', value: 'actions', width: '10%' },
       ],
       nodes: [],
     }

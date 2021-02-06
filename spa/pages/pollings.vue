@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card>
+    <v-card style="width: 100%">
       <v-card-title>
         ポーリングリスト
         <v-spacer></v-spacer>
@@ -180,15 +180,15 @@ export default {
       deletePolling: {},
       search: '',
       headers: [
-        { text: '状態', value: 'State' },
-        { text: 'ノード', value: 'NodeName' },
-        { text: '名前', value: 'Name' },
-        { text: 'レベル', value: 'Level' },
-        { text: '種別', value: 'Type' },
-        { text: '定義', value: 'Polling' },
-        { text: '最終実施', value: 'LastTimeStr' },
-        { text: '数値', value: 'LastVal' },
-        { text: '操作', value: 'actions' },
+        { text: '状態', value: 'State', width: '8%' },
+        { text: 'ノード', value: 'NodeName', width: '15%' },
+        { text: '名前', value: 'Name', width: '15%' },
+        { text: 'レベル', value: 'Level', width: '8%' },
+        { text: '種別', value: 'Type', width: '5%' },
+        { text: '定義', value: 'Polling', width: '20%' },
+        { text: '最終実施', value: 'LastTimeStr', width: '14%' },
+        { text: '数値', value: 'LastVal', width: '5%' },
+        { text: '操作', value: 'actions', width: '10%' },
       ],
       nodeList: [],
       pollings: [],
