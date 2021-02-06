@@ -28,6 +28,7 @@ export default {
     '@/plugins/common.js',
     '@/plugins/map.js',
     '@/plugins/echarts/logcount.js',
+    '@/plugins/echarts/loglevel.js',
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)

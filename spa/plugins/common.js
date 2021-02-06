@@ -1,10 +1,10 @@
 const stateList = [
-  { text: '重度', color: 'red', icon: 'mdi-alert-circle', value: 'high' },
-  { text: '軽度', color: 'pink', icon: 'mdi-alert-circle', value: 'low' },
-  { text: '注意', color: 'yellow', icon: 'mdi-alert', value: 'warn' },
-  { text: '正常', color: 'green', icon: 'mdi-check-circle', value: 'normal' },
-  { text: '復帰', color: 'blue', icon: 'mdi-autorenew', value: 'repair' },
-  { text: '情報', color: 'blue', icon: 'mdi-information', value: 'info' },
+  { text: '重度', color: '#e31a1c', icon: 'mdi-alert-circle', value: 'high' },
+  { text: '軽度', color: '#fb9a99', icon: 'mdi-alert-circle', value: 'low' },
+  { text: '注意', color: '#dfdf22', icon: 'mdi-alert', value: 'warn' },
+  { text: '正常', color: '#33a02c', icon: 'mdi-check-circle', value: 'normal' },
+  { text: '復帰', color: '#1f78b4', icon: 'mdi-autorenew', value: 'repair' },
+  { text: '情報', color: '#1f78b4', icon: 'mdi-information', value: 'info' },
 ]
 const stateMap = {}
 

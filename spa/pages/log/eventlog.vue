@@ -208,7 +208,7 @@ export default {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = t.toLocaleString()
     })
-    this.$showLogCountChart(this.logs)
+    this.$showLogLevelChart(this.logs)
   },
   data() {
     return {
@@ -240,8 +240,8 @@ export default {
     }
   },
   mounted() {
-    this.$makeLogCountChart('logCountChart')
-    this.$showLogCountChart(this.logs)
+    this.$makeLogLevelChart('logCountChart')
+    this.$showLogLevelChart(this.logs)
   },
   methods: {
     doFilter() {
