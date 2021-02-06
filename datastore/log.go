@@ -70,12 +70,9 @@ func (ds *DataStore) ForEachEventLog(st, et int64, f func(*EventLogEnt) bool) er
 			return nil
 		}
 		c := b.Cursor()
-		i := 0
-		j := 0
-		for k, v := c.Seek([]byte(sk)); k != nil && i < ds.MapConf.LogDispSize; k, v = c.Next() {
+		for k, v := c.Seek([]byte(sk)); k != nil; k, v = c.Next() {
 			var e EventLogEnt
 			err := json.Unmarshal(v, &e)
-			j++
 			if err != nil {
 				continue
 			}
@@ -85,13 +82,10 @@ func (ds *DataStore) ForEachEventLog(st, et int64, f func(*EventLogEnt) bool) er
 			if e.Time > et {
 				break
 			}
-			f(&e)
-			i++
+			if !f(&e) {
+				break
+			}
 		}
-		if i >= ds.MapConf.LogDispSize {
-			return fmt.Errorf("max log size over %d", i)
-		}
-		log.Printf("i=%d j=%d size=%d", i, j, ds.MapConf.LogDispSize)
 		return nil
 	})
 }
@@ -106,19 +100,56 @@ func (ds *DataStore) ForEachLastEventLog(skey string, f func(*EventLogEnt) bool)
 			return nil
 		}
 		c := b.Cursor()
-		i := 0
-		for k, v := c.Last(); k != nil && i < ds.MapConf.LogDispSize && string(k) != skey; k, v = c.Prev() {
+		for k, v := c.Last(); k != nil && string(k) != skey; k, v = c.Prev() {
 			var e EventLogEnt
 			err := json.Unmarshal(v, &e)
 			if err != nil {
 				continue
 			}
-			f(&e)
-			i++
+			if !f(&e) {
+				break
+			}
 		}
 		return nil
 	})
 }
+
+func (ds *DataStore) ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
+	if ds.db == nil {
+		return ErrDBNotOpen
+	}
+	sk := fmt.Sprintf("%016x", st)
+	return ds.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(t))
+		if b == nil {
+			return nil
+		}
+		c := b.Cursor()
+		for k, v := c.Seek([]byte(sk)); k != nil; k, v = c.Next() {
+			if bytes.HasSuffix(v, []byte{0, 0, 255, 255}) {
+				v = deCompressLog(v)
+			}
+			var e LogEnt
+			err := json.Unmarshal(v, &e)
+			if err != nil {
+				log.Printf("ForEachLog v=%s err=%v", v, err)
+				continue
+			}
+			if e.Time < st {
+				continue
+			}
+			if e.Time > et {
+				break
+			}
+			if !f(&e) {
+				break
+			}
+		}
+		return nil
+	})
+}
+
+// --
 
 type logFilterParamEnt struct {
 	StartKey    string

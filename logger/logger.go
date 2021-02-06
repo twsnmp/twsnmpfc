@@ -22,12 +22,13 @@ type Logger struct {
 }
 
 func NewLogger(ctx context.Context, ds *datastore.DataStore, r *report.Report) *Logger {
+	log.Println("Start Logger")
 	l := &Logger{
 		ds:     ds,
 		report: r,
 		logCh:  make(chan *datastore.LogEnt, 100),
 	}
-	l.logger(ctx)
+	go l.logger(ctx)
 	return l
 }
 

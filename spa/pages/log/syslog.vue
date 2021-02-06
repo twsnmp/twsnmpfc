@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card style="width: 100%">
       <v-card-title>
-        イベントログ
+        Syslog
         <v-spacer></v-spacer>
         <v-text-field
           v-model="search"
@@ -164,20 +164,21 @@
               ></v-time-picker>
             </v-menu>
           </v-row>
-          <v-select
-            v-model="filter.NodeID"
-            :items="nodeList"
-            label="関連ノード"
-          ></v-select>
-          <v-select
-            v-model="filter.Type"
-            :items="$filterEventTypeList"
-            label="種別"
-          >
-          </v-select>
           <v-text-field
-            v-model="filter.Event"
-            label="イベント（正規表現）"
+            v-model="filter.Type"
+            label="種別（正規表現）"
+          ></v-text-field>
+          <v-text-field
+            v-model="filter.Host"
+            label="ホスト名（正規表現）"
+          ></v-text-field>
+          <v-text-field
+            v-model="filter.Tag"
+            label="タグ（正規表現）"
+          ></v-text-field>
+          <v-text-field
+            v-model="filter.Message"
+            label="メッセージ（正規表現）"
           ></v-text-field>
         </v-card-text>
         <v-card-actions>
@@ -199,16 +200,8 @@
 <script>
 export default {
   async fetch() {
-    const r = await this.$axios.$post('/api/eventlogs', this.filter)
-    this.nodeList = r.NodeList
-    const nodeMap = {}
-    r.NodeList.forEach((e) => {
-      nodeMap[e.value] = e.text
-    })
-    this.nodeList.unshift({ text: '指定しない', value: '' })
-    this.logs = r.EventLogs
+    this.logs = await this.$axios.$post('/api/syslog', this.filter)
     this.logs.forEach((e) => {
-      e.NodeName = nodeMap[e.NodeID]
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = t.toLocaleString()
     })
@@ -228,17 +221,19 @@ export default {
         StartTime: '',
         EndDate: '',
         EndTime: '',
+        Host: '',
         Type: '',
-        NodeID: '',
-        Event: '',
+        Tag: '',
+        Message: '',
       },
       search: '',
       headers: [
         { text: '状態', value: 'Level', width: '10%' },
-        { text: '発生日時', value: 'TimeStr', width: '15%' },
+        { text: '日時', value: 'TimeStr', width: '15%' },
         { text: '種別', value: 'Type', width: '10%' },
-        { text: '関連ノード', value: 'NodeName', width: '15%' },
-        { text: 'イベント', value: 'Event', width: '50%' },
+        { text: 'ホスト名', value: 'Host', width: '10%' },
+        { text: 'タグ', value: 'Tag', width: '10%' },
+        { text: 'メッセージ', value: 'Message', width: '45%' },
       ],
       logs: [],
     }

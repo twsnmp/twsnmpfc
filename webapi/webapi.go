@@ -10,6 +10,7 @@ import (
 	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/discover"
+	"github.com/twsnmp/twsnmpfc/logger"
 	"github.com/twsnmp/twsnmpfc/notify"
 	"github.com/twsnmp/twsnmpfc/ping"
 	"github.com/twsnmp/twsnmpfc/polling"
@@ -24,6 +25,7 @@ type WebAPI struct {
 	Ping      *ping.Ping
 	Polling   *polling.Polling
 	Discover  *discover.Discover
+	Logger    *logger.Logger
 	Statik    http.Handler
 	Password  string
 }
@@ -70,6 +72,7 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.POST("/polling/delete", postPollingDelete)
 	r.POST("/polling/update", postPollingUpdate)
 	r.POST("/eventlogs", postEventLogs)
+	r.POST("/syslog", postSyslog)
 
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
 }

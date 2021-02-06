@@ -31,9 +31,9 @@ func (l *Logger) syslogd(stopCh chan bool) {
 				_ = server.Kill()
 				return
 			}
-		case log := <-syslogCh:
+		case sl := <-syslogCh:
 			{
-				s, err := json.Marshal(log)
+				s, err := json.Marshal(sl)
 				if err == nil {
 					l.logCh <- &datastore.LogEnt{
 						Time: time.Now().UnixNano(),

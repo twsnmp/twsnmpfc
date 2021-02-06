@@ -12,6 +12,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/rakyll/statik/fs"
+	"github.com/twsnmp/twsnmpfc/logger"
 	"github.com/twsnmp/twsnmpfc/notify"
 	_ "github.com/twsnmp/twsnmpfc/statik"
 
@@ -58,6 +59,7 @@ func main() {
 	pi := ping.NewPing(ctx)
 	di := discover.NewDiscover(ds, pi)
 	rp := report.NewReport(ctx, ds)
+	lg := logger.NewLogger(ctx, ds, rp)
 	po := polling.NewPolling(ctx, ds, rp, pi)
 	be := backend.NewBackEnd(ctx, ds, version)
 	nt := notify.NewNotify(ctx, ds)
@@ -68,6 +70,7 @@ func main() {
 		Report:    rp,
 		Discover:  di,
 		Polling:   po,
+		Logger:    lg,
 		Statik:    http.FileServer(statikFS),
 		Password:  password,
 	}
