@@ -73,7 +73,11 @@
       </v-list-item-content>
     </v-list-item>
     <v-card-actions>
-      <v-btn color="error" :disabled="reqStop" dark @click="stop"> 停止 </v-btn>
+      <v-spacer></v-spacer>
+      <v-btn color="error" :disabled="reqStop" dark @click="stop">
+        <v-icon>mdi-stop</v-icon>
+        停止
+      </v-btn>
     </v-card-actions>
   </v-card>
   <v-card v-else max-width="600" class="mx-auto">
@@ -123,7 +127,11 @@
         </v-slider>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="primary" dark @click="start"> 開始 </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" dark @click="start">
+          <v-icon>mdi-magnify</v-icon>
+          開始
+        </v-btn>
       </v-card-actions>
     </v-form>
   </v-card>

@@ -60,10 +60,14 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="normal" dark @click="editNodeDialog = false"
-            >キャンセル</v-btn
-          >
-          <v-btn color="primary" dark @click="doUpdateNode">保存</v-btn>
+          <v-btn color="primary" dark @click="doUpdateNode">
+            <v-icon>mdi-content-save</v-icon>
+            保存
+          </v-btn>
+          <v-btn color="normal" dark @click="editNodeDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -101,11 +105,18 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="normal" dark @click="lineDialog = false"
-            >キャンセル</v-btn
-          >
-          <v-btn color="red" dark @click="deleteLine">切断</v-btn>
-          <v-btn color="primary" dark @click="addLine">接続</v-btn>
+          <v-btn color="red" dark @click="deleteLine">
+            <v-icon>mdi-lan-disconnect</v-icon>
+            切断
+          </v-btn>
+          <v-btn color="primary" dark @click="addLine">
+            <v-icon>mdi-lan-connect</v-icon>
+            接続
+          </v-btn>
+          <v-btn color="normal" dark @click="lineDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -144,11 +155,18 @@
         </v-simple-table>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" dark @click="showEditNodeDialog">編集</v-btn>
-          <v-btn color="success" dark @click="showNodeInfoPage">詳細</v-btn>
-          <v-btn color="normal" dark @click="showNodeDialog = false"
-            >閉じる</v-btn
-          >
+          <v-btn color="primary" dark @click="showEditNodeDialog">
+            <v-icon>mdi-pencile</v-icon>
+            編集
+          </v-btn>
+          <v-btn color="success" dark @click="showNodeInfoPage">
+            <v-icon>mdi-eye</v-icon>
+            詳細
+          </v-btn>
+          <v-btn color="normal" dark @click="showNodeDialog = false">
+            <v-icon>mdi-close</v-icon>
+            閉じる
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

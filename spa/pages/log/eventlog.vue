@@ -29,8 +29,14 @@
         </template>
       </v-data-table>
       <v-card-actions>
+        <v-spacer></v-spacer>
         <v-btn color="primary" dark @click="filterDialog = true">
+          <v-icon>mdi-magnify</v-icon>
           検索条件
+        </v-btn>
+        <v-btn color="normal" dark @click="$fetch()">
+          <v-icon>mdi-cached</v-icon>
+          再検索
         </v-btn>
       </v-card-actions>
     </v-card>

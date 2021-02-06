@@ -87,8 +87,15 @@
         ></v-switch>
       </v-card-text>
       <v-card-actions>
-        <v-btn color="normal" dark @click="test"> テスト </v-btn>
-        <v-btn color="primary" dark @click="submit"> 保存 </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" dark @click="submit">
+          <v-icon>mdi-content-save</v-icon>
+          保存
+        </v-btn>
+        <v-btn color="normal" dark @click="test">
+          <v-icon>mdi-email-send</v-icon>
+          テスト
+        </v-btn>
       </v-card-actions>
     </v-form>
   </v-card>
