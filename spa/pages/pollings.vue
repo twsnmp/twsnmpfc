@@ -177,7 +177,7 @@ export default {
     this.pollings.forEach((e) => {
       e.NodeName = nodeMap[e.NodeID]
       const t = new Date(e.LastTime / (1000 * 1000))
-      e.LastTimeStr = t.toLocaleString()
+      e.TimeStr = this.$timeFormat(t)
     })
   },
   data() {

@@ -20,6 +20,7 @@
         sort-by="TimeStr"
         sort-desc
         dense
+        class="log"
       >
         <template v-slot:[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{
@@ -210,7 +211,7 @@ export default {
     this.logs.forEach((e) => {
       e.NodeName = nodeMap[e.NodeID]
       const t = new Date(e.Time / (1000 * 1000))
-      e.TimeStr = t.toLocaleString()
+      e.TimeStr = this.$timeFormat(t)
     })
     this.$showLogLevelChart(this.logs)
   },
@@ -261,3 +262,9 @@ export default {
   },
 }
 </script>
+
+<style>
+.log td {
+  word-break: break-all;
+}
+</style>

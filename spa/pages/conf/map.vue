@@ -135,8 +135,8 @@
           v-model="mapconf.LogDispSize"
           label="ログ表示件数"
           class="align-center"
-          max="10000"
-          min="500"
+          max="100000"
+          min="1000"
           hide-details
         >
           <template v-slot:append>
@@ -195,7 +195,7 @@ export default {
         Timeout: 1,
         Retry: 1,
         LogDays: 14,
-        LogDispSize: 1000,
+        LogDispSize: 10000,
         SnmpMode: '',
         Community: 'public',
         SnmpUser: '',
