@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card style="width: 100%">
       <v-card-title>
-        イベントログ
+        NetFlow
         <v-spacer></v-spacer>
         <v-text-field
           v-model="search"
@@ -24,12 +24,6 @@
         loading-text="Loading... Please wait"
         class="log"
       >
-        <template v-slot:[`item.Level`]="{ item }">
-          <v-icon :color="$getStateColor(item.Level)">{{
-            $getStateIconName(item.Level)
-          }}</v-icon>
-          {{ $getStateName(item.Level) }}
-        </template>
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -49,11 +43,6 @@
           <span class="headline">検索条件</span>
         </v-card-title>
         <v-card-text>
-          <v-select
-            v-model="filter.Level"
-            :items="$filterEventLevelList"
-            label="状態"
-          ></v-select>
           <v-row justify="space-around">
             <v-menu
               ref="sdMenu"
@@ -168,19 +157,22 @@
             </v-menu>
           </v-row>
           <v-select
-            v-model="filter.NodeID"
-            :items="nodeList"
-            label="関連ノード"
-          ></v-select>
-          <v-select
-            v-model="filter.Type"
-            :items="$filterEventTypeList"
-            label="種別"
+            v-model="filter.FlowType"
+            :items="flowTypeList"
+            label="フロー種別"
           >
           </v-select>
           <v-text-field
-            v-model="filter.Event"
-            label="イベント（正規表現）"
+            v-model="filter.Src"
+            label="送信元（正規表現）"
+          ></v-text-field>
+          <v-text-field
+            v-model="filter.Dst"
+            label="宛先（正規表現）"
+          ></v-text-field>
+          <v-text-field
+            v-model="filter.Protcol"
+            label="Protocol（正規表現）"
           ></v-text-field>
         </v-card-text>
         <v-card-actions>
@@ -202,20 +194,12 @@
 <script>
 export default {
   async fetch() {
-    const r = await this.$axios.$post('/api/eventlogs', this.filter)
-    this.nodeList = r.NodeList
-    const nodeMap = {}
-    r.NodeList.forEach((e) => {
-      nodeMap[e.value] = e.text
-    })
-    this.nodeList.unshift({ text: '指定しない', value: '' })
-    this.logs = r.EventLogs
+    this.logs = await this.$axios.$post('/api/netflow', this.filter)
     this.logs.forEach((e) => {
-      e.NodeName = nodeMap[e.NodeID]
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
     })
-    this.$showLogLevelChart(this.logs)
+    this.$showLogCountChart(this.logs)
   },
   data() {
     return {
@@ -226,29 +210,36 @@ export default {
       etMenuShow: false,
       nodeList: [],
       filter: {
-        Level: '',
         StartDate: '',
         StartTime: '',
         EndDate: '',
         EndTime: '',
-        Type: '',
-        NodeID: '',
-        Event: '',
+        Src: '',
+        Dst: '',
+        Protocol: '',
+        FlowType: 'netflow',
       },
       search: '',
       headers: [
-        { text: '状態', value: 'Level', width: '10%' },
-        { text: '発生日時', value: 'TimeStr', width: '15%' },
-        { text: '種別', value: 'Type', width: '10%' },
-        { text: '関連ノード', value: 'NodeName', width: '15%' },
-        { text: 'イベント', value: 'Event', width: '50%' },
+        { text: '受信日時', value: 'TimeStr', width: '15%' },
+        { text: '送信元', value: 'Src', width: '20%' },
+        { text: '宛先', value: 'Dst', width: '20%' },
+        { text: 'プロトコル', value: 'Protocol', width: '10%' },
+        { text: 'TCPフラグ', value: 'TCPFlags', width: '10%' },
+        { text: 'パケット数', value: 'Packets', width: '5%' },
+        { text: 'バイト数', value: 'Bytes', width: '10%' },
+        { text: '期間(Sec)', value: 'Duration', width: '10%' },
+      ],
+      flowTypeList: [
+        { text: 'NetFlow', value: 'netflow' },
+        { text: 'IPFIX', value: 'ipfix' },
       ],
       logs: [],
     }
   },
   mounted() {
-    this.$makeLogLevelChart('logCountChart')
-    this.$showLogLevelChart(this.logs)
+    this.$makeLogCountChart('logCountChart')
+    this.$showLogCountChart(this.logs)
   },
   methods: {
     doFilter() {

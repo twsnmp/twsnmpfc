@@ -203,13 +203,8 @@ export default {
         },
         {
           icon: 'mdi-check-network',
-          title: 'Netflow',
+          title: 'NetFlow',
           to: '/log/netflow',
-        },
-        {
-          icon: 'mdi-check-network-outline',
-          title: 'IPFIX',
-          to: '/log/ipfix',
         },
       ],
       confMenus: [

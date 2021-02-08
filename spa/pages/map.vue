@@ -5,7 +5,7 @@
         <v-card-title>
           <span class="headline">ノード削除</span>
         </v-card-title>
-        <v-alert :value="deleteError" type="error" dense dismissible>
+        <v-alert v-model="deleteError" type="error" dense dismissible>
           ノードを削除できませんでした
         </v-alert>
         <v-card-text> 選択したノードを削除しますか？ </v-card-text>
@@ -21,7 +21,7 @@
         <v-card-title>
           <span class="headline">ノード設定</span>
         </v-card-title>
-        <v-alert :value="editNodeError" type="error" dense dismissible>
+        <v-alert v-model="editNodeError" type="error" dense dismissible>
           ノードの保存に失敗しました
         </v-alert>
         <v-card-text>
@@ -76,7 +76,7 @@
         <v-card-title>
           <span class="headline">ライン編集</span>
         </v-card-title>
-        <v-alert :value="lineError" type="error" dense dismissible>
+        <v-alert v-model="lineError" type="error" dense dismissible>
           ラインの保存に失敗しました
         </v-alert>
         <v-card-text>

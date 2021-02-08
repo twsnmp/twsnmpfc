@@ -12,10 +12,10 @@
           hide-details
         ></v-text-field>
       </v-card-title>
-      <v-alert :value="deleteError" type="error" dense dismissible>
+      <v-alert v-model="deleteError" type="error" dense dismissible>
         ポーリングを削除できませんでした
       </v-alert>
-      <v-alert :value="updateError" type="error" dense dismissible>
+      <v-alert v-model="updateError" type="error" dense dismissible>
         ポーリングを変更できませんでした
       </v-alert>
       <v-data-table :headers="headers" :items="pollings" :search="search" dense>

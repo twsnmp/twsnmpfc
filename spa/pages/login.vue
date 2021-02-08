@@ -1,6 +1,6 @@
 <template>
   <v-card max-width="500" class="mx-auto">
-    <v-alert :value="error" type="error">
+    <v-alert v-model="error" type="error">
       ユーザーIDまたはパスワードが正しくありません
     </v-alert>
     <v-card-title primary-title>

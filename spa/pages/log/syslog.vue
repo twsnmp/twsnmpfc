@@ -20,6 +20,8 @@
         sort-by="TimeStr"
         sort-desc
         dense
+        :loading="$fetchState.pending"
+        loading-text="Loading... Please wait"
         class="log"
       >
         <template v-slot:[`item.Level`]="{ item }">

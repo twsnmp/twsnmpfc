@@ -11,13 +11,13 @@
       <v-alert v-model="error" type="error" dense dismissible>
         通知設定の保存に失敗しました
       </v-alert>
-      <v-alert v-model="saved" type="primary" dense dismissible>
+      <v-alert v-model="saved" type="success" dense dismissible>
         通知設定を保存しました
       </v-alert>
       <v-alert v-model="failed" type="error" dense dismissible>
         テストメールの送信に失敗しました
       </v-alert>
-      <v-alert v-model="sent" type="primary" dense dismissible>
+      <v-alert v-model="sent" type="success" dense dismissible>
         テストメールを送信しました
       </v-alert>
       <v-card-text>

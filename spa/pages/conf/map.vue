@@ -8,10 +8,10 @@
   <v-card v-else max-width="600" class="mx-auto">
     <v-form>
       <v-card-title primary-title> マップ設定 </v-card-title>
-      <v-alert :value="error" type="error" dense dismissible>
+      <v-alert v-model="error" type="error" dense dismissible>
         マップ設定の保存に失敗しました
       </v-alert>
-      <v-alert :value="saved" type="success" dense dismissible>
+      <v-alert v-model="saved" type="success" dense dismissible>
         マップ設定を保存しました
       </v-alert>
       <v-card-text>
