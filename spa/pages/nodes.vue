@@ -26,8 +26,9 @@
           {{ $getStateName(item.State) }}
         </template>
         <template v-slot:[`item.actions`]="{ item }">
-          <v-icon small class="mr-2" @click="editNodeFunc(item)">
-            mdi-pencil
+          <v-icon small @click="editNodeFunc(item)"> mdi-pencil </v-icon>
+          <v-icon small @click="$router.push({ path: '/node/' + item.ID })">
+            mdi-eye
           </v-icon>
           <v-icon small @click="deleteNodeFunc(item)"> mdi-delete </v-icon>
         </template>

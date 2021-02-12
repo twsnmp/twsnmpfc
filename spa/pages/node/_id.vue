@@ -1,11 +1,41 @@
 <template>
   <v-row justify="center">
-    <v-card>
+    <v-card style="width: 100%">
       <v-card-title>
-        ポーリングリスト
+        イベントログ - {{ node.Name }}
         <v-spacer></v-spacer>
         <v-text-field
-          v-model="search"
+          v-model="logSearch"
+          append-icon="mdi-magnify"
+          label="検索"
+          single-line
+          hide-details
+        ></v-text-field>
+      </v-card-title>
+      <div id="logCountChart" style="width: 100%; height: 200px"></div>
+      <v-data-table
+        :headers="logHeaders"
+        :items="logs"
+        :search="logSearch"
+        sort-by="TimeStr"
+        sort-desc
+        dense
+        :loading="$fetchState.pending"
+        loading-text="Loading... Please wait"
+        class="log"
+      >
+        <template v-slot:[`item.Level`]="{ item }">
+          <v-icon :color="$getStateColor(item.Level)">{{
+            $getStateIconName(item.Level)
+          }}</v-icon>
+          {{ $getStateName(item.Level) }}
+        </template>
+      </v-data-table>
+      <v-card-title>
+        ポーリング - {{ node.Name }}
+        <v-spacer></v-spacer>
+        <v-text-field
+          v-model="pollingSearch"
           append-icon="mdi-magnify"
           label="検索"
           single-line
@@ -18,7 +48,12 @@
       <v-alert v-model="updateError" type="error" dense dismissible>
         ポーリングを変更できませんでした
       </v-alert>
-      <v-data-table :headers="headers" :items="pollings" :search="search" dense>
+      <v-data-table
+        :headers="pollingHeaders"
+        :items="pollings"
+        :search="pollingSearch"
+        dense
+      >
         <template v-slot:[`item.State`]="{ item }">
           <v-icon :color="$getStateColor(item.State)">{{
             $getStateIconName(item.State)
@@ -38,18 +73,24 @@
           <v-icon small @click="deletePollingFunc(item)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" dark @click="addPolling">
+          <v-icon>mdi-plus</v-icon>
+          追加
+        </v-btn>
+        <v-btn color="normal" dark @click="$router.go(-1)">
+          <v-icon>mdi-arrow-left</v-icon>
+          戻る
+        </v-btn>
+      </v-card-actions>
     </v-card>
     <v-dialog v-model="editDialog" max-width="500px">
       <v-card>
         <v-card-title>
-          <span class="headline">ノード情報{{ id }}</span>
+          <span class="headline">ポーリング編集</span>
         </v-card-title>
         <v-card-text>
-          <v-select
-            v-model="editPolling.NodeID"
-            :items="nodeList"
-            label="ノード"
-          ></v-select>
           <v-text-field v-model="editPolling.Name" label="名前"></v-text-field>
           <v-select v-model="editPolling.Type" :items="$typeList" label="種別">
           </v-select>
@@ -155,25 +196,35 @@
 <script>
 export default {
   async fetch() {
-    const r = await this.$axios.$get('/api/pollings')
-    this.nodeList = r.NodeList
-    const nodeMap = {}
-    r.NodeList.forEach((e) => {
-      nodeMap[e.value] = e.text
-    })
-    this.pollings = r.Pollings
-    this.pollings.forEach((e) => {
-      e.NodeName = nodeMap[e.NodeID]
-      const t = new Date(e.LastTime / (1000 * 1000))
+    const r = await this.$axios.$get('/api/node/' + this.$route.params.id)
+    this.node = r.Node
+    if (r.Logs) {
+      this.logs = r.Logs
+    }
+    this.logs.forEach((e) => {
+      const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
     })
-  },
-  asyncData({ params }) {
-    const id = params.id
-    return { id }
+    if (r.Pollings) {
+      this.pollings = r.Pollings
+    }
+    this.pollings.forEach((e) => {
+      const t = new Date(e.LastTime / (1000 * 1000))
+      e.LastTimeStr = this.$timeFormat(t)
+    })
+    this.$showLogLevelChart(this.logs)
   },
   data() {
     return {
+      node: {},
+      logSearch: '',
+      logHeaders: [
+        { text: '状態', value: 'Level', width: '10%' },
+        { text: '発生日時', value: 'TimeStr', width: '15%' },
+        { text: '種別', value: 'Type', width: '10%' },
+        { text: 'イベント', value: 'Event', width: '50%' },
+      ],
+      logs: [],
       editDialog: false,
       deleteDialog: false,
       editIndex: -1,
@@ -182,10 +233,9 @@ export default {
       updateError: false,
       editPolling: {},
       deletePolling: {},
-      search: '',
-      headers: [
+      pollingSearch: '',
+      pollingHeaders: [
         { text: '状態', value: 'State' },
-        { text: 'ノード', value: 'NodeName' },
         { text: '名前', value: 'Name' },
         { text: 'レベル', value: 'Level' },
         { text: '種別', value: 'Type' },
@@ -194,14 +244,32 @@ export default {
         { text: '数値', value: 'LastVal' },
         { text: '操作', value: 'actions' },
       ],
-      nodeList: [],
       pollings: [],
     }
+  },
+  mounted() {
+    this.$makeLogLevelChart('logCountChart')
+    this.$showLogLevelChart(this.logs)
   },
   methods: {
     editPollingFunc(item) {
       this.editIndex = this.pollings.indexOf(item)
       this.editPolling = Object.assign({}, item)
+      this.editDialog = true
+    },
+    addPolling() {
+      this.editIndex = -1
+      this.editPolling = {
+        Name: '',
+        NodeID: this.node.ID,
+        Type: 'ping',
+        Polling: '',
+        Level: 'low',
+        PollInt: 60,
+        Timeout: 1,
+        Retry: 0,
+        LogMode: 0,
+      }
       this.editDialog = true
     },
     deletePollingFunc(item) {
@@ -238,6 +306,16 @@ export default {
           this.updateError = true
           this.$fetch()
         })
+      } else {
+        this.$axios
+          .post('/api/polling/add', this.editPolling)
+          .then(() => {
+            this.$fetch()
+          })
+          .catch((e) => {
+            this.updateError = true
+            this.$fetch()
+          })
       }
       this.closeEdit()
     },

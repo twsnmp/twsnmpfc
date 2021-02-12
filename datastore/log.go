@@ -303,6 +303,44 @@ func (ds *DataStore) AddPollingLog(p *PollingEnt) error {
 	return nil
 }
 
+func (ds *DataStore) ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bool) error {
+	if ds.db == nil {
+		return ErrDBNotOpen
+	}
+	sk := fmt.Sprintf("%016x", st)
+	return ds.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("pollingLogs"))
+		if b == nil {
+			return nil
+		}
+		c := b.Cursor()
+		for k, v := c.Seek([]byte(sk)); k != nil; k, v = c.Next() {
+			var e PollingLogEnt
+			err := json.Unmarshal(v, &e)
+			if err != nil {
+				log.Printf("ForEachPollingLog v=%s err=%v", v, err)
+				continue
+			}
+			if e.PollingID != pollingID {
+				continue
+			}
+			if math.IsNaN(e.NumVal) {
+				continue
+			}
+			if e.Time < st {
+				continue
+			}
+			if e.Time > et {
+				break
+			}
+			if !f(&e) {
+				break
+			}
+		}
+		return nil
+	})
+}
+
 func (ds *DataStore) GetPollingLog(startTime, endTime, pollingID string) []PollingLogEnt {
 	ret := []PollingLogEnt{}
 	if ds.db == nil {

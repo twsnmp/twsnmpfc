@@ -253,3 +253,87 @@ func postPollingUpdate(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
+
+func postPollingAdd(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	p := new(datastore.PollingEnt)
+	if err := c.Bind(p); err != nil {
+		log.Printf("postPollingAdd err=%v", err)
+		return echo.ErrBadRequest
+	}
+	// ここで入力データのチェックをする
+	p.NextTime = 0
+	p.State = "unknown"
+	if err := api.DataStore.AddPolling(p); err != nil {
+		log.Printf("postPollingAdd err=%v", err)
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+type nodeWebAPI struct {
+	Node     *datastore.NodeEnt
+	Logs     []*datastore.EventLogEnt
+	Pollings []*datastore.PollingEnt
+}
+
+func getNode(c echo.Context) error {
+	id := c.Param("id")
+	api := c.Get("api").(*WebAPI)
+	r := nodeWebAPI{}
+	r.Node = api.DataStore.GetNode(id)
+	if r.Node == nil {
+		log.Printf("node not found")
+		return echo.ErrBadRequest
+	}
+	api.DataStore.ForEachPollings(func(p *datastore.PollingEnt) bool {
+		if p.NodeID == id {
+			r.Pollings = append(r.Pollings, p)
+		}
+		return true
+	})
+	i := 0
+	st := time.Now().Add(-time.Hour * 24).UnixNano()
+	et := time.Now().UnixNano()
+	api.DataStore.ForEachEventLog(st, et, func(l *datastore.EventLogEnt) bool {
+		if l.NodeID != id {
+			return true
+		}
+		r.Logs = append(r.Logs, l)
+		i++
+		return i <= api.DataStore.MapConf.LogDispSize
+	})
+
+	return c.JSON(http.StatusOK, r)
+}
+
+type pollingWebAPI struct {
+	Node    *datastore.NodeEnt
+	Polling *datastore.PollingEnt
+	Logs    []*datastore.PollingLogEnt
+}
+
+func getPolling(c echo.Context) error {
+	id := c.Param("id")
+	api := c.Get("api").(*WebAPI)
+	r := pollingWebAPI{}
+	r.Polling = api.DataStore.GetPolling(id)
+	if r.Polling == nil {
+		log.Printf("polling not found id=%s", id)
+		return echo.ErrBadRequest
+	}
+	r.Node = api.DataStore.GetNode(r.Polling.NodeID)
+	if r.Node == nil {
+		log.Printf("node not found id=%s", r.Polling.NodeID)
+		return echo.ErrBadRequest
+	}
+	i := 0
+	st := time.Now().Add(-time.Hour * 24 * 356).UnixNano()
+	et := time.Now().UnixNano()
+	api.DataStore.ForEachPollingLog(st, et, id, func(l *datastore.PollingLogEnt) bool {
+		r.Logs = append(r.Logs, l)
+		i++
+		return i <= api.DataStore.MapConf.LogDispSize
+	})
+	return c.JSON(http.StatusOK, r)
+}
