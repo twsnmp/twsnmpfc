@@ -70,7 +70,7 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.POST("/line/add", postLineAdd)
 
 	r.GET("/pollings", getPollings)
-	r.GET("/polling/:id", getPolling)
+	r.POST("/polling/:id", postPolling)
 	r.POST("/polling/add", postPollingAdd)
 	r.POST("/polling/update", postPollingUpdate)
 	r.POST("/polling/delete", postPollingDelete)

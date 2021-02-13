@@ -37,7 +37,7 @@ func postEventLogs(c echo.Context) error {
 	}
 	eventFilter := makeStringFilter(filter.Event)
 	levelFilter := getLogLevelFilter(filter.Level)
-	st := makeTimeFilter(filter.StartDate, filter.EndDate, 24)
+	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 
 	api.DataStore.ForEachNodes(func(n *datastore.NodeEnt) bool {

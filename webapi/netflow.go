@@ -46,7 +46,7 @@ func postNetFlow(c echo.Context) error {
 	srcFilter := makeStringFilter(filter.Src)
 	dstFilter := makeStringFilter(filter.Dst)
 	protocolFilter := makeStringFilter(filter.Protocol)
-	st := makeTimeFilter(filter.StartDate, filter.EndDate, 3)
+	st := makeTimeFilter(filter.StartDate, filter.StartTime, 3)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
 	ipfix := filter.FlowType == "ipfix"

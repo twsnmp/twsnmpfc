@@ -32,9 +32,14 @@
           {{ $getStateName(item.Level) }}
         </template>
         <template v-slot:[`item.actions`]="{ item }">
-          <v-icon small class="mr-2" @click="editPollingFunc(item)">
-            mdi-pencil
+          <v-icon
+            v-if="item.LogMode > 0"
+            small
+            @click="$router.push({ path: '/polling/' + item.ID })"
+          >
+            mdi-eye
           </v-icon>
+          <v-icon small @click="editPollingFunc(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deletePollingFunc(item)"> mdi-delete </v-icon>
         </template>
       </v-data-table>

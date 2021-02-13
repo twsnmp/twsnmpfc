@@ -113,7 +113,7 @@ func postSyslog(c echo.Context) error {
 	hostFilter := makeStringFilter(filter.Host)
 	tagFilter := makeStringFilter(filter.Tag)
 	levelFilter := getLogLevelFilter(filter.Level)
-	st := makeTimeFilter(filter.StartDate, filter.EndDate, 3)
+	st := makeTimeFilter(filter.StartDate, filter.StartTime, 3)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
 	api.DataStore.ForEachLog(st, et, "syslog", func(l *datastore.LogEnt) bool {

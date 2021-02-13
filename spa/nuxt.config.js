@@ -29,6 +29,8 @@ export default {
     '@/plugins/map.js',
     '@/plugins/echarts/logcount.js',
     '@/plugins/echarts/loglevel.js',
+    '@/plugins/echarts/logstate.js',
+    '@/plugins/echarts/polling.js',
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)

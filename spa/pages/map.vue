@@ -155,13 +155,13 @@
         </v-simple-table>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="showNodeInfoPage">
+            <v-icon>mdi-eye</v-icon>
+            詳細
+          </v-btn>
           <v-btn color="primary" dark @click="showEditNodeDialog">
             <v-icon>mdi-pencile</v-icon>
             編集
-          </v-btn>
-          <v-btn color="success" dark @click="showNodeInfoPage">
-            <v-icon>mdi-eye</v-icon>
-            詳細
           </v-btn>
           <v-btn color="normal" dark @click="showNodeDialog = false">
             <v-icon>mdi-close</v-icon>

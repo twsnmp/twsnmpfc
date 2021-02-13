@@ -42,7 +42,7 @@ func postSnmpTrap(c echo.Context) error {
 	fromAddressFilter := makeStringFilter(filter.FromAddress)
 	trapTypeFilter := makeStringFilter(filter.TrapType)
 	variablesFilter := makeStringFilter(filter.Variables)
-	st := makeTimeFilter(filter.StartDate, filter.EndDate, 24)
+	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
 	api.DataStore.ForEachLog(st, et, "trap", func(l *datastore.LogEnt) bool {

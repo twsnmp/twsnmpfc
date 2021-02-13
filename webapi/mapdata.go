@@ -313,7 +313,14 @@ type pollingWebAPI struct {
 	Logs    []*datastore.PollingLogEnt
 }
 
-func getPolling(c echo.Context) error {
+type timeFilter struct {
+	StartDate string
+	StartTime string
+	EndDate   string
+	EndTime   string
+}
+
+func postPolling(c echo.Context) error {
 	id := c.Param("id")
 	api := c.Get("api").(*WebAPI)
 	r := pollingWebAPI{}
@@ -327,9 +334,15 @@ func getPolling(c echo.Context) error {
 		log.Printf("node not found id=%s", r.Polling.NodeID)
 		return echo.ErrBadRequest
 	}
+	filter := new(timeFilter)
+	if err := c.Bind(filter); err != nil {
+		log.Printf("postEventLogs err=%v", err)
+		return echo.ErrBadRequest
+	}
+	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24)
+	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
+	log.Printf("%d %d %v", st, et, filter)
 	i := 0
-	st := time.Now().Add(-time.Hour * 24 * 356).UnixNano()
-	et := time.Now().UnixNano()
 	api.DataStore.ForEachPollingLog(st, et, id, func(l *datastore.PollingLogEnt) bool {
 		r.Logs = append(r.Logs, l)
 		i++
