@@ -64,7 +64,7 @@ const mapMain = (p5) => {
       return
     }
     mapRedraw = false
-    p5.background(250)
+    p5.background(23)
     // if(backimg){
     //   p5.image(backimg,0,0);
     // }
@@ -91,13 +91,9 @@ const mapMain = (p5) => {
       p5.push()
       p5.translate(nodes[k].X, nodes[k].Y)
       if (selectedNodes.includes(nodes[k].ID)) {
-        p5.fill('rgba(240,248,255,0.9)')
+        p5.fill('rgba(23,23,23,0.9)')
         p5.stroke(getStateColor(nodes[k].State))
         p5.rect(-24, -24, 48, 48)
-      } else {
-        p5.fill('rgba(250,250,250,0.8)')
-        p5.stroke(250)
-        p5.rect(-18, -18, 36, 36)
       }
       p5.textFont('Material Design Icons')
       p5.textSize(32)
@@ -106,7 +102,7 @@ const mapMain = (p5) => {
       p5.text(icon, 0, 0)
       p5.textFont('Arial')
       p5.textSize(12)
-      p5.fill(0)
+      p5.fill(250)
       p5.text(nodes[k].Name, 0, 32)
       p5.pop()
     }

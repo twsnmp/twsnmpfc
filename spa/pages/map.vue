@@ -1,5 +1,36 @@
 <template>
-  <v-row>
+  <v-row justify="center">
+    <v-card style="width: 100%">
+      <v-card-title>
+        イベントログ
+        <v-spacer></v-spacer>
+        <v-text-field
+          v-model="search"
+          append-icon="mdi-magnify"
+          label="検索"
+          single-line
+          hide-details
+        ></v-text-field>
+      </v-card-title>
+      <v-data-table
+        :headers="headers"
+        :items="map.Logs"
+        :search="search"
+        sort-by="TimeStr"
+        sort-desc
+        dense
+        :loading="$fetchState.pending"
+        loading-text="Loading... Please wait"
+        class="log"
+      >
+        <template v-slot:[`item.Level`]="{ item }">
+          <v-icon :color="$getStateColor(item.Level)">{{
+            $getStateIconName(item.Level)
+          }}</v-icon>
+          {{ $getStateName(item.Level) }}
+        </template>
+      </v-data-table>
+    </v-card>
     <v-dialog v-model="deleteDialog" max-width="500px">
       <v-card>
         <v-card-title>
@@ -179,6 +210,10 @@ export default {
     this.map = await this.$axios.$get('/api/map')
     this.$setMAP(this.map)
     this.$store.commit('map/setMAP', this.map)
+    this.map.Logs.forEach((e) => {
+      const t = new Date(e.Time / (1000 * 1000))
+      e.TimeStr = this.$timeFormat(t)
+    })
   },
   data() {
     return {
@@ -205,7 +240,16 @@ export default {
         Pollings: [],
         Lines: [],
         MapConf: { MapName: '' },
+        Logs: [],
       },
+      search: '',
+      headers: [
+        { text: '状態', value: 'Level', width: '10%' },
+        { text: '発生日時', value: 'TimeStr', width: '15%' },
+        { text: '種別', value: 'Type', width: '10%' },
+        { text: '関連ノード', value: 'NodeName', width: '15%' },
+        { text: 'イベント', value: 'Event', width: '50%' },
+      ],
     }
   },
   computed: {

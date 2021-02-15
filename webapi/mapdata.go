@@ -15,6 +15,7 @@ type mapWebAPI struct {
 	Nodes      map[string]*datastore.NodeEnt
 	Lines      []*datastore.LineEnt
 	Pollings   map[string][]*datastore.PollingEnt
+	Logs       []*datastore.EventLogEnt
 }
 
 func getMap(c echo.Context) error {
@@ -36,6 +37,12 @@ func getMap(c echo.Context) error {
 	api.DataStore.ForEachPollings(func(p *datastore.PollingEnt) bool {
 		r.Pollings[p.NodeID] = append(r.Pollings[p.NodeID], p)
 		return true
+	})
+	i := 0
+	api.DataStore.ForEachLastEventLog("", func(e *datastore.EventLogEnt) bool {
+		r.Logs = append(r.Logs, e)
+		i++
+		return i < 100
 	})
 	r.LastUpdate = time.Now().Unix()
 	return c.JSON(http.StatusOK, r)

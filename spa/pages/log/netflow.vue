@@ -255,9 +255,3 @@ export default {
   },
 }
 </script>
-
-<style>
-.log td {
-  word-break: break-all;
-}
-</style>

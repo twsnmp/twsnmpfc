@@ -204,14 +204,9 @@ export default {
   async fetch() {
     const r = await this.$axios.$post('/api/eventlogs', this.filter)
     this.nodeList = r.NodeList
-    const nodeMap = {}
-    r.NodeList.forEach((e) => {
-      nodeMap[e.value] = e.text
-    })
     this.nodeList.unshift({ text: '指定しない', value: '' })
     this.logs = r.EventLogs
     this.logs.forEach((e) => {
-      e.NodeName = nodeMap[e.NodeID]
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
     })
@@ -264,9 +259,3 @@ export default {
   },
 }
 </script>
-
-<style>
-.log td {
-  word-break: break-all;
-}
-</style>

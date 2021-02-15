@@ -258,7 +258,10 @@ export default {
 <style>
 #map {
   width: 100%;
-  height: 800px;
+  height: 600px;
   overflow: scroll;
+}
+.log td {
+  word-break: break-all;
 }
 </style>
