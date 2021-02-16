@@ -313,6 +313,10 @@ export default {
           this.editNode = this.map.Nodes[r.Param]
           this.showNodeDialog = true
           break
+        case 'addNode':
+          this.editNode = r.Param
+          this.editNodeDialog = true
+          break
       }
     },
     showEditLineDiaglog(p) {

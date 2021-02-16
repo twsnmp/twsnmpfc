@@ -53,6 +53,7 @@ const mapMain = (p5) => {
   let lastMouseY
   let dragMode  = 0 // 0 : None , 1: Select , 2 :Move
   const draggedNodes = []
+  let clickInCanvas = false
 
   p5.setup = () => {
     const c = p5.createCanvas(MAP_SIZE_X, MAP_SIZE_Y)
@@ -146,6 +147,8 @@ const mapMain = (p5) => {
   }
 
   const canvasMousePressed = () => {
+    clickInCanvas = true
+    mapRedraw = true
     if (
       p5.keyIsDown(p5.SHIFT) &&
       selectedNodes.length === 1 &&
@@ -154,8 +157,8 @@ const mapMain = (p5) => {
       editLine()
       selectedNodes.length = 0
       return true
-    } else if (setSelectNode(false)) {
-      mapRedraw = true
+    } else  {
+      setSelectNode(false)
     }
     lastMouseX = p5.mouseX
     lastMouseY = p5.mouseY
@@ -166,12 +169,17 @@ const mapMain = (p5) => {
   }
 
   p5.mouseReleased = () => {
-    if( dragMode === 0) {
+    mapRedraw = true
+    if(!clickInCanvas){
+      selectedNodes.length = 0
+      return
+    }
+    clickInCanvas = false 
+    if (dragMode === 0) {
       return false
     }
-    if( dragMode === 1) {
+    if (dragMode === 1) {
       dragMode = 0
-      mapRedraw = true
       return false
     }
     if (draggedNodes.length === 0) {
@@ -183,7 +191,9 @@ const mapMain = (p5) => {
   p5.keyReleased = () => {
     if (p5.keyCode === p5.DELETE || p5.keyCode === p5.BACKSPACE) {
       // Delete
-      deleteNodes()
+      if (selectedNodes.length > 0){
+        deleteNodes()
+      }
     }
     if (p5.keyCode === p5.ENTER) {
       p5.doubleClicked()
@@ -192,28 +202,35 @@ const mapMain = (p5) => {
   }
 
   p5.doubleClicked = () => {
-    // Show Node Info
-    showNode()
+    if (selectedNodes.length === 1 ){
+      // Show Node Info
+      showNode()
+    } else if (selectedNodes.length === 0) {
+      // Add Node
+      addNode()
+    }
     return true
   }
-
+  const checkNodePos = (n) => {
+    if (n.X < 16) {
+      n.X = 16
+    }
+    if (n.Y < 16) {
+      n.Y = 16
+    }
+    if (n.X > MAP_SIZE_X) {
+      n.X = MAP_SIZE_X - 16
+    }
+    if (n.Y > MAP_SIZE_Y) {
+      n.Y = MAP_SIZE_Y - 16
+    }
+  }
   const dragMoveNodes = () => {
     selectedNodes.forEach((id) => {
       if (nodes[id]) {
         nodes[id].X += p5.mouseX - lastMouseX
         nodes[id].Y += p5.mouseY - lastMouseY
-        if (nodes[id].X < 16) {
-          nodes[id].X = 16
-        }
-        if (nodes[id].Y < 16) {
-          nodes[id].Y = 16
-        }
-        if (nodes[id].X > MAP_SIZE_X) {
-          nodes[id].X = MAP_SIZE_X - 16
-        }
-        if (nodes[id].Y > MAP_SIZE_Y) {
-          nodes[id].Y = MAP_SIZE_Y - 16
-        }
+        checkNodePos(nodes[id])
         if (!draggedNodes.includes(id)) {
           draggedNodes.push(id)
         }
@@ -297,13 +314,26 @@ const mapMain = (p5) => {
     draggedNodes.length = 0
   }
   const showNode = () => {
-    if (selectedNodes.length !== 1 ){
-      return
-    }
     if (mapCallBack) {
       mapCallBack({
         Cmd: 'showNode',
         Param: selectedNodes[0],
+      })
+    }
+  }
+  const addNode = () => {
+    if (mapCallBack) {
+      const n = {
+          ID: '',
+          Name: '新規ノード',
+          IP:'',
+          X: lastMouseX,
+          Y: lastMouseY,
+      }
+      checkNodePos(n)
+      mapCallBack({
+        Cmd: 'addNode',
+        Param: n,
       })
     }
   }
