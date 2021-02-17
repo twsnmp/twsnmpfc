@@ -124,6 +124,13 @@ func postNodeUpdate(c echo.Context) error {
 		log.Printf("postNodeUpdate err=%v", err)
 		return echo.ErrBadRequest
 	}
+	if nu.ID == "" {
+		if err := api.DataStore.AddNode(nu); err != nil {
+			log.Printf("postNodeUpdate err=%v", err)
+			return echo.ErrBadRequest
+		}
+		return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+	}
 	// ここで入力チェック
 	n := api.DataStore.GetNode(nu.ID)
 	if n == nil {

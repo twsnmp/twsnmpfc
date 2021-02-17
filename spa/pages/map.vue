@@ -31,7 +31,7 @@
         </template>
       </v-data-table>
     </v-card>
-    <v-dialog v-model="deleteDialog" max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
           <span class="headline">ノード削除</span>
@@ -47,7 +47,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="editNodeDialog" max-width="500px">
+    <v-dialog v-model="editNodeDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
           <span class="headline">ノード設定</span>
@@ -102,7 +102,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="lineDialog" max-width="500px">
+    <v-dialog v-model="lineDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
           <span class="headline">ライン編集</span>
@@ -151,7 +151,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="showNodeDialog" max-width="500px">
+    <v-dialog v-model="showNodeDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
           <span class="headline">ノード情報</span>
@@ -191,12 +191,12 @@
             詳細
           </v-btn>
           <v-btn color="primary" dark @click="showEditNodeDialog">
-            <v-icon>mdi-pencile</v-icon>
+            <v-icon>mdi-pencil</v-icon>
             編集
           </v-btn>
           <v-btn color="normal" dark @click="showNodeDialog = false">
             <v-icon>mdi-close</v-icon>
-            閉じる
+            キャンセル
           </v-btn>
         </v-card-actions>
       </v-card>

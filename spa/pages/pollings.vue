@@ -44,7 +44,7 @@
         </template>
       </v-data-table>
     </v-card>
-    <v-dialog v-model="editDialog" max-width="500px">
+    <v-dialog v-model="editDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
           <span class="headline">ポーリング設定</span>
@@ -145,7 +145,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="deleteDialog" max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
           <span class="headline">ポーリング削除</span>

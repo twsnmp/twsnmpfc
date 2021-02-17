@@ -56,7 +56,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="filterDialog" max-width="500px">
+    <v-dialog v-model="filterDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
           <span class="headline">時間範囲</span>

@@ -329,7 +329,18 @@ const mapMain = (p5) => {
           IP:'',
           X: lastMouseX,
           Y: lastMouseY,
-      }
+          Descr: '',
+          Icon: 'desktop',
+          MAC: '',
+          SnmpMode: '',
+          Community: '',
+          User: '',
+          Password: '',
+          PublicKey: '',
+          URL: '',
+          Type: '',
+          AddrMode: '',
+        }
       checkNodePos(n)
       mapCallBack({
         Cmd: 'addNode',
