@@ -28,6 +28,7 @@ func getMapConf(c echo.Context) error {
 	r.EnableNetflowd = api.DataStore.MapConf.EnableNetflowd
 	r.AILevel = api.DataStore.MapConf.AILevel
 	r.AIThreshold = api.DataStore.MapConf.AIThreshold
+	r.BackImage = api.DataStore.MapConf.BackImage
 	return c.JSON(http.StatusOK, r)
 }
 

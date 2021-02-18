@@ -11,9 +11,18 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+type backImage struct {
+	Path   string
+	X      int
+	Y      int
+	Width  int
+	Height int
+}
+
 // MapConfEnt :  マップ設定
 type MapConfEnt struct {
 	MapName        string
+	BackImage      backImage
 	UserID         string
 	Password       string
 	PollInt        int
