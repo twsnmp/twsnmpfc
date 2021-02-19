@@ -1,7 +1,10 @@
 package webapi
 
 import (
+	"io/ioutil"
+	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -116,6 +119,75 @@ func postNotifyTest(c echo.Context) error {
 	}
 	api := c.Get("api").(*WebAPI)
 	if err := api.Notify.SendTestMail(nc); err != nil {
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postBackImage(c echo.Context) error {
+	f, err := c.FormFile("file")
+	if err != nil || f == nil {
+		log.Printf("postBackImage err=%v", err)
+		return echo.ErrBadRequest
+	}
+	if f.Size > 1024*1024*2 {
+		log.Printf("postBackImage size over=%v", f)
+		return echo.ErrBadRequest
+	}
+	fp, err := f.Open()
+	if err != nil {
+		log.Printf("postBackImage err=%v", err)
+		return echo.ErrBadRequest
+	}
+	defer fp.Close()
+	img, err := ioutil.ReadAll(fp)
+	if err != nil {
+		log.Printf("postBackImage err=%v", err)
+		return echo.ErrBadRequest
+	}
+	x, _ := strconv.Atoi(c.FormValue("X"))
+	y, _ := strconv.Atoi(c.FormValue("Y"))
+	w, _ := strconv.Atoi(c.FormValue("Width"))
+	h, _ := strconv.Atoi(c.FormValue("Height"))
+	if w == 0 || h == 0 {
+		w = 0
+		h = 0
+	}
+	api := c.Get("api").(*WebAPI)
+	if err = api.DataStore.SaveBackImage(img); err != nil {
+		log.Printf("postBackImage err=%v", err)
+		return echo.ErrBadRequest
+	}
+	api.DataStore.MapConf.BackImage.X = x
+	api.DataStore.MapConf.BackImage.Y = y
+	api.DataStore.MapConf.BackImage.Width = w
+	api.DataStore.MapConf.BackImage.Height = h
+	api.DataStore.MapConf.BackImage.Path = f.Filename
+	if err := api.DataStore.SaveMapConfToDB(); err != nil {
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func getBackImage(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	img, err := api.DataStore.GetBackImage()
+	if err != nil {
+		log.Printf("postBackImage err=%v", err)
+		return echo.ErrNotFound
+	}
+	ct := http.DetectContentType(img)
+	return c.Blob(http.StatusOK, ct, img)
+}
+
+func deleteBackImage(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	if err := api.DataStore.SaveBackImage([]byte{}); err != nil {
+		log.Printf("postBackImage err=%v", err)
+		return echo.ErrBadRequest
+	}
+	api.DataStore.MapConf.BackImage.Path = ""
+	if err := api.DataStore.SaveMapConfToDB(); err != nil {
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})

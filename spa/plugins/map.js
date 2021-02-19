@@ -8,6 +8,15 @@ let mapCallBack
 
 let nodes = {}
 let lines = []
+let backImage = {
+  X:0,
+  Y:0,
+  Width:0,
+  Height: 0,
+  Path: '',
+  Image: null,
+}
+
 const selectedNodes = []
 
 const iconCodeMap = {}
@@ -20,9 +29,16 @@ const setIconCodeMap = (list) => {
   iconCodeMap.unknown = String.fromCodePoint(0xF0A39)
 }
 
-const setMAP = (m) => {
+const setMAP = (m,url) => {
   nodes = m.Nodes
   lines = m.Lines
+  backImage = m.MapConf.BackImage
+  backImage.Image = null
+  const _p5 = new P5()
+  _p5.loadImage(url+'/backimage',(img)=>{
+    backImage.Image = img
+    mapRedraw = true
+  })
   mapRedraw = true
 }
 
@@ -54,7 +70,6 @@ const mapMain = (p5) => {
   let dragMode  = 0 // 0 : None , 1: Select , 2 :Move
   const draggedNodes = []
   let clickInCanvas = false
-
   p5.setup = () => {
     const c = p5.createCanvas(MAP_SIZE_X, MAP_SIZE_Y)
     c.mousePressed(canvasMousePressed)
@@ -66,9 +81,13 @@ const mapMain = (p5) => {
     }
     mapRedraw = false
     p5.background(23)
-    // if(backimg){
-    //   p5.image(backimg,0,0);
-    // }
+    if(backImage.Image){
+      if(backImage.Width){
+        p5.image(backImage.Image,backImage.X,backImage.Y,backImage.Width,backImage.Height);
+      }else {
+        p5.image(backImage.Image,backImage.X,backImage.Y);
+      }
+    }
     for (const k in lines) {
       if (!nodes[lines[k].NodeID1] || !nodes[lines[k].NodeID2]) {
         continue

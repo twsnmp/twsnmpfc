@@ -174,6 +174,28 @@ func (ds *DataStore) loadConfFromDB() error {
 	return err
 }
 
+func (ds *DataStore) SaveBackImage(img []byte) error {
+	return ds.db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("config"))
+		if b == nil {
+			return fmt.Errorf("bucket config is nil")
+		}
+		return b.Put([]byte("backImage"), img)
+	})
+}
+
+func (ds *DataStore) GetBackImage() ([]byte, error) {
+	var r []byte
+	if ds.db == nil {
+		return r, ErrDBNotOpen
+	}
+	return r, ds.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("config"))
+		r = b.Get([]byte("backImage"))
+		return nil
+	})
+}
+
 func (ds *DataStore) initSecurityKey() {
 	key, err := security.GenPrivateKey(4096)
 	if err != nil {

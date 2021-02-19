@@ -47,12 +47,15 @@ func Init(e *echo.Echo, p *WebAPI) {
 	e.Use(middle(p))
 	// Route
 	e.POST("/login", login)
+	e.GET("/backimage", getBackImage)
 	// JWT保護されたRoute
 	r := e.Group("/api")
 	r.Use(middleware.JWT([]byte(p.Password)))
 	r.GET("/me", getMe)
 	r.GET("/conf/map", getMapConf)
 	r.POST("/conf/map", postMapConf)
+	r.POST("/conf/backimage", postBackImage)
+	r.DELETE("/conf/backimage", deleteBackImage)
 	r.GET("/conf/notify", getNotifyConf)
 	r.POST("/conf/notify", postNotifyConf)
 	r.POST("/notify/test", postNotifyTest)

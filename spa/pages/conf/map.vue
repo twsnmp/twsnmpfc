@@ -6,7 +6,7 @@
         <v-btn color="primary" dark @click="$fetch"> 再試行 </v-btn>
       </v-card-actions>
     </v-card>
-    <v-card v-else max-width="600" class="mx-auto">
+    <v-card v-else max-width="800" class="mx-auto">
       <v-form>
         <v-card-title primary-title> マップ設定 </v-card-title>
         <v-alert v-model="error" type="error" dense dismissible>
@@ -232,7 +232,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
-            v-if="!mapconf.BackImage.Path"
+            v-if="mapconf.BackImage.Path"
             color="error"
             @click="doDeleteBackImage"
           >
@@ -307,36 +307,37 @@ export default {
         })
     },
     selectFile(f) {
-      console.log(f)
       this.backImage.File = f
     },
     doAddBackImage() {
       const formData = new FormData()
       formData.append('X', this.backImage.X)
       formData.append('Y', this.backImage.Y)
-      formData.append('Width', this.description)
-      formData.append('Height', this.itemCount)
-      formData.append('images[]', this.backImagee.File)
+      formData.append('Width', this.backImage.Width)
+      formData.append('Height', this.backImage.Height)
+      formData.append('file', this.backImage.File)
       this.$axios
-        .$post('/api/conf/backimage/add', formData, {
+        .$post('/api/conf/backimage', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         })
         .then((r) => {
-          console.log(r)
-          this.$fetch()
           this.backImageDialog = false
+          this.$fetch()
         })
         .catch((e) => {
           this.backImageError = true
           this.$fetch()
-          console.log(e)
         })
     },
     doDeleteBackImage() {
       this.$axios
-        .post('/api/conf/backimage/delete', { ID: this.deleteNode.ID })
+        .delete('/api/conf/backimage')
+        .then((r) => {
+          this.backImageDialog = false
+          this.$fetch()
+        })
         .catch((e) => {
           this.backImageError = true
           this.$fetch()

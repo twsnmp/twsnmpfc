@@ -208,7 +208,7 @@
 export default {
   async fetch() {
     this.map = await this.$axios.$get('/api/map')
-    this.$setMAP(this.map)
+    this.$setMAP(this.map, this.$axios.defaults.baseURL)
     this.$store.commit('map/setMAP', this.map)
     this.map.Logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
