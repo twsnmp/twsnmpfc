@@ -126,23 +126,12 @@ func postNotifyTest(c echo.Context) error {
 
 func postBackImage(c echo.Context) error {
 	f, err := c.FormFile("file")
-	if err != nil || f == nil {
+	if err != nil {
 		log.Printf("postBackImage err=%v", err)
-		return echo.ErrBadRequest
+		f = nil
 	}
-	if f.Size > 1024*1024*2 {
+	if f != nil && f.Size > 1024*1024*2 {
 		log.Printf("postBackImage size over=%v", f)
-		return echo.ErrBadRequest
-	}
-	fp, err := f.Open()
-	if err != nil {
-		log.Printf("postBackImage err=%v", err)
-		return echo.ErrBadRequest
-	}
-	defer fp.Close()
-	img, err := ioutil.ReadAll(fp)
-	if err != nil {
-		log.Printf("postBackImage err=%v", err)
 		return echo.ErrBadRequest
 	}
 	x, _ := strconv.Atoi(c.FormValue("X"))
@@ -154,15 +143,28 @@ func postBackImage(c echo.Context) error {
 		h = 0
 	}
 	api := c.Get("api").(*WebAPI)
-	if err = api.DataStore.SaveBackImage(img); err != nil {
-		log.Printf("postBackImage err=%v", err)
-		return echo.ErrBadRequest
+	if f != nil {
+		fp, err := f.Open()
+		if err != nil {
+			log.Printf("postBackImage err=%v", err)
+			return echo.ErrBadRequest
+		}
+		defer fp.Close()
+		img, err := ioutil.ReadAll(fp)
+		if err != nil {
+			log.Printf("postBackImage err=%v", err)
+			return echo.ErrBadRequest
+		}
+		if err = api.DataStore.SaveBackImage(img); err != nil {
+			log.Printf("postBackImage err=%v", err)
+			return echo.ErrBadRequest
+		}
+		api.DataStore.MapConf.BackImage.Path = f.Filename
 	}
 	api.DataStore.MapConf.BackImage.X = x
 	api.DataStore.MapConf.BackImage.Y = y
 	api.DataStore.MapConf.BackImage.Width = w
 	api.DataStore.MapConf.BackImage.Height = h
-	api.DataStore.MapConf.BackImage.Path = f.Filename
 	if err := api.DataStore.SaveMapConfToDB(); err != nil {
 		return echo.ErrBadRequest
 	}

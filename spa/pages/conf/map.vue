@@ -1,14 +1,11 @@
 <template>
-  <v-row>
-    <v-card v-if="$fetchState.error" max-width="500" class="mx-auto">
-      <v-alert type="error" dense> マップ設定を取得できません </v-alert>
-      <v-card-actions>
-        <v-btn color="primary" dark @click="$fetch"> 再試行 </v-btn>
-      </v-card-actions>
-    </v-card>
-    <v-card v-else max-width="800" class="mx-auto">
+  <v-row justify="center">
+    <v-card style="width: 80%">
       <v-form>
         <v-card-title primary-title> マップ設定 </v-card-title>
+        <v-alert v-if="$fetchState.error" type="error" dense>
+          マップ設定を取得できません
+        </v-alert>
         <v-alert v-model="error" type="error" dense dismissible>
           マップ設定の保存に失敗しました
         </v-alert>
@@ -173,7 +170,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="primary" dark @click="backImageDialog = true">
-            <v-icon>mdi-content-save</v-icon>
+            <v-icon>mdi-image</v-icon>
             背景画像
           </v-btn>
           <v-btn color="primary" dark @click="submit">
@@ -192,6 +189,11 @@
           背景画像設定の保存に失敗しました
         </v-alert>
         <v-card-text>
+          <v-text-field
+            v-model="backImage.Path"
+            label="画像ファイル名"
+            readonly
+          ></v-text-field>
           <v-file-input
             label="背景画像ファイル"
             accept="image/*"
@@ -257,6 +259,7 @@
 export default {
   async fetch() {
     this.mapconf = await this.$axios.$get('/api/conf/map')
+    this.backImage = this.mapconf.BackImage
   },
   data() {
     return {
@@ -287,7 +290,8 @@ export default {
         Y: 0,
         Width: 0,
         Height: 0,
-        File: '',
+        Path: '',
+        File: null,
       },
       error: false,
       saved: false,

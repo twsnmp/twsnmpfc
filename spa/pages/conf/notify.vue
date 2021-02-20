@@ -1,13 +1,10 @@
 <template>
-  <v-card v-if="$fetchState.error" max-width="500" class="mx-auto">
-    <v-alert type="error" dense> 通知設定を取得できません </v-alert>
-    <v-card-actions>
-      <v-btn color="primary" dark @click="$fetch"> 再試行 </v-btn>
-    </v-card-actions>
-  </v-card>
-  <v-card v-else max-width="600" class="mx-auto">
+  <v-card>
     <v-form>
       <v-card-title primary-title> 通知設定 </v-card-title>
+      <v-alert v-if="$fetchState.error" type="error" dense>
+        通知設定を取得できません
+      </v-alert>
       <v-alert v-model="error" type="error" dense dismissible>
         通知設定の保存に失敗しました
       </v-alert>
