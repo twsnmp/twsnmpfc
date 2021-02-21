@@ -40,9 +40,8 @@ func TestDataStore(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.Remove(backdb)
-	ds.DBStats.BackupFile = backdb
-	ds.DBStats.BackupConfigOnly = true
-	err = ds.BackupDB()
+	ds.Backup.ConfigOnly = true
+	err = ds.BackupDB(backdb)
 	if err != nil {
 		t.Fatal(err)
 	}

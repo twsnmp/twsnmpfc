@@ -1,11 +1,9 @@
 package datastore
 
 import (
-	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/twsnmp/twsnmpfc/security"
 	"go.etcd.io/bbolt"
@@ -121,35 +119,16 @@ func (ds *DataStore) loadConfFromDB() error {
 			log.Println(fmt.Sprintf("Unmarshal notifyConf from DB error=%v", err))
 			return err
 		}
-		var p DBBackupParamEnt
 		v = b.Get([]byte("backup"))
 		if v != nil {
-			if err := json.Unmarshal(v, &p); err != nil {
+			if err := json.Unmarshal(v, &ds.Backup); err != nil {
 				log.Println(fmt.Sprintf("Unmarshal mainWinbackupdowInfo from DB error=%v", err))
-			} else {
-				if p.BackupFile != "" && p.Daily {
-					ds.DBStats.BackupConfigOnly = p.ConfigOnly
-					ds.DBStats.BackupFile = p.BackupFile
-					ds.DBStats.BackupDaily = p.Daily
-					now := time.Now()
-					d := 0
-					if now.Hour() > 2 {
-						d = 1
-					}
-					ds.nextBackup = time.Date(now.Year(), now.Month(), now.Day()+d, 3, 0, 0, 0, time.Local).UnixNano()
-				}
 			}
 		}
 		v = b.Get([]byte("influxdbConf"))
 		if v != nil {
 			if err := json.Unmarshal(v, &ds.InfluxdbConf); err != nil {
 				log.Println(fmt.Sprintf("Unmarshal influxdbConf from DB error=%v", err))
-			}
-		}
-		v = b.Get([]byte("restAPIConf"))
-		if v != nil {
-			if err := json.Unmarshal(v, &ds.RestAPIConf); err != nil {
-				log.Println(fmt.Sprintf("Unmarshal restAPIConf from DB error=%v", err))
 			}
 		}
 		return nil
@@ -257,57 +236,6 @@ func (ds *DataStore) SaveNotifyConfToDB() error {
 	})
 }
 
-func (ds *DataStore) SaveInfluxdbConfToDB() error {
-	if ds.db == nil {
-		return ErrDBNotOpen
-	}
-	s, err := json.Marshal(ds.InfluxdbConf)
-	if err != nil {
-		return err
-	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("config"))
-		if b == nil {
-			return fmt.Errorf("bucket config is nil")
-		}
-		return b.Put([]byte("influxdbConf"), s)
-	})
-}
-
-func (ds *DataStore) SaveRestAPIConfToDB() error {
-	if ds.db == nil {
-		return ErrDBNotOpen
-	}
-	s, err := json.Marshal(ds.RestAPIConf)
-	if err != nil {
-		return err
-	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("config"))
-		if b == nil {
-			return fmt.Errorf("bucket config is nil")
-		}
-		return b.Put([]byte("restAPIConf"), s)
-	})
-}
-
-func (ds *DataStore) SaveBackupParamToDB(p *DBBackupParamEnt) error {
-	if ds.db == nil {
-		return ErrDBNotOpen
-	}
-	s, err := json.Marshal(p)
-	if err != nil {
-		return err
-	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("config"))
-		if b == nil {
-			return fmt.Errorf("bucket config is nil")
-		}
-		return b.Put([]byte("backup"), s)
-	})
-}
-
 func (ds *DataStore) SaveDiscoverConfToDB() error {
 	if ds.db == nil {
 		return ErrDBNotOpen
@@ -323,89 +251,4 @@ func (ds *DataStore) SaveDiscoverConfToDB() error {
 		}
 		return b.Put([]byte("discoverConf"), s)
 	})
-}
-
-func (ds *DataStore) loadPollingTemplateFromDB() error {
-	if ds.db == nil {
-		return ErrDBNotOpen
-	}
-	err := ds.db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("pollingTemplates"))
-		if b == nil {
-			return nil
-		}
-		_ = b.ForEach(func(k, v []byte) error {
-			var pt PollingTemplateEnt
-			if err := json.Unmarshal(v, &pt); err == nil {
-				ds.pollingTemplates[pt.ID] = &pt
-			}
-			return nil
-		})
-		return nil
-	})
-	return err
-}
-
-func getSha1KeyForTemplate(s string) string {
-	h := sha1.New()
-	if _, err := h.Write([]byte(s)); err != nil {
-		log.Printf("getSha1KeyForTemplate err=%v", err)
-	}
-	bs := h.Sum(nil)
-	return fmt.Sprintf("%x", bs)
-}
-
-func (ds *DataStore) AddPollingTemplate(pt *PollingTemplateEnt) error {
-	if ds.db == nil {
-		return ErrDBNotOpen
-	}
-	pt.ID = getSha1KeyForTemplate(pt.Name + ":" + pt.Type + ":" + pt.NodeType + ":" + pt.Polling)
-	if _, ok := ds.pollingTemplates[pt.ID]; ok {
-		return fmt.Errorf("duplicate template")
-	}
-	s, err := json.Marshal(pt)
-	if err != nil {
-		return err
-	}
-	_ = ds.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("pollingTemplates"))
-		return b.Put([]byte(pt.ID), s)
-	})
-	ds.pollingTemplates[pt.ID] = pt
-	return nil
-}
-
-func (ds *DataStore) UpdatePollingTemplate(pt *PollingTemplateEnt) error {
-	if ds.db == nil {
-		return ErrDBNotOpen
-	}
-	if _, ok := ds.pollingTemplates[pt.ID]; !ok {
-		return ErrInvalidID
-	}
-	newID := getSha1KeyForTemplate(pt.Name + ":" + pt.Type + ":" + pt.NodeType + ":" + pt.Polling)
-	if newID != pt.ID {
-		// 更新後に同じ内容のテンプレートがないか確認する
-		if _, ok := ds.pollingTemplates[newID]; ok {
-			return fmt.Errorf("duplicate template")
-		}
-	}
-	// 削除してから追加する
-	_ = ds.DeletePollingTemplate(pt.ID)
-	pt.ID = newID
-	return ds.AddPollingTemplate(pt)
-}
-
-func (ds *DataStore) DeletePollingTemplate(id string) error {
-	if ds.db == nil {
-		return ErrDBNotOpen
-	}
-	if _, ok := ds.pollingTemplates[id]; !ok {
-		return ErrInvalidID
-	}
-	_ = ds.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("pollingTemplates"))
-		return b.Delete([]byte(id))
-	})
-	delete(ds.pollingTemplates, id)
-	return nil
 }

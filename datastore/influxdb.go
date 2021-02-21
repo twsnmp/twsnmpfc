@@ -9,7 +9,35 @@ import (
 
 	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
 	client "github.com/influxdata/influxdb1-client/v2"
+	"go.etcd.io/bbolt"
 )
+
+type InfluxdbConfEnt struct {
+	URL        string
+	User       string
+	Password   string
+	DB         string
+	Duration   string
+	PollingLog string
+	AIScore    string
+}
+
+func (ds *DataStore) SaveInfluxdbConfToDB() error {
+	if ds.db == nil {
+		return ErrDBNotOpen
+	}
+	s, err := json.Marshal(ds.InfluxdbConf)
+	if err != nil {
+		return err
+	}
+	return ds.db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("config"))
+		if b == nil {
+			return fmt.Errorf("bucket config is nil")
+		}
+		return b.Put([]byte("influxdbConf"), s)
+	})
+}
 
 func (ds *DataStore) SetupInfluxdb() error {
 	ds.closeInfluxdb()

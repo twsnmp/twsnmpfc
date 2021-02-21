@@ -45,6 +45,7 @@ func (b *Backend) mapBackend(ctx context.Context) {
 			i++
 			if i > 5 {
 				b.ds.UpdateDBStats()
+				b.ds.CheckDBBackup()
 				i = 0
 			}
 		}
