@@ -1,3 +1,5 @@
+import * as echarts from 'echarts'
+
 const stateList = [
   { text: '重度', color: '#e31a1c', icon: 'mdi-alert-circle', value: 'high' },
   { text: '軽度', color: '#fb9a99', icon: 'mdi-alert-circle', value: 'low' },
@@ -134,15 +136,9 @@ const getIconName = (icon) => {
 
 const timeFormat = (date, format) => {
   if (!format) {
-      format = 'YYYY/MM/DD hh:mm:ss'
+      format = 'yyyy/MM/dd hh:mm:ss'
   }
-  format = format.replace(/YYYY/g, date.getFullYear());
-  format = format.replace(/MM/g, ('0' + (date.getMonth() + 1)).slice(-2));
-  format = format.replace(/DD/g, ('0' + date.getDate()).slice(-2));
-  format = format.replace(/hh/g, ('0' + date.getHours()).slice(-2));
-  format = format.replace(/mm/g, ('0' + date.getMinutes()).slice(-2));
-  format = format.replace(/ss/g, ('0' + date.getSeconds()).slice(-2));
-  return format;
+  return echarts.format.formatTime(format, date)
 }
 
 export default (context, inject) => {

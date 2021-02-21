@@ -125,10 +125,9 @@ export default {
       deleteNode: {},
       search: '',
       headers: [
-        { text: '状態', value: 'State', width: '10%' },
+        { text: '状態', value: 'State', width: '15%' },
         { text: '名前', value: 'Name', width: '20%' },
-        { text: 'IPアドレス', value: 'IP', width: '10%' },
-        { text: 'MACアドレス', value: 'MAC', width: '10%' },
+        { text: 'IPアドレス', value: 'IP', width: '15%' },
         { text: '説明', value: 'Descr', width: '40%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],

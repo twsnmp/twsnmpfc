@@ -182,7 +182,7 @@ export default {
     this.pollings.forEach((e) => {
       e.NodeName = nodeMap[e.NodeID]
       const t = new Date(e.LastTime / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t)
+      e.TimeStr = this.$timeFormat(t, 'MM/dd hh:mm:ss')
     })
   },
   data() {
@@ -197,13 +197,12 @@ export default {
       deletePolling: {},
       search: '',
       headers: [
-        { text: '状態', value: 'State', width: '8%' },
+        { text: '状態', value: 'State', width: '10%' },
         { text: 'ノード', value: 'NodeName', width: '15%' },
-        { text: '名前', value: 'Name', width: '15%' },
-        { text: 'レベル', value: 'Level', width: '8%' },
+        { text: '名前', value: 'Name', width: '20%' },
+        { text: 'レベル', value: 'Level', width: '10%' },
         { text: '種別', value: 'Type', width: '5%' },
-        { text: '定義', value: 'Polling', width: '20%' },
-        { text: '最終実施', value: 'LastTimeStr', width: '14%' },
+        { text: '最終実施', value: 'TimeStr', width: '15%' },
         { text: '数値', value: 'LastVal', width: '5%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],

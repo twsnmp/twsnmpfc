@@ -42,8 +42,8 @@
         <v-card-text> 選択したノードを削除しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="normal" @click="deleteDialog = false">キャンセル</v-btn>
           <v-btn color="error" @click="doDeleteNode">削除</v-btn>
+          <v-btn color="normal" @click="deleteDialog = false">キャンセル</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -186,13 +186,21 @@
         </v-simple-table>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="copyNode">
+            <v-icon>mdi-content-copy</v-icon>
+            コピー
+          </v-btn>
           <v-btn color="primary" dark @click="showNodeInfoPage">
             <v-icon>mdi-eye</v-icon>
-            詳細
+            詳細...
           </v-btn>
           <v-btn color="primary" dark @click="showEditNodeDialog">
             <v-icon>mdi-pencil</v-icon>
-            編集
+            編集...
+          </v-btn>
+          <v-btn color="error" dark @click="deleteNode">
+            <v-icon>mdi-delete</v-icon>
+            削除...
           </v-btn>
           <v-btn color="normal" dark @click="showNodeDialog = false">
             <v-icon>mdi-close</v-icon>
@@ -353,6 +361,26 @@ export default {
         })
         .catch((e) => {
           this.editNodeError = true
+          this.$fetch()
+        })
+    },
+    deleteNode() {
+      this.showNodeDialog = false
+      this.deleteNodes = [this.editNode.ID]
+      this.deleteDialog = true
+    },
+    copyNode() {
+      this.showNodeDialog = false
+      // 位置をずらして新規追加
+      this.editNode.X += 64
+      this.editNode.ID = ''
+      this.editNode.Name += 'のコピー'
+      this.$axios
+        .post('/api/node/update', this.editNode)
+        .then(() => {
+          this.$fetch()
+        })
+        .catch((e) => {
           this.$fetch()
         })
     },

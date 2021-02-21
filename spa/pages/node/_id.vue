@@ -190,8 +190,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="normal" @click="closeDelete">キャンセル</v-btn>
           <v-btn color="error" @click="doDeletePolling">削除</v-btn>
+          <v-btn color="normal" @click="closeDelete">キャンセル</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -240,14 +240,14 @@ export default {
       deletePolling: {},
       pollingSearch: '',
       pollingHeaders: [
-        { text: '状態', value: 'State' },
-        { text: '名前', value: 'Name' },
-        { text: 'レベル', value: 'Level' },
-        { text: '種別', value: 'Type' },
-        { text: '定義', value: 'Polling' },
-        { text: '最終実施', value: 'LastTimeStr' },
-        { text: '数値', value: 'LastVal' },
-        { text: '操作', value: 'actions' },
+        { text: '状態', value: 'State', width: '10%' },
+        { text: 'ノード', value: 'NodeName', width: '15%' },
+        { text: '名前', value: 'Name', width: '20%' },
+        { text: 'レベル', value: 'Level', width: '10%' },
+        { text: '種別', value: 'Type', width: '5%' },
+        { text: '最終実施', value: 'TimeStr', width: '15%' },
+        { text: '数値', value: 'LastVal', width: '5%' },
+        { text: '操作', value: 'actions', width: '10%' },
       ],
       pollings: [],
     }
