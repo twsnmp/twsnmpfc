@@ -15,12 +15,12 @@ import (
 )
 
 type DBBackupEnt struct {
+	Mode       string
 	ConfigOnly bool
-	Daily      bool
 	Generation int
 }
 
-func (ds *DataStore) SaveBackupParamToDB() error {
+func (ds *DataStore) SaveBackupToDB() error {
 	if ds.db == nil {
 		return ErrDBNotOpen
 	}
@@ -38,10 +38,10 @@ func (ds *DataStore) SaveBackupParamToDB() error {
 }
 
 func (ds *DataStore) CheckDBBackup() {
-	if ds.db == nil {
+	if ds.db == nil || ds.Backup.Mode == "" {
 		return
 	}
-	if ds.Backup.Daily && ds.nextBackup == 0 {
+	if ds.Backup.Mode == "daily" && ds.nextBackup == 0 {
 		now := time.Now()
 		d := 0
 		if now.Hour() > 2 {
@@ -54,10 +54,12 @@ func (ds *DataStore) CheckDBBackup() {
 	}
 	file := filepath.Join(ds.dspath, "backup", "twsnmpfs.db."+time.Now().Format("20060102150405"))
 	if ds.nextBackup != 0 && ds.nextBackup < time.Now().UnixNano() {
-		if ds.Backup.Daily {
+		if ds.Backup.Mode == "daily" {
 			ds.nextBackup += (24 * 3600 * 1000 * 1000 * 1000)
 		} else {
+			ds.Backup.Mode = ""
 			ds.nextBackup = 0
+			ds.SaveBackupToDB()
 		}
 		go func() {
 			log.Printf("Backup start = %s", file)

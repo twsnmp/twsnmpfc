@@ -490,6 +490,19 @@ func (ds *DataStore) deleteOldLogs() {
 	}
 }
 
+func (ds *DataStore) DeleteAllLogs() {
+	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix"}
+	for _, b := range buckets {
+		ds.db.Batch(func(tx *bbolt.Tx) error {
+			if err := tx.DeleteBucket([]byte(b)); err != nil {
+				return err
+			}
+			tx.CreateBucketIfNotExists([]byte(b))
+			return nil
+		})
+	}
+}
+
 func (ds *DataStore) eventLogger(ctx context.Context) {
 	log.Println("Start EventLogger")
 	timer1 := time.NewTicker(time.Minute * 2)

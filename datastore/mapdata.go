@@ -324,8 +324,8 @@ func (ds *DataStore) DeletePolling(pollingID string) error {
 		}
 		return true
 	})
-	_ = ds.ClearPollingLog(pollingID)
-	_ = ds.DeleteAIReesult(pollingID)
+	ds.ClearPollingLog(pollingID)
+	ds.DeleteAIResult(pollingID)
 	return nil
 }
 

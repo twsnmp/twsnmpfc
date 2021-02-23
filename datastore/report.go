@@ -419,3 +419,24 @@ func (ds *DataStore) deleteDennyRule(id string) error {
 		return nil
 	})
 }
+
+func (ds *DataStore) ClearAllReport() error {
+	if ds.db == nil {
+		return ErrDBNotOpen
+	}
+	ds.db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("report"))
+		if b != nil {
+			for _, r := range []string{"devices", "flows", "users", "servers"} {
+				_ = b.DeleteBucket([]byte(r))
+				_, _ = b.CreateBucketIfNotExists([]byte(r))
+			}
+		}
+		return nil
+	})
+	ds.devices = make(map[string]*DeviceEnt)
+	ds.users = make(map[string]*UserEnt)
+	ds.flows = make(map[string]*FlowEnt)
+	ds.servers = make(map[string]*ServerEnt)
+	return nil
+}

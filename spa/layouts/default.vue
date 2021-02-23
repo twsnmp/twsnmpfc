@@ -56,7 +56,7 @@
         </v-list-group>
         <v-list-group no-action prepend-icon="mdi-cogs" :value="false">
           <template v-slot:activator>
-            <v-list-item-title>設定</v-list-item-title>
+            <v-list-item-title>システム設定</v-list-item-title>
           </template>
           <v-list-item
             v-for="(item, i) in confMenus"
@@ -188,12 +188,12 @@ export default {
       logMenus: [
         {
           icon: 'mdi-calendar-check',
-          title: 'イベントログ',
+          title: 'Event Log',
           to: '/log/eventlog',
         },
         {
           icon: 'mdi-calendar-text',
-          title: 'syslog',
+          title: 'Syslog',
           to: '/log/syslog',
         },
         {
@@ -210,23 +210,23 @@ export default {
       confMenus: [
         {
           icon: 'mdi-cog',
-          title: 'マップ設定',
+          title: 'マップ',
           to: '/conf/map',
         },
         {
           icon: 'mdi-email-send',
-          title: '通知設定',
+          title: '通知',
           to: '/conf/notify',
         },
         {
-          icon: 'mdi-link',
-          title: '拡張設定',
-          to: '/conf/ext',
+          icon: 'mdi-av-timer',
+          title: 'Influxdb',
+          to: '/conf/influxdb',
         },
         {
           icon: 'mdi-database-cog',
-          title: 'DB情報',
-          to: '/conf/dbinfo',
+          title: 'データストア',
+          to: '/conf/datastore',
         },
       ],
       notify: false,

@@ -160,7 +160,7 @@ func (b *Backend) checkAI() bool {
 }
 
 func (b *Backend) resetAIResult(id string) {
-	if err := b.ds.DeleteAIReesult(id); err != nil {
+	if err := b.ds.DeleteAIResult(id); err != nil {
 		log.Printf("loadAIReesult  id=%s err=%v", id, err)
 	}
 	b.checkAIMap[id] = 0
@@ -170,7 +170,7 @@ func (b *Backend) checkLastAIResultTime(id string) bool {
 	last, err := b.ds.LoadAIReesult(id)
 	if err != nil {
 		log.Printf("loadAIReesult  id=%s err=%v", id, err)
-		if err = b.ds.DeleteAIReesult(id); err != nil {
+		if err = b.ds.DeleteAIResult(id); err != nil {
 			log.Printf("loadAIReesult  id=%s err=%v", id, err)
 		}
 		return true

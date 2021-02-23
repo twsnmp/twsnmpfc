@@ -31,7 +31,7 @@ type DataStore struct {
 	DiscoverConf DiscoverConfEnt
 	Backup       DBBackupEnt
 	DBStats      DBStatsEnt
-	DBStatsLog   []DBStatsEnt
+	DBStatsLog   []DBStatsLogEnt
 	// Map Data on Memory not export
 	nodes    sync.Map
 	lines    sync.Map

@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card style="width: 80%">
+    <v-card min-width="600">
       <v-form>
         <v-card-title primary-title> マップ設定 </v-card-title>
         <v-alert v-if="$fetchState.error" type="error" dense>
@@ -9,7 +9,7 @@
         <v-alert v-model="error" type="error" dense dismissible>
           マップ設定の保存に失敗しました
         </v-alert>
-        <v-alert v-model="saved" type="success" dense dismissible>
+        <v-alert v-model="saved" type="primary" dense dismissible>
           マップ設定を保存しました
         </v-alert>
         <v-card-text>

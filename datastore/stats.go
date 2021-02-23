@@ -11,16 +11,21 @@ import (
 
 type DBStatsEnt struct {
 	Time       int64
+	Duration   float64
 	Size       int64
 	TotalWrite int64
-	LastWrite  int64
+	Write      int64
 	PeakWrite  int64
-	AvgWrite   float64
-	StartTime  int64
 	Speed      float64
-	Peak       float64
-	Rate       float64
+	AvgSpeed   float64
+	PeakSpeed  float64
 	BackupTime int64
+}
+
+type DBStatsLogEnt struct {
+	Time  int64
+	Size  int64
+	Speed float64
 }
 
 func (ds *DataStore) UpdateDBStats() {
@@ -36,26 +41,24 @@ func (ds *DataStore) UpdateDBStats() {
 	})
 	ds.DBStats.Size = dbSize
 	ds.DBStats.TotalWrite = int64(s.TxStats.Write)
-	ds.DBStats.LastWrite = int64(d.TxStats.Write)
-	if ds.DBStats.PeakWrite < ds.DBStats.LastWrite {
-		ds.DBStats.PeakWrite = ds.DBStats.LastWrite
+	ds.DBStats.Write = int64(d.TxStats.Write)
+	if ds.DBStats.PeakWrite < ds.DBStats.Write {
+		ds.DBStats.PeakWrite = ds.DBStats.Write
 	}
 	skipLog := true
 	// 初回は計算しない。
 	if ds.DBStats.PeakWrite > 0 && ds.DBStats.Time != 0 {
-		ds.DBStats.Rate = 100 * float64(d.TxStats.Write) / float64(ds.DBStats.PeakWrite)
-		ds.DBStats.StartTime = ds.dbOpenTime.UnixNano()
-		dbot := time.Since(ds.dbOpenTime).Seconds()
-		if dbot > 0 {
-			ds.DBStats.AvgWrite = float64(s.TxStats.Write) / dbot
+		ds.DBStats.Duration = time.Since(ds.dbOpenTime).Seconds()
+		if ds.DBStats.Duration > 0 {
+			ds.DBStats.AvgSpeed = float64(s.TxStats.Write) / ds.DBStats.Duration
 		}
 		skipLog = false
 	}
 	dt := d.TxStats.WriteTime.Seconds()
 	if dt != 0 {
 		ds.DBStats.Speed = float64(d.TxStats.Write) / dt
-		if ds.DBStats.Peak < ds.DBStats.Speed {
-			ds.DBStats.Peak = ds.DBStats.Speed
+		if ds.DBStats.PeakSpeed < ds.DBStats.Speed {
+			ds.DBStats.PeakSpeed = ds.DBStats.Speed
 		}
 	} else {
 		ds.DBStats.Speed = 0.0
@@ -65,7 +68,11 @@ func (ds *DataStore) UpdateDBStats() {
 	if skipLog {
 		return
 	}
-	ds.DBStatsLog = append(ds.DBStatsLog, ds.DBStats)
+	ds.DBStatsLog = append(ds.DBStatsLog, DBStatsLogEnt{
+		Time:  ds.DBStats.Time,
+		Size:  ds.DBStats.Size,
+		Speed: ds.DBStats.Speed,
+	})
 	if len(ds.DBStatsLog) > 24*60*7 {
 		ds.DBStatsLog = ds.DBStatsLog[1:]
 	}

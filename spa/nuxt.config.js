@@ -31,6 +31,7 @@ export default {
     '@/plugins/echarts/loglevel.js',
     '@/plugins/echarts/logstate.js',
     '@/plugins/echarts/polling.js',
+    '@/plugins/echarts/dbstats.js',
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)

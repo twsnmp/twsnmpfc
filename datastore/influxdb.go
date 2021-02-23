@@ -39,7 +39,14 @@ func (ds *DataStore) SaveInfluxdbConfToDB() error {
 	})
 }
 
-func (ds *DataStore) SetupInfluxdb() error {
+func (ds *DataStore) InitInfluxdb() error {
+	if err := ds.dropInfluxdb(); err != nil {
+		return err
+	}
+	return ds.setupInfluxdb()
+}
+
+func (ds *DataStore) setupInfluxdb() error {
 	ds.closeInfluxdb()
 	ds.muInfluxc.Lock()
 	defer ds.muInfluxc.Unlock()

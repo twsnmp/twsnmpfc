@@ -57,7 +57,7 @@ func (ds *DataStore) LoadAIReesult(id string) (*AIResult, error) {
 	return &ret, nil
 }
 
-func (ds *DataStore) DeleteAIReesult(id string) error {
+func (ds *DataStore) DeleteAIResult(id string) error {
 	if ds.db == nil {
 		return ErrDBNotOpen
 	}
