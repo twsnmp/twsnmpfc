@@ -139,6 +139,7 @@
 </template>
 
 <script>
+import * as numeral from 'numeral'
 export default {
   async fetch() {
     const r = await this.$axios.$get('/api/conf/datastore')
@@ -147,12 +148,15 @@ export default {
     }
     this.dbStats.Time = this.strTime(r.DBStats.Time)
     this.dbStats.BackupTime = this.strTime(r.DBStats.BackupTime)
-    this.dbStats.Duration = r.DBStats.Duration
-    this.dbStats.Size = r.DBStats.Size
-    this.dbStats.TotalWrite = r.DBStats.TotalWrite
-    this.dbStats.Speed = r.DBStats.Speed
-    this.dbStats.PeakSpeed = r.DBStats.PeakSpeed
-    this.dbStats.AvgSpeed = r.DBStats.AvgSpeed
+    this.dbStats.Duration = numeral(r.DBStats.Duration).format('00:00:00')
+    this.dbStats.Size = numeral(r.DBStats.Size).format('0.000b')
+    this.dbStats.TotalWrite = numeral(r.DBStats.TotalWrite).format('0,0')
+    this.dbStats.Speed =
+      numeral(r.DBStats.Speed).format('0.000a') + ' Write/Sec'
+    this.dbStats.PeakSpeed =
+      numeral(r.DBStats.PeakSpeed).format('0.000a') + ' Write/Sec'
+    this.dbStats.AvgSpeed =
+      numeral(r.DBStats.AvgSpeed).format('0.000a') + ' Write/Sec'
     this.dbStatsLog = r.DBStatsLog
     this.backup = r.Backup
     this.$showDBStatsChart(this.dbStatsLog)
