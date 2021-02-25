@@ -146,6 +146,7 @@ func (ds *DataStore) InitDataStore(fs http.FileSystem) {
 			log.Fatalf("InitDataStore services.txt err=%v", err)
 		}
 	}
+	ds.makeMibTreeList()
 	// OUIの定義
 	if r, err := os.Open(filepath.Join(ds.dspath, "oui.txt")); err == nil {
 		ds.loadOUIMap(r)

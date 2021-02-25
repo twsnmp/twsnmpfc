@@ -1,11 +1,5 @@
 <template>
-  <v-card v-if="$fetchState.error" max-width="500" class="mx-auto">
-    <v-alert type="error" dense> 自動発見の設定を取得できません </v-alert>
-    <v-card-actions>
-      <v-btn color="primary" dark @click="$fetch"> 再試行 </v-btn>
-    </v-card-actions>
-  </v-card>
-  <v-card v-else-if="discover.Stat.Running" max-width="600" class="mx-auto">
+  <v-card v-if="discover.Stat.Running" max-width="600" class="mx-auto">
     <v-card-title primary-title> 自動発見 </v-card-title>
     <v-list-item three-line>
       <v-list-item-content>

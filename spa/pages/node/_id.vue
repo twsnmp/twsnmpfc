@@ -175,8 +175,14 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="normal" dark @click="closeEdit">キャンセル</v-btn>
-          <v-btn color="primary" dark @click="doUpdatePolling">保存</v-btn>
+          <v-btn color="primary" dark @click="doUpdatePolling">
+            <v-icon>mdi-content-save</v-icon>
+            保存
+          </v-btn>
+          <v-btn color="normal" dark @click="closeEdit">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -190,8 +196,14 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" @click="doDeletePolling">削除</v-btn>
-          <v-btn color="normal" @click="closeDelete">キャンセル</v-btn>
+          <v-btn color="error" @click="doDeletePolling">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" @click="closeDelete">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

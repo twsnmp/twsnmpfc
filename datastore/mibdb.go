@@ -8,11 +8,21 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/sleepinggenius2/gosmi/parser"
 	gomibdb "github.com/twsnmp/go-mibdb"
 )
+
+type MIBTreeEnt struct {
+	OID      string        `json:"oid"`
+	Name     string        `json:"name"`
+	Children []*MIBTreeEnt `json:"children"`
+}
+
+var MIBTree = []*MIBTreeEnt{}
 
 func (ds *DataStore) loadMIBDB(f io.ReadCloser) {
 	if f == nil {
@@ -111,4 +121,67 @@ func getOid(oid *parser.Oid) string {
 		}
 	}
 	return ret
+}
+
+var (
+	mibTreeMAP  = map[string]*MIBTreeEnt{}
+	mibTreeRoot *MIBTreeEnt
+)
+
+func addToMibTree(oid, name, poid string) {
+	n := &MIBTreeEnt{Name: name, OID: oid, Children: []*MIBTreeEnt{}}
+	if poid == "" {
+		mibTreeRoot = n
+	} else {
+		p, ok := mibTreeMAP[poid]
+		if !ok {
+			log.Printf("addToMibTree parentId=%v: not found", poid)
+			return
+		}
+		p.Children = append(p.Children, n)
+	}
+	mibTreeMAP[oid] = n
+}
+
+func (ds *DataStore) makeMibTreeList() {
+	oids := []string{}
+	for _, n := range ds.MIBDB.GetNameList() {
+		oid := ds.MIBDB.NameToOID(n)
+		if oid == ".0.0" {
+			continue
+		}
+		oids = append(oids, oid)
+	}
+	sort.Slice(oids, func(i, j int) bool {
+		a := strings.Split(oids[i], ".")
+		b := strings.Split(oids[j], ".")
+		for k := 0; k < len(a) && k < len(b); k++ {
+			l, _ := strconv.Atoi(a[k])
+			m, _ := strconv.Atoi(b[k])
+			if l == m {
+				continue
+			}
+			if l < m {
+				return true
+			}
+			return false
+		}
+		return len(a) < len(b)
+	})
+	addToMibTree(".1.3.6.1", "iso.org.dod.internet", "")
+	for _, oid := range oids {
+		name := ds.MIBDB.OIDToName(oid)
+		if name == "" {
+			continue
+		}
+		lastDot := strings.LastIndex(oid, ".")
+		if lastDot < 0 {
+			continue
+		}
+		poid := oid[:lastDot]
+		addToMibTree(oid, name, poid)
+	}
+	if mibTreeRoot != nil {
+		MIBTree = append(MIBTree, mibTreeRoot.Children...)
+	}
 }

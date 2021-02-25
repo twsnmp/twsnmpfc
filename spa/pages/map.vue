@@ -42,8 +42,14 @@
         <v-card-text> 選択したノードを削除しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" @click="doDeleteNode">削除</v-btn>
-          <v-btn color="normal" @click="deleteDialog = false">キャンセル</v-btn>
+          <v-btn color="error" @click="doDeleteNode">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" @click="deleteDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -190,6 +196,10 @@
             <v-icon>mdi-content-copy</v-icon>
             コピー
           </v-btn>
+          <v-btn color="normal" dark @click="showMIBBr">
+            <v-icon>mdi-eye</v-icon>
+            MIBブラウザー
+          </v-btn>
           <v-btn color="primary" dark @click="showNodeInfoPage">
             <v-icon>mdi-eye</v-icon>
             詳細...
@@ -200,7 +210,7 @@
           </v-btn>
           <v-btn color="error" dark @click="deleteNode">
             <v-icon>mdi-delete</v-icon>
-            削除...
+            削除
           </v-btn>
           <v-btn color="normal" dark @click="showNodeDialog = false">
             <v-icon>mdi-close</v-icon>
@@ -390,6 +400,9 @@ export default {
     },
     showNodeInfoPage() {
       this.$router.push({ path: '/node/' + this.editNode.ID })
+    },
+    showMIBBr() {
+      this.$router.push({ path: '/mibbr/' + this.editNode.ID })
     },
     addLine() {
       this.$axios
