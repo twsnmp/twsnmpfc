@@ -17,12 +17,12 @@
       </v-alert>
       <v-data-table
         :headers="headers"
-        :items="mibs"
+        :items="items"
         :search="search"
         dense
         :loading="$fetchState.pending || wait"
         loading-text="Loading... Please wait"
-        class="log"
+        class="mibbr"
       >
       </v-data-table>
       <v-card-actions>
@@ -103,11 +103,8 @@ export default {
         OID: '',
       },
       search: '',
-      headers: [
-        { text: 'Index', value: 'Index' },
-        { text: '名前', value: 'Name' },
-        { text: '値', value: 'Value' },
-      ],
+      headers: [],
+      items: [],
       mibs: [],
       searchMIBTree: '',
       mibGetDialog: false,
@@ -118,6 +115,8 @@ export default {
   methods: {
     doMIBGet() {
       this.mibGetDialog = false
+      this.headers = []
+      this.items = []
       this.wait = true
       this.$axios
         .post('/api/mibbr', this.mibget)
@@ -127,6 +126,11 @@ export default {
           this.mibs.forEach((e) => {
             e.Index = i++
           })
+          if (!this.mibget.Name.includes('Table')) {
+            this.showList()
+          } else {
+            this.showTable()
+          }
           this.wait = false
         })
         .catch((e) => {
@@ -134,6 +138,59 @@ export default {
           this.wait = false
           this.mibs = []
         })
+    },
+    showList() {
+      this.headers = [
+        { text: 'Index', value: 'Index' },
+        { text: '名前', value: 'Name' },
+        { text: '値', value: 'Value' },
+      ]
+      this.items = this.mibs
+    },
+    showTable() {
+      const names = []
+      const indexes = []
+      const rows = []
+      this.mibs.forEach((e) => {
+        const name = e.Name
+        const val = e.Value
+        const i = name.indexOf('.')
+        if (i > 0) {
+          const base = name.substring(0, i)
+          const index = name.substring(i + 1)
+          if (!names.includes(base)) {
+            names.push(base)
+          }
+          if (!indexes.includes(index)) {
+            indexes.push(index)
+            rows.push([index])
+          }
+          const r = indexes.indexOf(index)
+          if (r >= 0) {
+            rows[r].push(val)
+          }
+        }
+      })
+      this.headers = [
+        {
+          text: 'Index',
+          value: 'Index',
+        },
+      ]
+      names.forEach((e) => {
+        this.headers.push({
+          text: e,
+          value: e,
+        })
+      })
+      this.items = []
+      rows.forEach((e) => {
+        const d = { Index: e[0] }
+        for (let i = 1; i < e.length; i++) {
+          d[names[i - 1]] = e[i]
+        }
+        this.items.push(d)
+      })
     },
     selectMIB(s) {
       if (s && s.length === 1) {
@@ -158,3 +215,9 @@ export default {
   },
 }
 </script>
+
+<style>
+.mibbr td {
+  word-wrap: break-word;
+}
+</style>
