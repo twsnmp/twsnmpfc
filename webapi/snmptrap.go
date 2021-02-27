@@ -31,7 +31,6 @@ type snmpTrapWebAPI struct {
 var trapOidRegexp = regexp.MustCompile(`snmpTrapOID.0=(\S+)`)
 
 func postSnmpTrap(c echo.Context) error {
-	api := c.Get("api").(*WebAPI)
 	r := []*snmpTrapWebAPI{}
 	var err error
 	filter := new(snmpTrapFilter)
@@ -45,7 +44,7 @@ func postSnmpTrap(c echo.Context) error {
 	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
-	api.DataStore.ForEachLog(st, et, "trap", func(l *datastore.LogEnt) bool {
+	datastore.ForEachLog(st, et, "trap", func(l *datastore.LogEnt) bool {
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
 			log.Printf("postSyslog err=%v", err)
@@ -94,7 +93,7 @@ func postSnmpTrap(c echo.Context) error {
 		}
 		r = append(r, re)
 		i++
-		return i <= api.DataStore.MapConf.LogDispSize
+		return i <= datastore.MapConf.LogDispSize
 	})
 	return c.JSON(http.StatusOK, r)
 }

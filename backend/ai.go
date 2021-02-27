@@ -93,7 +93,7 @@ const yasumi = `date,name
 2022-11-23,勤労感謝の日
 `
 
-func (b *Backend) aiBackend(ctx context.Context) {
+func aiBackend(ctx context.Context) {
 	aiBusy := false
 	timer := time.NewTicker(time.Second * 10)
 	for {
@@ -101,11 +101,11 @@ func (b *Backend) aiBackend(ctx context.Context) {
 		case <-ctx.Done():
 			timer.Stop()
 			return
-		case <-b.aiDone:
+		case <-aiDone:
 			aiBusy = false
 		case <-timer.C:
 			if !aiBusy {
-				aiBusy = b.checkAI()
+				aiBusy = checkAI()
 			}
 		}
 	}
@@ -117,60 +117,60 @@ type aiReq struct {
 	Data      [][]float64
 }
 
-func (b *Backend) makeYasumiMap() {
+func makeYasumiMap() {
 	for _, l := range strings.Split(yasumi, "\n") {
 		y := strings.Split(l, ",")
 		if len(y) == 2 {
 			if _, err := time.Parse("2006-01-02", y[0]); err == nil {
-				b.yasumiMap[y[0]] = true
+				yasumiMap[y[0]] = true
 			}
 		}
 	}
 }
 
-func (b *Backend) checkAI() bool {
-	b.ds.ForEachPollings(func(pe *datastore.PollingEnt) bool {
+func checkAI() bool {
+	datastore.ForEachPollings(func(pe *datastore.PollingEnt) bool {
 		if pe.LogMode == datastore.LogModeAI {
-			if _, ok := b.checkAIMap[pe.ID]; !ok {
-				b.checkAIMap[pe.ID] = 0
+			if _, ok := checkAIMap[pe.ID]; !ok {
+				checkAIMap[pe.ID] = 0
 			}
 		}
 		return true
 	})
 	now := time.Now().Unix()
 	var selPolling *datastore.PollingEnt
-	for id, n := range b.checkAIMap {
-		p := b.ds.GetPolling(id)
+	for id, n := range checkAIMap {
+		p := datastore.GetPolling(id)
 		if p == nil {
-			delete(b.checkAIMap, id)
+			delete(checkAIMap, id)
 			continue
 		}
 		if n > now {
 			continue
 		}
-		if selPolling == nil || b.checkAIMap[selPolling.ID] > n {
+		if selPolling == nil || checkAIMap[selPolling.ID] > n {
 			selPolling = p
 		}
 	}
 	if selPolling == nil {
 		return false
 	}
-	b.checkAIMap[selPolling.ID] = now + 60*5
-	return b.doAI(selPolling)
+	checkAIMap[selPolling.ID] = now + 60*5
+	return doAI(selPolling)
 }
 
-func (b *Backend) resetAIResult(id string) {
-	if err := b.ds.DeleteAIResult(id); err != nil {
+func resetAIResult(id string) {
+	if err := datastore.DeleteAIResult(id); err != nil {
 		log.Printf("loadAIReesult  id=%s err=%v", id, err)
 	}
-	b.checkAIMap[id] = 0
+	checkAIMap[id] = 0
 }
 
-func (b *Backend) checkLastAIResultTime(id string) bool {
-	last, err := b.ds.LoadAIReesult(id)
+func checkLastAIResultTime(id string) bool {
+	last, err := datastore.LoadAIReesult(id)
 	if err != nil {
 		log.Printf("loadAIReesult  id=%s err=%v", id, err)
-		if err = b.ds.DeleteAIResult(id); err != nil {
+		if err = datastore.DeleteAIResult(id); err != nil {
 			log.Printf("loadAIReesult  id=%s err=%v", id, err)
 		}
 		return true
@@ -178,17 +178,17 @@ func (b *Backend) checkLastAIResultTime(id string) bool {
 	return last.LastTime < time.Now().Unix()-60*60
 }
 
-func (b *Backend) doAI(pe *datastore.PollingEnt) bool {
-	if !b.checkLastAIResultTime(pe.ID) {
+func doAI(pe *datastore.PollingEnt) bool {
+	if !checkLastAIResultTime(pe.ID) {
 		return false
 	}
 	req := &aiReq{
 		PollingID: pe.ID,
 	}
 	if pe.Type == "syslogpri" {
-		b.makeAIDataFromSyslogPriPolling(req)
+		makeAIDataFromSyslogPriPolling(req)
 	} else {
-		b.makeAIDataFromPolling(req)
+		makeAIDataFromPolling(req)
 	}
 	if len(req.Data) < 10 {
 		log.Printf("doAI Skip No data %s %s %v", pe.ID, pe.Name, req)
@@ -196,12 +196,12 @@ func (b *Backend) doAI(pe *datastore.PollingEnt) bool {
 	}
 	log.Printf("doAI Start %s %s %d", pe.ID, pe.Name, len(req.Data))
 	// AIのコンテナに送信する
-	go b.sendAIReq(req)
+	go sendAIReq(req)
 	return true
 }
 
-func (b *Backend) makeAIDataFromSyslogPriPolling(req *aiReq) {
-	logs := b.ds.GetAllPollingLog(req.PollingID)
+func makeAIDataFromSyslogPriPolling(req *aiReq) {
+	logs := datastore.GetAllPollingLog(req.PollingID)
 	if len(logs) < 1 {
 		return
 	}
@@ -213,7 +213,7 @@ func (b *Backend) makeAIDataFromSyslogPriPolling(req *aiReq) {
 		if st != ct {
 			ts := time.Unix(ct, 0)
 			ent[0] = float64(ts.Hour()) / 24.0
-			if _, ok := b.yasumiMap[ts.Format("2006-01-02")]; ok {
+			if _, ok := yasumiMap[ts.Format("2006-01-02")]; ok {
 				ent[1] = 0.0
 			} else {
 				ent[1] = float64(ts.Weekday()) / 6.0
@@ -251,8 +251,8 @@ func (b *Backend) makeAIDataFromSyslogPriPolling(req *aiReq) {
 
 const entLen = 20
 
-func (b *Backend) makeAIDataFromPolling(req *aiReq) {
-	logs := b.ds.GetAllPollingLog(req.PollingID)
+func makeAIDataFromPolling(req *aiReq) {
+	logs := datastore.GetAllPollingLog(req.PollingID)
 	if len(logs) < 1 {
 		return
 	}
@@ -265,7 +265,7 @@ func (b *Backend) makeAIDataFromPolling(req *aiReq) {
 		if st != ct {
 			ts := time.Unix(ct, 0)
 			ent[0] = float64(ts.Hour())
-			if _, ok := b.yasumiMap[ts.Format("2006-01-02")]; ok {
+			if _, ok := yasumiMap[ts.Format("2006-01-02")]; ok {
 				ent[1] = 0.0
 			} else {
 				ent[1] = float64(ts.Weekday())
@@ -338,41 +338,41 @@ func getStateNum(s string) float64 {
 	return 0.0
 }
 
-func (b *Backend) sendAIReq(req *aiReq) {
+func sendAIReq(req *aiReq) {
 	defer func() {
 		// 終了を知らせる
-		b.aiDone <- true
+		aiDone <- true
 	}()
 	var res datastore.AIResult
 	// ここでAI分析コンテナにリクエストを送信する。
 	if len(res.ScoreData) < 1 {
 		return
 	}
-	if err := b.ds.SaveAIResultToDB(&res); err != nil {
+	if err := datastore.SaveAIResultToDB(&res); err != nil {
 		log.Printf("saveAIResultToDB err=%v", err)
 		return
 	}
-	pe := b.ds.GetPolling(req.PollingID)
+	pe := datastore.GetPolling(req.PollingID)
 	if pe == nil {
 		return
 	}
-	n := b.ds.GetNode(pe.NodeID)
+	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
 		return
 	}
 	if len(res.ScoreData) > 0 {
 		ls := res.ScoreData[len(res.ScoreData)-1][1]
-		if ls > float64(b.ds.MapConf.AIThreshold) {
-			b.ds.AddEventLog(&datastore.EventLogEnt{
+		if ls > float64(datastore.MapConf.AIThreshold) {
+			datastore.AddEventLog(&datastore.EventLogEnt{
 				Type:     "ai",
-				Level:    b.ds.MapConf.AILevel,
+				Level:    datastore.MapConf.AILevel,
 				NodeID:   pe.NodeID,
 				NodeName: n.Name,
 				Event:    fmt.Sprintf("AI分析レポート:%s(%s):%f", pe.Name, pe.Type, ls),
 			})
 		}
-		if b.ds.InfluxdbConf.AIScore == "send" {
-			if err := b.ds.SendAIScoreToInfluxdb(pe, &res); err != nil {
+		if datastore.InfluxdbConf.AIScore == "send" {
+			if err := datastore.SendAIScoreToInfluxdb(pe, &res); err != nil {
 				log.Printf("sendAIScoreToInfluxdb err=%v", err)
 			}
 		}

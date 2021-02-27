@@ -3,33 +3,27 @@ package backend
 
 import (
 	"context"
-
-	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-type Backend struct {
-	ds                *datastore.DataStore
+var (
 	versionCheckState int
 	versionNum        string
 	yasumiMap         map[string]bool
 	aiDone            chan bool
 	checkAIMap        map[string]int64
+)
+
+func StartBackend(ctx context.Context, versionNum string) error {
+	versionNum = versionNum
+	yasumiMap = make(map[string]bool)
+	checkAIMap = make(map[string]int64)
+	aiDone = make(chan bool)
+	makeYasumiMap()
+	go mapBackend(ctx)
+	go aiBackend(ctx)
+	return nil
 }
 
-func NewBackEnd(ctx context.Context, ds *datastore.DataStore, versionNum string) *Backend {
-	b := &Backend{
-		ds:         ds,
-		versionNum: versionNum,
-		yasumiMap:  make(map[string]bool),
-		checkAIMap: make(map[string]int64),
-		aiDone:     make(chan bool),
-	}
-	go b.mapBackend(ctx)
-	b.makeYasumiMap()
-	go b.aiBackend(ctx)
-	return b
-}
-
-func (b *Backend) HasNewVersion() bool {
-	return b.versionCheckState == 2
+func HasNewVersion() bool {
+	return versionCheckState == 2
 }

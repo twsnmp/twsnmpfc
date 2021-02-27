@@ -19,7 +19,7 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-type DataStore struct {
+var (
 	db          *bbolt.DB
 	dspath      string
 	prevDBStats bbolt.Stats
@@ -69,7 +69,7 @@ type DataStore struct {
 
 	logSize     int64
 	compLogSize int64
-}
+)
 
 const (
 	// MaxDispLog : ログの検索結果の最大値
@@ -87,128 +87,126 @@ var (
 	ErrInvalidID     = fmt.Errorf("invalid id")
 )
 
-func NewDataStore(ctx context.Context, dspath string, fs http.FileSystem) *DataStore {
-	ds := &DataStore{
-		dspath:     dspath,
-		devices:    make(map[string]*DeviceEnt),
-		users:      make(map[string]*UserEnt),
-		flows:      make(map[string]*FlowEnt),
-		servers:    make(map[string]*ServerEnt),
-		dennyRules: make(map[string]bool),
-		allowRules: make(map[string]*AllowRuleEnt),
-		eventLogCh: make(chan *EventLogEnt, 100),
-		protMap: map[int]string{
-			1:   "icmp",
-			2:   "igmp",
-			6:   "tcp",
-			8:   "egp",
-			17:  "udp",
-			112: "vrrp",
-		},
-		serviceMap: make(map[string]string),
-		geoipMap:   make(map[string]string),
-		ouiMap:     make(map[string]string),
-		tlsCSMap:   make(map[string]string),
+func InitDataStore(ctx context.Context, path string, fs http.FileSystem) error {
+	dspath = path
+	devices = make(map[string]*DeviceEnt)
+	users = make(map[string]*UserEnt)
+	flows = make(map[string]*FlowEnt)
+	servers = make(map[string]*ServerEnt)
+	dennyRules = make(map[string]bool)
+	allowRules = make(map[string]*AllowRuleEnt)
+	eventLogCh = make(chan *EventLogEnt, 100)
+	protMap = map[int]string{
+		1:   "icmp",
+		2:   "igmp",
+		6:   "tcp",
+		8:   "egp",
+		17:  "udp",
+		112: "vrrp",
 	}
-	ds.InitDataStore(fs)
-	go ds.eventLogger(ctx)
-	return ds
+	serviceMap = make(map[string]string)
+	geoipMap = make(map[string]string)
+	ouiMap = make(map[string]string)
+	tlsCSMap = make(map[string]string)
+	loadDataFromFS(fs)
+	go eventLogger(ctx)
+	return nil
 }
 
-func (ds *DataStore) InitDataStore(fs http.FileSystem) {
-	if ds.dspath == "" {
+func loadDataFromFS(fs http.FileSystem) {
+	if dspath == "" {
 		log.Println("No DataStore Path Skip Init")
 		return
 	}
 	// BBoltをオープン
-	if err := ds.OpenDB(filepath.Join(ds.dspath, "twsnmpfc.db")); err != nil {
+	if err := openDB(filepath.Join(dspath, "twsnmpfc.db")); err != nil {
 		log.Fatalf("InitDataStore OpenDB err=%v", err)
 	}
 	// MIBDB
-	if r, err := os.Open(filepath.Join(ds.dspath, "mib.txt")); err == nil {
-		ds.loadMIBDB(r)
+	if r, err := os.Open(filepath.Join(dspath, "mib.txt")); err == nil {
+		loadMIBDB(r)
 	} else {
 		if r, err := fs.Open("/conf/mib.txt"); err == nil {
-			ds.loadMIBDB(r)
+			loadMIBDB(r)
 		} else {
 			log.Fatalf("InitDataStore MIBDB err=%v", err)
 		}
 	}
 	// 拡張MIBの読み込み
-	ds.loadExtMIBs(filepath.Join(ds.dspath, "extmibs"))
+	loadExtMIBs(filepath.Join(dspath, "extmibs"))
 	// サービスの定義ファイル、ユーザー指定があれば利用、なければ内蔵
-	if r, err := os.Open(filepath.Join(ds.dspath, "services.txt")); err == nil {
-		ds.loadServiceMap(r)
+	if r, err := os.Open(filepath.Join(dspath, "services.txt")); err == nil {
+		loadServiceMap(r)
 	} else {
 		if r, err := fs.Open("/conf/services.txt"); err == nil {
-			ds.loadServiceMap(r)
+			loadServiceMap(r)
 		} else {
 			log.Fatalf("InitDataStore services.txt err=%v", err)
 		}
 	}
-	ds.makeMibTreeList()
+	makeMibTreeList()
 	// OUIの定義
-	if r, err := os.Open(filepath.Join(ds.dspath, "oui.txt")); err == nil {
-		ds.loadOUIMap(r)
+	if r, err := os.Open(filepath.Join(dspath, "oui.txt")); err == nil {
+		loadOUIMap(r)
 	} else {
 		if r, err := fs.Open("/conf/oui.txt"); err == nil {
-			ds.loadOUIMap(r)
+			loadOUIMap(r)
 		} else {
 			log.Fatalf("InitDataStore oui.txt err=%v", err)
 		}
 	}
 	// TLS暗号名の定義
-	if r, err := os.Open(filepath.Join(ds.dspath, "tlsparams.csv")); err == nil {
-		ds.loadTLSCihperNameMap(r)
+	if r, err := os.Open(filepath.Join(dspath, "tlsparams.csv")); err == nil {
+		loadTLSCihperNameMap(r)
 	} else {
 		if r, err := fs.Open("/conf/tlsparams.csv"); err == nil {
-			ds.loadTLSCihperNameMap(r)
+			loadTLSCihperNameMap(r)
 		} else {
 			log.Fatalf("InitDataStore tlsparams.csv err=%v", err)
 		}
 	}
-	p := filepath.Join(ds.dspath, "geoip.mmdb")
+	p := filepath.Join(dspath, "geoip.mmdb")
 	if _, err := os.Stat(p); err == nil {
-		ds.openGeoIP(p)
+		openGeoIP(p)
 	}
-	p = filepath.Join(ds.dspath, "grok.txt")
+	p = filepath.Join(dspath, "grok.txt")
 	if _, err := os.Stat(p); err == nil {
-		ds.loadGrokMap(p)
+		loadGrokMap(p)
 	}
 }
 
-func (ds *DataStore) OpenDB(path string) error {
+func openDB(path string) error {
 	var err error
-	ds.db, err = bbolt.Open(path, 0600, nil)
+	db, err = bbolt.Open(path, 0600, nil)
 	if err != nil {
 		return err
 	}
-	ds.prevDBStats = ds.db.Stats()
-	ds.dbOpenTime = time.Now()
-	err = ds.initDB()
+	prevDBStats = db.Stats()
+	dbOpenTime = time.Now()
+	err = initDB()
 	if err != nil {
-		ds.db.Close()
+		db.Close()
 		return err
 	}
-	err = ds.loadConfFromDB()
+	err = loadConfFromDB()
 	if err != nil {
-		ds.db.Close()
+		db.Close()
 		return err
 	}
-	err = ds.loadMapDataFromDB()
+	err = loadMapDataFromDB()
 	if err != nil {
-		ds.db.Close()
+		db.Close()
 		return err
 	}
 	return nil
 }
 
-func (ds *DataStore) initDB() error {
+func initDB() error {
 	buckets := []string{"config", "nodes", "lines", "pollings", "logs", "pollingLogs",
 		"syslog", "trap", "netflow", "ipfix", "arp", "ai", "report"}
 	reports := []string{"devices", "users", "flows", "servers", "allows", "dennys"}
-	ds.initConf()
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+	initConf()
+	return db.Update(func(tx *bbolt.Tx) error {
 		for _, b := range buckets {
 			pb, err := tx.CreateBucketIfNotExists([]byte(b))
 			if err != nil {
@@ -226,13 +224,13 @@ func (ds *DataStore) initDB() error {
 	})
 }
 
-// CloseDB : DBをクローズする
-func (ds *DataStore) CloseDB() {
-	if ds.db == nil {
+// CloseDataStore : DBをクローズする
+func CloseDataStore() {
+	if db == nil {
 		return
 	}
-	ds.db.Close()
-	ds.db = nil
+	db.Close()
+	db = nil
 }
 
 // bboltに保存する場合のキーを時刻から生成する。

@@ -17,10 +17,10 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func (p *Polling) doPollingSSH(pe *datastore.PollingEnt) {
+func doPollingSSH(pe *datastore.PollingEnt) {
 	cmds := splitCmd(pe.Polling)
 	if len(cmds) < 3 {
-		p.setPollingError("ssh", pe, fmt.Errorf("no cmd"))
+		setPollingError("ssh", pe, fmt.Errorf("no cmd"))
 		return
 	}
 	cmd := cmds[0]
@@ -34,16 +34,16 @@ func (p *Polling) doPollingSSH(pe *datastore.PollingEnt) {
 	lr := make(map[string]string)
 	cl := strings.Split(cmd, " ")
 	if len(cl) < 1 {
-		p.setPollingError("ssh", pe, fmt.Errorf("no cmd"))
+		setPollingError("ssh", pe, fmt.Errorf("no cmd"))
 		return
 	}
-	client, session, err := p.sshConnectToHost(pe, port)
+	client, session, err := sshConnectToHost(pe, port)
 	if err != nil {
 		log.Printf("ssh error Polling=%s err=%v", pe.Polling, err)
 		lr["error"] = fmt.Sprintf("%v", err)
 		pe.LastResult = makeLastResult(lr)
 		pe.LastVal = 0.0
-		p.setPollingState(pe, pe.Level)
+		setPollingState(pe, pe.Level)
 		return
 	}
 	defer func() {
@@ -59,7 +59,7 @@ func (p *Polling) doPollingSSH(pe *datastore.PollingEnt) {
 			lr["error"] = fmt.Sprintf("%v", err)
 			pe.LastResult = makeLastResult(lr)
 			pe.LastVal = 0.0
-			p.setPollingState(pe, pe.Level)
+			setPollingState(pe, pe.Level)
 			return
 		}
 	} else {
@@ -70,10 +70,10 @@ func (p *Polling) doPollingSSH(pe *datastore.PollingEnt) {
 	_ = vm.Set("interval", pe.PollInt)
 	_ = vm.Set("exitCode", int(pe.LastVal))
 	if extractor != "" {
-		grokEnt := p.ds.GetGrokEnt(extractor)
+		grokEnt := datastore.GetGrokEnt(extractor)
 		if grokEnt == nil {
 			log.Printf("No grok pattern Polling=%s", pe.Polling)
-			p.setPollingError("ssh", pe, fmt.Errorf("no grok pattern"))
+			setPollingError("ssh", pe, fmt.Errorf("no grok pattern"))
 			return
 		}
 		g, _ := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
@@ -81,7 +81,7 @@ func (p *Polling) doPollingSSH(pe *datastore.PollingEnt) {
 		cap := fmt.Sprintf("%%{%s}", extractor)
 		values, err := g.Parse(cap, string(out))
 		if err != nil {
-			p.setPollingError("ssh", pe, err)
+			setPollingError("ssh", pe, err)
 			return
 		}
 		for k, v := range values {
@@ -91,7 +91,7 @@ func (p *Polling) doPollingSSH(pe *datastore.PollingEnt) {
 	}
 	value, err := vm.Run(script)
 	if err != nil {
-		p.setPollingError("ssh", pe, err)
+		setPollingError("ssh", pe, err)
 		return
 	}
 	pe.LastVal = 0.0
@@ -105,19 +105,19 @@ func (p *Polling) doPollingSSH(pe *datastore.PollingEnt) {
 	}
 	pe.LastResult = makeLastResult(lr)
 	if ok, _ := value.ToBoolean(); ok {
-		p.setPollingState(pe, "normal")
+		setPollingState(pe, "normal")
 		return
 	}
-	p.setPollingState(pe, pe.Level)
+	setPollingState(pe, pe.Level)
 }
 
-func (p *Polling) sshConnectToHost(pe *datastore.PollingEnt, port string) (*ssh.Client, *ssh.Session, error) {
-	n := p.ds.GetNode(pe.NodeID)
+func sshConnectToHost(pe *datastore.PollingEnt, port string) (*ssh.Client, *ssh.Session, error) {
+	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
 		log.Printf("node not found nodeID=%s", pe.NodeID)
 		return nil, nil, fmt.Errorf("node not found nodeID=%s", pe.NodeID)
 	}
-	signer, err := ssh.ParsePrivateKey([]byte(p.ds.GetPrivateKey()))
+	signer, err := ssh.ParsePrivateKey([]byte(datastore.GetPrivateKey()))
 	if err != nil {
 		log.Printf("sshConnectToHost err=%v", err)
 		return nil, nil, fmt.Errorf("no private key for ssh")
@@ -141,7 +141,7 @@ func (p *Polling) sshConnectToHost(pe *datastore.PollingEnt, port string) (*ssh.
 		sshConfig.HostKeyCallback =
 			func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 				n.PublicKey = strings.TrimSpace(string(ssh.MarshalAuthorizedKey(key)))
-				if err := p.ds.UpdateNode(n); err != nil {
+				if err := datastore.UpdateNode(n); err != nil {
 					log.Printf("sshConnectToHost err=%v", err)
 				}
 				return nil

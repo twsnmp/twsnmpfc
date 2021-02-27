@@ -6,28 +6,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-
-	"github.com/twsnmp/twsnmpfc/backend"
-	"github.com/twsnmp/twsnmpfc/datastore"
-	"github.com/twsnmp/twsnmpfc/discover"
-	"github.com/twsnmp/twsnmpfc/logger"
-	"github.com/twsnmp/twsnmpfc/notify"
-	"github.com/twsnmp/twsnmpfc/ping"
-	"github.com/twsnmp/twsnmpfc/polling"
-	"github.com/twsnmp/twsnmpfc/report"
 )
 
 type WebAPI struct {
-	DataStore *datastore.DataStore
-	Backend   *backend.Backend
-	Notify    *notify.Notify
-	Report    *report.Report
-	Ping      *ping.Ping
-	Polling   *polling.Polling
-	Discover  *discover.Discover
-	Logger    *logger.Logger
-	Statik    http.Handler
-	Password  string
+	Statik   http.Handler
+	Password string
 }
 
 // 削除のためにIDだけ受け取る

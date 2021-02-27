@@ -35,11 +35,11 @@ const (
 	PingOtherError
 )
 
-type Ping struct {
+var (
 	pingSendCh chan *PingEnt
 	randGen    *rand.Rand
 	pingMutex  sync.Mutex
-}
+)
 
 type PingEnt struct {
 	Target   string
@@ -64,31 +64,29 @@ type packet struct {
 	ttl    int
 }
 
-func NewPing(ctx context.Context) *Ping {
-	p := &Ping{
-		pingSendCh: make(chan *PingEnt, 100),
-		randGen:    rand.New(rand.NewSource(time.Now().UnixNano())),
-	}
-	go p.pingBackend(ctx)
-	return p
+func StartPing(ctx context.Context) error {
+	pingSendCh = make(chan *PingEnt, 100)
+	randGen = rand.New(rand.NewSource(time.Now().UnixNano()))
+	go pingBackend(ctx)
+	return nil
 }
 
 // DoPing : pingの実行
-func (p *Ping) DoPing(ip string, timeout, retry, size int) *PingEnt {
+func DoPing(ip string, timeout, retry, size int) *PingEnt {
 	var err error
-	var pe = p.newPingEnt(ip, timeout, retry, size)
+	var pe = newPingEnt(ip, timeout, retry, size)
 	if pe.ipaddr, err = net.ResolveIPAddr("ip", ip); err != nil {
 		pe.Stat = PingOtherError
 		return pe
 	}
-	p.pingSendCh <- pe
+	pingSendCh <- pe
 	<-pe.done
 	return pe
 }
 
-func (p *Ping) newPingEnt(ip string, timeout, retry, size int) *PingEnt {
-	p.pingMutex.Lock()
-	defer p.pingMutex.Unlock()
+func newPingEnt(ip string, timeout, retry, size int) *PingEnt {
+	pingMutex.Lock()
+	defer pingMutex.Unlock()
 	return &PingEnt{
 		Target:   ip,
 		Stat:     PingStart,
@@ -96,8 +94,8 @@ func (p *Ping) newPingEnt(ip string, timeout, retry, size int) *PingEnt {
 		Retry:    retry,
 		Size:     size,
 		sequence: 0,
-		id:       p.randGen.Intn(math.MaxInt16),
-		Tracker:  p.randGen.Int63n(math.MaxInt64),
+		id:       randGen.Intn(math.MaxInt16),
+		Tracker:  randGen.Int63n(math.MaxInt64),
 		done:     make(chan bool),
 	}
 }
@@ -144,7 +142,7 @@ func (p *PingEnt) sendICMP(conn *icmp.PacketConn) error {
 }
 
 // pingBackend : ping実行時の送受信処理
-func (p *Ping) pingBackend(ctx context.Context) {
+func pingBackend(ctx context.Context) {
 	timer := time.NewTicker(time.Millisecond * 500)
 	pingMap := make(map[int64]*PingEnt)
 	netProto := "udp4"
@@ -165,7 +163,7 @@ func (p *Ping) pingBackend(ctx context.Context) {
 				close(p.done)
 			}
 			return
-		case p := <-p.pingSendCh:
+		case p := <-pingSendCh:
 			if p != nil {
 				_, ok := pingMap[p.Tracker]
 				for ok {

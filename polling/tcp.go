@@ -20,8 +20,8 @@ import (
 	"github.com/vjeantet/grok"
 )
 
-func (p *Polling) doPollingTCP(pe *datastore.PollingEnt) {
-	n := p.ds.GetNode(pe.NodeID)
+func doPollingTCP(pe *datastore.PollingEnt) {
+	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
 		log.Printf("node not found nodeID=%s", pe.NodeID)
 		return
@@ -46,19 +46,19 @@ func (p *Polling) doPollingTCP(pe *datastore.PollingEnt) {
 	if ok {
 		delete(lr, "error")
 		lr["rtt"] = fmt.Sprintf("%f", pe.LastVal)
-		p.setPollingState(pe, "normal")
+		setPollingState(pe, "normal")
 	} else {
-		p.setPollingState(pe, pe.Level)
+		setPollingState(pe, pe.Level)
 	}
 	pe.LastResult = makeLastResult(lr)
 }
 
-func (p *Polling) doPollingHTTP(pe *datastore.PollingEnt) {
+func doPollingHTTP(pe *datastore.PollingEnt) {
 	var ok bool
 	var err error
 	cmd := splitCmd(pe.Polling)
 	if len(cmd) < 1 {
-		p.setPollingError("http", pe, fmt.Errorf("no url"))
+		setPollingError("http", pe, fmt.Errorf("no url"))
 		return
 	}
 	url := cmd[0]
@@ -82,9 +82,9 @@ func (p *Polling) doPollingHTTP(pe *datastore.PollingEnt) {
 	}
 	pe.LastVal = float64(rTime)
 	if len(cmd) > 2 {
-		ok, lr, err = p.checkHTTPResp(pe, cmd[1], cmd[2], status, body, code)
+		ok, lr, err = checkHTTPResp(pe, cmd[1], cmd[2], status, body, code)
 		if err != nil {
-			p.setPollingError("http", pe, err)
+			setPollingError("http", pe, err)
 			return
 		}
 		if v, ok := lr["numVal"]; ok {
@@ -98,14 +98,14 @@ func (p *Polling) doPollingHTTP(pe *datastore.PollingEnt) {
 	}
 	if ok {
 		delete(lr, "error")
-		p.setPollingState(pe, "normal")
+		setPollingState(pe, "normal")
 	} else {
-		p.setPollingState(pe, pe.Level)
+		setPollingState(pe, pe.Level)
 	}
 	pe.LastResult = makeLastResult(lr)
 }
 
-func (p *Polling) checkHTTPResp(pe *datastore.PollingEnt, extractor, script, status, body string, code int) (bool, map[string]string, error) {
+func checkHTTPResp(pe *datastore.PollingEnt, extractor, script, status, body string, code int) (bool, map[string]string, error) {
 	lr := make(map[string]string)
 	vm := otto.New()
 	lr["status"] = status
@@ -125,7 +125,7 @@ func (p *Polling) checkHTTPResp(pe *datastore.PollingEnt, extractor, script, sta
 		}
 		return false, lr, nil
 	}
-	grokEnt := p.ds.GetGrokEnt(extractor)
+	grokEnt := datastore.GetGrokEnt(extractor)
 	if grokEnt == nil {
 		return false, lr, fmt.Errorf("no grok pattern")
 	}
@@ -190,10 +190,10 @@ func doHTTPGet(pe *datastore.PollingEnt, url string) (string, string, int, error
 	return resp.Status, string(body), resp.StatusCode, err
 }
 
-func (p *Polling) doPollingTLS(pe *datastore.PollingEnt) {
-	n := p.ds.GetNode(pe.NodeID)
+func doPollingTLS(pe *datastore.PollingEnt) {
+	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
-		p.setPollingError("tls", pe, fmt.Errorf("node not found"))
+		setPollingError("tls", pe, fmt.Errorf("node not found"))
 		return
 	}
 	cmd := splitCmd(pe.Polling)
@@ -250,7 +250,7 @@ func (p *Polling) doPollingTLS(pe *datastore.PollingEnt) {
 	}
 	pe.LastVal = float64(rTime)
 	if ok {
-		lr = p.getTLSConnectioStateInfo(n.Name, &cs)
+		lr = getTLSConnectioStateInfo(n.Name, &cs)
 		lr["rtt"] = fmt.Sprintf("%f", pe.LastVal)
 		if mode == "expire" {
 			var d int
@@ -274,9 +274,9 @@ func (p *Polling) doPollingTLS(pe *datastore.PollingEnt) {
 	}
 	pe.LastResult = makeLastResult(lr)
 	if (ok && !strings.Contains(script, "!")) || (!ok && strings.Contains(script, "!")) {
-		p.setPollingState(pe, "normal")
+		setPollingState(pe, "normal")
 	} else {
-		p.setPollingState(pe, pe.Level)
+		setPollingState(pe, pe.Level)
 	}
 }
 
@@ -296,7 +296,7 @@ func getServerCert(host string, cs *tls.ConnectionState) *x509.Certificate {
 	return nil
 }
 
-func (p *Polling) getTLSConnectioStateInfo(host string, cs *tls.ConnectionState) map[string]string {
+func getTLSConnectioStateInfo(host string, cs *tls.ConnectionState) map[string]string {
 	ret := make(map[string]string)
 	switch cs.Version {
 	case tls.VersionSSL30:
@@ -313,7 +313,7 @@ func (p *Polling) getTLSConnectioStateInfo(host string, cs *tls.ConnectionState)
 		ret["version"] = "Unknown"
 	}
 	id := fmt.Sprintf("%04x", cs.CipherSuite)
-	if n, ok := p.ds.GetCipherSuiteName(id); ok {
+	if n, ok := datastore.GetCipherSuiteName(id); ok {
 		ret["cipherSuite"] = n
 	} else {
 		ret["cipherSuite"] = id

@@ -11,14 +11,14 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func (b *Backend) mapBackend(ctx context.Context) {
-	b.clearPollingState()
-	b.ds.ForEachNodes(func(n *datastore.NodeEnt) bool {
-		b.updateNodeState(n)
+func mapBackend(ctx context.Context) {
+	clearPollingState()
+	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
+		updateNodeState(n)
 		return true
 	})
-	b.updateLineState()
-	go b.checkNewVersion()
+	updateLineState()
+	go checkNewVersion()
 	timer := time.NewTicker(time.Second * 10)
 	newVersionTimer := time.NewTicker(time.Hour * 24)
 	i := 6
@@ -28,32 +28,32 @@ func (b *Backend) mapBackend(ctx context.Context) {
 			timer.Stop()
 			return
 		case <-newVersionTimer.C:
-			go b.checkNewVersion()
+			go checkNewVersion()
 		case <-timer.C:
 			bHit := false
-			b.ds.ForEachStateChangedNodes(func(id string) bool {
-				if n := b.ds.GetNode(id); n != nil {
-					b.updateNodeState(n)
+			datastore.ForEachStateChangedNodes(func(id string) bool {
+				if n := datastore.GetNode(id); n != nil {
+					updateNodeState(n)
 					bHit = true
 				}
-				b.ds.DeleteNodeStateChanged(id)
+				datastore.DeleteNodeStateChanged(id)
 				return true
 			})
 			if bHit {
-				b.updateLineState()
+				updateLineState()
 			}
 			i++
 			if i > 5 {
-				b.ds.UpdateDBStats()
-				b.ds.CheckDBBackup()
+				datastore.UpdateDBStats()
+				datastore.CheckDBBackup()
 				i = 0
 			}
 		}
 	}
 }
 
-func (b *Backend) clearPollingState() {
-	b.ds.ForEachPollings(func(p *datastore.PollingEnt) bool {
+func clearPollingState() {
+	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
 		if p.State == "repair" {
 			p.State = "unknown"
 			p.NextTime = 0
@@ -62,9 +62,9 @@ func (b *Backend) clearPollingState() {
 	})
 }
 
-func (b *Backend) updateNodeState(n *datastore.NodeEnt) {
+func updateNodeState(n *datastore.NodeEnt) {
 	n.State = "unknown"
-	b.ds.ForEachPollings(func(p *datastore.PollingEnt) bool {
+	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
 		if p.NodeID != n.ID {
 			return true
 		}
@@ -91,14 +91,14 @@ func (b *Backend) updateNodeState(n *datastore.NodeEnt) {
 	})
 }
 
-func (b *Backend) updateLineState() {
-	b.ds.ForEachLines(func(l *datastore.LineEnt) bool {
-		if p := b.ds.GetPolling(l.PollingID1); p != nil {
+func updateLineState() {
+	datastore.ForEachLines(func(l *datastore.LineEnt) bool {
+		if p := datastore.GetPolling(l.PollingID1); p != nil {
 			l.State1 = p.State
 		} else {
 			l.State1 = "unknown"
 		}
-		if p := b.ds.GetPolling(l.PollingID2); p != nil {
+		if p := datastore.GetPolling(l.PollingID2); p != nil {
 			l.State2 = p.State
 		} else {
 			l.State2 = "unknown"
@@ -107,11 +107,11 @@ func (b *Backend) updateLineState() {
 	})
 }
 
-func (b *Backend) checkNewVersion() {
-	if !b.ds.NotifyConf.CheckUpdate || b.versionCheckState > 1 {
+func checkNewVersion() {
+	if !datastore.NotifyConf.CheckUpdate || versionCheckState > 1 {
 		return
 	}
-	url := "https://lhx98.linkclub.jp/twise.co.jp/cgi-bin/twsnmp/twsnmp.cgi?twsver=" + b.versionNum
+	url := "https://lhx98.linkclub.jp/twise.co.jp/cgi-bin/twsnmp/twsnmp.cgi?twsver=" + versionNum
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Printf("checkNewVersion err=%v", err)
@@ -124,20 +124,20 @@ func (b *Backend) checkNewVersion() {
 		return
 	}
 	if strings.Contains(string(ba), "#TWSNMPVEROK#") {
-		if b.versionCheckState == 0 {
-			b.ds.AddEventLog(&datastore.EventLogEnt{
+		if versionCheckState == 0 {
+			datastore.AddEventLog(&datastore.EventLogEnt{
 				Type:  "system",
 				Level: "info",
 				Event: "TWSNMPのバージョンは最新です。",
 			})
-			b.versionCheckState = 1
+			versionCheckState = 1
 		}
 		return
 	}
-	b.ds.AddEventLog(&datastore.EventLogEnt{
+	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
 		Level: "warn",
 		Event: "TWSNMPの新しいバージョンがあります。",
 	})
-	b.versionCheckState = 2
+	versionCheckState = 2
 }

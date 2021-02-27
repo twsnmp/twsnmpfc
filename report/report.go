@@ -15,60 +15,56 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-type Report struct {
-	ds             *datastore.DataStore
+var (
 	deviceReportCh chan *deviceReportEnt
 	userReportCh   chan *userReportEnt
 	flowReportCh   chan *flowReportEnt
 	badIPs         map[string]int64
+)
+
+func StartReport(ctx context.Context) error {
+	deviceReportCh = make(chan *deviceReportEnt, 100)
+	userReportCh = make(chan *userReportEnt, 100)
+	flowReportCh = make(chan *flowReportEnt, 500)
+	badIPs = make(map[string]int64)
+	go reportBackend(ctx)
+	return nil
 }
 
-func NewReport(ctx context.Context, ds *datastore.DataStore) *Report {
-	r := &Report{
-		ds:             ds,
-		deviceReportCh: make(chan *deviceReportEnt, 100),
-		userReportCh:   make(chan *userReportEnt, 100),
-		flowReportCh:   make(chan *flowReportEnt, 500),
-		badIPs:         make(map[string]int64),
-	}
-	go r.reportBackend(ctx)
-	return r
-}
-
-func (r *Report) reportBackend(ctx context.Context) {
+func reportBackend(ctx context.Context) {
 	timer := time.NewTicker(time.Minute * 5)
-	r.checkOldReport()
-	r.calcScore()
+	checkOldReport()
+	calcScore()
 	last := int64(0)
 	for {
 		select {
 		case <-ctx.Done():
 			{
 				timer.Stop()
-				r.ds.SaveReport(0)
+				datastore.SaveReport(0)
 				log.Printf("Stop reportBackend")
 				return
 			}
 		case <-timer.C:
 			{
-				r.checkOldReport()
-				r.calcScore()
-				r.ds.SaveReport(last)
+				checkOldReport()
+				calcScore()
+				datastore.SaveReport(last)
 				last = time.Now().UnixNano()
 			}
-		case dr := <-r.deviceReportCh:
-			r.checkDeviceReport(dr)
-		case ur := <-r.userReportCh:
-			r.checkUserReport(ur)
-		case fr := <-r.flowReportCh:
-			r.checkFlowReport(fr)
+		case dr := <-deviceReportCh:
+			checkDeviceReport(dr)
+		case ur := <-userReportCh:
+			checkUserReport(ur)
+		case fr := <-flowReportCh:
+			checkFlowReport(fr)
 		}
 	}
 }
 
-func (r *Report) checkOldReport() {
+func checkOldReport() {
 	oh := -24
-	svs := r.ds.LenServers()
+	svs := datastore.LenServers()
 	if svs > 10000 {
 		oh = -12 / (svs / 10000)
 		if oh > -3 {
@@ -76,17 +72,17 @@ func (r *Report) checkOldReport() {
 		}
 	}
 	old := time.Now().Add(time.Hour * time.Duration(oh)).UnixNano()
-	tooOld := time.Now().AddDate(0, 0, -r.ds.MapConf.LogDays).UnixNano()
-	r.checkOldServers(old, tooOld)
-	r.checkOldFlows(old, tooOld)
-	r.checkOldDevices(old)
-	r.checkOldUsers(old)
+	tooOld := time.Now().AddDate(0, 0, -datastore.MapConf.LogDays).UnixNano()
+	checkOldServers(old, tooOld)
+	checkOldFlows(old, tooOld)
+	checkOldDevices(old)
+	checkOldUsers(old)
 }
 
-func (r *Report) checkOldServers(old, tooOld int64) {
+func checkOldServers(old, tooOld int64) {
 	count := 0
 	ids := []string{}
-	r.ds.ForEachServers(func(s *datastore.ServerEnt) bool {
+	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
 		if s.LastTime < old {
 			if s.LastTime < tooOld || s.LastTime-s.FirstTime < 3600*1000*1000*1000 {
 				ids = append(ids, s.ID)
@@ -104,7 +100,7 @@ func (r *Report) checkOldServers(old, tooOld int64) {
 		return true
 	})
 	for _, id := range ids {
-		r.ds.DeleteReport("servers", id)
+		datastore.DeleteReport("servers", id)
 		count++
 	}
 	if count > 0 {
@@ -112,10 +108,10 @@ func (r *Report) checkOldServers(old, tooOld int64) {
 	}
 }
 
-func (r *Report) checkOldFlows(old, tooOld int64) {
+func checkOldFlows(old, tooOld int64) {
 	count := 0
 	ids := []string{}
-	r.ds.ForEachFlows(func(f *datastore.FlowEnt) bool {
+	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
 		if f.LastTime < old {
 			if f.LastTime < tooOld || f.LastTime-f.FirstTime < 3600*1000*1000*1000 {
 				ids = append(ids, f.ID)
@@ -133,7 +129,7 @@ func (r *Report) checkOldFlows(old, tooOld int64) {
 		return true
 	})
 	for _, id := range ids {
-		r.ds.DeleteReport("flows", id)
+		datastore.DeleteReport("flows", id)
 		count++
 	}
 	if count > 0 {
@@ -141,17 +137,17 @@ func (r *Report) checkOldFlows(old, tooOld int64) {
 	}
 }
 
-func (r *Report) checkOldDevices(tooOld int64) {
+func checkOldDevices(tooOld int64) {
 	count := 0
 	ids := []string{}
-	r.ds.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 		if d.LastTime < tooOld {
 			ids = append(ids, d.ID)
 		}
 		return true
 	})
 	for _, id := range ids {
-		r.ds.DeleteReport("devices", id)
+		datastore.DeleteReport("devices", id)
 		count++
 	}
 	if count > 0 {
@@ -159,17 +155,17 @@ func (r *Report) checkOldDevices(tooOld int64) {
 	}
 }
 
-func (r *Report) checkOldUsers(tooOld int64) {
+func checkOldUsers(tooOld int64) {
 	count := 0
 	ids := []string{}
-	r.ds.ForEachUsers(func(u *datastore.UserEnt) bool {
+	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 		if u.LastTime < tooOld {
 			ids = append(ids, u.ID)
 		}
 		return true
 	})
 	for _, id := range ids {
-		r.ds.DeleteReport("users", id)
+		datastore.DeleteReport("users", id)
 		count++
 	}
 	if count > 0 {
@@ -177,18 +173,18 @@ func (r *Report) checkOldUsers(tooOld int64) {
 	}
 }
 
-func (r *Report) calcScore() {
-	r.calcDeviceScore()
-	r.calcServerScore()
-	r.calcFlowScore()
-	r.calcUserScore()
-	r.badIPs = make(map[string]int64)
+func calcScore() {
+	calcDeviceScore()
+	calcServerScore()
+	calcFlowScore()
+	calcUserScore()
+	badIPs = make(map[string]int64)
 }
 
-func (r *Report) calcDeviceScore() {
+func calcDeviceScore() {
 	var xs []float64
-	r.ds.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		if n, ok := r.badIPs[d.IP]; ok {
+	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+		if n, ok := badIPs[d.IP]; ok {
 			d.Penalty += n
 		}
 		if d.Penalty > 100 {
@@ -201,15 +197,15 @@ func (r *Report) calcDeviceScore() {
 	if sd == 0 {
 		return
 	}
-	r.ds.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 		d.Score = ((10 * (float64(100-d.Penalty) - m) / sd) + 50)
 		return true
 	})
 }
 
-func (r *Report) calcFlowScore() {
+func calcFlowScore() {
 	var xs []float64
-	r.ds.ForEachFlows(func(f *datastore.FlowEnt) bool {
+	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
 		if f.Penalty > 100 {
 			f.Penalty = 100
 		}
@@ -220,15 +216,15 @@ func (r *Report) calcFlowScore() {
 	if sd == 0 {
 		return
 	}
-	r.ds.ForEachFlows(func(f *datastore.FlowEnt) bool {
+	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
 		f.Score = ((10 * (float64(100-f.Penalty) - m) / sd) + 50)
 		return true
 	})
 }
 
-func (r *Report) calcUserScore() {
+func calcUserScore() {
 	var xs []float64
-	r.ds.ForEachUsers(func(u *datastore.UserEnt) bool {
+	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 		if u.Penalty > 100 {
 			u.Penalty = 100
 		}
@@ -239,15 +235,15 @@ func (r *Report) calcUserScore() {
 	if sd == 0 {
 		return
 	}
-	r.ds.ForEachUsers(func(u *datastore.UserEnt) bool {
+	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 		u.Score = ((10 * (float64(100-u.Penalty) - m) / sd) + 50)
 		return true
 	})
 }
 
-func (r *Report) calcServerScore() {
+func calcServerScore() {
 	var xs []float64
-	r.ds.ForEachServers(func(s *datastore.ServerEnt) bool {
+	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
 		if s.Penalty > 100 {
 			s.Penalty = 100
 		}
@@ -258,7 +254,7 @@ func (r *Report) calcServerScore() {
 	if sd == 0 {
 		return
 	}
-	r.ds.ForEachServers(func(s *datastore.ServerEnt) bool {
+	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
 		s.Score = ((10 * (float64(100-s.Penalty) - m) / sd) + 50)
 		return true
 	})
@@ -276,45 +272,45 @@ func getMeanSD(xs *[]float64) (float64, float64) {
 	return m, sd
 }
 
-func (r *Report) resetPenalty(report string) {
+func resetPenalty(report string) {
 	if report == "devices" {
-		r.ds.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+		datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 			d.Penalty = 0
-			r.setDevicePenalty(d)
+			setDevicePenalty(d)
 			d.UpdateTime = time.Now().UnixNano()
 			return true
 		})
-		r.calcDeviceScore()
+		calcDeviceScore()
 	} else if report == "users" {
-		r.ds.ForEachUsers(func(u *datastore.UserEnt) bool {
+		datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 			u.Penalty = 0
 			u.UpdateTime = time.Now().UnixNano()
 			return true
 		})
-		r.calcUserScore()
+		calcUserScore()
 	} else if report == "servers" {
-		r.ds.ForEachServers(func(s *datastore.ServerEnt) bool {
+		datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
 			if s.Loc == "" {
-				s.Loc = r.ds.GetLoc(s.Server)
+				s.Loc = datastore.GetLoc(s.Server)
 			}
-			r.setServerPenalty(s)
+			setServerPenalty(s)
 			s.UpdateTime = time.Now().UnixNano()
 			return true
 		})
-		r.calcServerScore()
+		calcServerScore()
 	} else if report == "flows" {
-		r.ds.ForEachFlows(func(f *datastore.FlowEnt) bool {
+		datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
 			if f.ServerLoc == "" {
-				f.ServerLoc = r.ds.GetLoc(f.Server)
+				f.ServerLoc = datastore.GetLoc(f.Server)
 			}
 			if f.ClientLoc == "" {
-				f.ClientLoc = r.ds.GetLoc(f.Client)
+				f.ClientLoc = datastore.GetLoc(f.Client)
 			}
-			r.setFlowPenalty(f)
+			setFlowPenalty(f)
 			f.UpdateTime = time.Now().UnixNano()
 			return true
 		})
-		r.calcFlowScore()
+		calcFlowScore()
 	}
 }
 
@@ -335,11 +331,11 @@ func normMACAddr(m string) string {
 	return strings.ToUpper(r)
 }
 
-func (r *Report) findNameFromIP(ip string) string {
+func findNameFromIP(ip string) string {
 	if names, err := net.LookupAddr(ip); err == nil && len(names) > 0 {
 		return names[0]
 	}
-	n := r.ds.FindNodeFromIP(ip)
+	n := datastore.FindNodeFromIP(ip)
 	if n != nil {
 		return n.Name
 	}

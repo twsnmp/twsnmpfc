@@ -9,10 +9,10 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func (p *Polling) doPollingNTP(pe *datastore.PollingEnt) {
-	n := p.ds.GetNode(pe.NodeID)
+func doPollingNTP(pe *datastore.PollingEnt) {
+	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
-		p.setPollingError("ntp", pe, fmt.Errorf("node not found"))
+		setPollingError("ntp", pe, fmt.Errorf("node not found"))
 		return
 	}
 	lr := make(map[string]string)
@@ -35,8 +35,8 @@ func (p *Polling) doPollingNTP(pe *datastore.PollingEnt) {
 	}
 	pe.LastResult = makeLastResult(lr)
 	if ok {
-		p.setPollingState(pe, "normal")
+		setPollingState(pe, "normal")
 		return
 	}
-	p.setPollingState(pe, pe.Level)
+	setPollingState(pe, pe.Level)
 }

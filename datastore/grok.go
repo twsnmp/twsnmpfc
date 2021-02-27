@@ -23,7 +23,7 @@ var (
 	}
 )
 
-func (ds *DataStore) loadGrokMap(s string) {
+func loadGrokMap(s string) {
 	for _, l := range strings.Split(s, "\n") {
 		l := strings.TrimSpace(l)
 		if len(l) < 1 || strings.HasPrefix(l, "#") {
@@ -41,7 +41,7 @@ func (ds *DataStore) loadGrokMap(s string) {
 	// TODO:ここにDBから読み込む処理を追加する。
 }
 
-func (ds *DataStore) GetGrokEnt(k string) *GrokEnt {
+func GetGrokEnt(k string) *GrokEnt {
 	if r, ok := grokMap[k]; ok {
 		return r
 	}

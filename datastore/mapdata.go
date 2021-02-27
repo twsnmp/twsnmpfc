@@ -55,11 +55,11 @@ type PollingEnt struct {
 	State      string
 }
 
-func (ds *DataStore) loadMapDataFromDB() error {
-	if ds.db == nil {
+func loadMapDataFromDB() error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	err := ds.db.View(func(tx *bbolt.Tx) error {
+	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))
 		if b == nil {
 			return nil
@@ -67,7 +67,7 @@ func (ds *DataStore) loadMapDataFromDB() error {
 		_ = b.ForEach(func(k, v []byte) error {
 			var n NodeEnt
 			if err := json.Unmarshal(v, &n); err == nil {
-				ds.nodes.Store(n.ID, &n)
+				nodes.Store(n.ID, &n)
 			}
 			return nil
 		})
@@ -76,7 +76,7 @@ func (ds *DataStore) loadMapDataFromDB() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var l LineEnt
 				if err := json.Unmarshal(v, &l); err == nil {
-					ds.lines.Store(l.ID, &l)
+					lines.Store(l.ID, &l)
 				}
 				return nil
 			})
@@ -86,7 +86,7 @@ func (ds *DataStore) loadMapDataFromDB() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var p PollingEnt
 				if err := json.Unmarshal(v, &p); err == nil {
-					ds.pollings.Store(p.ID, &p)
+					pollings.Store(p.ID, &p)
 				}
 				return nil
 			})
@@ -96,13 +96,13 @@ func (ds *DataStore) loadMapDataFromDB() error {
 	return err
 }
 
-func (ds *DataStore) AddNode(n *NodeEnt) error {
-	if ds.db == nil {
+func AddNode(n *NodeEnt) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
 	for {
 		n.ID = makeKey()
-		if _, ok := ds.nodes.Load(n.ID); !ok {
+		if _, ok := nodes.Load(n.ID); !ok {
 			break
 		}
 	}
@@ -110,70 +110,70 @@ func (ds *DataStore) AddNode(n *NodeEnt) error {
 	if err != nil {
 		return err
 	}
-	_ = ds.db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))
 		return b.Put([]byte(n.ID), s)
 	})
-	ds.nodes.Store(n.ID, n)
+	nodes.Store(n.ID, n)
 	return nil
 }
 
-func (ds *DataStore) UpdateNode(n *NodeEnt) error {
-	if ds.db == nil {
+func UpdateNode(n *NodeEnt) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	if _, ok := ds.nodes.Load(n.ID); !ok {
+	if _, ok := nodes.Load(n.ID); !ok {
 		return ErrInvalidID
 	}
 	s, err := json.Marshal(n)
 	if err != nil {
 		return err
 	}
-	_ = ds.db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))
 		return b.Put([]byte(n.ID), s)
 	})
 	return nil
 }
 
-func (ds *DataStore) DeleteNode(nodeID string) error {
-	if ds.db == nil {
+func DeleteNode(nodeID string) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	if _, ok := ds.nodes.Load(nodeID); !ok {
+	if _, ok := nodes.Load(nodeID); !ok {
 		return ErrInvalidID
 	}
-	ds.db.Update(func(tx *bbolt.Tx) error {
+	db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))
 		return b.Delete([]byte(nodeID))
 	})
-	ds.nodes.Delete(nodeID)
+	nodes.Delete(nodeID)
 	delList := []string{}
-	ds.pollings.Range(func(k, v interface{}) bool {
+	pollings.Range(func(k, v interface{}) bool {
 		if v.(*PollingEnt).NodeID == nodeID {
 			delList = append(delList, k.(string))
 		}
 		return true
 	})
 	for _, k := range delList {
-		ds.DeletePolling(k)
+		DeletePolling(k)
 	}
 	return nil
 }
 
-func (ds *DataStore) GetNode(nodeID string) *NodeEnt {
-	if ds.db == nil {
+func GetNode(nodeID string) *NodeEnt {
+	if db == nil {
 		return nil
 	}
-	if n, ok := ds.nodes.Load(nodeID); ok {
+	if n, ok := nodes.Load(nodeID); ok {
 		return n.(*NodeEnt)
 	}
 	return nil
 }
 
-func (ds *DataStore) FindNodeFromIP(ip string) *NodeEnt {
+func FindNodeFromIP(ip string) *NodeEnt {
 	var ret *NodeEnt
-	ds.nodes.Range(func(_, p interface{}) bool {
+	nodes.Range(func(_, p interface{}) bool {
 		if p.(*NodeEnt).IP == ip {
 			ret = p.(*NodeEnt)
 			return false
@@ -183,92 +183,92 @@ func (ds *DataStore) FindNodeFromIP(ip string) *NodeEnt {
 	return ret
 }
 
-func (ds *DataStore) ForEachNodes(f func(*NodeEnt) bool) {
-	ds.nodes.Range(func(_, p interface{}) bool {
+func ForEachNodes(f func(*NodeEnt) bool) {
+	nodes.Range(func(_, p interface{}) bool {
 		return f(p.(*NodeEnt))
 	})
 }
 
-func (ds *DataStore) AddLine(l *LineEnt) error {
+func AddLine(l *LineEnt) error {
 	for {
 		l.ID = makeKey()
-		if _, ok := ds.lines.Load(l.ID); !ok {
+		if _, ok := lines.Load(l.ID); !ok {
 			break
 		}
 	}
-	if ds.db == nil {
+	if db == nil {
 		return ErrDBNotOpen
 	}
 	s, err := json.Marshal(l)
 	if err != nil {
 		return err
 	}
-	_ = ds.db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("lines"))
 		return b.Put([]byte(l.ID), s)
 	})
-	ds.lines.Store(l.ID, l)
+	lines.Store(l.ID, l)
 	return nil
 }
 
-func (ds *DataStore) UpdateLine(l *LineEnt) error {
-	if ds.db == nil {
+func UpdateLine(l *LineEnt) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	if _, ok := ds.lines.Load(l.ID); !ok {
+	if _, ok := lines.Load(l.ID); !ok {
 		return ErrInvalidID
 	}
 	s, err := json.Marshal(l)
 	if err != nil {
 		return err
 	}
-	_ = ds.db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("lines"))
 		return b.Put([]byte(l.ID), s)
 	})
 	return nil
 }
 
-func (ds *DataStore) DeleteLine(lineID string) error {
-	if ds.db == nil {
+func DeleteLine(lineID string) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	if _, ok := ds.lines.Load(lineID); !ok {
+	if _, ok := lines.Load(lineID); !ok {
 		return ErrInvalidID
 	}
-	_ = ds.db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("lines"))
 		return b.Delete([]byte(lineID))
 	})
-	ds.lines.Delete(lineID)
+	lines.Delete(lineID)
 	return nil
 }
 
-func (ds *DataStore) GetLine(lineID string) *LineEnt {
-	if ds.db == nil {
+func GetLine(lineID string) *LineEnt {
+	if db == nil {
 		return nil
 	}
-	if n, ok := ds.lines.Load(lineID); ok {
+	if n, ok := lines.Load(lineID); ok {
 		return n.(*LineEnt)
 	}
 	return nil
 }
 
 // ForEachLines : Line毎の処理
-func (ds *DataStore) ForEachLines(f func(*LineEnt) bool) {
-	ds.lines.Range(func(_, v interface{}) bool {
+func ForEachLines(f func(*LineEnt) bool) {
+	lines.Range(func(_, v interface{}) bool {
 		return f(v.(*LineEnt))
 	})
 }
 
 // AddPolling : ポーリングを追加する
-func (ds *DataStore) AddPolling(p *PollingEnt) error {
-	if ds.db == nil {
+func AddPolling(p *PollingEnt) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
 	for {
 		p.ID = makeKey()
-		if _, ok := ds.pollings.Load(p.ID); !ok {
+		if _, ok := pollings.Load(p.ID); !ok {
 			break
 		}
 	}
@@ -276,19 +276,19 @@ func (ds *DataStore) AddPolling(p *PollingEnt) error {
 	if err != nil {
 		return err
 	}
-	_ = ds.db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollings"))
 		return b.Put([]byte(p.ID), s)
 	})
-	ds.pollings.Store(p.ID, p)
+	pollings.Store(p.ID, p)
 	return nil
 }
 
-func (ds *DataStore) UpdatePolling(p *PollingEnt) error {
-	if ds.db == nil {
+func UpdatePolling(p *PollingEnt) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	if _, ok := ds.pollings.Load(p.ID); !ok {
+	if _, ok := pollings.Load(p.ID); !ok {
 		return ErrInvalidID
 	}
 	p.LastTime = time.Now().UnixNano()
@@ -296,64 +296,64 @@ func (ds *DataStore) UpdatePolling(p *PollingEnt) error {
 	if err != nil {
 		return err
 	}
-	_ = ds.db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollings"))
 		return b.Put([]byte(p.ID), s)
 	})
-	ds.pollings.Store(p.ID, p)
+	pollings.Store(p.ID, p)
 	return nil
 }
 
-func (ds *DataStore) DeletePolling(pollingID string) error {
-	if ds.db == nil {
+func DeletePolling(pollingID string) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	if _, ok := ds.pollings.Load(pollingID); !ok {
+	if _, ok := pollings.Load(pollingID); !ok {
 		return ErrInvalidID
 	}
-	_ = ds.db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollings"))
 		return b.Delete([]byte(pollingID))
 	})
-	ds.pollings.Delete(pollingID)
+	pollings.Delete(pollingID)
 	// Delete lines
-	ds.lines.Range(func(_, p interface{}) bool {
+	lines.Range(func(_, p interface{}) bool {
 		l := p.(*LineEnt)
 		if l.PollingID1 == pollingID || l.PollingID2 == pollingID {
-			_ = ds.DeleteLine(l.ID)
+			_ = DeleteLine(l.ID)
 		}
 		return true
 	})
-	ds.ClearPollingLog(pollingID)
-	ds.DeleteAIResult(pollingID)
+	ClearPollingLog(pollingID)
+	DeleteAIResult(pollingID)
 	return nil
 }
 
 // GetPolling : ポーリングを取得する
-func (ds *DataStore) GetPolling(id string) *PollingEnt {
-	p, _ := ds.pollings.Load(id)
+func GetPolling(id string) *PollingEnt {
+	p, _ := pollings.Load(id)
 	return p.(*PollingEnt)
 }
 
 // ForEachPollings : ポーリング毎の処理
-func (ds *DataStore) ForEachPollings(f func(*PollingEnt) bool) {
-	ds.pollings.Range(func(_, p interface{}) bool {
+func ForEachPollings(f func(*PollingEnt) bool) {
+	pollings.Range(func(_, p interface{}) bool {
 		return f(p.(*PollingEnt))
 	})
 }
 
 // SetNodeStateChanged :
-func (ds *DataStore) SetNodeStateChanged(id string) {
-	ds.lastNodeChanged = time.Now()
-	ds.stateChangedNodes.Store(id, true)
+func SetNodeStateChanged(id string) {
+	lastNodeChanged = time.Now()
+	stateChangedNodes.Store(id, true)
 }
 
-func (ds *DataStore) DeleteNodeStateChanged(id string) {
-	ds.stateChangedNodes.Delete(id)
+func DeleteNodeStateChanged(id string) {
+	stateChangedNodes.Delete(id)
 }
 
-func (ds *DataStore) ForEachStateChangedNodes(f func(string) bool) {
-	ds.stateChangedNodes.Range(func(id, _ interface{}) bool {
+func ForEachStateChangedNodes(f func(string) bool) {
+	stateChangedNodes.Range(func(id, _ interface{}) bool {
 		return f(id.(string))
 	})
 }

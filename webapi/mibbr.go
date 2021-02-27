@@ -19,9 +19,8 @@ type mibbrWebAPI struct {
 
 func getMIBBr(c echo.Context) error {
 	id := c.Param("id")
-	api := c.Get("api").(*WebAPI)
 	r := mibbrWebAPI{}
-	r.Node = api.DataStore.GetNode(id)
+	r.Node = datastore.GetNode(id)
 	r.MIBTree = &datastore.MIBTree
 	if r.Node == nil {
 		log.Printf("node not found")
@@ -62,7 +61,7 @@ func postMIBBr(c echo.Context) error {
 
 func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 	ret := []*mibEnt{}
-	n := api.DataStore.GetNode(p.NodeID)
+	n := datastore.GetNode(p.NodeID)
 	if n == nil {
 		log.Printf("postMIBBr node not found")
 		return ret, fmt.Errorf("node not found")
@@ -73,8 +72,8 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 		Transport:          "udp",
 		Community:          n.Community,
 		Version:            gosnmp.Version2c,
-		Timeout:            time.Duration(api.DataStore.MapConf.Timeout) * time.Second,
-		Retries:            api.DataStore.MapConf.Retry,
+		Timeout:            time.Duration(datastore.MapConf.Timeout) * time.Second,
+		Retries:            datastore.MapConf.Retry,
 		ExponentialTimeout: true,
 		MaxOids:            gosnmp.MaxOids,
 	}
@@ -104,11 +103,11 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 		return ret, err
 	}
 	defer agent.Conn.Close()
-	err = agent.Walk(api.DataStore.MIBDB.NameToOID(p.Name), func(variable gosnmp.SnmpPDU) error {
-		name := api.DataStore.MIBDB.OIDToName(variable.Name)
+	err = agent.Walk(datastore.MIBDB.NameToOID(p.Name), func(variable gosnmp.SnmpPDU) error {
+		name := datastore.MIBDB.OIDToName(variable.Name)
 		value := ""
 		if variable.Type == gosnmp.OctetString {
-			if strings.Contains(api.DataStore.MIBDB.OIDToName(variable.Name), "ifPhysAd") {
+			if strings.Contains(datastore.MIBDB.OIDToName(variable.Name), "ifPhysAd") {
 				a := variable.Value.(string)
 				if len(a) > 5 {
 					value = fmt.Sprintf("%02X:%02X:%02X:%02X:%02X:%02X", a[0], a[1], a[2], a[3], a[4], a[5])
@@ -117,7 +116,7 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 				value = variable.Value.(string)
 			}
 		} else if variable.Type == gosnmp.ObjectIdentifier {
-			value = api.DataStore.MIBDB.OIDToName(variable.Value.(string))
+			value = datastore.MIBDB.OIDToName(variable.Value.(string))
 		} else {
 			value = fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Uint64())
 		}

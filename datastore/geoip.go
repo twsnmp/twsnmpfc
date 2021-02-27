@@ -8,16 +8,16 @@ import (
 	"github.com/oschwald/geoip2-golang"
 )
 
-func (ds *DataStore) openGeoIP(path string) {
+func openGeoIP(path string) {
 	var err error
-	ds.geoip, err = geoip2.Open(path)
+	geoip, err = geoip2.Open(path)
 	if err != nil {
 		log.Printf("OpenGeoIP err=%v", err)
 	}
 }
 
-func (ds *DataStore) GetLoc(sip string) string {
-	if l, ok := ds.geoipMap[sip]; ok {
+func GetLoc(sip string) string {
+	if l, ok := geoipMap[sip]; ok {
 		return l
 	}
 	loc := ""
@@ -25,10 +25,10 @@ func (ds *DataStore) GetLoc(sip string) string {
 	if IsPrivateIP(ip) {
 		loc = "LOCAL,0,0,"
 	} else {
-		if ds.geoip == nil {
+		if geoip == nil {
 			return loc
 		}
-		record, err := ds.geoip.City(ip)
+		record, err := geoip.City(ip)
 		if err == nil {
 			loc = fmt.Sprintf("%s,%f,%f,%s", record.Country.IsoCode, record.Location.Latitude, record.Location.Longitude, record.City.Names["en"])
 		} else {
@@ -36,7 +36,7 @@ func (ds *DataStore) GetLoc(sip string) string {
 			loc = "LOCAL,0,0,"
 		}
 	}
-	ds.geoipMap[sip] = loc
+	geoipMap[sip] = loc
 	return loc
 }
 

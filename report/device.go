@@ -13,24 +13,24 @@ type deviceReportEnt struct {
 	IP   string
 }
 
-func (r *Report) ReportDevice(mac, ip string, t int64) {
+func ReportDevice(mac, ip string, t int64) {
 	mac = normMACAddr(mac)
-	r.deviceReportCh <- &deviceReportEnt{
+	deviceReportCh <- &deviceReportEnt{
 		Time: t,
 		MAC:  mac,
 		IP:   ip,
 	}
 }
 
-func (r *Report) checkDeviceReport(dr *deviceReportEnt) {
+func checkDeviceReport(dr *deviceReportEnt) {
 	ip := dr.IP
 	mac := dr.MAC
-	d := r.ds.GetDevice(mac)
+	d := datastore.GetDevice(mac)
 	if d != nil {
 		if d.IP != ip {
 			d.IP = ip
-			d.Name = r.findNameFromIP(ip)
-			r.setDevicePenalty(d)
+			d.Name = findNameFromIP(ip)
+			setDevicePenalty(d)
 			// IPアドレスが変わるもの
 			d.Penalty++
 		}
@@ -41,17 +41,17 @@ func (r *Report) checkDeviceReport(dr *deviceReportEnt) {
 	d = &datastore.DeviceEnt{
 		ID:         mac,
 		IP:         ip,
-		Name:       r.findNameFromIP(ip),
-		Vendor:     r.ds.FindVendor(mac),
+		Name:       findNameFromIP(ip),
+		Vendor:     datastore.FindVendor(mac),
 		FirstTime:  dr.Time,
 		LastTime:   dr.Time,
 		UpdateTime: time.Now().UnixNano(),
 	}
-	r.setDevicePenalty(d)
-	r.ds.AddDevice(d)
+	setDevicePenalty(d)
+	datastore.AddDevice(d)
 }
 
-func (r *Report) setDevicePenalty(d *datastore.DeviceEnt) {
+func setDevicePenalty(d *datastore.DeviceEnt) {
 	// ベンダー禁止のもの
 	if d.Vendor == "Unknown" {
 		d.Penalty++

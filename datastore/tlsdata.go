@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func (ds *DataStore) loadTLSCihperNameMap(f io.ReadCloser) {
+func loadTLSCihperNameMap(f io.ReadCloser) {
 	if f == nil {
 		return
 	}
@@ -25,12 +25,12 @@ func (ds *DataStore) loadTLSCihperNameMap(f io.ReadCloser) {
 		id = strings.ToLower(id)
 		name := line[1]
 		if strings.HasPrefix(name, "TLS_") {
-			ds.tlsCSMap[id] = name
+			tlsCSMap[id] = name
 		}
 	}
 }
 
-func (ds *DataStore) GetCipherSuiteName(id string) (string, bool) {
-	r, ok := ds.tlsCSMap[id]
+func GetCipherSuiteName(id string) (string, bool) {
+	r, ok := tlsCSMap[id]
 	return r, ok
 }

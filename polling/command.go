@@ -17,10 +17,10 @@ import (
 	"github.com/vjeantet/grok"
 )
 
-func (p *Polling) doPollingCmd(pe *datastore.PollingEnt) {
+func doPollingCmd(pe *datastore.PollingEnt) {
 	cmds := splitCmd(pe.Polling)
 	if len(cmds) < 3 {
-		p.setPollingError("cmd", pe, fmt.Errorf("no cmd"))
+		setPollingError("cmd", pe, fmt.Errorf("no cmd"))
 		return
 	}
 	cmd := cmds[0]
@@ -30,7 +30,7 @@ func (p *Polling) doPollingCmd(pe *datastore.PollingEnt) {
 	lr := make(map[string]string)
 	cl := strings.Split(cmd, " ")
 	if len(cl) < 1 {
-		p.setPollingError("cmd", pe, fmt.Errorf("no cmd"))
+		setPollingError("cmd", pe, fmt.Errorf("no cmd"))
 		return
 	}
 	tio := &timeout.Timeout{
@@ -40,7 +40,7 @@ func (p *Polling) doPollingCmd(pe *datastore.PollingEnt) {
 	}
 	exitStatus, stdout, stderr, err := tio.Run()
 	if err != nil {
-		p.setPollingError("cmd", pe, err)
+		setPollingError("cmd", pe, err)
 		return
 	}
 	lr["lastTime"] = time.Now().Format("2006-01-02T15:04")
@@ -54,10 +54,10 @@ func (p *Polling) doPollingCmd(pe *datastore.PollingEnt) {
 	}
 	pe.LastVal = float64(exitStatus.Code)
 	if extractor != "" {
-		grokEnt := p.ds.GetGrokEnt(extractor)
+		grokEnt := datastore.GetGrokEnt(extractor)
 		if grokEnt == nil {
 			log.Printf("No grok pattern Polling=%s", pe.Polling)
-			p.setPollingError("cmd", pe, fmt.Errorf("no grok pattern"))
+			setPollingError("cmd", pe, fmt.Errorf("no grok pattern"))
 			return
 		}
 		g, _ := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
@@ -67,7 +67,7 @@ func (p *Polling) doPollingCmd(pe *datastore.PollingEnt) {
 		cap := fmt.Sprintf("%%{%s}", extractor)
 		values, err := g.Parse(cap, string(stdout))
 		if err != nil {
-			p.setPollingError("cmd", pe, err)
+			setPollingError("cmd", pe, err)
 			return
 		}
 		for k, v := range values {
@@ -79,7 +79,7 @@ func (p *Polling) doPollingCmd(pe *datastore.PollingEnt) {
 	}
 	value, err := vm.Run(script)
 	if err != nil {
-		p.setPollingError("cmd", pe, err)
+		setPollingError("cmd", pe, err)
 		return
 	}
 	pe.LastVal = 0.0
@@ -93,8 +93,8 @@ func (p *Polling) doPollingCmd(pe *datastore.PollingEnt) {
 	}
 	pe.LastResult = makeLastResult(lr)
 	if ok, _ := value.ToBoolean(); ok {
-		p.setPollingState(pe, "normal")
+		setPollingState(pe, "normal")
 		return
 	}
-	p.setPollingState(pe, pe.Level)
+	setPollingState(pe, pe.Level)
 }

@@ -18,7 +18,6 @@ import (
 
 	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
-	"github.com/twsnmp/twsnmpfc/discover"
 	"github.com/twsnmp/twsnmpfc/ping"
 	"github.com/twsnmp/twsnmpfc/polling"
 	"github.com/twsnmp/twsnmpfc/report"
@@ -50,29 +49,35 @@ func main() {
 		log.Fatalln(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	ds := datastore.NewDataStore(ctx, dataStorePath, statikFS)
-	ds.AddEventLog(&datastore.EventLogEnt{
+	if err = datastore.InitDataStore(ctx, dataStorePath, statikFS); err != nil {
+		log.Fatalln(err)
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
 		Level: "info",
 		Event: "TWSNMP FC起動",
 	})
-	pi := ping.NewPing(ctx)
-	di := discover.NewDiscover(ds, pi)
-	rp := report.NewReport(ctx, ds)
-	lg := logger.NewLogger(ctx, ds, rp)
-	po := polling.NewPolling(ctx, ds, rp, pi)
-	be := backend.NewBackEnd(ctx, ds, version)
-	nt := notify.NewNotify(ctx, ds)
+	if err = ping.StartPing(ctx); err != nil {
+		log.Fatalln(err)
+	}
+	if err = report.StartReport(ctx); err != nil {
+		log.Fatalln(err)
+	}
+	if err = logger.StartLogger(ctx); err != nil {
+		log.Fatalln(err)
+	}
+	if err = polling.StartPolling(ctx); err != nil {
+		log.Fatalln(err)
+	}
+	if err = backend.StartBackend(ctx, version); err != nil {
+		log.Fatalln(err)
+	}
+	if err = notify.StartNotify(ctx); err != nil {
+		log.Fatalln(err)
+	}
 	w := &webapi.WebAPI{
-		DataStore: ds,
-		Backend:   be,
-		Notify:    nt,
-		Report:    rp,
-		Discover:  di,
-		Polling:   po,
-		Logger:    lg,
-		Statik:    http.FileServer(statikFS),
-		Password:  password,
+		Statik:   http.FileServer(statikFS),
+		Password: password,
 	}
 	e := echo.New()
 	webapi.Init(e, w)
@@ -86,7 +91,7 @@ func main() {
 	log.Println("Sig")
 	sig := <-quit
 	log.Println(sig)
-	ds.AddEventLog(&datastore.EventLogEnt{
+	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
 		Level: "info",
 		Event: "TWSNMP FC停止",

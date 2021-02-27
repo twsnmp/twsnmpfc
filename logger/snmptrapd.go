@@ -17,27 +17,27 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func (l *Logger) snmptrapd(stopCh chan bool) {
+func snmptrapd(stopCh chan bool) {
 	tl := gosnmp.NewTrapListener()
-	if l.ds.MapConf.SnmpMode != "" {
+	if datastore.MapConf.SnmpMode != "" {
 		tl.Params = &gosnmp.GoSNMP{}
 		tl.Params.Version = gosnmp.Version3
 		tl.Params.SecurityModel = gosnmp.UserSecurityModel
-		if l.ds.MapConf.SnmpMode == "v3auth" {
+		if datastore.MapConf.SnmpMode == "v3auth" {
 			tl.Params.MsgFlags = gosnmp.AuthNoPriv
 			tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 l.ds.MapConf.SnmpUser,
+				UserName:                 datastore.MapConf.SnmpUser,
 				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: l.ds.MapConf.SnmpPassword,
+				AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
 			}
 		} else {
 			tl.Params.MsgFlags = gosnmp.AuthPriv
 			tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 l.ds.MapConf.SnmpUser,
+				UserName:                 datastore.MapConf.SnmpUser,
 				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: l.ds.MapConf.SnmpPassword,
+				AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
 				PrivacyProtocol:          gosnmp.AES,
-				PrivacyPassphrase:        l.ds.MapConf.SnmpPassword,
+				PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
 			}
 		}
 	}
@@ -45,17 +45,17 @@ func (l *Logger) snmptrapd(stopCh chan bool) {
 		var record = make(map[string]interface{})
 		record["FromAddress"] = u.String()
 		record["Timestamp"] = s.Timestamp
-		record["Enterprise"] = l.ds.MIBDB.OIDToName(s.Enterprise)
+		record["Enterprise"] = datastore.MIBDB.OIDToName(s.Enterprise)
 		record["GenericTrap"] = s.GenericTrap
 		record["SpecificTrap"] = s.SpecificTrap
 		record["Variables"] = ""
 		vbs := ""
 		for _, vb := range s.Variables {
-			key := l.ds.MIBDB.OIDToName(vb.Name)
+			key := datastore.MIBDB.OIDToName(vb.Name)
 			val := ""
 			switch vb.Type {
 			case gosnmp.ObjectIdentifier:
-				val = l.ds.MIBDB.OIDToName(vb.Value.(string))
+				val = datastore.MIBDB.OIDToName(vb.Value.(string))
 			case gosnmp.OctetString:
 				val = vb.Value.(string)
 			default:
@@ -68,7 +68,7 @@ func (l *Logger) snmptrapd(stopCh chan bool) {
 		if err != nil {
 			log.Println(err)
 		}
-		l.logCh <- &datastore.LogEnt{
+		logCh <- &datastore.LogEnt{
 			Time: time.Now().UnixNano(),
 			Type: "trap",
 			Log:  string(js),

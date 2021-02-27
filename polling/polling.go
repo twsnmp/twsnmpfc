@@ -30,77 +30,68 @@ import (
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
-	"github.com/twsnmp/twsnmpfc/ping"
-	"github.com/twsnmp/twsnmpfc/report"
 )
 
-type Polling struct {
-	ds          *datastore.DataStore
-	ping        *ping.Ping
-	report      *report.Report
+var (
 	doPollingCh chan bool
+)
+
+func StartPolling(ctx context.Context) error {
+	doPollingCh = make(chan bool)
+	go pollingBackend(ctx)
+	return nil
 }
 
-func NewPolling(ctx context.Context, ds *datastore.DataStore, report *report.Report, ping *ping.Ping) *Polling {
-	p := &Polling{
-		ds:     ds,
-		ping:   ping,
-		report: report,
-	}
-	go p.pollingBackend(ctx)
-	return p
-}
-
-func (p *Polling) pollNowNode(nodeID string) {
-	n := p.ds.GetNode(nodeID)
+func pollNowNode(nodeID string) {
+	n := datastore.GetNode(nodeID)
 	if n == nil {
 		return
 	}
-	p.ds.ForEachPollings(func(pe *datastore.PollingEnt) bool {
+	datastore.ForEachPollings(func(pe *datastore.PollingEnt) bool {
 		if pe.NodeID == nodeID && pe.State != "normal" {
 			pe.State = "unknown"
 			pe.NextTime = 0
-			p.ds.AddEventLog(&datastore.EventLogEnt{
+			datastore.AddEventLog(&datastore.EventLogEnt{
 				Type:     "user",
 				Level:    pe.State,
 				NodeID:   pe.NodeID,
 				NodeName: n.Name,
 				Event:    "ポーリング再確認:" + pe.Name,
 			})
-			p.ds.UpdatePolling(pe)
+			datastore.UpdatePolling(pe)
 		}
 		return true
 	})
-	p.ds.SetNodeStateChanged(n.ID)
-	p.doPollingCh <- true
+	datastore.SetNodeStateChanged(n.ID)
+	doPollingCh <- true
 }
 
-func (p *Polling) CheckAllPoll() {
-	p.ds.ForEachPollings(func(pe *datastore.PollingEnt) bool {
+func CheckAllPoll() {
+	datastore.ForEachPollings(func(pe *datastore.PollingEnt) bool {
 		if pe.State != "normal" {
 			pe.State = "unknown"
 			pe.NextTime = 0
-			n := p.ds.GetNode(pe.NodeID)
+			n := datastore.GetNode(pe.NodeID)
 			if n == nil {
 				return true
 			}
-			p.ds.AddEventLog(&datastore.EventLogEnt{
+			datastore.AddEventLog(&datastore.EventLogEnt{
 				Type:     "user",
 				Level:    pe.State,
 				NodeID:   pe.NodeID,
 				NodeName: n.Name,
 				Event:    "ポーリング再確認:" + pe.Name,
 			})
-			p.ds.SetNodeStateChanged(n.ID)
-			p.ds.UpdatePolling(pe)
+			datastore.SetNodeStateChanged(n.ID)
+			datastore.UpdatePolling(pe)
 		}
 		return true
 	})
-	p.doPollingCh <- true
+	doPollingCh <- true
 }
 
 // pollingBackend :  ポーリングのバックグランド処理
-func (p *Polling) pollingBackend(ctx context.Context) {
+func pollingBackend(ctx context.Context) {
 	time.Sleep(time.Millisecond * 100)
 	timer := time.NewTicker(time.Second * 30)
 	for {
@@ -108,17 +99,17 @@ func (p *Polling) pollingBackend(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-timer.C:
-			p.checkPolling()
-		case <-p.doPollingCh:
-			p.checkPolling()
+			checkPolling()
+		case <-doPollingCh:
+			checkPolling()
 		}
 	}
 }
 
-func (p *Polling) checkPolling() {
+func checkPolling() {
 	now := time.Now().UnixNano()
 	list := []*datastore.PollingEnt{}
-	p.ds.ForEachPollings(func(p *datastore.PollingEnt) bool {
+	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
 		if p.NextTime < (now + (10 * 1000 * 1000 * 1000)) {
 			list = append(list, p)
 		}
@@ -137,66 +128,66 @@ func (p *Polling) checkPolling() {
 			startTime = now
 		}
 		list[i].NextTime = startTime + (int64(list[i].PollInt) * 1000 * 1000 * 1000)
-		go p.doPolling(list[i], startTime)
+		go doPolling(list[i], startTime)
 		time.Sleep(time.Millisecond * 2)
 	}
 }
 
-func (p *Polling) doPolling(pe *datastore.PollingEnt, startTime int64) {
+func doPolling(pe *datastore.PollingEnt, startTime int64) {
 	for startTime > time.Now().UnixNano() {
 		time.Sleep(time.Millisecond * 100)
 	}
 	oldState := pe.State
 	switch pe.Type {
 	case "ping":
-		p.doPollingPing(pe)
+		doPollingPing(pe)
 	case "snmp":
-		p.doPollingSnmp(pe)
+		doPollingSnmp(pe)
 	case "tcp":
-		p.doPollingTCP(pe)
+		doPollingTCP(pe)
 	case "http", "https":
-		p.doPollingHTTP(pe)
+		doPollingHTTP(pe)
 	case "tls":
-		p.doPollingTLS(pe)
+		doPollingTLS(pe)
 	case "dns":
-		p.doPollingDNS(pe)
+		doPollingDNS(pe)
 	case "ntp":
-		p.doPollingNTP(pe)
+		doPollingNTP(pe)
 	case "syslog", "trap", "netflow", "ipfix":
-		p.doPollingLog(pe)
+		doPollingLog(pe)
 	case "syslogpri":
-		if !p.doPollingSyslogPri(pe) {
+		if !doPollingSyslogPri(pe) {
 			return
 		}
 	case "syslogdevice":
-		p.doPollingSyslogDevice(pe)
+		doPollingSyslogDevice(pe)
 	case "sysloguser":
-		p.doPollingSyslogUser(pe)
+		doPollingSyslogUser(pe)
 	case "syslogflow":
-		p.doPollingSyslogFlow(pe)
+		doPollingSyslogFlow(pe)
 	case "cmd":
-		p.doPollingCmd(pe)
+		doPollingCmd(pe)
 	case "ssh":
-		p.doPollingSSH(pe)
+		doPollingSSH(pe)
 	case "vmware":
-		p.doPollingVMWare(pe)
+		doPollingVMWare(pe)
 	case "twsnmp":
-		p.doPollingTWSNMP(pe)
+		doPollingTWSNMP(pe)
 	}
-	p.ds.UpdatePolling(pe)
+	datastore.UpdatePolling(pe)
 	if pe.LogMode == datastore.LogModeAlways || pe.LogMode == datastore.LogModeAI || (pe.LogMode == datastore.LogModeOnChange && oldState != pe.State) {
-		if err := p.ds.AddPollingLog(pe); err != nil {
+		if err := datastore.AddPollingLog(pe); err != nil {
 			log.Printf("addPollingLog err=%v %#v", err, pe)
 		}
 	}
-	if p.ds.InfluxdbConf.PollingLog != "" {
-		if p.ds.InfluxdbConf.PollingLog == "all" || pe.LogMode != datastore.LogModeNone {
-			_ = p.ds.SendPollingLogToInfluxdb(pe)
+	if datastore.InfluxdbConf.PollingLog != "" {
+		if datastore.InfluxdbConf.PollingLog == "all" || pe.LogMode != datastore.LogModeNone {
+			_ = datastore.SendPollingLogToInfluxdb(pe)
 		}
 	}
 }
 
-func (p *Polling) setPollingState(pe *datastore.PollingEnt, newState string) {
+func setPollingState(pe *datastore.PollingEnt, newState string) {
 	sendEvent := false
 	oldState := pe.State
 	if newState == "normal" {
@@ -221,11 +212,11 @@ func (p *Polling) setPollingState(pe *datastore.PollingEnt, newState string) {
 	}
 	if sendEvent {
 		nodeName := "unknown"
-		if n := p.ds.GetNode(pe.NodeID); n != nil {
+		if n := datastore.GetNode(pe.NodeID); n != nil {
 			nodeName = n.Name
 		}
-		p.ds.SetNodeStateChanged(pe.NodeID)
-		p.ds.AddEventLog(&datastore.EventLogEnt{
+		datastore.SetNodeStateChanged(pe.NodeID)
+		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:     "polling",
 			Level:    pe.State,
 			NodeID:   pe.NodeID,
@@ -235,12 +226,12 @@ func (p *Polling) setPollingState(pe *datastore.PollingEnt, newState string) {
 	}
 }
 
-func (p *Polling) setPollingError(s string, pe *datastore.PollingEnt, err error) {
+func setPollingError(s string, pe *datastore.PollingEnt, err error) {
 	log.Printf("%s error Polling=%s err=%v", s, pe.Polling, err)
 	lr := make(map[string]string)
 	lr["error"] = fmt.Sprintf("%v", err)
 	pe.LastResult = makeLastResult(lr)
-	p.setPollingState(pe, "unknown")
+	setPollingState(pe, "unknown")
 }
 
 // Util Functions

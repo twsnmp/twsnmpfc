@@ -38,6 +38,7 @@ type MapConfEnt struct {
 	EnableSyslogd  bool
 	EnableTrapd    bool
 	EnableNetflowd bool
+	EnableArpWatch bool
 	AILevel        string
 	AIThreshold    int
 }
@@ -66,40 +67,40 @@ type DiscoverConfEnt struct {
 	Y       int
 }
 
-func (ds *DataStore) initConf() {
-	ds.MapConf.Community = "public"
-	ds.MapConf.PollInt = 60
-	ds.MapConf.Retry = 1
-	ds.MapConf.Timeout = 1
-	ds.MapConf.LogDispSize = 5000
-	ds.MapConf.LogDays = 14
-	ds.MapConf.AILevel = "info"
-	ds.MapConf.AIThreshold = 81
-	ds.MapConf.Community = "public"
-	ds.MapConf.UserID = "twsnmp"
-	ds.MapConf.Password = security.PasswordHash("twsnmp")
-	ds.DiscoverConf.Retry = 1
-	ds.DiscoverConf.Timeout = 1
-	ds.NotifyConf.InsecureSkipVerify = true
-	ds.NotifyConf.Interval = 60
-	ds.NotifyConf.Subject = "TWSNMPからの通知"
-	ds.NotifyConf.Level = "none"
-	ds.InfluxdbConf.DB = "twsnmp"
+func initConf() {
+	MapConf.Community = "public"
+	MapConf.PollInt = 60
+	MapConf.Retry = 1
+	MapConf.Timeout = 1
+	MapConf.LogDispSize = 5000
+	MapConf.LogDays = 14
+	MapConf.AILevel = "info"
+	MapConf.AIThreshold = 81
+	MapConf.Community = "public"
+	MapConf.UserID = "twsnmp"
+	MapConf.Password = security.PasswordHash("twsnmp")
+	DiscoverConf.Retry = 1
+	DiscoverConf.Timeout = 1
+	NotifyConf.InsecureSkipVerify = true
+	NotifyConf.Interval = 60
+	NotifyConf.Subject = "TWSNMPからの通知"
+	NotifyConf.Level = "none"
+	InfluxdbConf.DB = "twsnmp"
 }
 
-func (ds *DataStore) loadConfFromDB() error {
-	if ds.db == nil {
+func loadConfFromDB() error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
 	bSaveConf := false
-	err := ds.db.View(func(tx *bbolt.Tx) error {
+	err := db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		v := b.Get([]byte("mapConf"))
 		if v == nil {
 			bSaveConf = true
 			return nil
 		}
-		if err := json.Unmarshal(v, &ds.MapConf); err != nil {
+		if err := json.Unmarshal(v, &MapConf); err != nil {
 			log.Println(fmt.Sprintf("Unmarshal mapConf from DB error=%v", err))
 			return err
 		}
@@ -107,7 +108,7 @@ func (ds *DataStore) loadConfFromDB() error {
 		if v == nil {
 			return nil
 		}
-		if err := json.Unmarshal(v, &ds.DiscoverConf); err != nil {
+		if err := json.Unmarshal(v, &DiscoverConf); err != nil {
 			log.Println(fmt.Sprintf("Unmarshal discoverConf from DB error=%v", err))
 			return err
 		}
@@ -115,46 +116,46 @@ func (ds *DataStore) loadConfFromDB() error {
 		if v == nil {
 			return nil
 		}
-		if err := json.Unmarshal(v, &ds.NotifyConf); err != nil {
+		if err := json.Unmarshal(v, &NotifyConf); err != nil {
 			log.Println(fmt.Sprintf("Unmarshal notifyConf from DB error=%v", err))
 			return err
 		}
 		v = b.Get([]byte("backup"))
 		if v != nil {
-			if err := json.Unmarshal(v, &ds.Backup); err != nil {
+			if err := json.Unmarshal(v, &Backup); err != nil {
 				log.Println(fmt.Sprintf("Unmarshal mainWinbackupdowInfo from DB error=%v", err))
 			}
 		}
 		v = b.Get([]byte("influxdbConf"))
 		if v != nil {
-			if err := json.Unmarshal(v, &ds.InfluxdbConf); err != nil {
+			if err := json.Unmarshal(v, &InfluxdbConf); err != nil {
 				log.Println(fmt.Sprintf("Unmarshal influxdbConf from DB error=%v", err))
 			}
 		}
 		return nil
 	})
-	if err == nil && ds.MapConf.PrivateKey == "" {
-		ds.initSecurityKey()
+	if err == nil && MapConf.PrivateKey == "" {
+		initSecurityKey()
 	}
 	if err == nil && bSaveConf {
-		if err := ds.SaveMapConfToDB(); err != nil {
+		if err := SaveMapConfToDB(); err != nil {
 			log.Printf("loadConfFromDB err=%v", err)
 		}
-		if err := ds.SaveNotifyConfToDB(); err != nil {
+		if err := SaveNotifyConfToDB(); err != nil {
 			log.Printf("loadConfFromDB err=%v", err)
 		}
-		if err := ds.SaveDiscoverConfToDB(); err != nil {
+		if err := SaveDiscoverConfToDB(); err != nil {
 			log.Printf("loadConfFromDB err=%v", err)
 		}
-		if err := ds.SaveInfluxdbConfToDB(); err != nil {
+		if err := SaveInfluxdbConfToDB(); err != nil {
 			log.Printf("loadConfFromDB err=%v", err)
 		}
 	}
 	return err
 }
 
-func (ds *DataStore) SaveBackImage(img []byte) error {
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+func SaveBackImage(img []byte) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
@@ -163,19 +164,19 @@ func (ds *DataStore) SaveBackImage(img []byte) error {
 	})
 }
 
-func (ds *DataStore) GetBackImage() ([]byte, error) {
+func GetBackImage() ([]byte, error) {
 	var r []byte
-	if ds.db == nil {
+	if db == nil {
 		return r, ErrDBNotOpen
 	}
-	return r, ds.db.View(func(tx *bbolt.Tx) error {
+	return r, db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		r = b.Get([]byte("backImage"))
 		return nil
 	})
 }
 
-func (ds *DataStore) initSecurityKey() {
+func initSecurityKey() {
 	key, err := security.GenPrivateKey(4096)
 	if err != nil {
 		log.Printf("initSecurityKey err=%v", err)
@@ -191,26 +192,26 @@ func (ds *DataStore) initSecurityKey() {
 		log.Printf("initSecurityKey err=%v", err)
 		return
 	}
-	ds.MapConf.PrivateKey = key
-	ds.MapConf.PublicKey = pubkey
-	ds.MapConf.TLSCert = cert
+	MapConf.PrivateKey = key
+	MapConf.PublicKey = pubkey
+	MapConf.TLSCert = cert
 	log.Printf("initSecurityKey Public Key=%v", pubkey)
-	_ = ds.SaveMapConfToDB()
+	_ = SaveMapConfToDB()
 }
 
-func (ds *DataStore) GetPrivateKey() string {
-	return security.GetRawKeyPem(ds.MapConf.PrivateKey)
+func GetPrivateKey() string {
+	return security.GetRawKeyPem(MapConf.PrivateKey)
 }
 
-func (ds *DataStore) SaveMapConfToDB() error {
-	if ds.db == nil {
+func SaveMapConfToDB() error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	s, err := json.Marshal(ds.MapConf)
+	s, err := json.Marshal(MapConf)
 	if err != nil {
 		return err
 	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
@@ -219,15 +220,15 @@ func (ds *DataStore) SaveMapConfToDB() error {
 	})
 }
 
-func (ds *DataStore) SaveNotifyConfToDB() error {
-	if ds.db == nil {
+func SaveNotifyConfToDB() error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	s, err := json.Marshal(ds.NotifyConf)
+	s, err := json.Marshal(NotifyConf)
 	if err != nil {
 		return err
 	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
@@ -236,15 +237,15 @@ func (ds *DataStore) SaveNotifyConfToDB() error {
 	})
 }
 
-func (ds *DataStore) SaveDiscoverConfToDB() error {
-	if ds.db == nil {
+func SaveDiscoverConfToDB() error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	s, err := json.Marshal(ds.DiscoverConf)
+	s, err := json.Marshal(DiscoverConf)
 	if err != nil {
 		return err
 	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")

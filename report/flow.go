@@ -19,8 +19,8 @@ type flowReportEnt struct {
 	Bytes   int64
 }
 
-func (r *Report) ReportFlow(src string, sp int, dst string, dp, prot int, bytes int64, t int64) {
-	r.flowReportCh <- &flowReportEnt{
+func ReportFlow(src string, sp int, dst string, dp, prot int, bytes int64, t int64) {
+	flowReportCh <- &flowReportEnt{
 		Time:    t,
 		SrcIP:   src,
 		SrcPort: sp,
@@ -32,15 +32,15 @@ func (r *Report) ReportFlow(src string, sp int, dst string, dp, prot int, bytes 
 }
 
 // getFlowDir : クライアント、サーバー、サービスを決定するアルゴリズム
-func (r *Report) getFlowDir(fr *flowReportEnt) (server, client, service string) {
+func getFlowDir(fr *flowReportEnt) (server, client, service string) {
 	guc1 := datastore.IsGlobalUnicast(fr.SrcIP)
 	guc2 := datastore.IsGlobalUnicast(fr.DstIP)
 	if !guc1 && !guc2 {
 		// 両方ユニキャストでない場合は含めない。
 		return
 	}
-	s1, ok1 := r.ds.GetServiceName(fr.Prot, fr.SrcPort)
-	s2, ok2 := r.ds.GetServiceName(fr.Prot, fr.DstPort)
+	s1, ok1 := datastore.GetServiceName(fr.Prot, fr.SrcPort)
+	s2, ok2 := datastore.GetServiceName(fr.Prot, fr.DstPort)
 	if ok1 {
 		if ok2 {
 			if fr.SrcPort < fr.DstPort || !guc1 {
@@ -50,7 +50,7 @@ func (r *Report) getFlowDir(fr *flowReportEnt) (server, client, service string) 
 				service = s1
 			} else if fr.SrcPort == fr.DstPort {
 				id := fmt.Sprintf("%s:%s", fr.DstIP, fr.SrcIP)
-				if r.ds.GetFlow(id) != nil || !guc2 {
+				if datastore.GetFlow(id) != nil || !guc2 {
 					// 既に登録済みか、マルチキャストをサーバーとする
 					server = fr.DstIP
 					client = fr.SrcIP
@@ -90,28 +90,28 @@ func (r *Report) getFlowDir(fr *flowReportEnt) (server, client, service string) 
 	return
 }
 
-func (r *Report) checkFlowReport(fr *flowReportEnt) {
-	server, client, service := r.getFlowDir(fr)
+func checkFlowReport(fr *flowReportEnt) {
+	server, client, service := getFlowDir(fr)
 	if server == "" {
-		log.Printf("Skip flow report %v", r)
+		log.Printf("Skip flow report %v", fr)
 		return
 	}
-	r.checkServerReport(server, service, fr.Bytes, fr.Time)
+	checkServerReport(server, service, fr.Bytes, fr.Time)
 	now := time.Now().UnixNano()
 	id := fmt.Sprintf("%s:%s", client, server)
-	f := r.ds.GetFlow(id)
+	f := datastore.GetFlow(id)
 	if f != nil {
 		if _, ok := f.Services[service]; ok {
 			f.Services[service]++
 		} else {
 			f.Services[service] = 1
-			r.setFlowPenalty(f)
+			setFlowPenalty(f)
 		}
 		if f.ServerLoc == "" {
-			f.ServerLoc = r.ds.GetLoc(f.Server)
+			f.ServerLoc = datastore.GetLoc(f.Server)
 		}
 		if f.ClientLoc == "" {
-			f.ClientLoc = r.ds.GetLoc(f.Client)
+			f.ClientLoc = datastore.GetLoc(f.Client)
 		}
 		f.Bytes += fr.Bytes
 		f.Count++
@@ -126,32 +126,32 @@ func (r *Report) checkFlowReport(fr *flowReportEnt) {
 		Services:   make(map[string]int64),
 		Count:      1,
 		Bytes:      fr.Bytes,
-		ServerLoc:  r.ds.GetLoc(server),
-		ClientLoc:  r.ds.GetLoc(client),
-		ServerName: r.findNameFromIP(server),
-		ClientName: r.findNameFromIP(client),
+		ServerLoc:  datastore.GetLoc(server),
+		ClientLoc:  datastore.GetLoc(client),
+		ServerName: findNameFromIP(server),
+		ClientName: findNameFromIP(client),
 		FirstTime:  fr.Time,
 		LastTime:   fr.Time,
 		UpdateTime: now,
 	}
 	f.Services[service] = 1
-	r.setFlowPenalty(f)
-	r.ds.AddFlow(f)
+	setFlowPenalty(f)
+	datastore.AddFlow(f)
 }
 
-func (r *Report) checkServerReport(server, service string, bytes, t int64) {
+func checkServerReport(server, service string, bytes, t int64) {
 	if !strings.Contains(service, "/") {
 		return
 	}
 	now := time.Now().UnixNano()
 	id := server
-	s := r.ds.GetServer(id)
+	s := datastore.GetServer(id)
 	if s != nil {
 		if _, ok := s.Services[service]; ok {
 			s.Services[service]++
 		} else {
 			s.Services[service] = 1
-			r.setServerPenalty(s)
+			setServerPenalty(s)
 		}
 		s.Count++
 		s.Bytes += bytes
@@ -163,8 +163,8 @@ func (r *Report) checkServerReport(server, service string, bytes, t int64) {
 		ID:         id,
 		Server:     server,
 		Services:   make(map[string]int64),
-		ServerName: r.findNameFromIP(server),
-		Loc:        r.ds.GetLoc(server),
+		ServerName: findNameFromIP(server),
+		Loc:        datastore.GetLoc(server),
 		Count:      1,
 		Bytes:      bytes,
 		FirstTime:  t,
@@ -172,11 +172,11 @@ func (r *Report) checkServerReport(server, service string, bytes, t int64) {
 		UpdateTime: now,
 	}
 	s.Services[service] = 1
-	r.setServerPenalty(s)
-	r.ds.AddServer(s)
+	setServerPenalty(s)
+	datastore.AddServer(s)
 }
 
-func (r *Report) setFlowPenalty(f *datastore.FlowEnt) {
+func setFlowPenalty(f *datastore.FlowEnt) {
 	loc := ""
 	if f.ServerLoc != "" {
 		a := strings.Split(f.ServerLoc, ",")
@@ -191,7 +191,7 @@ func (r *Report) setFlowPenalty(f *datastore.FlowEnt) {
 		if loc != "" {
 			ids = append(ids, fmt.Sprintf("*:%s:%s", service, loc))
 		}
-		if as := r.ds.GetAllowRule(service); as != nil {
+		if as := datastore.GetAllowRule(service); as != nil {
 			if e, ok := as.Servers[f.Server]; !ok {
 				if e {
 					f.Penalty++
@@ -204,7 +204,7 @@ func (r *Report) setFlowPenalty(f *datastore.FlowEnt) {
 		ids = append(ids, fmt.Sprintf("*:*:%s", loc))
 	}
 	for _, id := range ids {
-		if r.ds.GetDennyRule(id) {
+		if datastore.GetDennyRule(id) {
 			f.Penalty++
 		}
 	}
@@ -213,13 +213,13 @@ func (r *Report) setFlowPenalty(f *datastore.FlowEnt) {
 		f.Penalty++
 	}
 	if f.Penalty > 0 {
-		if n, ok := r.badIPs[f.Client]; !ok || n < f.Penalty {
-			r.badIPs[f.Client] = f.Penalty
+		if n, ok := badIPs[f.Client]; !ok || n < f.Penalty {
+			badIPs[f.Client] = f.Penalty
 		}
 	}
 }
 
-func (r *Report) setServerPenalty(s *datastore.ServerEnt) {
+func setServerPenalty(s *datastore.ServerEnt) {
 	loc := ""
 	if s.Loc != "" {
 		a := strings.Split(s.Loc, ",")
@@ -234,7 +234,7 @@ func (r *Report) setServerPenalty(s *datastore.ServerEnt) {
 		if loc != "" {
 			ids = append(ids, fmt.Sprintf("*:%s:%s", service, loc))
 		}
-		if as := r.ds.GetAllowRule(service); as != nil {
+		if as := datastore.GetAllowRule(service); as != nil {
 			if _, ok := as.Servers[s.Server]; !ok {
 				s.Penalty++
 			}
@@ -244,7 +244,7 @@ func (r *Report) setServerPenalty(s *datastore.ServerEnt) {
 		ids = append(ids, fmt.Sprintf("*:*:%s", loc))
 	}
 	for _, id := range ids {
-		if r.ds.GetDennyRule(id) {
+		if datastore.GetDennyRule(id) {
 			s.Penalty++
 		}
 	}

@@ -22,15 +22,12 @@ import (
 // GRID : 自動発見時にノードを配置する間隔
 const GRID = 90
 
-// Discover : 自動発見の
-type Discover struct {
-	ds   *datastore.DataStore
-	ping *ping.Ping
+var (
 	Stat DiscoverStat
 	Stop bool
 	X    int
 	Y    int
-}
+)
 
 type DiscoverStat struct {
 	Running   bool
@@ -56,71 +53,63 @@ type discoverInfoEnt struct {
 	Y           int
 }
 
-func NewDiscover(ds *datastore.DataStore, ping *ping.Ping) *Discover {
-	d := &Discover{
-		ds:   ds,
-		ping: ping,
-	}
-	return d
-}
-
 // StopDiscover : 自動発見を停止する
-func (d *Discover) StopDiscover() {
-	for d.Stat.Running {
-		d.Stop = true
+func StopDiscover() {
+	for Stat.Running {
+		Stop = true
 		time.Sleep(time.Millisecond * 100)
 	}
 }
 
-func (d *Discover) StartDiscover() error {
-	if d.Stat.Running {
+func StartDiscover() error {
+	if Stat.Running {
 		return fmt.Errorf("discover already runnning")
 	}
-	sip, err := ipv4.FromDots(d.ds.DiscoverConf.StartIP)
+	sip, err := ipv4.FromDots(datastore.DiscoverConf.StartIP)
 	if err != nil {
 		return fmt.Errorf("discover start ip err=%v", err)
 	}
-	eip, err := ipv4.FromDots(d.ds.DiscoverConf.EndIP)
+	eip, err := ipv4.FromDots(datastore.DiscoverConf.EndIP)
 	if err != nil {
 		return fmt.Errorf("discover end ip err=%v", err)
 	}
 	if sip > eip {
 		return fmt.Errorf("discover start ip > end ip")
 	}
-	d.ds.AddEventLog(&datastore.EventLogEnt{
+	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
 		Level: "info",
-		Event: fmt.Sprintf("自動発見開始 %s - %s", d.ds.DiscoverConf.StartIP, d.ds.DiscoverConf.EndIP),
+		Event: fmt.Sprintf("自動発見開始 %s - %s", datastore.DiscoverConf.StartIP, datastore.DiscoverConf.EndIP),
 	})
-	d.Stop = false
-	d.Stat.Total = eip - sip + 1
-	d.Stat.Sent = 0
-	d.Stat.Found = 0
-	d.Stat.Snmp = 0
-	d.Stat.Web = 0
-	d.Stat.Mail = 0
-	d.Stat.SSH = 0
-	d.Stat.Running = true
-	d.Stat.StartTime = time.Now().Unix()
-	d.Stat.Now = d.Stat.StartTime
-	d.X = (1 + d.ds.DiscoverConf.X/GRID) * GRID
-	d.Y = (1 + d.ds.DiscoverConf.Y/GRID) * GRID
+	Stop = false
+	Stat.Total = eip - sip + 1
+	Stat.Sent = 0
+	Stat.Found = 0
+	Stat.Snmp = 0
+	Stat.Web = 0
+	Stat.Mail = 0
+	Stat.SSH = 0
+	Stat.Running = true
+	Stat.StartTime = time.Now().Unix()
+	Stat.Now = Stat.StartTime
+	X = (1 + datastore.DiscoverConf.X/GRID) * GRID
+	Y = (1 + datastore.DiscoverConf.Y/GRID) * GRID
 	var mu sync.Mutex
 	sem := make(chan bool, 20)
 	go func() {
-		for ; sip <= eip && !d.Stop; sip++ {
+		for ; sip <= eip && !Stop; sip++ {
 			sem <- true
-			d.Stat.Sent++
-			d.Stat.Now = time.Now().Unix()
+			Stat.Sent++
+			Stat.Now = time.Now().Unix()
 			go func(ip uint32) {
 				defer func() {
 					<-sem
 				}()
 				ipstr := ipv4.ToDots(ip)
-				if d.ds.FindNodeFromIP(ipstr) != nil {
+				if datastore.FindNodeFromIP(ipstr) != nil {
 					return
 				}
-				r := d.ping.DoPing(ipstr, d.ds.DiscoverConf.Timeout, d.ds.DiscoverConf.Retry, 64)
+				r := ping.DoPing(ipstr, datastore.DiscoverConf.Timeout, datastore.DiscoverConf.Retry, 64)
 				if r.Stat == ping.PingOK {
 					dent := discoverInfoEnt{
 						IP:          ipstr,
@@ -130,30 +119,30 @@ func (d *Discover) StartDiscover() error {
 					if names, err := net.LookupAddr(ipstr); err == nil && len(names) > 0 {
 						dent.HostName = names[0]
 					}
-					d.getSnmpInfo(ipstr, &dent)
-					d.checkServer(&dent)
+					getSnmpInfo(ipstr, &dent)
+					checkServer(&dent)
 					mu.Lock()
-					dent.X = d.X
-					dent.Y = d.Y
-					d.Stat.Found++
-					d.X += GRID
-					if d.X > GRID*10 {
-						d.X = GRID
-						d.Y += GRID
+					dent.X = X
+					dent.Y = Y
+					Stat.Found++
+					X += GRID
+					if X > GRID*10 {
+						X = GRID
+						Y += GRID
 					}
 					if dent.SysName != "" {
-						d.Stat.Snmp++
+						Stat.Snmp++
 					}
 					if dent.ServerList["http"] || dent.ServerList["https"] {
-						d.Stat.Web++
+						Stat.Web++
 					}
 					if dent.ServerList["smtp"] || dent.ServerList["imap"] || dent.ServerList["pop3"] {
-						d.Stat.Mail++
+						Stat.Mail++
 					}
 					if dent.ServerList["ssh"] {
-						d.Stat.SSH++
+						Stat.SSH++
 					}
-					d.addFoundNode(&dent)
+					addFoundNode(&dent)
 					mu.Unlock()
 				}
 			}(sip)
@@ -161,46 +150,46 @@ func (d *Discover) StartDiscover() error {
 		for len(sem) > 0 {
 			time.Sleep(time.Millisecond * 10)
 		}
-		d.Stat.Running = false
-		d.ds.AddEventLog(&datastore.EventLogEnt{
+		Stat.Running = false
+		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
 			Level: "info",
-			Event: fmt.Sprintf("自動発見終了 %s - %s", d.ds.DiscoverConf.StartIP, d.ds.DiscoverConf.EndIP),
+			Event: fmt.Sprintf("自動発見終了 %s - %s", datastore.DiscoverConf.StartIP, datastore.DiscoverConf.EndIP),
 		})
 	}()
 	return nil
 }
 
-func (d *Discover) getSnmpInfo(t string, dent *discoverInfoEnt) {
+func getSnmpInfo(t string, dent *discoverInfoEnt) {
 	agent := &gosnmp.GoSNMP{
 		Target:             t,
 		Port:               161,
 		Transport:          "udp",
-		Community:          d.ds.MapConf.Community,
+		Community:          datastore.MapConf.Community,
 		Version:            gosnmp.Version2c,
-		Timeout:            time.Duration(d.ds.DiscoverConf.Timeout) * time.Second,
-		Retries:            d.ds.DiscoverConf.Retry,
+		Timeout:            time.Duration(datastore.DiscoverConf.Timeout) * time.Second,
+		Retries:            datastore.DiscoverConf.Retry,
 		ExponentialTimeout: true,
 		MaxOids:            gosnmp.MaxOids,
 	}
-	if d.ds.MapConf.SnmpMode != "" {
+	if datastore.MapConf.SnmpMode != "" {
 		agent.Version = gosnmp.Version3
 		agent.SecurityModel = gosnmp.UserSecurityModel
-		if d.ds.MapConf.SnmpMode == "v3auth" {
+		if datastore.MapConf.SnmpMode == "v3auth" {
 			agent.MsgFlags = gosnmp.AuthNoPriv
 			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 d.ds.MapConf.SnmpUser,
+				UserName:                 datastore.MapConf.SnmpUser,
 				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: d.ds.MapConf.SnmpPassword,
+				AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
 			}
 		} else {
 			agent.MsgFlags = gosnmp.AuthPriv
 			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 d.ds.MapConf.SnmpUser,
+				UserName:                 datastore.MapConf.SnmpUser,
 				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: d.ds.MapConf.SnmpPassword,
+				AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
 				PrivacyProtocol:          gosnmp.AES,
-				PrivacyPassphrase:        d.ds.MapConf.SnmpPassword,
+				PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
 			}
 		}
 	}
@@ -210,21 +199,21 @@ func (d *Discover) getSnmpInfo(t string, dent *discoverInfoEnt) {
 		return
 	}
 	defer agent.Conn.Close()
-	oids := []string{d.ds.MIBDB.NameToOID("sysName"), d.ds.MIBDB.NameToOID("sysObjectID")}
+	oids := []string{datastore.MIBDB.NameToOID("sysName"), datastore.MIBDB.NameToOID("sysObjectID")}
 	result, err := agent.GetNext(oids)
 	if err != nil {
 		log.Printf("discoverGetSnmpInfo err=%v", err)
 		return
 	}
 	for _, variable := range result.Variables {
-		if d.ds.MIBDB.OIDToName(variable.Name) == "sysName.0" {
+		if datastore.MIBDB.OIDToName(variable.Name) == "sysName.0" {
 			dent.SysName = variable.Value.(string)
-		} else if d.ds.MIBDB.OIDToName(variable.Name) == "sysObjectID.0" {
+		} else if datastore.MIBDB.OIDToName(variable.Name) == "sysObjectI0" {
 			dent.SysObjectID = variable.Value.(string)
 		}
 	}
-	_ = agent.Walk(d.ds.MIBDB.NameToOID("ifType"), func(variable gosnmp.SnmpPDU) error {
-		a := strings.Split(d.ds.MIBDB.OIDToName(variable.Name), ".")
+	_ = agent.Walk(datastore.MIBDB.NameToOID("ifType"), func(variable gosnmp.SnmpPDU) error {
+		a := strings.Split(datastore.MIBDB.OIDToName(variable.Name), ".")
 		if len(a) == 2 &&
 			a[0] == "ifType" &&
 			gosnmp.ToBigInt(variable.Value).Int64() == 6 {
@@ -234,7 +223,7 @@ func (d *Discover) getSnmpInfo(t string, dent *discoverInfoEnt) {
 	})
 }
 
-func (d *Discover) addFoundNode(dent *discoverInfoEnt) {
+func addFoundNode(dent *discoverInfoEnt) {
 	n := datastore.NodeEnt{
 		Name:  dent.HostName,
 		IP:    dent.IP,
@@ -251,38 +240,38 @@ func (d *Discover) addFoundNode(dent *discoverInfoEnt) {
 		}
 	}
 	if dent.SysObjectID != "" {
-		n.SnmpMode = d.ds.MapConf.SnmpMode
-		n.User = d.ds.MapConf.SnmpUser
-		n.Password = d.ds.MapConf.SnmpPassword
-		n.Community = d.ds.MapConf.Community
+		n.SnmpMode = datastore.MapConf.SnmpMode
+		n.User = datastore.MapConf.SnmpUser
+		n.Password = datastore.MapConf.SnmpPassword
+		n.Community = datastore.MapConf.Community
 		n.Icon = "hdd"
 	}
-	if err := d.ds.AddNode(&n); err != nil {
+	if err := datastore.AddNode(&n); err != nil {
 		log.Printf("discover AddNode err=%v", err)
 		return
 	}
-	d.ds.AddEventLog(&datastore.EventLogEnt{
+	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:     "discover",
 		Level:    "info",
 		NodeID:   n.ID,
 		NodeName: n.Name,
 		Event:    "自動発見により追加",
 	})
-	d.addPollingToNode(dent, &n)
+	addPollingToNode(dent, &n)
 }
 
-func (d *Discover) addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt) {
+func addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 	p := &datastore.PollingEnt{
 		NodeID:  n.ID,
 		Name:    "PING監視",
 		Type:    "ping",
 		Level:   "low",
 		State:   "unknown",
-		PollInt: d.ds.MapConf.PollInt,
-		Timeout: d.ds.MapConf.Timeout,
-		Retry:   d.ds.MapConf.Retry,
+		PollInt: datastore.MapConf.PollInt,
+		Timeout: datastore.MapConf.Timeout,
+		Retry:   datastore.MapConf.Retry,
 	}
-	if err := d.ds.AddPolling(p); err != nil {
+	if err := datastore.AddPolling(p); err != nil {
 		log.Printf("discover AddPolling err=%v", err)
 		return
 	}
@@ -325,11 +314,11 @@ func (d *Discover) addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt)
 			Polling: polling,
 			Level:   "low",
 			State:   "unknown",
-			PollInt: d.ds.MapConf.PollInt,
-			Timeout: d.ds.MapConf.Timeout,
-			Retry:   d.ds.MapConf.Retry,
+			PollInt: datastore.MapConf.PollInt,
+			Timeout: datastore.MapConf.Timeout,
+			Retry:   datastore.MapConf.Retry,
 		}
-		if err := d.ds.AddPolling(p); err != nil {
+		if err := datastore.AddPolling(p); err != nil {
 			log.Printf("discover AddPolling err=%v", err)
 			return
 		}
@@ -344,11 +333,11 @@ func (d *Discover) addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt)
 		Polling: "sysUpTime",
 		Level:   "low",
 		State:   "unknown",
-		PollInt: d.ds.MapConf.PollInt,
-		Timeout: d.ds.MapConf.Timeout,
-		Retry:   d.ds.MapConf.Retry,
+		PollInt: datastore.MapConf.PollInt,
+		Timeout: datastore.MapConf.Timeout,
+		Retry:   datastore.MapConf.Retry,
 	}
-	if err := d.ds.AddPolling(p); err != nil {
+	if err := datastore.AddPolling(p); err != nil {
 		log.Printf("discover AddPolling err=%v", err)
 		return
 	}
@@ -360,11 +349,11 @@ func (d *Discover) addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt)
 			Polling: "ifOperStatus." + i,
 			Level:   "low",
 			State:   "unknown",
-			PollInt: d.ds.MapConf.PollInt,
-			Timeout: d.ds.MapConf.Timeout,
-			Retry:   d.ds.MapConf.Retry,
+			PollInt: datastore.MapConf.PollInt,
+			Timeout: datastore.MapConf.Timeout,
+			Retry:   datastore.MapConf.Retry,
 		}
-		if err := d.ds.AddPolling(p); err != nil {
+		if err := datastore.AddPolling(p); err != nil {
 			log.Printf("discover AddPolling err=%v", err)
 			return
 		}
@@ -372,7 +361,7 @@ func (d *Discover) addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt)
 }
 
 // サーバーの確認
-func (d *Discover) checkServer(dent *discoverInfoEnt) {
+func checkServer(dent *discoverInfoEnt) {
 	checkList := map[string]string{
 		"http":  "80",
 		"https": "443",
@@ -382,14 +371,14 @@ func (d *Discover) checkServer(dent *discoverInfoEnt) {
 		"ssh":   "22",
 	}
 	for s, p := range checkList {
-		if d.doTCPConnect(dent.IP + ":" + p) {
+		if doTCPConnect(dent.IP + ":" + p) {
 			dent.ServerList[s] = true
 		}
 	}
 }
 
-func (d *Discover) doTCPConnect(dst string) bool {
-	conn, err := net.DialTimeout("tcp", dst, time.Duration(d.ds.DiscoverConf.Timeout)*time.Second)
+func doTCPConnect(dst string) bool {
+	conn, err := net.DialTimeout("tcp", dst, time.Duration(datastore.DiscoverConf.Timeout)*time.Second)
 	if err != nil {
 		return false
 	}

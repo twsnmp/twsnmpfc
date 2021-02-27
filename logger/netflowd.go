@@ -20,9 +20,10 @@ import (
 	"github.com/tehmaze/netflow/read"
 	"github.com/tehmaze/netflow/session"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/report"
 )
 
-func (l *Logger) netflowd(stopCh chan bool) {
+func netflowd(stopCh chan bool) {
 	var readSize = 2 << 16
 	var addr *net.UDPAddr
 	var err error
@@ -75,11 +76,11 @@ func (l *Logger) netflowd(stopCh chan bool) {
 				switch p := m.(type) {
 				case *netflow5.Packet:
 					{
-						l.logNetflow(p)
+						logNetflow(p)
 					}
 				case *ipfix.Message:
 					{
-						l.logIPFIX(p)
+						logIPFIX(p)
 					}
 				}
 			}
@@ -87,7 +88,7 @@ func (l *Logger) netflowd(stopCh chan bool) {
 	}
 }
 
-func (l *Logger) logIPFIX(p *ipfix.Message) {
+func logIPFIX(p *ipfix.Message) {
 	for _, ds := range p.DataSets {
 		if ds.Records == nil {
 			continue
@@ -110,7 +111,7 @@ func (l *Logger) logIPFIX(p *ipfix.Message) {
 				log.Printf("logIPFIX err=%v", err)
 				continue
 			}
-			l.logCh <- &datastore.LogEnt{
+			logCh <- &datastore.LogEnt{
 				Time: time.Now().UnixNano(),
 				Type: "ipfix",
 				Log:  string(s),
@@ -125,7 +126,7 @@ func (l *Logger) logIPFIX(p *ipfix.Message) {
 					}
 				}()
 				if _, ok := record["sourceTransportPort"]; ok {
-					l.report.ReportFlow(
+					report.ReportFlow(
 						record["sourceIPv4Address"].(net.IP).String(),
 						int(record["sourceTransportPort"].(uint16)),
 						record["destinationIPv4Address"].(net.IP).String(),
@@ -136,7 +137,7 @@ func (l *Logger) logIPFIX(p *ipfix.Message) {
 					)
 				} else if _, ok := record["icmpTypeCodeIPv4"]; ok {
 					tc := record["icmpTypeCodeIPv4"].(uint16)
-					l.report.ReportFlow(
+					report.ReportFlow(
 						record["sourceIPv4Address"].(net.IP).String(),
 						int(tc/256),
 						record["destinationIPv4Address"].(net.IP).String(),
@@ -151,7 +152,7 @@ func (l *Logger) logIPFIX(p *ipfix.Message) {
 	}
 }
 
-func (l *Logger) logNetflow(p *netflow5.Packet) {
+func logNetflow(p *netflow5.Packet) {
 	var record = make(map[string]interface{})
 	for _, r := range p.Records {
 		record["srcAddr"] = r.SrcAddr
@@ -176,7 +177,7 @@ func (l *Logger) logNetflow(p *netflow5.Packet) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		l.logCh <- &datastore.LogEnt{
+		logCh <- &datastore.LogEnt{
 			Time: time.Now().UnixNano(),
 			Type: "netflow",
 			Log:  string(s),
@@ -190,7 +191,7 @@ func (l *Logger) logNetflow(p *netflow5.Packet) {
 					}
 				}
 			}()
-			l.report.ReportFlow(
+			report.ReportFlow(
 				record["srcAddr"].(net.IP).String(),
 				int(record["srcPort"].(uint16)),
 				record["dstAddr"].(net.IP).String(),

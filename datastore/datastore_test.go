@@ -29,9 +29,9 @@ func TestDataStore(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(td)
-	ds := NewDataStore(ctx, td, statikFS)
-	ds.MapConf.MapName = "Test123"
-	if err := ds.SaveMapConfToDB(); err != nil {
+	InitDataStore(ctx, td, statikFS)
+	MapConf.MapName = "Test123"
+	if err := SaveMapConfToDB(); err != nil {
 		t.Fatal(err)
 	}
 	defer cancel()
@@ -40,19 +40,19 @@ func TestDataStore(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.Remove(backdb)
-	ds.Backup.ConfigOnly = true
-	err = ds.BackupDB(backdb)
+	Backup.ConfigOnly = true
+	err = BackupDB(backdb)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ds.CloseDB()
-	ds.MapConf.MapName = ""
-	err = ds.OpenDB(backdb)
+	CloseDataStore()
+	MapConf.MapName = ""
+	err = openDB(backdb)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ds.MapConf.MapName != "Test123" {
-		t.Errorf("Backup MapName = '%s'", ds.MapConf.MapName)
+	if MapConf.MapName != "Test123" {
+		t.Errorf("Backup MapName = '%s'", MapConf.MapName)
 	}
-	ds.CloseDB()
+	CloseDataStore()
 }

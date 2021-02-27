@@ -9,14 +9,14 @@ import (
 	"github.com/twsnmp/twsnmpfc/ping"
 )
 
-func (p *Polling) doPollingPing(pe *datastore.PollingEnt) {
+func doPollingPing(pe *datastore.PollingEnt) {
 	if pe.Polling == "line" {
-		p.doPollingCheckLineCond(pe)
+		doPollingCheckLineCond(pe)
 		return
 	}
-	n := p.ds.GetNode(pe.NodeID)
+	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
-		p.setPollingError("ping", pe, fmt.Errorf("node not found"))
+		setPollingError("ping", pe, fmt.Errorf("node not found"))
 		return
 	}
 	size := 64
@@ -26,23 +26,23 @@ func (p *Polling) doPollingPing(pe *datastore.PollingEnt) {
 		}
 	}
 	lr := make(map[string]string)
-	r := p.ping.DoPing(n.IP, pe.Timeout, pe.Retry, size)
+	r := ping.DoPing(n.IP, pe.Timeout, pe.Retry, size)
 	pe.LastVal = float64(r.Time)
 	if r.Stat == ping.PingOK {
 		lr["rtt"] = fmt.Sprintf("%f", pe.LastVal)
 		pe.LastResult = makeLastResult(lr)
-		p.setPollingState(pe, "normal")
+		setPollingState(pe, "normal")
 	} else {
 		lr["error"] = fmt.Sprintf("%v", r.Error)
 		pe.LastResult = makeLastResult(lr)
-		p.setPollingState(pe, pe.Level)
+		setPollingState(pe, pe.Level)
 	}
 }
 
-func (p *Polling) doPollingCheckLineCond(pe *datastore.PollingEnt) {
-	n := p.ds.GetNode(pe.NodeID)
+func doPollingCheckLineCond(pe *datastore.PollingEnt) {
+	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
-		p.setPollingError("ping", pe, fmt.Errorf("node not found"))
+		setPollingError("ping", pe, fmt.Errorf("node not found"))
 		return
 	}
 	lastError := ""
@@ -50,13 +50,13 @@ func (p *Polling) doPollingCheckLineCond(pe *datastore.PollingEnt) {
 	rtt := []float64{}
 	fail := 0
 	for i := 0; i < 20; i++ {
-		r64 := p.ping.DoPing(n.IP, pe.Timeout, pe.Retry, 64)
+		r64 := ping.DoPing(n.IP, pe.Timeout, pe.Retry, 64)
 		if r64.Stat != ping.PingOK {
 			lastError = fmt.Sprintf("%v", r64.Error)
 			fail += 1
 			continue
 		}
-		r1364 := p.ping.DoPing(n.IP, pe.Timeout, pe.Retry, 1364)
+		r1364 := ping.DoPing(n.IP, pe.Timeout, pe.Retry, 1364)
 		if r1364.Stat != ping.PingOK {
 			lastError = fmt.Sprintf("%v", r1364.Error)
 			fail += 1
@@ -84,7 +84,7 @@ func (p *Polling) doPollingCheckLineCond(pe *datastore.PollingEnt) {
 		lr["error"] = lastError
 		pe.LastVal = 0.0
 		pe.LastResult = makeLastResult(lr)
-		p.setPollingState(pe, pe.Level)
+		setPollingState(pe, pe.Level)
 		return
 	}
 	// 5回の測定から平均値と変動係数を計算
@@ -97,7 +97,7 @@ func (p *Polling) doPollingCheckLineCond(pe *datastore.PollingEnt) {
 	lr["speed_cv"] = fmt.Sprintf("%f", scv)
 	lr["fail"] = fmt.Sprintf("%d", fail)
 	pe.LastResult = makeLastResult(lr)
-	p.setPollingState(pe, "normal")
+	setPollingState(pe, "normal")
 }
 
 func calcMeanCV(a []float64) (float64, float64) {

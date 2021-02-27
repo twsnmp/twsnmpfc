@@ -75,18 +75,18 @@ type AllowRuleEnt struct {
 	Servers map[string]bool
 }
 
-func (ds *DataStore) loadReport() error {
-	if ds.db == nil {
+func loadReport() error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	return ds.db.View(func(tx *bbolt.Tx) error {
+	return db.View(func(tx *bbolt.Tx) error {
 		r := tx.Bucket([]byte("report"))
 		b := r.Bucket([]byte("devices"))
 		if b != nil {
 			_ = b.ForEach(func(k, v []byte) error {
 				var d DeviceEnt
 				if err := json.Unmarshal(v, &d); err == nil {
-					ds.devices[d.ID] = &d
+					devices[d.ID] = &d
 				}
 				return nil
 			})
@@ -96,7 +96,7 @@ func (ds *DataStore) loadReport() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var u UserEnt
 				if err := json.Unmarshal(v, &u); err == nil {
-					ds.users[u.ID] = &u
+					users[u.ID] = &u
 				}
 				return nil
 			})
@@ -106,7 +106,7 @@ func (ds *DataStore) loadReport() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var s ServerEnt
 				if err := json.Unmarshal(v, &s); err == nil {
-					ds.servers[s.ID] = &s
+					servers[s.ID] = &s
 				}
 				return nil
 			})
@@ -116,7 +116,7 @@ func (ds *DataStore) loadReport() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var f FlowEnt
 				if err := json.Unmarshal(v, &f); err == nil {
-					ds.flows[f.ID] = &f
+					flows[f.ID] = &f
 				}
 				return nil
 			})
@@ -126,7 +126,7 @@ func (ds *DataStore) loadReport() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var en bool
 				if err := json.Unmarshal(v, &en); err == nil {
-					ds.dennyRules[string(k)] = en
+					dennyRules[string(k)] = en
 				}
 				return nil
 			})
@@ -136,7 +136,7 @@ func (ds *DataStore) loadReport() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var as AllowRuleEnt
 				if err := json.Unmarshal(v, &as); err == nil {
-					ds.allowRules[as.Service] = &as
+					allowRules[as.Service] = &as
 				}
 				return nil
 			})
@@ -145,14 +145,14 @@ func (ds *DataStore) loadReport() error {
 	})
 }
 
-func (ds *DataStore) SaveReport(last int64) error {
-	if ds.db == nil {
+func SaveReport(last int64) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	return ds.db.Batch(func(tx *bbolt.Tx) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		r := b.Bucket([]byte("devices"))
-		for _, d := range ds.devices {
+		for _, d := range devices {
 			if d.UpdateTime < last {
 				continue
 			}
@@ -166,7 +166,7 @@ func (ds *DataStore) SaveReport(last int64) error {
 			}
 		}
 		r = b.Bucket([]byte("users"))
-		for _, u := range ds.users {
+		for _, u := range users {
 			if u.UpdateTime < last {
 				continue
 			}
@@ -180,7 +180,7 @@ func (ds *DataStore) SaveReport(last int64) error {
 			}
 		}
 		r = b.Bucket([]byte("servers"))
-		for _, s := range ds.servers {
+		for _, s := range servers {
 			if s.UpdateTime < last {
 				continue
 			}
@@ -194,7 +194,7 @@ func (ds *DataStore) SaveReport(last int64) error {
 			}
 		}
 		r = b.Bucket([]byte("flows"))
-		for _, f := range ds.flows {
+		for _, f := range flows {
 			if f.UpdateTime < last {
 				continue
 			}
@@ -211,11 +211,11 @@ func (ds *DataStore) SaveReport(last int64) error {
 	})
 }
 
-func (ds *DataStore) DeleteReport(report, id string) error {
-	if ds.db == nil {
+func DeleteReport(report, id string) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	ds.db.Update(func(tx *bbolt.Tx) error {
+	db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		if b != nil {
 			r := b.Bucket([]byte(report))
@@ -226,98 +226,98 @@ func (ds *DataStore) DeleteReport(report, id string) error {
 		return nil
 	})
 	if report == "devices" {
-		delete(ds.devices, id)
+		delete(devices, id)
 	} else if report == "users" {
-		delete(ds.users, id)
+		delete(users, id)
 	} else if report == "servers" {
-		delete(ds.servers, id)
+		delete(servers, id)
 	} else if report == "flows" {
-		delete(ds.flows, id)
+		delete(flows, id)
 	}
 	return nil
 }
 
-func (ds *DataStore) GetDevice(id string) *DeviceEnt {
-	return ds.devices[id]
+func GetDevice(id string) *DeviceEnt {
+	return devices[id]
 }
 
-func (ds *DataStore) AddDevice(d *DeviceEnt) {
-	ds.devices[d.ID] = d
+func AddDevice(d *DeviceEnt) {
+	devices[d.ID] = d
 }
 
-func (ds *DataStore) ForEachDevices(f func(*DeviceEnt) bool) {
-	for _, d := range ds.devices {
+func ForEachDevices(f func(*DeviceEnt) bool) {
+	for _, d := range devices {
 		if !f(d) {
 			return
 		}
 	}
 }
 
-func (ds *DataStore) GetUser(id string) *UserEnt {
-	return ds.users[id]
+func GetUser(id string) *UserEnt {
+	return users[id]
 }
 
-func (ds *DataStore) AddUser(u *UserEnt) {
-	ds.users[u.ID] = u
+func AddUser(u *UserEnt) {
+	users[u.ID] = u
 }
 
-func (ds *DataStore) ForEachUsers(f func(*UserEnt) bool) {
-	for _, u := range ds.users {
+func ForEachUsers(f func(*UserEnt) bool) {
+	for _, u := range users {
 		if !f(u) {
 			return
 		}
 	}
 }
 
-func (ds *DataStore) GetDennyRule(id string) bool {
-	return ds.dennyRules[id]
+func GetDennyRule(id string) bool {
+	return dennyRules[id]
 }
 
-func (ds *DataStore) GetAllowRule(id string) *AllowRuleEnt {
-	return ds.allowRules[id]
+func GetAllowRule(id string) *AllowRuleEnt {
+	return allowRules[id]
 }
 
-func (ds *DataStore) GetFlow(id string) *FlowEnt {
-	return ds.flows[id]
+func GetFlow(id string) *FlowEnt {
+	return flows[id]
 }
 
-func (ds *DataStore) AddFlow(f *FlowEnt) {
-	ds.flows[f.ID] = f
+func AddFlow(f *FlowEnt) {
+	flows[f.ID] = f
 }
 
-func (ds *DataStore) ForEachFlows(f func(*FlowEnt) bool) {
-	for _, fl := range ds.flows {
+func ForEachFlows(f func(*FlowEnt) bool) {
+	for _, fl := range flows {
 		if !f(fl) {
 			return
 		}
 	}
 }
 
-func (ds *DataStore) GetServer(id string) *ServerEnt {
-	return ds.servers[id]
+func GetServer(id string) *ServerEnt {
+	return servers[id]
 }
 
-func (ds *DataStore) AddServer(s *ServerEnt) {
-	ds.servers[s.ID] = s
+func AddServer(s *ServerEnt) {
+	servers[s.ID] = s
 }
 
-func (ds *DataStore) LenServers() int {
-	return len(ds.servers)
+func LenServers() int {
+	return len(servers)
 }
 
-func (ds *DataStore) ForEachServers(f func(*ServerEnt) bool) {
-	for _, s := range ds.servers {
+func ForEachServers(f func(*ServerEnt) bool) {
+	for _, s := range servers {
 		if !f(s) {
 			return
 		}
 	}
 }
 
-func (ds *DataStore) AddAllowRule(service, server string) error {
-	if ds.db == nil {
+func AddAllowRule(service, server string) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	as, ok := ds.allowRules[service]
+	as, ok := allowRules[service]
 	if ok {
 		as.Servers[server] = true
 	} else {
@@ -325,13 +325,13 @@ func (ds *DataStore) AddAllowRule(service, server string) error {
 			Service: service,
 			Servers: map[string]bool{server: true},
 		}
-		ds.allowRules[service] = as
+		allowRules[service] = as
 	}
 	js, err := json.Marshal(as)
 	if err != nil {
 		return err
 	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		if b != nil {
 			r := b.Bucket([]byte("allows"))
@@ -343,8 +343,8 @@ func (ds *DataStore) AddAllowRule(service, server string) error {
 	})
 }
 
-func (ds *DataStore) DeleteAllowRule(id string) error {
-	if ds.db == nil {
+func DeleteAllowRule(id string) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
 	a := strings.Split(id, ":")
@@ -353,7 +353,7 @@ func (ds *DataStore) DeleteAllowRule(id string) error {
 	}
 	server := a[0]
 	service := a[1]
-	as, ok := ds.allowRules[service]
+	as, ok := allowRules[service]
 	if !ok {
 		return nil
 	}
@@ -362,7 +362,7 @@ func (ds *DataStore) DeleteAllowRule(id string) error {
 	if len(as.Servers) > 0 {
 		js, _ = json.Marshal(as)
 	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		if b != nil {
 			r := b.Bucket([]byte("allows"))
@@ -378,16 +378,16 @@ func (ds *DataStore) DeleteAllowRule(id string) error {
 	})
 }
 
-func (ds *DataStore) AddDennyRule(id string) error {
-	if ds.db == nil {
+func AddDennyRule(id string) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	ds.dennyRules[id] = true
-	js, err := json.Marshal(ds.dennyRules[id])
+	dennyRules[id] = true
+	js, err := json.Marshal(dennyRules[id])
 	if err != nil {
 		return err
 	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		if b != nil {
 			r := b.Bucket([]byte("dennys"))
@@ -399,16 +399,16 @@ func (ds *DataStore) AddDennyRule(id string) error {
 	})
 }
 
-func (ds *DataStore) deleteDennyRule(id string) error {
-	if ds.db == nil {
+func deleteDennyRule(id string) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	_, ok := ds.dennyRules[id]
+	_, ok := dennyRules[id]
 	if !ok {
 		return nil
 	}
-	delete(ds.dennyRules, id)
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+	delete(dennyRules, id)
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		if b != nil {
 			r := b.Bucket([]byte("dennys"))
@@ -420,11 +420,11 @@ func (ds *DataStore) deleteDennyRule(id string) error {
 	})
 }
 
-func (ds *DataStore) ClearAllReport() error {
-	if ds.db == nil {
+func ClearAllReport() error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	ds.db.Update(func(tx *bbolt.Tx) error {
+	db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		if b != nil {
 			for _, r := range []string{"devices", "flows", "users", "servers"} {
@@ -434,9 +434,9 @@ func (ds *DataStore) ClearAllReport() error {
 		}
 		return nil
 	})
-	ds.devices = make(map[string]*DeviceEnt)
-	ds.users = make(map[string]*UserEnt)
-	ds.flows = make(map[string]*FlowEnt)
-	ds.servers = make(map[string]*ServerEnt)
+	devices = make(map[string]*DeviceEnt)
+	users = make(map[string]*UserEnt)
+	flows = make(map[string]*FlowEnt)
+	servers = make(map[string]*ServerEnt)
 	return nil
 }

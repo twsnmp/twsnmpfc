@@ -33,7 +33,6 @@ type netflowWebAPI struct {
 }
 
 func postNetFlow(c echo.Context) error {
-	api := c.Get("api").(*WebAPI)
 	r := []*netflowWebAPI{}
 	filter := new(netflowFilter)
 	if err := c.Bind(filter); err != nil {
@@ -50,7 +49,7 @@ func postNetFlow(c echo.Context) error {
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
 	ipfix := filter.FlowType == "ipfix"
-	api.DataStore.ForEachLog(st, et, filter.FlowType, func(l *datastore.LogEnt) bool {
+	datastore.ForEachLog(st, et, filter.FlowType, func(l *datastore.LogEnt) bool {
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
 			log.Printf("postSyslog err=%v", err)
@@ -194,7 +193,7 @@ func postNetFlow(c echo.Context) error {
 		}
 		r = append(r, re)
 		i++
-		return i <= api.DataStore.MapConf.LogDispSize
+		return i <= datastore.MapConf.LogDispSize
 	})
 	return c.JSON(http.StatusOK, r)
 }

@@ -9,14 +9,13 @@ import (
 )
 
 func getInfluxdb(c echo.Context) error {
-	api := c.Get("api").(*WebAPI)
 	r := new(datastore.InfluxdbConfEnt)
-	r.URL = api.DataStore.InfluxdbConf.URL
-	r.User = api.DataStore.InfluxdbConf.User
-	r.DB = api.DataStore.InfluxdbConf.DB
-	r.Duration = api.DataStore.InfluxdbConf.Duration
-	r.AIScore = api.DataStore.InfluxdbConf.AIScore
-	r.PollingLog = api.DataStore.InfluxdbConf.PollingLog
+	r.URL = datastore.InfluxdbConf.URL
+	r.User = datastore.InfluxdbConf.User
+	r.DB = datastore.InfluxdbConf.DB
+	r.Duration = datastore.InfluxdbConf.Duration
+	r.AIScore = datastore.InfluxdbConf.AIScore
+	r.PollingLog = datastore.InfluxdbConf.PollingLog
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -25,25 +24,23 @@ func postInfluxdb(c echo.Context) error {
 	if err := c.Bind(ic); err != nil {
 		return echo.ErrBadRequest
 	}
-	api := c.Get("api").(*WebAPI)
-	api.DataStore.InfluxdbConf.URL = ic.URL
-	api.DataStore.InfluxdbConf.User = ic.User
+	datastore.InfluxdbConf.URL = ic.URL
+	datastore.InfluxdbConf.User = ic.User
 	if ic.Password != "" {
-		api.DataStore.MapConf.Password = ic.Password
+		datastore.MapConf.Password = ic.Password
 	}
-	api.DataStore.InfluxdbConf.DB = ic.DB
-	api.DataStore.InfluxdbConf.Duration = ic.Duration
-	api.DataStore.InfluxdbConf.PollingLog = ic.PollingLog
-	api.DataStore.InfluxdbConf.AIScore = ic.AIScore
-	if err := api.DataStore.SaveInfluxdbConfToDB(); err != nil {
+	datastore.InfluxdbConf.DB = ic.DB
+	datastore.InfluxdbConf.Duration = ic.Duration
+	datastore.InfluxdbConf.PollingLog = ic.PollingLog
+	datastore.InfluxdbConf.AIScore = ic.AIScore
+	if err := datastore.SaveInfluxdbConfToDB(); err != nil {
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
 func deleteInfluxdb(c echo.Context) error {
-	api := c.Get("api").(*WebAPI)
-	if err := api.DataStore.InitInfluxdb(); err != nil {
+	if err := datastore.InitInfluxdb(); err != nil {
 		log.Printf("deleteInfluxdb err=%v", err)
 		return echo.ErrBadRequest
 	}

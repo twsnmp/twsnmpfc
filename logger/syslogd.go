@@ -14,7 +14,7 @@ import (
 	syslog "gopkg.in/mcuadros/go-syslog.v2"
 )
 
-func (l *Logger) syslogd(stopCh chan bool) {
+func syslogd(stopCh chan bool) {
 	syslogCh := make(syslog.LogPartsChannel)
 	server := syslog.NewServer()
 	server.SetFormat(syslog.Automatic)
@@ -35,7 +35,7 @@ func (l *Logger) syslogd(stopCh chan bool) {
 			{
 				s, err := json.Marshal(sl)
 				if err == nil {
-					l.logCh <- &datastore.LogEnt{
+					logCh <- &datastore.LogEnt{
 						Time: time.Now().UnixNano(),
 						Type: "syslog",
 						Log:  string(s),

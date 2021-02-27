@@ -12,26 +12,25 @@ import (
 )
 
 func getMapConf(c echo.Context) error {
-	api := c.Get("api").(*WebAPI)
 	r := new(datastore.MapConfEnt)
-	r.MapName = api.DataStore.MapConf.MapName
-	r.UserID = api.DataStore.MapConf.UserID
-	//	r.Password = api.DataStore.MapConf.Password
-	r.PollInt = api.DataStore.MapConf.PollInt
-	r.Timeout = api.DataStore.MapConf.Timeout
-	r.Retry = api.DataStore.MapConf.Retry
-	r.LogDays = api.DataStore.MapConf.LogDays
-	r.LogDispSize = api.DataStore.MapConf.LogDispSize
-	r.SnmpMode = api.DataStore.MapConf.SnmpMode
-	r.Community = api.DataStore.MapConf.Community
-	r.SnmpUser = api.DataStore.MapConf.SnmpUser
-	//	r.SnmpPassword = api.DataStore.MapConf.SmmpPassword
-	r.EnableSyslogd = api.DataStore.MapConf.EnableSyslogd
-	r.EnableTrapd = api.DataStore.MapConf.EnableTrapd
-	r.EnableNetflowd = api.DataStore.MapConf.EnableNetflowd
-	r.AILevel = api.DataStore.MapConf.AILevel
-	r.AIThreshold = api.DataStore.MapConf.AIThreshold
-	r.BackImage = api.DataStore.MapConf.BackImage
+	r.MapName = datastore.MapConf.MapName
+	r.UserID = datastore.MapConf.UserID
+	//	r.Password = datastore.MapConf.Password
+	r.PollInt = datastore.MapConf.PollInt
+	r.Timeout = datastore.MapConf.Timeout
+	r.Retry = datastore.MapConf.Retry
+	r.LogDays = datastore.MapConf.LogDays
+	r.LogDispSize = datastore.MapConf.LogDispSize
+	r.SnmpMode = datastore.MapConf.SnmpMode
+	r.Community = datastore.MapConf.Community
+	r.SnmpUser = datastore.MapConf.SnmpUser
+	//	r.SnmpPassword = datastore.MapConf.SmmpPassword
+	r.EnableSyslogd = datastore.MapConf.EnableSyslogd
+	r.EnableTrapd = datastore.MapConf.EnableTrapd
+	r.EnableNetflowd = datastore.MapConf.EnableNetflowd
+	r.AILevel = datastore.MapConf.AILevel
+	r.AIThreshold = datastore.MapConf.AIThreshold
+	r.BackImage = datastore.MapConf.BackImage
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -40,29 +39,28 @@ func postMapConf(c echo.Context) error {
 	if err := c.Bind(mc); err != nil {
 		return echo.ErrBadRequest
 	}
-	api := c.Get("api").(*WebAPI)
-	api.DataStore.MapConf.MapName = mc.MapName
-	api.DataStore.MapConf.UserID = mc.UserID
+	datastore.MapConf.MapName = mc.MapName
+	datastore.MapConf.UserID = mc.UserID
 	if mc.Password != "" {
-		api.DataStore.MapConf.Password = security.PasswordHash(mc.Password)
+		datastore.MapConf.Password = security.PasswordHash(mc.Password)
 	}
-	api.DataStore.MapConf.PollInt = mc.PollInt
-	api.DataStore.MapConf.Timeout = mc.Timeout
-	api.DataStore.MapConf.Retry = mc.Retry
-	api.DataStore.MapConf.LogDays = mc.LogDays
-	api.DataStore.MapConf.LogDispSize = mc.LogDispSize
-	api.DataStore.MapConf.SnmpMode = mc.SnmpMode
-	api.DataStore.MapConf.Community = mc.Community
-	api.DataStore.MapConf.SnmpUser = mc.SnmpUser
+	datastore.MapConf.PollInt = mc.PollInt
+	datastore.MapConf.Timeout = mc.Timeout
+	datastore.MapConf.Retry = mc.Retry
+	datastore.MapConf.LogDays = mc.LogDays
+	datastore.MapConf.LogDispSize = mc.LogDispSize
+	datastore.MapConf.SnmpMode = mc.SnmpMode
+	datastore.MapConf.Community = mc.Community
+	datastore.MapConf.SnmpUser = mc.SnmpUser
 	if mc.SnmpPassword != "" {
-		api.DataStore.MapConf.SnmpPassword = mc.SnmpPassword
+		datastore.MapConf.SnmpPassword = mc.SnmpPassword
 	}
-	api.DataStore.MapConf.EnableSyslogd = mc.EnableSyslogd
-	api.DataStore.MapConf.EnableTrapd = mc.EnableTrapd
-	api.DataStore.MapConf.EnableNetflowd = mc.EnableNetflowd
-	api.DataStore.MapConf.AILevel = mc.AILevel
-	api.DataStore.MapConf.AIThreshold = mc.AIThreshold
-	if err := api.DataStore.SaveMapConfToDB(); err != nil {
+	datastore.MapConf.EnableSyslogd = mc.EnableSyslogd
+	datastore.MapConf.EnableTrapd = mc.EnableTrapd
+	datastore.MapConf.EnableNetflowd = mc.EnableNetflowd
+	datastore.MapConf.AILevel = mc.AILevel
+	datastore.MapConf.AIThreshold = mc.AIThreshold
+	if err := datastore.SaveMapConfToDB(); err != nil {
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
@@ -86,7 +84,6 @@ func postBackImage(c echo.Context) error {
 		w = 0
 		h = 0
 	}
-	api := c.Get("api").(*WebAPI)
 	if f != nil {
 		fp, err := f.Open()
 		if err != nil {
@@ -99,25 +96,24 @@ func postBackImage(c echo.Context) error {
 			log.Printf("postBackImage err=%v", err)
 			return echo.ErrBadRequest
 		}
-		if err = api.DataStore.SaveBackImage(img); err != nil {
+		if err = datastore.SaveBackImage(img); err != nil {
 			log.Printf("postBackImage err=%v", err)
 			return echo.ErrBadRequest
 		}
-		api.DataStore.MapConf.BackImage.Path = f.Filename
+		datastore.MapConf.BackImage.Path = f.Filename
 	}
-	api.DataStore.MapConf.BackImage.X = x
-	api.DataStore.MapConf.BackImage.Y = y
-	api.DataStore.MapConf.BackImage.Width = w
-	api.DataStore.MapConf.BackImage.Height = h
-	if err := api.DataStore.SaveMapConfToDB(); err != nil {
+	datastore.MapConf.BackImage.X = x
+	datastore.MapConf.BackImage.Y = y
+	datastore.MapConf.BackImage.Width = w
+	datastore.MapConf.BackImage.Height = h
+	if err := datastore.SaveMapConfToDB(); err != nil {
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
 func getBackImage(c echo.Context) error {
-	api := c.Get("api").(*WebAPI)
-	img, err := api.DataStore.GetBackImage()
+	img, err := datastore.GetBackImage()
 	if err != nil {
 		log.Printf("postBackImage err=%v", err)
 		return echo.ErrNotFound
@@ -127,13 +123,12 @@ func getBackImage(c echo.Context) error {
 }
 
 func deleteBackImage(c echo.Context) error {
-	api := c.Get("api").(*WebAPI)
-	if err := api.DataStore.SaveBackImage([]byte{}); err != nil {
+	if err := datastore.SaveBackImage([]byte{}); err != nil {
 		log.Printf("postBackImage err=%v", err)
 		return echo.ErrBadRequest
 	}
-	api.DataStore.MapConf.BackImage.Path = ""
-	if err := api.DataStore.SaveMapConfToDB(); err != nil {
+	datastore.MapConf.BackImage.Path = ""
+	if err := datastore.SaveMapConfToDB(); err != nil {
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})

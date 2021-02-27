@@ -53,18 +53,18 @@ type LogFilterEnt struct {
 	LogType   string
 }
 
-func (ds *DataStore) AddEventLog(e *EventLogEnt) {
+func AddEventLog(e *EventLogEnt) {
 	e.Time = time.Now().UnixNano()
 	log.Printf("log=%v", e)
-	ds.eventLogCh <- e
+	eventLogCh <- e
 }
 
-func (ds *DataStore) ForEachEventLog(st, et int64, f func(*EventLogEnt) bool) error {
-	if ds.db == nil {
+func ForEachEventLog(st, et int64, f func(*EventLogEnt) bool) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
 	sk := fmt.Sprintf("%016x", st)
-	return ds.db.View(func(tx *bbolt.Tx) error {
+	return db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("logs"))
 		if b == nil {
 			return nil
@@ -90,11 +90,11 @@ func (ds *DataStore) ForEachEventLog(st, et int64, f func(*EventLogEnt) bool) er
 	})
 }
 
-func (ds *DataStore) ForEachLastEventLog(skey string, f func(*EventLogEnt) bool) error {
-	if ds.db == nil {
+func ForEachLastEventLog(skey string, f func(*EventLogEnt) bool) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	return ds.db.View(func(tx *bbolt.Tx) error {
+	return db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("logs"))
 		if b == nil {
 			return nil
@@ -114,12 +114,12 @@ func (ds *DataStore) ForEachLastEventLog(skey string, f func(*EventLogEnt) bool)
 	})
 }
 
-func (ds *DataStore) ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
-	if ds.db == nil {
+func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
 	sk := fmt.Sprintf("%016x", st)
-	return ds.db.View(func(tx *bbolt.Tx) error {
+	return db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(t))
 		if b == nil {
 			return nil
@@ -203,13 +203,13 @@ func getFilterParams(filter *LogFilterEnt) *logFilterParamEnt {
 	return ret
 }
 
-func (ds *DataStore) GetEventLogs(filter *LogFilterEnt) []EventLogEnt {
+func GetEventLogs(filter *LogFilterEnt) []EventLogEnt {
 	ret := []EventLogEnt{}
-	if ds.db == nil {
+	if db == nil {
 		return ret
 	}
 	f := getFilterParams(filter)
-	_ = ds.db.View(func(tx *bbolt.Tx) error {
+	_ = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("logs"))
 		if b == nil {
 			return nil
@@ -240,13 +240,13 @@ func (ds *DataStore) GetEventLogs(filter *LogFilterEnt) []EventLogEnt {
 	return ret
 }
 
-func (ds *DataStore) GetLogs(filter *LogFilterEnt) []LogEnt {
+func GetLogs(filter *LogFilterEnt) []LogEnt {
 	ret := []LogEnt{}
-	if ds.db == nil {
+	if db == nil {
 		return ret
 	}
 	f := getFilterParams(filter)
-	_ = ds.db.View(func(tx *bbolt.Tx) error {
+	_ = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(filter.LogType))
 		if b == nil {
 			log.Printf("getLogs no Bucket=%s", filter.LogType)
@@ -281,8 +281,8 @@ func (ds *DataStore) GetLogs(filter *LogFilterEnt) []LogEnt {
 	return ret
 }
 
-func (ds *DataStore) AddPollingLog(p *PollingEnt) error {
-	if ds.db == nil {
+func AddPollingLog(p *PollingEnt) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
 	pl := PollingLogEnt{
@@ -296,19 +296,19 @@ func (ds *DataStore) AddPollingLog(p *PollingEnt) error {
 	if err != nil {
 		return err
 	}
-	_ = ds.db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingLogs"))
 		return b.Put([]byte(makeKey()), s)
 	})
 	return nil
 }
 
-func (ds *DataStore) ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bool) error {
-	if ds.db == nil {
+func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bool) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
 	sk := fmt.Sprintf("%016x", st)
-	return ds.db.View(func(tx *bbolt.Tx) error {
+	return db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingLogs"))
 		if b == nil {
 			return nil
@@ -341,9 +341,9 @@ func (ds *DataStore) ForEachPollingLog(st, et int64, pollingID string, f func(*P
 	})
 }
 
-func (ds *DataStore) GetPollingLog(startTime, endTime, pollingID string) []PollingLogEnt {
+func GetPollingLog(startTime, endTime, pollingID string) []PollingLogEnt {
 	ret := []PollingLogEnt{}
-	if ds.db == nil {
+	if db == nil {
 		return ret
 	}
 	var st int64
@@ -361,7 +361,7 @@ func (ds *DataStore) GetPollingLog(startTime, endTime, pollingID string) []Polli
 		et = time.Now().UnixNano()
 	}
 	startKey := fmt.Sprintf("%016x", st)
-	_ = ds.db.View(func(tx *bbolt.Tx) error {
+	_ = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingLogs"))
 		if b == nil {
 			log.Printf("getPollingLog no Bucket getPollingLog")
@@ -399,12 +399,12 @@ func (ds *DataStore) GetPollingLog(startTime, endTime, pollingID string) []Polli
 	return ret
 }
 
-func (ds *DataStore) GetAllPollingLog(pollingID string) []PollingLogEnt {
+func GetAllPollingLog(pollingID string) []PollingLogEnt {
 	ret := []PollingLogEnt{}
-	if ds.db == nil {
+	if db == nil {
 		return ret
 	}
-	_ = ds.db.View(func(tx *bbolt.Tx) error {
+	_ = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingLogs"))
 		if b == nil {
 			log.Printf("getPollingLog no Bucket getPollingLog")
@@ -433,8 +433,8 @@ func (ds *DataStore) GetAllPollingLog(pollingID string) []PollingLogEnt {
 	return ret
 }
 
-func (ds *DataStore) ClearPollingLog(pollingID string) error {
-	return ds.db.Batch(func(tx *bbolt.Tx) error {
+func ClearPollingLog(pollingID string) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingLogs"))
 		if b == nil {
 			return fmt.Errorf("bucket pollingLogs not found")
@@ -454,46 +454,46 @@ func (ds *DataStore) ClearPollingLog(pollingID string) error {
 	})
 }
 
-func (ds *DataStore) deleteOldLog(bucket string, days int) error {
+func deleteOldLog(bucket string, days int) error {
 	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -days).UnixNano())
-	return ds.db.Batch(func(tx *bbolt.Tx) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			return fmt.Errorf("bucket %s not found", bucket)
 		}
 		c := b.Cursor()
 		for k, _ := c.First(); k != nil; k, _ = c.Next() {
-			if st < string(k) || ds.delCount > MaxDelLog {
+			if st < string(k) || delCount > MaxDelLog {
 				break
 			}
 			_ = c.Delete()
-			ds.delCount++
+			delCount++
 		}
 		return nil
 	})
 }
 
-func (ds *DataStore) deleteOldLogs() {
-	ds.delCount = 0
-	if ds.MapConf.LogDays < 1 {
+func deleteOldLogs() {
+	delCount = 0
+	if MapConf.LogDays < 1 {
 		log.Println("mapConf.LogDays < 1 ")
 		return
 	}
 	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix"}
 	for _, b := range buckets {
-		if err := ds.deleteOldLog(b, ds.MapConf.LogDays); err != nil {
+		if err := deleteOldLog(b, MapConf.LogDays); err != nil {
 			log.Printf("deleteOldLog err=%v", err)
 		}
 	}
-	if ds.delCount > 0 {
-		log.Printf("DeleteLogs=%d", ds.delCount)
+	if delCount > 0 {
+		log.Printf("DeleteLogs=%d", delCount)
 	}
 }
 
-func (ds *DataStore) DeleteAllLogs() {
+func DeleteAllLogs() {
 	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix"}
 	for _, b := range buckets {
-		ds.db.Batch(func(tx *bbolt.Tx) error {
+		db.Batch(func(tx *bbolt.Tx) error {
 			if err := tx.DeleteBucket([]byte(b)); err != nil {
 				return err
 			}
@@ -503,7 +503,7 @@ func (ds *DataStore) DeleteAllLogs() {
 	}
 }
 
-func (ds *DataStore) eventLogger(ctx context.Context) {
+func eventLogger(ctx context.Context) {
 	log.Println("Start EventLogger")
 	timer1 := time.NewTicker(time.Minute * 2)
 	timer2 := time.NewTicker(time.Second * 5)
@@ -512,34 +512,34 @@ func (ds *DataStore) eventLogger(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			if len(list) > 0 {
-				ds.saveLogList(list)
+				saveLogList(list)
 			}
 			timer1.Stop()
 			timer2.Stop()
 			return
-		case e := <-ds.eventLogCh:
+		case e := <-eventLogCh:
 			list = append(list, e)
 			if len(list) > 100 {
-				ds.saveLogList(list)
+				saveLogList(list)
 				list = []*EventLogEnt{}
 			}
 		case <-timer1.C:
-			ds.deleteOldLogs()
+			deleteOldLogs()
 		case <-timer2.C:
 			if len(list) > 0 {
-				ds.saveLogList(list)
+				saveLogList(list)
 				list = []*EventLogEnt{}
 			}
 		}
 	}
 }
 
-func (ds *DataStore) saveLogList(list []*EventLogEnt) {
-	if ds.db == nil {
+func saveLogList(list []*EventLogEnt) {
+	if db == nil {
 		return
 	}
 	log.Printf("saveLogList len=%d", len(list))
-	ds.db.Batch(func(tx *bbolt.Tx) error {
+	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("logs"))
 		for _, e := range list {
 			s, err := json.Marshal(e)
@@ -555,12 +555,12 @@ func (ds *DataStore) saveLogList(list []*EventLogEnt) {
 	})
 }
 
-func (ds *DataStore) SaveLogBuffer(logBuffer []*LogEnt) {
-	if ds.db == nil {
+func SaveLogBuffer(logBuffer []*LogEnt) {
+	if db == nil {
 		log.Printf("saveLogBuffer DB Not open")
 		return
 	}
-	_ = ds.db.Batch(func(tx *bbolt.Tx) error {
+	_ = db.Batch(func(tx *bbolt.Tx) error {
 		syslog := tx.Bucket([]byte("syslog"))
 		netflow := tx.Bucket([]byte("netflow"))
 		ipfix := tx.Bucket([]byte("ipfix"))
@@ -571,11 +571,11 @@ func (ds *DataStore) SaveLogBuffer(logBuffer []*LogEnt) {
 			if err != nil {
 				return err
 			}
-			ds.logSize += int64(len(s))
+			logSize += int64(len(s))
 			if len(s) > 100 {
 				s = compressLog(s)
 			}
-			ds.compLogSize += int64(len(s))
+			compLogSize += int64(len(s))
 			switch l.Type {
 			case "syslog":
 				_ = syslog.Put([]byte(k), []byte(s))

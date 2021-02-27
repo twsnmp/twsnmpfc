@@ -20,24 +20,20 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-type Notify struct {
-	ds            *datastore.DataStore
+var (
 	lastExecLevel int
+)
+
+func StartNotify(ctx context.Context) error {
+	lastExecLevel = -1
+	go notifyBackend(ctx)
+	return nil
 }
 
-func NewNotify(ctx context.Context, ds *datastore.DataStore) *Notify {
-	n := &Notify{
-		ds:            ds,
-		lastExecLevel: -1,
-	}
-	go n.notifyBackend(ctx)
-	return n
-}
-
-func (n *Notify) notifyBackend(ctx context.Context) {
+func notifyBackend(ctx context.Context) {
 	lastSendReport := time.Now().Add(time.Hour * time.Duration(-24))
 	lastLog := ""
-	lastLog = n.checkNotify(lastLog)
+	lastLog = checkNotify(lastLog)
 	timer := time.NewTicker(time.Second * 60)
 	i := 0
 	for {
@@ -47,13 +43,13 @@ func (n *Notify) notifyBackend(ctx context.Context) {
 			return
 		case <-timer.C:
 			i++
-			if i >= n.ds.NotifyConf.Interval {
+			if i >= datastore.NotifyConf.Interval {
 				i = 0
-				lastLog = n.checkNotify(lastLog)
+				lastLog = checkNotify(lastLog)
 			}
-			if n.ds.NotifyConf.Report && lastSendReport.Day() != time.Now().Day() {
+			if datastore.NotifyConf.Report && lastSendReport.Day() != time.Now().Day() {
 				lastSendReport = time.Now()
-				n.sendReport()
+				sendReport()
 			}
 		}
 	}
@@ -71,25 +67,25 @@ func getLevelNum(l string) int {
 	return 3
 }
 
-func (n *Notify) checkNotify(lastLog string) string {
+func checkNotify(lastLog string) string {
 	list := []*datastore.EventLogEnt{}
-	n.ds.ForEachLastEventLog(lastLog, func(l *datastore.EventLogEnt) bool {
+	datastore.ForEachLastEventLog(lastLog, func(l *datastore.EventLogEnt) bool {
 		list = append(list, l)
 		return true
 	})
 	if len(list) > 0 {
-		nl := getLevelNum(n.ds.NotifyConf.Level)
+		nl := getLevelNum(datastore.NotifyConf.Level)
 		if nl == 3 {
 			return fmt.Sprintf("%016x", list[0].Time)
 		}
 		body := []string{}
 		repair := []string{}
-		ti := time.Now().Add(time.Duration(-n.ds.NotifyConf.Interval) * time.Minute).UnixNano()
+		ti := time.Now().Add(time.Duration(-datastore.NotifyConf.Interval) * time.Minute).UnixNano()
 		for _, l := range list {
 			if ti > l.Time {
 				continue
 			}
-			if n.ds.NotifyConf.NotifyRepair && l.Level == "repair" {
+			if datastore.NotifyConf.NotifyRepair && l.Level == "repair" {
 				a := strings.Split(l.Event, ":")
 				if len(a) < 5 {
 					continue
@@ -111,26 +107,26 @@ func (n *Notify) checkNotify(lastLog string) string {
 			body = append(body, fmt.Sprintf("%s,%s,%s,%s,%s", l.Level, ts, l.Type, l.NodeName, l.Event))
 		}
 		if len(body) > 0 {
-			err := n.sendMail(n.ds.NotifyConf.Subject, strings.Join(body, "\r\n"))
+			err := sendMail(datastore.NotifyConf.Subject, strings.Join(body, "\r\n"))
 			r := ""
 			if err != nil {
 				log.Printf("sendMail err=%v", err)
 				r = fmt.Sprintf("失敗 エラー=%v", err)
 			}
-			n.ds.AddEventLog(&datastore.EventLogEnt{
+			datastore.AddEventLog(&datastore.EventLogEnt{
 				Type:  "system",
 				Level: "info",
 				Event: fmt.Sprintf("通知メール送信 %s", r),
 			})
 		}
 		if len(repair) > 0 {
-			err := n.sendMail(n.ds.NotifyConf.Subject+"(復帰)", strings.Join(repair, "\r\n"))
+			err := sendMail(datastore.NotifyConf.Subject+"(復帰)", strings.Join(repair, "\r\n"))
 			r := ""
 			if err != nil {
 				log.Printf("sendMail err=%v", err)
 				r = fmt.Sprintf("失敗 エラー=%v", err)
 			}
-			n.ds.AddEventLog(&datastore.EventLogEnt{
+			datastore.AddEventLog(&datastore.EventLogEnt{
 				Type:  "system",
 				Level: "info",
 				Event: fmt.Sprintf("復帰通知メール送信 %s", r),
@@ -141,15 +137,15 @@ func (n *Notify) checkNotify(lastLog string) string {
 	return lastLog
 }
 
-func (n *Notify) sendMail(subject, body string) error {
-	if n.ds.NotifyConf.MailServer == "" || n.ds.NotifyConf.MailFrom == "" || n.ds.NotifyConf.MailTo == "" {
+func sendMail(subject, body string) error {
+	if datastore.NotifyConf.MailServer == "" || datastore.NotifyConf.MailFrom == "" || datastore.NotifyConf.MailTo == "" {
 		return nil
 	}
 	tlsconfig := &tls.Config{
-		ServerName:         n.ds.NotifyConf.MailServer,
-		InsecureSkipVerify: n.ds.NotifyConf.InsecureSkipVerify,
+		ServerName:         datastore.NotifyConf.MailServer,
+		InsecureSkipVerify: datastore.NotifyConf.InsecureSkipVerify,
 	}
-	c, err := smtp.Dial(n.ds.NotifyConf.MailServer)
+	c, err := smtp.Dial(datastore.NotifyConf.MailServer)
 	if err != nil {
 		return err
 	}
@@ -157,21 +153,21 @@ func (n *Notify) sendMail(subject, body string) error {
 	if err = c.StartTLS(tlsconfig); err != nil {
 		log.Printf("StartTLS err=%s", err)
 	}
-	msv := n.ds.NotifyConf.MailServer
-	a := strings.SplitN(n.ds.NotifyConf.MailServer, ":", 2)
+	msv := datastore.NotifyConf.MailServer
+	a := strings.SplitN(datastore.NotifyConf.MailServer, ":", 2)
 	if len(a) == 2 {
 		msv = a[0]
 	}
-	if n.ds.NotifyConf.User != "" {
-		auth := smtp.PlainAuth("", n.ds.NotifyConf.User, n.ds.NotifyConf.Password, msv)
+	if datastore.NotifyConf.User != "" {
+		auth := smtp.PlainAuth("", datastore.NotifyConf.User, datastore.NotifyConf.Password, msv)
 		if err = c.Auth(auth); err != nil {
 			return err
 		}
 	}
-	if err = c.Mail(n.ds.NotifyConf.MailFrom); err != nil {
+	if err = c.Mail(datastore.NotifyConf.MailFrom); err != nil {
 		return err
 	}
-	for _, rcpt := range strings.Split(n.ds.NotifyConf.MailTo, ",") {
+	for _, rcpt := range strings.Split(datastore.NotifyConf.MailTo, ",") {
 		if err = c.Rcpt(rcpt); err != nil {
 			return err
 		}
@@ -182,10 +178,10 @@ func (n *Notify) sendMail(subject, body string) error {
 	}
 	defer w.Close()
 	body = convNewline(body, "\r\n")
-	message := makeMailMessage(n.ds.NotifyConf.MailFrom, n.ds.NotifyConf.MailTo, subject, body)
+	message := makeMailMessage(datastore.NotifyConf.MailFrom, datastore.NotifyConf.MailTo, subject, body)
 	_, _ = w.Write([]byte(message))
 	_ = c.Quit()
-	log.Printf("Send Mail to %s", n.ds.NotifyConf.MailTo)
+	log.Printf("Send Mail to %s", datastore.NotifyConf.MailTo)
 	return nil
 }
 
@@ -197,7 +193,7 @@ func convNewline(str, nlcode string) string {
 	).Replace(str)
 }
 
-func (n *Notify) SendTestMail(testConf *datastore.NotifyConfEnt) error {
+func SendTestMail(testConf *datastore.NotifyConfEnt) error {
 	tlsconfig := &tls.Config{
 		ServerName:         testConf.MailServer,
 		InsecureSkipVerify: testConf.InsecureSkipVerify,
@@ -344,14 +340,14 @@ func calcHash(msg string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func (n *Notify) sendReport() {
+func sendReport() {
 	body := []string{}
 	logs := []string{}
 	body = append(body, "【現在のマップ情報】")
-	body = append(body, n.getMapInfo()...)
+	body = append(body, getMapInfo()...)
 	body = append(body, "")
 	list := []*datastore.EventLogEnt{}
-	n.ds.ForEachLastEventLog("", func(l *datastore.EventLogEnt) bool {
+	datastore.ForEachLastEventLog("", func(l *datastore.EventLogEnt) bool {
 		list = append(list, l)
 		return true
 	})
@@ -383,20 +379,20 @@ func (n *Notify) sendReport() {
 		}
 	}
 	body = append(body, "【48時間以内に新しく発見したデバイス】")
-	body = append(body, n.getNewDevice()...)
+	body = append(body, getNewDevice()...)
 	body = append(body, "")
 	body = append(body, "【48時間以内に新しく発見したユーザーID】")
-	body = append(body, n.getNewUser()...)
+	body = append(body, getNewUser()...)
 	body = append(body, "")
 	body = append(body, "【24時間以内の状態別ログ件数】")
 	body = append(body, fmt.Sprintf("重度=%d,軽度=%d,注意=%d,正常=%d,その他=%d", high, low, warn, normal, other))
 	body = append(body, "")
 	body = append(body, "【最新24時間のログ】")
 	body = append(body, logs...)
-	if err := n.sendMail(fmt.Sprintf("TWSNMP定期レポート %s", time.Now().Format(time.RFC3339)), strings.Join(body, "\r\n")); err != nil {
+	if err := sendMail(fmt.Sprintf("TWSNMP定期レポート %s", time.Now().Format(time.RFC3339)), strings.Join(body, "\r\n")); err != nil {
 		log.Printf("sendMail err=%v", err)
 	} else {
-		n.ds.AddEventLog(&datastore.EventLogEnt{
+		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
 			Level: "info",
 			Event: "定期レポートメール送信",
@@ -404,14 +400,14 @@ func (n *Notify) sendReport() {
 	}
 }
 
-func (n *Notify) getMapInfo() []string {
+func getMapInfo() []string {
 	high := 0
 	low := 0
 	warn := 0
 	normal := 0
 	repair := 0
 	unknown := 0
-	n.ds.ForEachNodes(func(n *datastore.NodeEnt) bool {
+	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
 		switch n.State {
 		case "high":
 			high++
@@ -441,14 +437,14 @@ func (n *Notify) getMapInfo() []string {
 	return []string{
 		fmt.Sprintf("MAP状態=%s", state),
 		fmt.Sprintf("重度=%d,軽度=%d,注意=%d,復帰=%d,正常=%d,不明=%d", high, low, warn, repair, normal, unknown),
-		fmt.Sprintf("データベースサイズ=%d", n.ds.DBStats.Size),
+		fmt.Sprintf("データベースサイズ=%d", datastore.DBStats.Size),
 	}
 }
 
-func (n *Notify) getNewDevice() []string {
+func getNewDevice() []string {
 	st := time.Now().Add(time.Duration(-48) * time.Hour).UnixNano()
 	ret := []string{}
-	n.ds.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 		if d.FirstTime >= st {
 			ret = append(ret, fmt.Sprintf("%s,%s,%s,%s", d.Name, d.IP, d.ID, d.Vendor))
 		}
@@ -457,10 +453,10 @@ func (n *Notify) getNewDevice() []string {
 	return (ret)
 }
 
-func (n *Notify) getNewUser() []string {
+func getNewUser() []string {
 	st := time.Now().Add(time.Duration(-48) * time.Hour).UnixNano()
 	ret := []string{}
-	n.ds.ForEachUsers(func(u *datastore.UserEnt) bool {
+	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 		if u.FirstTime >= st {
 			ret = append(ret, fmt.Sprintf("%s,%s,%s", u.UserID, u.ServerName, u.Server))
 		}

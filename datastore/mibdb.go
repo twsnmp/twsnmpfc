@@ -24,7 +24,7 @@ type MIBTreeEnt struct {
 
 var MIBTree = []*MIBTreeEnt{}
 
-func (ds *DataStore) loadMIBDB(f io.ReadCloser) {
+func loadMIBDB(f io.ReadCloser) {
 	if f == nil {
 		return
 	}
@@ -35,14 +35,14 @@ func (ds *DataStore) loadMIBDB(f io.ReadCloser) {
 			log.Printf("loadMIBDB err=%v", err)
 			return
 		}
-		ds.MIBDB = mibdb
+		MIBDB = mibdb
 	} else {
 		log.Printf("loadMIBDB err=%v", err)
 	}
 }
 
-func (ds *DataStore) loadExtMIBs(root string) {
-	if ds.MIBDB == nil {
+func loadExtMIBs(root string) {
+	if MIBDB == nil {
 		return
 	}
 	filepath.Walk(root,
@@ -54,16 +54,16 @@ func (ds *DataStore) loadExtMIBs(root string) {
 			if info.IsDir() {
 				return nil
 			}
-			ds.loadExtMIB(filepath.Join(root, path))
+			loadExtMIB(filepath.Join(root, path))
 			return nil
 		})
 }
 
-func (ds *DataStore) loadExtMIB(path string) {
+func loadExtMIB(path string) {
 	var nameList []string
 	var mapNameToOID = make(map[string]string)
-	for _, name := range ds.MIBDB.GetNameList() {
-		mapNameToOID[name] = ds.MIBDB.NameToOID(name)
+	for _, name := range MIBDB.GetNameList() {
+		mapNameToOID[name] = MIBDB.NameToOID(name)
 	}
 	asn1, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -106,7 +106,7 @@ func (ds *DataStore) loadExtMIB(path string) {
 		mapNameToOID[name] = noid + "." + a[1]
 	}
 	for _, name := range nameList {
-		_ = ds.MIBDB.Add(name, mapNameToOID[name])
+		_ = MIBDB.Add(name, mapNameToOID[name])
 	}
 }
 
@@ -143,10 +143,10 @@ func addToMibTree(oid, name, poid string) {
 	mibTreeMAP[oid] = n
 }
 
-func (ds *DataStore) makeMibTreeList() {
+func makeMibTreeList() {
 	oids := []string{}
-	for _, n := range ds.MIBDB.GetNameList() {
-		oid := ds.MIBDB.NameToOID(n)
+	for _, n := range MIBDB.GetNameList() {
+		oid := MIBDB.NameToOID(n)
 		if oid == ".0.0" {
 			continue
 		}
@@ -170,7 +170,7 @@ func (ds *DataStore) makeMibTreeList() {
 	})
 	addToMibTree(".1.3.6.1", "iso.org.dod.internet", "")
 	for _, oid := range oids {
-		name := ds.MIBDB.OIDToName(oid)
+		name := MIBDB.OIDToName(oid)
 		if name == "" {
 			continue
 		}

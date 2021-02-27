@@ -25,7 +25,6 @@ type eventLogFilter struct {
 }
 
 func postEventLogs(c echo.Context) error {
-	api := c.Get("api").(*WebAPI)
 	r := logsWebAPI{
 		NodeList:  []selectEntWebAPI{},
 		EventLogs: []*datastore.EventLogEnt{},
@@ -40,12 +39,12 @@ func postEventLogs(c echo.Context) error {
 	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 
-	api.DataStore.ForEachNodes(func(n *datastore.NodeEnt) bool {
+	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
 		r.NodeList = append(r.NodeList, selectEntWebAPI{Text: n.Name, Value: n.ID})
 		return true
 	})
 	i := 0
-	api.DataStore.ForEachEventLog(st, et, func(l *datastore.EventLogEnt) bool {
+	datastore.ForEachEventLog(st, et, func(l *datastore.EventLogEnt) bool {
 		if eventFilter != nil && !eventFilter.Match([]byte(l.Event)) {
 			return true
 		}
@@ -60,7 +59,7 @@ func postEventLogs(c echo.Context) error {
 		}
 		r.EventLogs = append(r.EventLogs, l)
 		i++
-		return i <= api.DataStore.MapConf.LogDispSize
+		return i <= datastore.MapConf.LogDispSize
 	})
 	return c.JSON(http.StatusOK, r)
 }

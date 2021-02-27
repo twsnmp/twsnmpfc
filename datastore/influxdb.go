@@ -22,15 +22,15 @@ type InfluxdbConfEnt struct {
 	AIScore    string
 }
 
-func (ds *DataStore) SaveInfluxdbConfToDB() error {
-	if ds.db == nil {
+func SaveInfluxdbConfToDB() error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	s, err := json.Marshal(ds.InfluxdbConf)
+	s, err := json.Marshal(InfluxdbConf)
 	if err != nil {
 		return err
 	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
@@ -39,47 +39,47 @@ func (ds *DataStore) SaveInfluxdbConfToDB() error {
 	})
 }
 
-func (ds *DataStore) InitInfluxdb() error {
-	if err := ds.dropInfluxdb(); err != nil {
+func InitInfluxdb() error {
+	if err := dropInfluxdb(); err != nil {
 		return err
 	}
-	return ds.setupInfluxdb()
+	return setupInfluxdb()
 }
 
-func (ds *DataStore) setupInfluxdb() error {
-	ds.closeInfluxdb()
-	ds.muInfluxc.Lock()
-	defer ds.muInfluxc.Unlock()
-	if ds.InfluxdbConf.URL == "" {
+func setupInfluxdb() error {
+	closeInfluxdb()
+	muInfluxc.Lock()
+	defer muInfluxc.Unlock()
+	if InfluxdbConf.URL == "" {
 		return nil
 	}
 	var err error
 	conf := client.HTTPConfig{
-		Addr:               ds.InfluxdbConf.URL,
+		Addr:               InfluxdbConf.URL,
 		Timeout:            time.Second * 5,
 		InsecureSkipVerify: true,
 	}
-	if ds.InfluxdbConf.User != "" && ds.InfluxdbConf.Password != "" {
-		conf.Username = ds.InfluxdbConf.User
-		conf.Password = ds.InfluxdbConf.Password
+	if InfluxdbConf.User != "" && InfluxdbConf.Password != "" {
+		conf.Username = InfluxdbConf.User
+		conf.Password = InfluxdbConf.Password
 	}
-	ds.influxc, err = client.NewHTTPClient(conf)
+	influxc, err = client.NewHTTPClient(conf)
 	if err != nil {
-		ds.influxc = nil
+		influxc = nil
 		return err
 	}
-	return ds.checkInfluxdb()
+	return checkInfluxdb()
 }
 
-func (ds *DataStore) checkInfluxdb() error {
+func checkInfluxdb() error {
 	q := client.NewQuery("SHOW DATABASES", "", "")
-	if response, err := ds.influxc.Query(q); err == nil && response.Error() == nil {
+	if response, err := influxc.Query(q); err == nil && response.Error() == nil {
 		for _, r := range response.Results {
 			for _, s := range r.Series {
 				for _, ns := range s.Values {
 					for _, n := range ns {
 						if name, ok := n.(string); ok {
-							if name == ds.InfluxdbConf.DB {
+							if name == InfluxdbConf.DB {
 								return nil
 							}
 						}
@@ -90,44 +90,44 @@ func (ds *DataStore) checkInfluxdb() error {
 	} else {
 		return err
 	}
-	qs := fmt.Sprintf(`CREATE DATABASE "%s"`, ds.InfluxdbConf.DB)
-	if ds.InfluxdbConf.Duration != "" {
-		qs += " WITH DURATION " + ds.InfluxdbConf.Duration
+	qs := fmt.Sprintf(`CREATE DATABASE "%s"`, InfluxdbConf.DB)
+	if InfluxdbConf.Duration != "" {
+		qs += " WITH DURATION " + InfluxdbConf.Duration
 	}
 	q = client.NewQuery(qs, "", "")
-	if response, err := ds.influxc.Query(q); err != nil || response.Error() != nil {
+	if response, err := influxc.Query(q); err != nil || response.Error() != nil {
 		return err
 	}
 	return nil
 }
 
-func (ds *DataStore) dropInfluxdb() error {
-	ds.muInfluxc.Lock()
-	defer ds.muInfluxc.Unlock()
-	if ds.influxc == nil {
+func dropInfluxdb() error {
+	muInfluxc.Lock()
+	defer muInfluxc.Unlock()
+	if influxc == nil {
 		return nil
 	}
-	qs := fmt.Sprintf(`DROP DATABASE "%s"`, ds.InfluxdbConf.DB)
+	qs := fmt.Sprintf(`DROP DATABASE "%s"`, InfluxdbConf.DB)
 	q := client.NewQuery(qs, "", "")
-	if response, err := ds.influxc.Query(q); err != nil || response.Error() != nil {
+	if response, err := influxc.Query(q); err != nil || response.Error() != nil {
 		return err
 	}
 	return nil
 }
 
-func (ds *DataStore) SendPollingLogToInfluxdb(pe *PollingEnt) error {
-	ds.muInfluxc.Lock()
-	defer ds.muInfluxc.Unlock()
-	if ds.influxc == nil {
+func SendPollingLogToInfluxdb(pe *PollingEnt) error {
+	muInfluxc.Lock()
+	defer muInfluxc.Unlock()
+	if influxc == nil {
 		return nil
 	}
-	n := ds.GetNode(pe.NodeID)
+	n := GetNode(pe.NodeID)
 	if n == nil {
 		return ErrInvalidID
 	}
 	// Create a new point batch
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  ds.InfluxdbConf.DB,
+		Database:  InfluxdbConf.DB,
 		Precision: "s",
 	})
 	if err != nil {
@@ -136,7 +136,7 @@ func (ds *DataStore) SendPollingLogToInfluxdb(pe *PollingEnt) error {
 
 	// Create a point and add to batch
 	tags := map[string]string{
-		"map":       ds.MapConf.MapName,
+		"map":       MapConf.MapName,
 		"node":      n.Name,
 		"nodeID":    n.ID,
 		"pollingID": pe.ID,
@@ -161,25 +161,25 @@ func (ds *DataStore) SendPollingLogToInfluxdb(pe *PollingEnt) error {
 	bp.AddPoint(pt)
 
 	// Write the batch
-	if err := ds.influxc.Write(bp); err != nil {
+	if err := influxc.Write(bp); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (ds *DataStore) SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error {
-	ds.muInfluxc.Lock()
-	defer ds.muInfluxc.Unlock()
-	if ds.influxc == nil {
+func SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error {
+	muInfluxc.Lock()
+	defer muInfluxc.Unlock()
+	if influxc == nil {
 		return nil
 	}
-	n := ds.GetNode(pe.NodeID)
+	n := GetNode(pe.NodeID)
 	if n == nil {
 		return ErrInvalidID
 	}
 	qs := fmt.Sprintf(`DROP SERIES FROM "AIScore" WHERE "pollingID" = "%s" `, pe.ID)
-	q := client.NewQuery(qs, ds.InfluxdbConf.DB, "")
-	if response, err := ds.influxc.Query(q); err != nil {
+	q := client.NewQuery(qs, InfluxdbConf.DB, "")
+	if response, err := influxc.Query(q); err != nil {
 		log.Printf("sendAIScoreToInfluxdb err=%v", err)
 		return err
 	} else if response == nil {
@@ -191,7 +191,7 @@ func (ds *DataStore) SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error 
 	}
 	// Create a new point batch
 	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  ds.InfluxdbConf.DB,
+		Database:  InfluxdbConf.DB,
 		Precision: "s",
 	})
 	if err != nil {
@@ -200,7 +200,7 @@ func (ds *DataStore) SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error 
 
 	// Create a point and add to batch
 	tags := map[string]string{
-		"map":       ds.MapConf.MapName,
+		"map":       MapConf.MapName,
 		"node":      n.Name,
 		"nodeID":    n.ID,
 		"pollingID": pe.ID,
@@ -219,19 +219,19 @@ func (ds *DataStore) SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error 
 		bp.AddPoint(pt)
 	}
 	// Write the batch
-	if err := ds.influxc.Write(bp); err != nil {
+	if err := influxc.Write(bp); err != nil {
 		return err
 	}
 	return nil
 
 }
 
-func (ds *DataStore) closeInfluxdb() {
-	ds.muInfluxc.Lock()
-	defer ds.muInfluxc.Unlock()
-	if ds.influxc == nil {
+func closeInfluxdb() {
+	muInfluxc.Lock()
+	defer muInfluxc.Unlock()
+	if influxc == nil {
 		return
 	}
-	ds.influxc.Close()
-	ds.influxc = nil
+	influxc.Close()
+	influxc = nil
 }

@@ -12,33 +12,26 @@ import (
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
-	"github.com/twsnmp/twsnmpfc/report"
 )
 
-type Logger struct {
-	ds     *datastore.DataStore
-	report *report.Report
-	logCh  chan *datastore.LogEnt
-}
+var logCh chan *datastore.LogEnt
 
-func NewLogger(ctx context.Context, ds *datastore.DataStore, r *report.Report) *Logger {
+func StartLogger(ctx context.Context) error {
 	log.Println("Start Logger")
-	l := &Logger{
-		ds:     ds,
-		report: r,
-		logCh:  make(chan *datastore.LogEnt, 100),
-	}
-	go l.logger(ctx)
-	return l
+	logCh = make(chan *datastore.LogEnt, 100)
+	go logger(ctx)
+	return nil
 }
 
-func (l *Logger) logger(ctx context.Context) {
+func logger(ctx context.Context) {
 	var syslogdRunning = false
 	var trapdRunning = false
 	var netflowdRunning = false
+	var arpWatchRunning = false
 	var stopSyslogd chan bool
 	var stopTrapd chan bool
 	var stopNetflowd chan bool
+	var stopArpWatch chan bool
 	timer := time.NewTicker(time.Second * 10)
 	logBuffer := []*datastore.LogEnt{}
 	for {
@@ -47,7 +40,7 @@ func (l *Logger) logger(ctx context.Context) {
 			{
 				timer.Stop()
 				if len(logBuffer) > 0 {
-					l.ds.SaveLogBuffer(logBuffer)
+					datastore.SaveLogBuffer(logBuffer)
 				}
 				if syslogdRunning {
 					close(stopSyslogd)
@@ -58,48 +51,61 @@ func (l *Logger) logger(ctx context.Context) {
 				if trapdRunning {
 					close(stopTrapd)
 				}
+				if arpWatchRunning {
+					close(stopArpWatch)
+				}
 				log.Printf("Stop logger")
 				return
 			}
-		case log := <-l.logCh:
+		case log := <-logCh:
 			{
 				logBuffer = append(logBuffer, log)
 			}
 		case <-timer.C:
 			{
 				if len(logBuffer) > 0 {
-					l.ds.SaveLogBuffer(logBuffer)
+					datastore.SaveLogBuffer(logBuffer)
 					logBuffer = []*datastore.LogEnt{}
 				}
-				if l.ds.MapConf.EnableSyslogd && !syslogdRunning {
+				if datastore.MapConf.EnableSyslogd && !syslogdRunning {
 					stopSyslogd = make(chan bool)
 					syslogdRunning = true
-					go l.syslogd(stopSyslogd)
+					go syslogd(stopSyslogd)
 					log.Printf("start syslogd")
-				} else if !l.ds.MapConf.EnableSyslogd && syslogdRunning {
+				} else if !datastore.MapConf.EnableSyslogd && syslogdRunning {
 					close(stopSyslogd)
 					syslogdRunning = false
 					log.Printf("stop syslogd")
 				}
-				if l.ds.MapConf.EnableTrapd && !trapdRunning {
+				if datastore.MapConf.EnableTrapd && !trapdRunning {
 					stopTrapd = make(chan bool)
 					trapdRunning = true
-					go l.snmptrapd(stopTrapd)
+					go snmptrapd(stopTrapd)
 					log.Printf("start trapd")
-				} else if !l.ds.MapConf.EnableTrapd && trapdRunning {
+				} else if !datastore.MapConf.EnableTrapd && trapdRunning {
 					close(stopTrapd)
 					trapdRunning = false
 					log.Printf("stop trapd")
 				}
-				if l.ds.MapConf.EnableNetflowd && !netflowdRunning {
+				if datastore.MapConf.EnableNetflowd && !netflowdRunning {
 					stopNetflowd = make(chan bool)
 					netflowdRunning = true
-					go l.netflowd(stopNetflowd)
+					go netflowd(stopNetflowd)
 					log.Printf("start netflowd")
-				} else if !l.ds.MapConf.EnableNetflowd && netflowdRunning {
+				} else if !datastore.MapConf.EnableNetflowd && netflowdRunning {
 					close(stopNetflowd)
 					netflowdRunning = false
 					log.Printf("stop netflowd")
+				}
+				if datastore.MapConf.EnableArpWatch && !arpWatchRunning {
+					stopArpWatch = make(chan bool)
+					arpWatchRunning = true
+					go arpWatch(stopArpWatch)
+					log.Printf("start arpWatch")
+				} else if !datastore.MapConf.EnableArpWatch && arpWatchRunning {
+					close(stopArpWatch)
+					arpWatchRunning = false
+					log.Printf("stop arpWatch")
 				}
 			}
 		}

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (ds *DataStore) loadServiceMap(f io.ReadCloser) {
+func loadServiceMap(f io.ReadCloser) {
 	if f == nil {
 		return
 	}
@@ -27,14 +27,14 @@ func (ds *DataStore) loadServiceMap(f io.ReadCloser) {
 		if len(a) > 1 {
 			sn += "/" + a[1]
 		}
-		ds.serviceMap[f[1]] = sn
+		serviceMap[f[1]] = sn
 	}
 }
 
-func (ds *DataStore) GetServiceName(prot, port int) (string, bool) {
-	if p, ok := ds.protMap[prot]; ok {
+func GetServiceName(prot, port int) (string, bool) {
+	if p, ok := protMap[prot]; ok {
 		k := fmt.Sprintf("%d/%s", port, p)
-		if s, ok := ds.serviceMap[k]; ok {
+		if s, ok := serviceMap[k]; ok {
 			return s, true
 		}
 		return p, false

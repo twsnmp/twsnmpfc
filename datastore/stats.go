@@ -28,52 +28,52 @@ type DBStatsLogEnt struct {
 	Speed float64
 }
 
-func (ds *DataStore) UpdateDBStats() {
-	if ds.db == nil {
+func UpdateDBStats() {
+	if db == nil {
 		return
 	}
-	s := ds.db.Stats()
-	d := s.Sub(&ds.prevDBStats)
+	s := db.Stats()
+	d := s.Sub(&prevDBStats)
 	var dbSize int64
-	_ = ds.db.View(func(tx *bbolt.Tx) error {
+	_ = db.View(func(tx *bbolt.Tx) error {
 		dbSize = tx.Size()
 		return nil
 	})
-	ds.DBStats.Size = dbSize
-	ds.DBStats.TotalWrite = int64(s.TxStats.Write)
-	ds.DBStats.Write = int64(d.TxStats.Write)
-	if ds.DBStats.PeakWrite < ds.DBStats.Write {
-		ds.DBStats.PeakWrite = ds.DBStats.Write
+	DBStats.Size = dbSize
+	DBStats.TotalWrite = int64(s.TxStats.Write)
+	DBStats.Write = int64(d.TxStats.Write)
+	if DBStats.PeakWrite < DBStats.Write {
+		DBStats.PeakWrite = DBStats.Write
 	}
 	skipLog := true
 	// 初回は計算しない。
-	if ds.DBStats.PeakWrite > 0 && ds.DBStats.Time != 0 {
-		ds.DBStats.Duration = time.Since(ds.dbOpenTime).Seconds()
-		if ds.DBStats.Duration > 0 {
-			ds.DBStats.AvgSpeed = float64(s.TxStats.Write) / ds.DBStats.Duration
+	if DBStats.PeakWrite > 0 && DBStats.Time != 0 {
+		DBStats.Duration = time.Since(dbOpenTime).Seconds()
+		if DBStats.Duration > 0 {
+			DBStats.AvgSpeed = float64(s.TxStats.Write) / DBStats.Duration
 		}
 		skipLog = false
 	}
 	dt := d.TxStats.WriteTime.Seconds()
 	if dt != 0 {
-		ds.DBStats.Speed = float64(d.TxStats.Write) / dt
-		if ds.DBStats.PeakSpeed < ds.DBStats.Speed {
-			ds.DBStats.PeakSpeed = ds.DBStats.Speed
+		DBStats.Speed = float64(d.TxStats.Write) / dt
+		if DBStats.PeakSpeed < DBStats.Speed {
+			DBStats.PeakSpeed = DBStats.Speed
 		}
 	} else {
-		ds.DBStats.Speed = 0.0
+		DBStats.Speed = 0.0
 	}
-	ds.DBStats.Time = time.Now().UnixNano()
-	ds.prevDBStats = s
+	DBStats.Time = time.Now().UnixNano()
+	prevDBStats = s
 	if skipLog {
 		return
 	}
-	ds.DBStatsLog = append(ds.DBStatsLog, DBStatsLogEnt{
-		Time:  ds.DBStats.Time,
-		Size:  ds.DBStats.Size,
-		Speed: ds.DBStats.Speed,
+	DBStatsLog = append(DBStatsLog, DBStatsLogEnt{
+		Time:  DBStats.Time,
+		Size:  DBStats.Size,
+		Speed: DBStats.Speed,
 	})
-	if len(ds.DBStatsLog) > 24*60*7 {
-		ds.DBStatsLog = ds.DBStatsLog[1:]
+	if len(DBStatsLog) > 24*60*7 {
+		DBStatsLog = DBStatsLog[1:]
 	}
 }

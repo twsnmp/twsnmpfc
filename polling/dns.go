@@ -12,10 +12,10 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func (p *Polling) doPollingDNS(pe *datastore.PollingEnt) {
-	n := p.ds.GetNode(pe.NodeID)
+func doPollingDNS(pe *datastore.PollingEnt) {
+	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
-		p.setPollingError("dns", pe, fmt.Errorf("node not found"))
+		setPollingError("dns", pe, fmt.Errorf("node not found"))
 		return
 	}
 	cmds := splitCmd(pe.Polling)
@@ -54,7 +54,7 @@ func (p *Polling) doPollingDNS(pe *datastore.PollingEnt) {
 		}
 		pe.LastResult = makeLastResult(lr)
 		pe.LastVal = 0.0
-		p.setPollingState(pe, pe.Level)
+		setPollingState(pe, pe.Level)
 		return
 	}
 	pe.LastVal = float64(rTime)
@@ -68,10 +68,10 @@ func (p *Polling) doPollingDNS(pe *datastore.PollingEnt) {
 		lr["ip"] = out[0]
 		pe.LastResult = makeLastResult(lr)
 		if oldlr["ip"] != "" && oldlr["ip"] != lr["ip"] {
-			p.setPollingState(pe, pe.Level)
+			setPollingState(pe, pe.Level)
 			return
 		}
-		p.setPollingState(pe, "normal")
+		setPollingState(pe, "normal")
 		return
 	case "addr":
 		_ = vm.Set("addr", out)
@@ -94,15 +94,15 @@ func (p *Polling) doPollingDNS(pe *datastore.PollingEnt) {
 	}
 	value, err := vm.Run(script)
 	if err != nil {
-		p.setPollingError("dns", pe, fmt.Errorf("%v", err))
+		setPollingError("dns", pe, fmt.Errorf("%v", err))
 		return
 	}
 	pe.LastResult = makeLastResult(lr)
 	if ok, _ := value.ToBoolean(); ok {
-		p.setPollingState(pe, "normal")
+		setPollingState(pe, "normal")
 		return
 	}
-	p.setPollingState(pe, pe.Level)
+	setPollingState(pe, pe.Level)
 }
 
 func doLookup(mode, target string) ([]string, error) {

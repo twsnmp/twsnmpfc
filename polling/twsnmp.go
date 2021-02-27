@@ -25,10 +25,10 @@ type restMapStatusEnt struct {
 }
 
 // TWSNMPへのポーリング
-func (p *Polling) doPollingTWSNMP(pe *datastore.PollingEnt) {
-	n := p.ds.GetNode(pe.NodeID)
+func doPollingTWSNMP(pe *datastore.PollingEnt) {
+	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
-		p.setPollingError("twsnmp", pe, fmt.Errorf("node not found"))
+		setPollingError("twsnmp", pe, fmt.Errorf("node not found"))
 		return
 	}
 	ok := false
@@ -49,7 +49,7 @@ func (p *Polling) doPollingTWSNMP(pe *datastore.PollingEnt) {
 	if ok {
 		var ms restMapStatusEnt
 		if err := json.Unmarshal([]byte(body), &ms); err != nil {
-			p.setPollingError("twsnmp", pe, err)
+			setPollingError("twsnmp", pe, err)
 			return
 		}
 		lr := make(map[string]string)
@@ -62,10 +62,10 @@ func (p *Polling) doPollingTWSNMP(pe *datastore.PollingEnt) {
 		lr["repair"] = fmt.Sprintf("%d", ms.Repair)
 		lr["dbsize"] = fmt.Sprintf("%d", ms.DBSize)
 		pe.LastResult = makeLastResult(lr)
-		p.setPollingState(pe, ms.State)
+		setPollingState(pe, ms.State)
 		return
 	}
-	p.setPollingError("twsnmp", pe, err)
+	setPollingError("twsnmp", pe, err)
 }
 
 func doTWSNMPGet(n *datastore.NodeEnt, pe *datastore.PollingEnt) (string, error) {

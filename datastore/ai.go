@@ -14,15 +14,15 @@ type AIResult struct {
 	ScoreData [][]float64
 }
 
-func (ds *DataStore) SaveAIResultToDB(res *AIResult) error {
-	if ds.db == nil {
+func SaveAIResultToDB(res *AIResult) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
 	s, err := json.Marshal(res)
 	if err != nil {
 		return err
 	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("ai"))
 		if b == nil {
 			return fmt.Errorf("bucket ai is nil")
@@ -31,13 +31,13 @@ func (ds *DataStore) SaveAIResultToDB(res *AIResult) error {
 	})
 }
 
-func (ds *DataStore) LoadAIReesult(id string) (*AIResult, error) {
+func LoadAIReesult(id string) (*AIResult, error) {
 	var ret AIResult
 	r := ""
-	if ds.db == nil {
+	if db == nil {
 		return &ret, ErrDBNotOpen
 	}
-	_ = ds.db.View(func(tx *bbolt.Tx) error {
+	_ = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("ai"))
 		if b == nil {
 			return nil
@@ -57,11 +57,11 @@ func (ds *DataStore) LoadAIReesult(id string) (*AIResult, error) {
 	return &ret, nil
 }
 
-func (ds *DataStore) DeleteAIResult(id string) error {
-	if ds.db == nil {
+func DeleteAIResult(id string) error {
+	if db == nil {
 		return ErrDBNotOpen
 	}
-	return ds.db.Update(func(tx *bbolt.Tx) error {
+	return db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("ai"))
 		_ = b.Delete([]byte(id))
 		return nil

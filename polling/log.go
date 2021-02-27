@@ -13,6 +13,7 @@ import (
 
 	"github.com/robertkrimen/otto"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/report"
 	"github.com/vjeantet/grok"
 )
 
@@ -29,17 +30,17 @@ func getLogContent(l string) string {
 	return ""
 }
 
-func (p *Polling) doPollingLog(pe *datastore.PollingEnt) {
+func doPollingLog(pe *datastore.PollingEnt) {
 	cmds := splitCmd(pe.Polling)
 	if len(cmds) != 3 {
-		p.setPollingError("log", pe, fmt.Errorf("invalid log watch format"))
+		setPollingError("log", pe, fmt.Errorf("invalid log watch format"))
 		return
 	}
 	filter := "`" + cmds[0] + "`"
 	extractor := cmds[1]
 	script := cmds[2]
 	if _, err := regexp.Compile(filter); err != nil {
-		p.setPollingError("log", pe, fmt.Errorf("invalid log watch format"))
+		setPollingError("log", pe, fmt.Errorf("invalid log watch format"))
 		return
 	}
 	vm := otto.New()
@@ -54,7 +55,7 @@ func (p *Polling) doPollingLog(pe *datastore.PollingEnt) {
 		st = time.Now().Add(-time.Second * time.Duration(pe.PollInt)).Format("2006-01-02T15:04")
 	}
 	et := time.Now().Format("2006-01-02T15:04")
-	logs := p.ds.GetLogs(&datastore.LogFilterEnt{
+	logs := datastore.GetLogs(&datastore.LogFilterEnt{
 		Filter:    filter,
 		StartTime: st,
 		EndTime:   et,
@@ -70,23 +71,23 @@ func (p *Polling) doPollingLog(pe *datastore.PollingEnt) {
 		if err == nil {
 			pe.LastResult = makeLastResult(lr)
 			if ok, _ := value.ToBoolean(); ok {
-				p.setPollingState(pe, "normal")
+				setPollingState(pe, "normal")
 			} else {
-				p.setPollingState(pe, pe.Level)
+				setPollingState(pe, pe.Level)
 			}
 			return
 		}
-		p.setPollingError("log", pe, fmt.Errorf("invalid log watch format"))
+		setPollingError("log", pe, fmt.Errorf("invalid log watch format"))
 		return
 	}
-	grokEnt := p.ds.GetGrokEnt(extractor)
+	grokEnt := datastore.GetGrokEnt(extractor)
 	if grokEnt == nil {
-		p.setPollingError("log", pe, fmt.Errorf("no extractor pattern"))
+		setPollingError("log", pe, fmt.Errorf("no extractor pattern"))
 		return
 	}
 	g, _ := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
 	if err := g.AddPattern(extractor, grokEnt.Pat); err != nil {
-		p.setPollingError("log", pe, fmt.Errorf("no extractor pattern"))
+		setPollingError("log", pe, fmt.Errorf("no extractor pattern"))
 		return
 	}
 	cap := fmt.Sprintf("%%{%s}", extractor)
@@ -104,30 +105,30 @@ func (p *Polling) doPollingLog(pe *datastore.PollingEnt) {
 		if err == nil {
 			if ok, _ := value.ToBoolean(); !ok {
 				pe.LastResult = makeLastResult(lr)
-				p.setPollingState(pe, pe.Level)
+				setPollingState(pe, pe.Level)
 				return
 			}
 		} else {
-			p.setPollingError("log", pe, fmt.Errorf("invalid log watch format"))
+			setPollingError("log", pe, fmt.Errorf("invalid log watch format"))
 			return
 		}
 	}
 	pe.LastResult = makeLastResult(lr)
-	p.setPollingState(pe, "normal")
+	setPollingState(pe, "normal")
 }
 
 var syslogPriFilter = regexp.MustCompile(`"priority":(\d+),`)
 
-func (p *Polling) doPollingSyslogPri(pe *datastore.PollingEnt) bool {
+func doPollingSyslogPri(pe *datastore.PollingEnt) bool {
 	cmds := splitCmd(pe.Polling)
 	if len(cmds) < 1 {
-		p.setPollingError("log", pe, fmt.Errorf("invalid syslog pri watch format"))
+		setPollingError("log", pe, fmt.Errorf("invalid syslog pri watch format"))
 		return false
 	}
 	filter := cmds[0]
 	_, err := regexp.Compile(filter)
 	if err != nil {
-		p.setPollingError("log", pe, fmt.Errorf("invalid syslogpri watch format"))
+		setPollingError("log", pe, fmt.Errorf("invalid syslogpri watch format"))
 		return false
 	}
 	endTime := time.Unix((time.Now().Unix()/3600)*3600, 0)
@@ -139,7 +140,7 @@ func (p *Polling) doPollingSyslogPri(pe *datastore.PollingEnt) bool {
 	pe.LastVal = float64(startTime.UnixNano())
 	st := startTime.Format("2006-01-02T15:04")
 	et := endTime.Format("2006-01-02T15:04")
-	logs := p.ds.GetLogs(&datastore.LogFilterEnt{
+	logs := datastore.GetLogs(&datastore.LogFilterEnt{
 		Filter:    "`" + filter + "`",
 		StartTime: st,
 		EndTime:   et,
@@ -162,30 +163,30 @@ func (p *Polling) doPollingSyslogPri(pe *datastore.PollingEnt) bool {
 		lr[fmt.Sprintf("pri_%d", pri)] = fmt.Sprintf("%d", c)
 	}
 	pe.LastResult = makeLastResult(lr)
-	p.setPollingState(pe, "normal")
+	setPollingState(pe, "normal")
 	return true
 }
 
-func (p *Polling) doPollingSyslogDevice(pe *datastore.PollingEnt) {
+func doPollingSyslogDevice(pe *datastore.PollingEnt) {
 	cmds := splitCmd(pe.Polling)
 	if len(cmds) != 2 {
-		p.setPollingError("log", pe, fmt.Errorf("invalid syslog device watch format"))
+		setPollingError("log", pe, fmt.Errorf("invalid syslog device watch format"))
 		return
 	}
 	filter := cmds[0]
 	extractor := cmds[1]
 	if _, err := regexp.Compile(filter); err != nil {
-		p.setPollingError("log", pe, fmt.Errorf("invalid syslog device watch format"))
+		setPollingError("log", pe, fmt.Errorf("invalid syslog device watch format"))
 		return
 	}
-	grokEnt := p.ds.GetGrokEnt(extractor)
+	grokEnt := datastore.GetGrokEnt(extractor)
 	if grokEnt == nil {
-		p.setPollingError("log", pe, fmt.Errorf("invalid syslog device watch format"))
+		setPollingError("log", pe, fmt.Errorf("invalid syslog device watch format"))
 		return
 	}
 	g, _ := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
 	if err := g.AddPattern(extractor, grokEnt.Pat); err != nil {
-		p.setPollingError("log", pe, fmt.Errorf("invalid syslog device watch format err=%v", err))
+		setPollingError("log", pe, fmt.Errorf("invalid syslog device watch format err=%v", err))
 		return
 	}
 	lr := make(map[string]string)
@@ -199,7 +200,7 @@ func (p *Polling) doPollingSyslogDevice(pe *datastore.PollingEnt) {
 		st = time.Now().Add(-time.Second * time.Duration(pe.PollInt)).Format("2006-01-02T15:04")
 	}
 	et := time.Now().Format("2006-01-02T15:04")
-	logs := p.ds.GetLogs(&datastore.LogFilterEnt{
+	logs := datastore.GetLogs(&datastore.LogFilterEnt{
 		Filter:    "`" + filter + "`",
 		StartTime: st,
 		EndTime:   et,
@@ -225,34 +226,34 @@ func (p *Polling) doPollingSyslogDevice(pe *datastore.PollingEnt) {
 			continue
 		}
 		count++
-		p.report.ReportDevice(mac, ip, l.Time)
+		report.ReportDevice(mac, ip, l.Time)
 	}
 	lr["hit"] = fmt.Sprintf("%d", count)
 	pe.LastVal = float64(count)
 	pe.LastResult = makeLastResult(lr)
-	p.setPollingState(pe, "normal")
+	setPollingState(pe, "normal")
 }
 
-func (p *Polling) doPollingSyslogUser(pe *datastore.PollingEnt) {
-	n := p.ds.GetNode(pe.NodeID)
+func doPollingSyslogUser(pe *datastore.PollingEnt) {
+	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
 		log.Printf("node not found nodeID=%s", pe.NodeID)
 		return
 	}
 	cmds := splitCmd(pe.Polling)
 	if len(cmds) != 2 {
-		p.setPollingError("log", pe, fmt.Errorf("invalid syslog user watch format"))
+		setPollingError("log", pe, fmt.Errorf("invalid syslog user watch format"))
 		return
 	}
 	filter := cmds[0]
 	extractor := cmds[1]
 	if _, err := regexp.Compile(filter); err != nil {
-		p.setPollingError("log", pe, fmt.Errorf("invalid filter for syslog user"))
+		setPollingError("log", pe, fmt.Errorf("invalid filter for syslog user"))
 		return
 	}
-	grokEnt := p.ds.GetGrokEnt(extractor)
+	grokEnt := datastore.GetGrokEnt(extractor)
 	if grokEnt == nil {
-		p.setPollingError("log", pe, fmt.Errorf("invalid extractor for syslog user"))
+		setPollingError("log", pe, fmt.Errorf("invalid extractor for syslog user"))
 		return
 	}
 	g, _ := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
@@ -270,7 +271,7 @@ func (p *Polling) doPollingSyslogUser(pe *datastore.PollingEnt) {
 		st = time.Now().Add(-time.Second * time.Duration(pe.PollInt)).Format("2006-01-02T15:04")
 	}
 	et := time.Now().Format("2006-01-02T15:04")
-	logs := p.ds.GetLogs(&datastore.LogFilterEnt{
+	logs := datastore.GetLogs(&datastore.LogFilterEnt{
 		Filter:    "`" + filter + "`",
 		StartTime: st,
 		EndTime:   et,
@@ -302,7 +303,7 @@ func (p *Polling) doPollingSyslogUser(pe *datastore.PollingEnt) {
 		if ok {
 			okCount++
 		}
-		p.report.ReportUser(user, n.IP, client, ok, l.Time)
+		report.ReportUser(user, n.IP, client, ok, l.Time)
 	}
 	if totalCount > 0 {
 		pe.LastVal = float64(okCount) / float64(totalCount)
@@ -313,29 +314,29 @@ func (p *Polling) doPollingSyslogUser(pe *datastore.PollingEnt) {
 	lr["ok"] = fmt.Sprintf("%d", okCount)
 	lr["rate"] = fmt.Sprintf("%f", pe.LastVal*100.0)
 	pe.LastResult = makeLastResult(lr)
-	p.setPollingState(pe, "normal")
+	setPollingState(pe, "normal")
 }
 
-func (p *Polling) doPollingSyslogFlow(pe *datastore.PollingEnt) {
+func doPollingSyslogFlow(pe *datastore.PollingEnt) {
 	cmds := splitCmd(pe.Polling)
 	if len(cmds) != 2 {
-		p.setPollingError("syslogFlow", pe, fmt.Errorf("invalid watch format"))
+		setPollingError("syslogFlow", pe, fmt.Errorf("invalid watch format"))
 		return
 	}
 	filter := cmds[0]
 	extractor := cmds[1]
 	if _, err := regexp.Compile(filter); err != nil {
-		p.setPollingError("syslogFlow", pe, fmt.Errorf("invalid filter"))
+		setPollingError("syslogFlow", pe, fmt.Errorf("invalid filter"))
 		return
 	}
-	grokEnt := p.ds.GetGrokEnt(extractor)
+	grokEnt := datastore.GetGrokEnt(extractor)
 	if grokEnt == nil {
-		p.setPollingError("syslogFlow", pe, fmt.Errorf("invalid extractor"))
+		setPollingError("syslogFlow", pe, fmt.Errorf("invalid extractor"))
 		return
 	}
 	g, _ := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
 	if err := g.AddPattern(extractor, grokEnt.Pat); err != nil {
-		p.setPollingError("syslogFlow", pe, fmt.Errorf("invalid extractor"))
+		setPollingError("syslogFlow", pe, fmt.Errorf("invalid extractor"))
 		return
 	}
 	lr := make(map[string]string)
@@ -349,7 +350,7 @@ func (p *Polling) doPollingSyslogFlow(pe *datastore.PollingEnt) {
 		st = time.Now().Add(-time.Second * time.Duration(pe.PollInt)).Format("2006-01-02T15:04")
 	}
 	et := time.Now().Format("2006-01-02T15:04")
-	logs := p.ds.GetLogs(&datastore.LogFilterEnt{
+	logs := datastore.GetLogs(&datastore.LogFilterEnt{
 		Filter:    "`" + filter + "`",
 		StartTime: st,
 		EndTime:   et,
@@ -396,13 +397,13 @@ func (p *Polling) doPollingSyslogFlow(pe *datastore.PollingEnt) {
 		nProt := getProt(prot)
 		nSPort, _ := strconv.Atoi(sport)
 		nDPort, _ := strconv.Atoi(dport)
-		p.report.ReportFlow(src, nSPort, dst, nDPort, nProt, int64(nBytes), l.Time)
+		report.ReportFlow(src, nSPort, dst, nDPort, nProt, int64(nBytes), l.Time)
 		count++
 	}
 	lr["hit"] = fmt.Sprintf("%d", count)
 	pe.LastVal = float64(count)
 	pe.LastResult = makeLastResult(lr)
-	p.setPollingState(pe, "normal")
+	setPollingState(pe, "normal")
 }
 
 func getProt(p string) int {

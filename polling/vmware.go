@@ -20,15 +20,15 @@ import (
 	"github.com/vmware/govmomi/vim25/soap"
 )
 
-func (p *Polling) doPollingVMWare(pe *datastore.PollingEnt) {
-	n := p.ds.GetNode(pe.NodeID)
+func doPollingVMWare(pe *datastore.PollingEnt) {
+	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
 		log.Printf("node not found nodeID=%s", pe.NodeID)
 		return
 	}
 	cmds := splitCmd(pe.Polling)
 	if len(cmds) != 3 {
-		p.setPollingError("vmware", pe, fmt.Errorf("invalid format"))
+		setPollingError("vmware", pe, fmt.Errorf("invalid format"))
 		return
 	}
 	mode := cmds[0]
@@ -43,7 +43,7 @@ func (p *Polling) doPollingVMWare(pe *datastore.PollingEnt) {
 	}
 	u, err := soap.ParseURL(us)
 	if err != nil {
-		p.setPollingError("vmware", pe, fmt.Errorf("invalid url"))
+		setPollingError("vmware", pe, fmt.Errorf("invalid url"))
 		return
 	}
 	if u.User == nil || u.User.String() == ":" {
@@ -53,7 +53,7 @@ func (p *Polling) doPollingVMWare(pe *datastore.PollingEnt) {
 	defer cancel()
 	client, err := govmomi.NewClient(ctx, u, true)
 	if err != nil {
-		p.setPollingError("vmware", pe, err)
+		setPollingError("vmware", pe, err)
 		return
 	}
 	var rMap = make(map[string]float64)
@@ -66,7 +66,7 @@ func (p *Polling) doPollingVMWare(pe *datastore.PollingEnt) {
 		rMap, err = vmwareVirtualMachine(ctx, client.Client, target)
 	}
 	if err != nil {
-		p.setPollingError("vmware", pe, err)
+		setPollingError("vmware", pe, err)
 		return
 	}
 	vm := otto.New()
@@ -77,7 +77,7 @@ func (p *Polling) doPollingVMWare(pe *datastore.PollingEnt) {
 	}
 	value, err := vm.Run(script)
 	if err != nil {
-		p.setPollingError("vmware", pe, err)
+		setPollingError("vmware", pe, err)
 		return
 	}
 	pe.LastResult = makeLastResult(lr)
@@ -89,10 +89,10 @@ func (p *Polling) doPollingVMWare(pe *datastore.PollingEnt) {
 		}
 	}
 	if ok, _ := value.ToBoolean(); !ok {
-		p.setPollingState(pe, pe.Level)
+		setPollingState(pe, pe.Level)
 		return
 	}
-	p.setPollingState(pe, "normal")
+	setPollingState(pe, "normal")
 }
 
 func vmwareHostSystem(ctx context.Context, c *vim25.Client, target string) (map[string]float64, error) {
