@@ -143,9 +143,41 @@ const timeFormat = (date, format) => {
   return echarts.format.formatTime(format, date)
 }
 
+const getScoreColor = (s) => {
+  if (s > 66) {
+    return getStateColor('repair')
+  } else if (s > 50) {
+    return getStateColor('info')
+  } else if (s > 42) {
+    return getStateColor('warn')
+  } else if (s > 33) {
+    return getStateColor('low')
+  } else if (s <= 0) {
+    return getStateColor('unknown')
+  }
+  return getStateColor('high')
+}
+
+const getScoreIconName = (s) => {
+  if (s > 66) {
+    return 'mdi-emoticon-excited-outline'
+  } else if (s > 50) {
+    return 'mdi-emoticon-outline'
+  } else if (s > 42) {
+    return 'mdi-emoticon-sad-outline'
+  } else if (s > 33) {
+    return 'mdi-emoticon-sick-outline'
+  } else if (s <= 0) {
+    return 'mdi-help-circle-outline'
+  }
+  return 'mdi-emoticon-dead-outline'
+}
+
 export default (context, inject) => {
   inject('getIconName', getIconName)
   inject('getStateName', getStateName)
+  inject('getScoreColor', getScoreColor)
+  inject('getScoreIconName', getScoreIconName)
   inject('getStateColor', getStateColor)
   inject('getStateIconName', getStateIconName)
   inject('logModeList', logModeList)

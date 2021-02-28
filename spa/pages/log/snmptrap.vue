@@ -188,7 +188,7 @@
 <script>
 export default {
   async fetch() {
-    this.logs = await this.$axios.$post('/api/snmptrap', this.filter)
+    this.logs = await this.$axios.$post('/api/log/snmptrap', this.filter)
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)

@@ -71,11 +71,16 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.POST("/polling/add", postPollingAdd)
 	r.POST("/polling/update", postPollingUpdate)
 	r.POST("/polling/delete", postPollingDelete)
-	r.POST("/eventlogs", postEventLogs)
-	r.POST("/syslog", postSyslog)
-	r.POST("/snmptrap", postSnmpTrap)
-	r.POST("/netflow", postNetFlow)
-	r.POST("/arp", postArp)
+	// log
+	r.POST("/log/eventlogs", postEventLogs)
+	r.POST("/log/syslog", postSyslog)
+	r.POST("/log/snmptrap", postSnmpTrap)
+	r.POST("/log/netflow", postNetFlow)
+	r.POST("/log/arp", postArp)
+	// report
+	r.GET("/report/devices", getDevices)
+	r.DELETE("/report/device/:id", deleteDevice)
+	r.POST("/report/devices/reset", resetDevices)
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
 }
 

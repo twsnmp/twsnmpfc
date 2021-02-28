@@ -12,6 +12,7 @@ type DeviceEnt struct {
 	ID         string // MAC Addr
 	Name       string
 	IP         string
+	NodeID     string
 	Vendor     string
 	Services   map[string]int64
 	Score      float64
@@ -243,6 +244,10 @@ func GetDevice(id string) *DeviceEnt {
 
 func AddDevice(d *DeviceEnt) {
 	devices[d.ID] = d
+}
+
+func DeleteDevice(id string) {
+	delete(devices, id)
 }
 
 func ForEachDevices(f func(*DeviceEnt) bool) {

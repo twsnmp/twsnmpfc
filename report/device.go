@@ -22,6 +22,24 @@ func ReportDevice(mac, ip string, t int64) {
 	}
 }
 
+func ResetDeviceScore() {
+	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+		d.Penalty = 0
+		setDevicePenalty(d)
+		d.UpdateTime = time.Now().UnixNano()
+		return true
+	})
+	calcDeviceScore()
+}
+
+func findNodeIDFromIP(ip string) string {
+	n := datastore.FindNodeFromIP(ip)
+	if n != nil {
+		return n.ID
+	}
+	return ""
+}
+
 func checkDeviceReport(dr *deviceReportEnt) {
 	ip := dr.IP
 	mac := dr.MAC
@@ -30,6 +48,7 @@ func checkDeviceReport(dr *deviceReportEnt) {
 		if d.IP != ip {
 			d.IP = ip
 			d.Name = findNameFromIP(ip)
+			d.NodeID = findNodeIDFromIP(ip)
 			setDevicePenalty(d)
 			// IPアドレスが変わるもの
 			d.Penalty++
@@ -41,6 +60,7 @@ func checkDeviceReport(dr *deviceReportEnt) {
 	d = &datastore.DeviceEnt{
 		ID:         mac,
 		IP:         ip,
+		NodeID:     findNodeIDFromIP(ip),
 		Name:       findNameFromIP(ip),
 		Vendor:     datastore.FindVendor(mac),
 		FirstTime:  dr.Time,

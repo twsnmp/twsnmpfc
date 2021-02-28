@@ -202,7 +202,7 @@
 <script>
 export default {
   async fetch() {
-    const r = await this.$axios.$post('/api/eventlogs', this.filter)
+    const r = await this.$axios.$post('/api/log/eventlogs', this.filter)
     this.nodeList = r.NodeList
     this.nodeList.unshift({ text: '指定しない', value: '' })
     this.logs = r.EventLogs
