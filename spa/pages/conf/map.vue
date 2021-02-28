@@ -116,17 +116,18 @@
           >
           </v-select>
           <v-row justify="space-around">
-            <v-switch
-              v-model="mapconf.EnableSyslogd"
-              label="syslog受信"
-            ></v-switch>
+            <v-switch v-model="mapconf.EnableSyslogd" label="syslog"></v-switch>
             <v-switch
               v-model="mapconf.EnableTrapd"
-              label="SNMP TRAP受信"
+              label="SNMP TRAP"
             ></v-switch>
             <v-switch
               v-model="mapconf.EnableNetflowd"
-              label="NetFlow受信"
+              label="NetFlow"
+            ></v-switch>
+            <v-switch
+              v-model="mapconf.EnableArpWatch"
+              label="ARP Watch"
             ></v-switch>
           </v-row>
           <v-slider

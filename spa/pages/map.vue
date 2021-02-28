@@ -157,7 +157,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="showNodeDialog" persistent max-width="500px">
+    <v-dialog v-model="showNodeDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
           <span class="headline">ノード情報</span>
