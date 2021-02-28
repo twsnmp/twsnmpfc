@@ -59,6 +59,10 @@
             <v-icon>mdi-delete</v-icon>
             ログ削除
           </v-btn>
+          <v-btn color="error" dark @click="deleteTarget = 'arp'">
+            <v-icon>mdi-delete</v-icon>
+            ARP監視削除
+          </v-btn>
           <v-btn color="error" dark @click="deleteTarget = 'report'">
             <v-icon>mdi-delete</v-icon>
             レポート削除
@@ -204,6 +208,8 @@ export default {
           return 'ai分析結果'
         case 'logs':
           return 'ログ'
+        case 'arp':
+          return 'ARP監視情報'
         default:
           return ''
       }

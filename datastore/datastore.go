@@ -203,7 +203,7 @@ func openDB(path string) error {
 
 func initDB() error {
 	buckets := []string{"config", "nodes", "lines", "pollings", "logs", "pollingLogs",
-		"syslog", "trap", "netflow", "ipfix", "arp", "ai", "report"}
+		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report"}
 	reports := []string{"devices", "users", "flows", "servers", "allows", "dennys"}
 	initConf()
 	return db.Update(func(tx *bbolt.Tx) error {

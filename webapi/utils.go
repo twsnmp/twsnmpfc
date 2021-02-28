@@ -14,6 +14,9 @@ var logLevelMap = map[string]*regexp.Regexp{
 }
 
 func makeTimeFilter(sd, st string, oh int) int64 {
+	if sd == "" {
+		return time.Now().Add(-time.Hour * time.Duration(oh)).UnixNano()
+	}
 	var t time.Time
 	var err error
 	if t, err = time.Parse("2006-01-02T15:04 MST", fmt.Sprintf("%sT%s JST", sd, st)); err != nil {

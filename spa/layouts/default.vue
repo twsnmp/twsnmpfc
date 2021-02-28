@@ -206,6 +206,11 @@ export default {
           title: 'NetFlow',
           to: '/log/netflow',
         },
+        {
+          icon: 'mdi-check-network',
+          title: 'ARP Log',
+          to: '/log/arp',
+        },
       ],
       confMenus: [
         {

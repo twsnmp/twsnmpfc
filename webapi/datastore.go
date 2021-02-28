@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/logger"
 )
 
 type dataStoreWebAPI struct {
@@ -34,6 +35,12 @@ func postBackup(c echo.Context) error {
 
 func deleteLogs(c echo.Context) error {
 	go datastore.DeleteAllLogs()
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func deleteArp(c echo.Context) error {
+	logger.ResetArpTable()
+	datastore.DeleteArp()
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

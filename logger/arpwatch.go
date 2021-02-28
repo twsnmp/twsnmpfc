@@ -18,6 +18,11 @@ var arpTable = make(map[string]string)
 var macToIPTable = make(map[string]string)
 var localCheckAddrs []string
 
+func ResetArpTable() {
+	arpTable = make(map[string]string)
+	macToIPTable = make(map[string]string)
+}
+
 func arpWatch(stopCh chan bool) {
 	log.Println("start arpWacher")
 	datastore.ForEachArp(func(a *datastore.ArpEnt) bool {

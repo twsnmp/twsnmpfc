@@ -7,6 +7,8 @@ const stateList = [
   { text: '正常', color: '#33a02c', icon: 'mdi-check-circle', value: 'normal' },
   { text: '復帰', color: '#1f78b4', icon: 'mdi-autorenew', value: 'repair' },
   { text: '情報', color: '#1f78b4', icon: 'mdi-information', value: 'info' },
+  { text: '新規', color: '#1f78b4', icon: 'mdi-information', value: 'New' },
+  { text: '変化', color: '#e31a1c', icon: 'mdi-autorenew', value: 'Change' },
 ]
 const stateMap = {}
 

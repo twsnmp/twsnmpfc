@@ -503,6 +503,19 @@ func DeleteAllLogs() {
 	}
 }
 
+func DeleteArp() {
+	buckets := []string{"arp", "arplog"}
+	for _, b := range buckets {
+		db.Batch(func(tx *bbolt.Tx) error {
+			if err := tx.DeleteBucket([]byte(b)); err != nil {
+				return err
+			}
+			tx.CreateBucketIfNotExists([]byte(b))
+			return nil
+		})
+	}
+}
+
 func eventLogger(ctx context.Context) {
 	log.Println("Start EventLogger")
 	timer1 := time.NewTicker(time.Minute * 2)
@@ -560,11 +573,12 @@ func SaveLogBuffer(logBuffer []*LogEnt) {
 		log.Printf("saveLogBuffer DB Not open")
 		return
 	}
-	_ = db.Batch(func(tx *bbolt.Tx) error {
+	db.Batch(func(tx *bbolt.Tx) error {
 		syslog := tx.Bucket([]byte("syslog"))
 		netflow := tx.Bucket([]byte("netflow"))
 		ipfix := tx.Bucket([]byte("ipfix"))
 		trap := tx.Bucket([]byte("trap"))
+		arp := tx.Bucket([]byte("arplog"))
 		for _, l := range logBuffer {
 			k := fmt.Sprintf("%016x", l.Time)
 			s, err := json.Marshal(l)
@@ -578,13 +592,15 @@ func SaveLogBuffer(logBuffer []*LogEnt) {
 			compLogSize += int64(len(s))
 			switch l.Type {
 			case "syslog":
-				_ = syslog.Put([]byte(k), []byte(s))
+				syslog.Put([]byte(k), []byte(s))
 			case "netflow":
-				_ = netflow.Put([]byte(k), []byte(s))
+				netflow.Put([]byte(k), []byte(s))
 			case "ipfix":
-				_ = ipfix.Put([]byte(k), []byte(s))
+				ipfix.Put([]byte(k), []byte(s))
 			case "trap":
-				_ = trap.Put([]byte(k), []byte(s))
+				trap.Put([]byte(k), []byte(s))
+			case "arplog":
+				arp.Put([]byte(k), []byte(s))
 			}
 		}
 		return nil

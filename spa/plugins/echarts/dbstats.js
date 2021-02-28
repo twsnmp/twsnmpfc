@@ -131,6 +131,9 @@ const makeDBStatsChart = (div) => {
 const showDBStatsChart = (logs) => {
   const speed = []
   const size = []
+  if (!logs) {
+    return
+  }
   logs.forEach((e) => {
     const t = new Date(e.Time / (1000 * 1000))
     speed.push({
