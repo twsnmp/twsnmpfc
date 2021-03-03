@@ -8,22 +8,22 @@ import (
 	"github.com/twsnmp/twsnmpfc/report"
 )
 
-func getDevices(c echo.Context) error {
-	r := []*datastore.DeviceEnt{}
-	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		r = append(r, d)
+func getUsers(c echo.Context) error {
+	r := []*datastore.UserEnt{}
+	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
+		r = append(r, u)
 		return true
 	})
 	return c.JSON(http.StatusOK, r)
 }
 
-func deleteDevice(c echo.Context) error {
+func deleteUser(c echo.Context) error {
 	id := c.Param("id")
 	datastore.DeleteDevice(id)
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
-func resetDevices(c echo.Context) error {
-	report.ResetDevicesScore()
+func resetUsers(c echo.Context) error {
+	report.ResetUsersScore()
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

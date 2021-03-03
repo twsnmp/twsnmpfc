@@ -76,8 +76,9 @@ func main() {
 		log.Fatalln(err)
 	}
 	w := &webapi.WebAPI{
-		Statik:   http.FileServer(statikFS),
-		Password: password,
+		Statik:        http.FileServer(statikFS),
+		Password:      password,
+		DataStorePath: dataStorePath,
 	}
 	e := echo.New()
 	webapi.Init(e, w)

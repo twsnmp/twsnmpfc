@@ -41,6 +41,7 @@ type MapConfEnt struct {
 	EnableArpWatch bool
 	AILevel        string
 	AIThreshold    int
+	GeoIPInfo      string
 }
 
 type NotifyConfEnt struct {

@@ -22,7 +22,7 @@ func ReportDevice(mac, ip string, t int64) {
 	}
 }
 
-func ResetDeviceScore() {
+func ResetDevicesScore() {
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 		d.Penalty = 0
 		setDevicePenalty(d)

@@ -1,9 +1,12 @@
 package webapi
 
 import (
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -32,6 +35,7 @@ func getMapConf(c echo.Context) error {
 	r.AILevel = datastore.MapConf.AILevel
 	r.AIThreshold = datastore.MapConf.AIThreshold
 	r.BackImage = datastore.MapConf.BackImage
+	r.GeoIPInfo = datastore.MapConf.GeoIPInfo
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -133,5 +137,44 @@ func deleteBackImage(c echo.Context) error {
 	if err := datastore.SaveMapConfToDB(); err != nil {
 		return echo.ErrBadRequest
 	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postGeoIP(c echo.Context) error {
+	f, err := c.FormFile("file")
+	if err != nil {
+		log.Printf("postGeoIP err=%v", err)
+		return echo.ErrBadRequest
+	}
+	if f.Size > 1024*1024*200 {
+		log.Printf("postGeoIP size over=%v", f)
+		return echo.ErrBadRequest
+	}
+	api := c.Get("api").(*WebAPI)
+	dp := filepath.Join(api.DataStorePath, "geoio.uplaod")
+	src, err := f.Open()
+	if err != nil {
+		log.Printf("postGeoIP err=%v", err)
+		return echo.ErrBadRequest
+	}
+	defer src.Close()
+	dst, err := os.Create(dp)
+	if err != nil {
+		log.Printf("postGeoIP err=%v", err)
+		return echo.ErrInternalServerError
+	}
+	defer dst.Close()
+	if _, err = io.Copy(dst, src); err != nil {
+		log.Printf("postGeoIP err=%v", err)
+		return echo.ErrInternalServerError
+	}
+	if err := datastore.UpdateGeoIP(dp); err != nil {
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func deleteGeoIP(c echo.Context) error {
+	datastore.DeleteGeoIP()
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

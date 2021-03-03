@@ -3,13 +3,13 @@
     <v-card min-width="600">
       <v-form>
         <v-card-title primary-title> マップ設定 </v-card-title>
-        <v-alert v-if="$fetchState.error" type="error" dense>
+        <v-alert v-if="$fetchState.error" color="error" dense>
           マップ設定を取得できません
         </v-alert>
-        <v-alert v-model="error" type="error" dense dismissible>
+        <v-alert v-model="error" color="error" dense dismissible>
           マップ設定の保存に失敗しました
         </v-alert>
-        <v-alert v-model="saved" type="primary" dense dismissible>
+        <v-alert v-model="saved" color="primary" dense dismissible>
           マップ設定を保存しました
         </v-alert>
         <v-card-text>
@@ -174,6 +174,10 @@
             <v-icon>mdi-image</v-icon>
             背景画像
           </v-btn>
+          <v-btn color="primary" dark @click="geoipDialog = true">
+            <v-icon>mdi-database-marker</v-icon>
+            GeoIPデータベース
+          </v-btn>
           <v-btn color="primary" dark @click="submit">
             <v-icon>mdi-content-save</v-icon>
             保存
@@ -186,7 +190,7 @@
         <v-card-title>
           <span class="headline">背景画像設定</span>
         </v-card-title>
-        <v-alert v-model="backImageError" type="error" dense dismissible>
+        <v-alert v-model="backImageError" color="error" dense dismissible>
           背景画像設定の保存に失敗しました
         </v-alert>
         <v-card-text>
@@ -253,6 +257,43 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="geoipDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">GeoIPデータベース</span>
+        </v-card-title>
+        <v-alert v-model="geoipSaveError" color="error" dense dismissible>
+          GeoIPデータベースの保存に失敗しました
+        </v-alert>
+        <v-alert v-model="geoipDeleteError" color="error" dense dismissible>
+          GeoIPデータベースの削除に失敗しました
+        </v-alert>
+        <v-card-text>
+          <v-text-field
+            v-model="mapconf.GeoIPInfo"
+            label="GeoIP情報"
+            readonly
+          ></v-text-field>
+          <v-file-input label="GeoIPファイル" @change="selectGeoIPFile">
+          </v-file-input>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn v-if="mapconf.GeoIPInfo" color="error" @click="deleteGeoIP">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="primary" @click="updateGeoIP">
+            <v-icon>mdi-content-save</v-icon>
+            保存
+          </v-btn>
+          <v-btn color="normal" @click="geoipDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -298,6 +339,10 @@ export default {
       saved: false,
       backImageError: false,
       backImageDialog: false,
+      geoipSaveError: false,
+      geoipDeleteError: false,
+      geoipDialog: false,
+      geoipFile: null,
     }
   },
   methods: {
@@ -313,6 +358,9 @@ export default {
     },
     selectFile(f) {
       this.backImage.File = f
+    },
+    selectGeoIPFile(f) {
+      this.geoipFile = f
     },
     doAddBackImage() {
       const formData = new FormData()
@@ -345,6 +393,36 @@ export default {
         })
         .catch((e) => {
           this.backImageError = true
+          this.$fetch()
+        })
+    },
+    updateGeoIP() {
+      const formData = new FormData()
+      formData.append('file', this.geoipFile)
+      this.$axios
+        .$post('/api/conf/geoip', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+        .then((r) => {
+          this.geoipDialog = false
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.geoipSaveError = true
+          this.$fetch()
+        })
+    },
+    deleteGeoIP() {
+      this.$axios
+        .delete('/api/conf/geoip')
+        .then((r) => {
+          this.geoipDialog = false
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.geoipDeleteError = true
           this.$fetch()
         })
     },

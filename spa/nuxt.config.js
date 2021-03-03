@@ -33,6 +33,9 @@ export default {
     '@/plugins/echarts/polling.js',
     '@/plugins/echarts/dbstats.js',
     '@/plugins/echarts/devices.js',
+    '@/plugins/echarts/users.js',
+    '@/plugins/echarts/servers.js',
+    '@/plugins/echarts/flows.js',
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)

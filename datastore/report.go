@@ -274,6 +274,10 @@ func ForEachUsers(f func(*UserEnt) bool) {
 	}
 }
 
+func DeleteUser(id string) {
+	delete(devices, id)
+}
+
 func GetDennyRule(id string) bool {
 	return dennyRules[id]
 }
@@ -298,6 +302,10 @@ func ForEachFlows(f func(*FlowEnt) bool) {
 	}
 }
 
+func DeleteFlow(id string) {
+	delete(flows, id)
+}
+
 func GetServer(id string) *ServerEnt {
 	return servers[id]
 }
@@ -316,6 +324,10 @@ func ForEachServers(f func(*ServerEnt) bool) {
 			return
 		}
 	}
+}
+
+func DeleteServer(id string) {
+	delete(servers, id)
 }
 
 func AddAllowRule(service, server string) error {

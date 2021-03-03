@@ -31,6 +31,26 @@ func ReportFlow(src string, sp int, dst string, dp, prot int, bytes int64, t int
 	}
 }
 
+func ResetFlowsScore() {
+	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
+		f.Penalty = 0
+		setFlowPenalty(f)
+		f.UpdateTime = time.Now().UnixNano()
+		return true
+	})
+	calcFlowScore()
+}
+
+func ResetServersScore() {
+	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
+		s.Penalty = 0
+		setServerPenalty(s)
+		s.UpdateTime = time.Now().UnixNano()
+		return true
+	})
+	calcServerScore()
+}
+
 // getFlowDir : クライアント、サーバー、サービスを決定するアルゴリズム
 func getFlowDir(fr *flowReportEnt) (server, client, service string) {
 	guc1 := datastore.IsGlobalUnicast(fr.SrcIP)

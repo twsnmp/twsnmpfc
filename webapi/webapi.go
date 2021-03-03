@@ -9,8 +9,9 @@ import (
 )
 
 type WebAPI struct {
-	Statik   http.Handler
-	Password string
+	Statik        http.Handler
+	Password      string
+	DataStorePath string
 }
 
 // 削除のためにIDだけ受け取る
@@ -39,6 +40,8 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.POST("/conf/map", postMapConf)
 	r.POST("/conf/backimage", postBackImage)
 	r.DELETE("/conf/backimage", deleteBackImage)
+	r.POST("/conf/geoip", postGeoIP)
+	r.DELETE("/conf/geoip", deleteGeoIP)
 	r.GET("/conf/notify", getNotifyConf)
 	r.POST("/conf/notify", postNotifyConf)
 	r.POST("/notify/test", postNotifyTest)
@@ -81,6 +84,15 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.GET("/report/devices", getDevices)
 	r.DELETE("/report/device/:id", deleteDevice)
 	r.POST("/report/devices/reset", resetDevices)
+	r.GET("/report/users", getUsers)
+	r.DELETE("/report/user/:id", deleteUser)
+	r.POST("/report/users/reset", resetUsers)
+	r.GET("/report/servers", getServers)
+	r.DELETE("/report/server/:id", deleteServer)
+	r.POST("/report/servers/reset", resetServers)
+	r.GET("/report/flows", getFlows)
+	r.DELETE("/report/flow/:id", deleteFlow)
+	r.POST("/report/flows/reset", resetFlows)
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
 }
 

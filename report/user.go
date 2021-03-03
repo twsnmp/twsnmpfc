@@ -26,6 +26,21 @@ func ReportUser(user, server, client string, ok bool, t int64) {
 	}
 }
 
+func ResetUsersScore() {
+	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
+		u.Penalty = 0
+		setUserPenalty(u)
+		u.UpdateTime = time.Now().UnixNano()
+		return true
+	})
+	calcUserScore()
+}
+
+func setUserPenalty(u *datastore.UserEnt) {
+	u.Penalty = int64(u.Total) - int64(u.Ok)
+	u.Penalty += int64(len(u.Clients))
+}
+
 func checkUserReport(ur *userReportEnt) {
 	now := time.Now().UnixNano()
 	id := fmt.Sprintf("%s:%s", ur.UserID, ur.Server)

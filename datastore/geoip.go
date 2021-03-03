@@ -4,16 +4,49 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"path/filepath"
 
 	"github.com/oschwald/geoip2-golang"
 )
 
-func openGeoIP(path string) {
+// UpdateGeoIP : GeoIP DBを更新する
+func UpdateGeoIP(path string) error {
+	DeleteGeoIP()
+	dst := filepath.Join(dspath, "geoip.mmdb")
+	if err := os.Rename(path, dst); err != nil {
+		return err
+	}
+	return openGeoIP(dst)
+}
+
+// DeleteGeoIP : GeoIP DBを削除する
+func DeleteGeoIP() {
+	closeGeoIP()
+	dst := filepath.Join(dspath, "geoip.mmdb")
+	if _, err := os.Stat(dst); err == nil {
+		os.Remove(dst)
+	}
+}
+
+func openGeoIP(path string) error {
 	var err error
 	geoip, err = geoip2.Open(path)
 	if err != nil {
-		log.Printf("OpenGeoIP err=%v", err)
+		log.Printf("openGeoIP err=%v", err)
+	} else {
+		md := geoip.Metadata()
+		MapConf.GeoIPInfo = fmt.Sprintf("%d.%d", md.BinaryFormatMajorVersion, md.BinaryFormatMinorVersion)
 	}
+	return err
+}
+
+func closeGeoIP() {
+	if geoip != nil {
+		geoip.Close()
+	}
+	geoip = nil
+	MapConf.GeoIPInfo = ""
 }
 
 func GetLoc(sip string) string {
