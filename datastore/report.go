@@ -23,51 +23,55 @@ type DeviceEnt struct {
 }
 
 type UserEnt struct {
-	ID         string // User ID + Server
-	UserID     string
-	Server     string
-	ServerName string
-	Clients    map[string]int64
-	Total      int
-	Ok         int
-	Score      float64
-	Penalty    int64
-	FirstTime  int64
-	LastTime   int64
-	UpdateTime int64
+	ID           string // User ID + Server
+	UserID       string
+	Server       string
+	ServerName   string
+	ServerNodeID string
+	Clients      map[string]int64
+	Total        int
+	Ok           int
+	Score        float64
+	Penalty      int64
+	FirstTime    int64
+	LastTime     int64
+	UpdateTime   int64
 }
 
 type ServerEnt struct {
-	ID         string //  ID Server
-	Server     string
-	Services   map[string]int64
-	Count      int64
-	Bytes      int64
-	ServerName string
-	Loc        string
-	Score      float64
-	Penalty    int64
-	FirstTime  int64
-	LastTime   int64
-	UpdateTime int64
+	ID           string //  ID Server
+	Server       string
+	Services     map[string]int64
+	Count        int64
+	Bytes        int64
+	ServerName   string
+	ServerNodeID string
+	Loc          string
+	Score        float64
+	Penalty      int64
+	FirstTime    int64
+	LastTime     int64
+	UpdateTime   int64
 }
 
 type FlowEnt struct {
-	ID         string // ID Client:Server
-	Client     string
-	Server     string
-	Services   map[string]int64
-	Count      int64
-	Bytes      int64
-	ClientName string
-	ClientLoc  string
-	ServerName string
-	ServerLoc  string
-	Score      float64
-	Penalty    int64
-	FirstTime  int64
-	LastTime   int64
-	UpdateTime int64
+	ID           string // ID Client:Server
+	Client       string
+	Server       string
+	Services     map[string]int64
+	Count        int64
+	Bytes        int64
+	ClientName   string
+	ClientNodeID string
+	ClientLoc    string
+	ServerName   string
+	ServerNodeID string
+	ServerLoc    string
+	Score        float64
+	Penalty      int64
+	FirstTime    int64
+	LastTime     int64
+	UpdateTime   int64
 }
 
 // AllowRuleEnt : 特定のサービスは特定のサーバーに限定するルール
@@ -76,7 +80,7 @@ type AllowRuleEnt struct {
 	Servers map[string]bool
 }
 
-func loadReport() error {
+func LoadReport() error {
 	if db == nil {
 		return ErrDBNotOpen
 	}

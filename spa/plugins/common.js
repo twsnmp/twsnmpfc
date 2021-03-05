@@ -173,6 +173,51 @@ const getScoreIconName = (s) => {
   return 'mdi-emoticon-dead-outline'
 }
 
+// Service Name Map
+const serviceNameArray = [
+  ["submission/tcp", "SMTP"],
+  ["http/tcp", "HTTP"],
+  ["https/tcp", "HTTPS"],
+  ["ldap/tcp", "LDAP"],
+  ["ldaps/tcp", "LDAPS"],
+  ["domain/tcp", "DNS"],
+  ["domain/udp", "DNS"],
+  ["snmp/udp", "SNMP"],
+  ["ntp/udp", "NTP"],
+  ["smtp/tcp", "SMTP"],
+  ["pop3/tcp", "POP3"],
+  ["pop3s/tcp", "POP3S"],
+  ["imap/tcp", "IMAP"],
+  ["imaps/tcp", "IMAPS"],
+  ["ssh/tcp", "SSH"],
+  ["telnet/tcp", "TELNET"],
+  ["ftp/tcp", "FTP"],
+  ["bootps/udp", "DHCP"],
+  ["syslog/udp", "SYSLOG"],
+  ["microsoft-ds/tcp", "CIFS"],
+  ["rfb/tcp", "RFB"],
+  ["netbios-ns/udp", "NETBIOS"],
+  ["netbios-dgm/udp", "NETBIOS"],
+  ["icmp", "ICMP"],
+  ["igmp", "IGMP"]
+]
+
+const serviceNameMap = new Map(serviceNameArray);
+
+function getServiceName(s) {
+  const ret = serviceNameMap.get(s);
+  return ret || 'Other'
+}
+
+function getServiceNames(services) {
+  const sns = new Map();
+  for (let i = 0; i < services.length; i++) {
+    const n = getServiceName(services[i]);
+    sns.set(n, true);
+  }
+  return Array.from(sns.keys()).join();
+}
+
 export default (context, inject) => {
   inject('getIconName', getIconName)
   inject('getStateName', getStateName)
@@ -191,4 +236,5 @@ export default (context, inject) => {
   inject('filterEventLevelList', filterEventLevelList)
   inject('filterEventTypeList', filterEventTypeList)
   inject('timeFormat', timeFormat)
+  inject('getServiceNames', getServiceNames)
 }

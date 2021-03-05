@@ -60,6 +60,7 @@ func checkUserReport(ur *userReportEnt) {
 			u.Clients[ur.Client] = 1
 			checkUserClient(u, ur.Client)
 		}
+		u.ServerName, u.ServerNodeID = findNodeInfoFromIP(ur.Server)
 		u.LastTime = ur.Time
 		u.UpdateTime = now
 		return
@@ -68,13 +69,13 @@ func checkUserReport(ur *userReportEnt) {
 		ID:         id,
 		UserID:     ur.UserID,
 		Server:     ur.Server,
-		ServerName: findNameFromIP(ur.Server),
 		Clients:    make(map[string]int64),
 		Total:      1,
 		FirstTime:  ur.Time,
 		LastTime:   ur.Time,
 		UpdateTime: now,
 	}
+	u.ServerName, u.ServerNodeID = findNodeInfoFromIP(ur.Server)
 	u.Clients[ur.Client] = 1
 	checkUserClient(u, ur.Client)
 	if ur.Ok {
@@ -95,7 +96,8 @@ func checkUserClient(u *datastore.UserEnt, client string) {
 		loc = a[0]
 	}
 	// DNSで解決できない場合
-	if client == findNameFromIP(client) {
+	name, _ := findNodeInfoFromIP(client)
+	if client == name {
 		u.Penalty++
 	}
 	if loc != "" && loc != "LOCAL" {

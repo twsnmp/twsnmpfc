@@ -148,12 +148,12 @@ func checkFlowReport(fr *flowReportEnt) {
 		Bytes:      fr.Bytes,
 		ServerLoc:  datastore.GetLoc(server),
 		ClientLoc:  datastore.GetLoc(client),
-		ServerName: findNameFromIP(server),
-		ClientName: findNameFromIP(client),
 		FirstTime:  fr.Time,
 		LastTime:   fr.Time,
 		UpdateTime: now,
 	}
+	f.ClientName, f.ClientNodeID = findNodeInfoFromIP(client)
+	f.ServerName, f.ServerNodeID = findNodeInfoFromIP(server)
 	f.Services[service] = 1
 	setFlowPenalty(f)
 	datastore.AddFlow(f)
@@ -177,13 +177,13 @@ func checkServerReport(server, service string, bytes, t int64) {
 		s.Bytes += bytes
 		s.LastTime = t
 		s.UpdateTime = now
+		s.ServerName, s.ServerNodeID = findNodeInfoFromIP(server)
 		return
 	}
 	s = &datastore.ServerEnt{
 		ID:         id,
 		Server:     server,
 		Services:   make(map[string]int64),
-		ServerName: findNameFromIP(server),
 		Loc:        datastore.GetLoc(server),
 		Count:      1,
 		Bytes:      bytes,
@@ -191,6 +191,7 @@ func checkServerReport(server, service string, bytes, t int64) {
 		LastTime:   t,
 		UpdateTime: now,
 	}
+	s.ServerName, s.ServerNodeID = findNodeInfoFromIP(server)
 	s.Services[service] = 1
 	setServerPenalty(s)
 	datastore.AddServer(s)

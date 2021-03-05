@@ -23,6 +23,7 @@ var (
 )
 
 func StartReport(ctx context.Context) error {
+	datastore.LoadReport()
 	deviceReportCh = make(chan *deviceReportEnt, 100)
 	userReportCh = make(chan *userReportEnt, 100)
 	flowReportCh = make(chan *flowReportEnt, 500)
@@ -331,15 +332,15 @@ func normMACAddr(m string) string {
 	return strings.ToUpper(r)
 }
 
-func findNameFromIP(ip string) string {
-	if names, err := net.LookupAddr(ip); err == nil && len(names) > 0 {
-		return names[0]
-	}
+func findNodeInfoFromIP(ip string) (string, string) {
 	n := datastore.FindNodeFromIP(ip)
 	if n != nil {
-		return n.Name
+		return n.Name, n.ID
 	}
-	return ip
+	if names, err := net.LookupAddr(ip); err == nil && len(names) > 0 {
+		return names[0], ""
+	}
+	return ip, ""
 }
 
 type ipInfoCache struct {
