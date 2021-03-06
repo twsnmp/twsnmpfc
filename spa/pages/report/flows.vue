@@ -55,9 +55,13 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" dark @click="openFlowChart()">
+        <v-btn color="primary" dark @click="openFlowsChart()">
           <v-icon>mdi-map-marker</v-icon>
-          フロー
+          力学モデル
+        </v-btn>
+        <v-btn color="primary" dark @click="openFlows3DChart()">
+          <v-icon>mdi-map-marker</v-icon>
+          地球儀
         </v-btn>
         <v-btn color="error" dark @click="resetDialog = true">
           <v-icon>mdi-calculator</v-icon>
@@ -107,15 +111,30 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="flowChartDialog" persistent max-width="800px">
+    <v-dialog v-model="flowsChartDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
-          <span class="headline">通信フロー</span>
+          <span class="headline">通信フロー（力学モデル）</span>
         </v-card-title>
-        <div id="flowChart" style="width: 800px; height: 400px"></div>
+        <div id="flowsChart" style="width: 800px; height: 400px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="normal" @click="flowChartDialog = false">
+          <v-btn color="normal" @click="flowsChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="flows3DChartDialog" persistent max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">通信フロー（位置情報）</span>
+        </v-card-title>
+        <div id="flows3DChart" style="width: 800px; height: 800px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="flows3DChartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -285,7 +304,8 @@ export default {
       resetDialog: false,
       resetError: false,
       infoDialog: false,
-      flowChartDialog: false,
+      flowsChartDialog: false,
+      flows3DChartDialog: false,
     }
   },
   methods: {
@@ -338,10 +358,16 @@ export default {
         this.$showServicePieChart('servicePieChart', this.selected.ServiceList)
       })
     },
-    openFlowChart() {
-      this.flowChartDialog = true
+    openFlowsChart() {
+      this.flowsChartDialog = true
       this.$nextTick(() => {
-        this.$showFlowsChart('flowChart', this.flows)
+        this.$showFlowsChart('flowsChart', this.flows)
+      })
+    },
+    openFlows3DChart() {
+      this.flows3DChartDialog = true
+      this.$nextTick(() => {
+        this.$showFlows3DChart('flows3DChart', this.flows)
       })
     },
     formatCount(n) {
