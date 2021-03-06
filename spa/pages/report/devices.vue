@@ -16,6 +16,7 @@
         :headers="headers"
         :items="devices"
         :search="search"
+        :items-per-page="15"
         sort-by="Score"
         sort-asec
         dense
@@ -34,14 +35,17 @@
             small
             @click="$router.push({ path: '/node/' + item.NodeID })"
           >
-            mdi-eye
+            mdi-link
           </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
-      <div id="devicesChart" style="width: 100%; height: 400px"></div>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-btn color="primary" dark @click="openVendorChart()">
+          <v-icon>mdi-map-marker</v-icon>
+          メーカー別
+        </v-btn>
         <v-btn color="error" dark @click="resetDialog = true">
           <v-icon>mdi-calculator</v-icon>
           再計算
@@ -92,6 +96,21 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="vendorDialog" persistent max-width="900px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">メーカー別</span>
+        </v-card-title>
+        <div id="vendorChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="vendorDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -112,7 +131,6 @@ export default {
         'MM/dd hh:mm:ss'
       )
     })
-    this.$showDevicesChart(this.devices)
   },
   data() {
     return {
@@ -133,11 +151,8 @@ export default {
       deleteError: false,
       resetDialog: false,
       resetError: false,
+      vendorDialog: false,
     }
-  },
-  mounted() {
-    this.$makeDevicesChart('devicesChart')
-    this.$showDevicesChart(this.devices)
   },
   methods: {
     doDelete() {
@@ -167,6 +182,12 @@ export default {
     openDeleteDialog(item) {
       this.selectedDevice = item
       this.deleteDialog = true
+    },
+    openVendorChart() {
+      this.vendorDialog = true
+      this.$nextTick(() => {
+        this.$showVendorChart('vendorChart', this.devices)
+      })
     },
   },
 }

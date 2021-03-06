@@ -1,10 +1,8 @@
 import * as echarts from 'echarts'
 import { getScoreIndex } from '~/plugins/echarts/utils.js'
 
-let chart
-
-const makeUsersChart = (div) => {
-  chart = echarts.init(document.getElementById(div))
+const showUsersChart = (div, users) => {
+  const chart = echarts.init(document.getElementById(div))
   const option = {
     backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
       {
@@ -113,26 +111,8 @@ const makeUsersChart = (div) => {
       },
     ],
   }
-  chart.setOption(option)
-  chart.resize()
-}
-
-const showUsersChart = (users) => {
   if (!users) {
     return
-  }
-  const opt = {
-    yAxis: {
-      data: [],
-    },
-    series: [
-      { data: [] },
-      { data: [] },
-      { data: [] },
-      { data: [] },
-      { data: [] },
-      { data: [] },
-    ],
   }
   const data = {}
   users.forEach((u) => {
@@ -152,16 +132,15 @@ const showUsersChart = (users) => {
     i = 49
   }
   for (; i >= 0; i--) {
-    opt.yAxis.data.push(keys[i])
+    option.yAxis.data.push(keys[i])
     for (let j = 0; j < 6; j++) {
-      opt.series[j].data.push(data[keys[i]][j + 1])
+      option.series[j].data.push(data[keys[i]][j + 1])
     }
   }
-  chart.setOption(opt)
+  chart.setOption(option)
   chart.resize()
 }
 
 export default (context, inject) => {
-  inject('makeUsersChart', makeUsersChart)
   inject('showUsersChart', showUsersChart)
 }

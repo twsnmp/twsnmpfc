@@ -1,10 +1,8 @@
 import * as echarts from 'echarts'
 import WorldData from 'world-map-geojson'
 
-let chart
-
-const makeServersChart = (div) => {
-  chart = echarts.init(document.getElementById(div))
+const showServerMapChart = (div, servers) => {
+  const chart = echarts.init(document.getElementById(div))
   echarts.registerMap('world', WorldData)
   const option = {
     backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
@@ -81,16 +79,8 @@ const makeServersChart = (div) => {
       },
     ],
   }
-  chart.setOption(option)
-  chart.resize()
-}
-
-const showServersChart = (servers) => {
   if (!servers) {
     return
-  }
-  const opt = {
-    series: [{ data: [] }],
   }
   const locMap = {}
   servers.forEach((s) => {
@@ -110,16 +100,15 @@ const showServersChart = (servers) => {
     if (a.length < 4 || !a[1]) {
       continue
     }
-    opt.series[0].data.push({
+    option.series[0].data.push({
       name: a[3] + '/' + a[0],
       value: [a[2] * 1.0, a[1] * 1.0, locMap[k]],
     })
   }
-  chart.setOption(opt)
+  chart.setOption(option)
   chart.resize()
 }
 
 export default (context, inject) => {
-  inject('makeServersChart', makeServersChart)
-  inject('showServersChart', showServersChart)
+  inject('showServerMapChart', showServerMapChart)
 }

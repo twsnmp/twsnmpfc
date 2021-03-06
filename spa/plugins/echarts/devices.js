@@ -1,10 +1,8 @@
 import * as echarts from 'echarts'
 import { getScoreIndex } from '~/plugins/echarts/utils.js'
 
-let chart
-
-const makeDevicesChart = (div) => {
-  chart = echarts.init(document.getElementById(div))
+const showVendorChart = (div, devices) => {
+  const chart = echarts.init(document.getElementById(div))
   const option = {
     backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
       {
@@ -24,9 +22,7 @@ const makeDevicesChart = (div) => {
     },
     color: ['#e31a1c', '#fb9a99', '#dfdf22', '#a6cee3', '#1f78b4', '#999'],
     legend: {
-      orient: 'vertical',
-      top: 50,
-      right: 10,
+      top: 15,
       textStyle: {
         fontSize: 10,
         color: '#ccc',
@@ -34,10 +30,10 @@ const makeDevicesChart = (div) => {
       data: ['32以下', '33-41', '42-50', '51-66', '67以上', '調査中'],
     },
     grid: {
-      top: '3%',
-      left: '7%',
+      top: '10%',
+      left: '5%',
       right: '10%',
-      bottom: '3%',
+      bottom: '10%',
       containLabel: true,
     },
     xAxis: {
@@ -113,26 +109,8 @@ const makeDevicesChart = (div) => {
       },
     ],
   }
-  chart.setOption(option)
-  chart.resize()
-}
-
-const showDevicesChart = (devices) => {
   if (!devices) {
     return
-  }
-  const opt = {
-    yAxis: {
-      data: [],
-    },
-    series: [
-      { data: [] },
-      { data: [] },
-      { data: [] },
-      { data: [] },
-      { data: [] },
-      { data: [] },
-    ],
   }
   const data = {}
   devices.forEach((d) => {
@@ -152,16 +130,15 @@ const showDevicesChart = (devices) => {
     i = 49
   }
   for (; i >= 0; i--) {
-    opt.yAxis.data.push(keys[i])
+    option.yAxis.data.push(keys[i])
     for (let j = 0; j < 6; j++) {
-      opt.series[j].data.push(data[keys[i]][j + 1])
+      option.series[j].data.push(data[keys[i]][j + 1])
     }
   }
-  chart.setOption(opt)
+  chart.setOption(option)
   chart.resize()
 }
 
 export default (context, inject) => {
-  inject('makeDevicesChart', makeDevicesChart)
-  inject('showDevicesChart', showDevicesChart)
+  inject('showVendorChart', showVendorChart)
 }

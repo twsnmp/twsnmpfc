@@ -16,6 +16,7 @@
         :headers="headers"
         :items="servers"
         :search="search"
+        :items-per-page="15"
         sort-by="Score"
         sort-asec
         dense
@@ -46,9 +47,12 @@
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
-      <div id="serversChart" style="width: 100%; height: 400px"></div>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-btn color="primary" dark @click="openMapChart()">
+          <v-icon>mdi-map-marker</v-icon>
+          サーバー位置
+        </v-btn>
         <v-btn color="error" dark @click="resetDialog = true">
           <v-icon>mdi-calculator</v-icon>
           再計算
@@ -93,6 +97,21 @@
           <v-btn color="normal" @click="resetDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="mapChartDialog" persistent max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">サーバー位置</span>
+        </v-card-title>
+        <div id="mapChart" style="width: 800px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="mapChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -208,26 +227,11 @@ export default {
         'MM/dd hh:mm:ss'
       )
       s.ServiceInfo = this.$getServiceNames(Object.keys(s.Services))
-      const loc = s.Loc.split(',')
-      s.LatLong = ''
-      s.LocInfo = ''
-      s.Country = ''
-      if (loc.length < 3) {
-        return
-      }
-      if (loc[0] === 'LOCAL') {
-        s.LocInfo = 'ローカル'
-        return
-      }
-      s.Country = loc[0]
-      if (loc.length > 3 && loc[3]) {
-        s.LocInfo = loc[0] + '/' + loc[3]
-      } else {
-        s.LocInfo = loc[0]
-      }
-      s.LatLong = loc[1] + ',' + loc[2]
+      const loc = this.$getLocInfo(s.Loc)
+      s.LatLong = loc.LatLong
+      s.LocInfo = loc.LocInfo
+      s.Country = loc.Country
     })
-    this.$showServersChart(this.servers)
   },
   data() {
     return {
@@ -250,11 +254,8 @@ export default {
       deleteError: false,
       resetDialog: false,
       resetError: false,
+      mapChartDialog: false,
     }
-  },
-  mounted() {
-    this.$makeServersChart('serversChart')
-    this.$showServersChart(this.servers)
   },
   methods: {
     doDelete() {
@@ -304,6 +305,12 @@ export default {
       this.infoDialog = true
       this.$nextTick(() => {
         this.$showServicePieChart('servicePieChart', this.selected.ServiceList)
+      })
+    },
+    openMapChart() {
+      this.mapChartDialog = true
+      this.$nextTick(() => {
+        this.$showServerMapChart('mapChart', this.servers)
       })
     },
     formatCount(n) {

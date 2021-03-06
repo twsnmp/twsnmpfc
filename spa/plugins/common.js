@@ -218,6 +218,30 @@ function getServiceNames(services) {
   return Array.from(sns.keys()).join();
 }
 
+function getLocInfo(l) {
+  const loc = l.split(',')
+  const r = {
+    LatLong: '',
+    LocInfo: '',
+    Country: '',
+  }
+  if (loc.length < 3) {
+    return r
+  }
+  if (loc[0] === 'LOCAL') {
+    r.LocInfo = 'ローカル'
+    return r
+  }
+  r.Country = loc[0]
+  if (loc.length > 3 && loc[3]) {
+    r.LocInfo = loc[3] + '/' + loc[0]
+  } else {
+    r.LocInfo = loc[0]
+  }
+  r.LatLong = loc[1] + ',' + loc[2]
+  return r
+}
+
 export default (context, inject) => {
   inject('getIconName', getIconName)
   inject('getStateName', getStateName)
@@ -237,4 +261,5 @@ export default (context, inject) => {
   inject('filterEventTypeList', filterEventTypeList)
   inject('timeFormat', timeFormat)
   inject('getServiceNames', getServiceNames)
+  inject('getLocInfo', getLocInfo)
 }

@@ -16,6 +16,7 @@
         :headers="headers"
         :items="users"
         :search="search"
+        :items-per-page="15"
         sort-by="Score"
         sort-asec
         dense
@@ -32,9 +33,12 @@
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
-      <div id="UsersChart" style="width: 100%; height: 400px"></div>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-btn color="primary" dark @click="openUserChart()">
+          <v-icon>mdi-account-check</v-icon>
+          ユーザー別
+        </v-btn>
         <v-btn color="error" dark @click="resetDialog = true">
           <v-icon>mdi-calculator</v-icon>
           再計算
@@ -50,7 +54,9 @@
         <v-card-title>
           <span class="headline">ユーザー削除</span>
         </v-card-title>
-        <v-card-text> ユーザー{{ selected.Name }}を削除しますか？ </v-card-text>
+        <v-card-text>
+          ユーザー"{{ selected.UserID }}"を削除しますか？
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="error" @click="doDelete">
@@ -83,27 +89,43 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="usersChartDialog" persistent max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ユーザー別</span>
+        </v-card-title>
+        <div id="usersChart" style="width: 800px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="usersChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
 <script>
+import * as numeral from 'numeral'
 export default {
   async fetch() {
     this.users = await this.$axios.$get('/api/report/users')
     if (!this.users) {
       return
     }
-    this.users.forEach((d) => {
-      d.First = this.$timeFormat(
-        new Date(d.FirstTime / (1000 * 1000)),
+    this.users.forEach((u) => {
+      u.First = this.$timeFormat(
+        new Date(u.FirstTime / (1000 * 1000)),
         'MM/dd hh:mm:ss'
       )
-      d.Last = this.$timeFormat(
-        new Date(d.LastTime / (1000 * 1000)),
+      u.Last = this.$timeFormat(
+        new Date(u.LastTime / (1000 * 1000)),
         'MM/dd hh:mm:ss'
       )
+      u.Client = Object.keys(u.Clients).join()
     })
-    this.$showUsersChart(this.users)
   },
   data() {
     return {
@@ -111,13 +133,13 @@ export default {
       headers: [
         { text: '信用スコア', value: 'Score', width: '10%' },
         { text: 'ユーザーID', value: 'UserID', width: '15%' },
-        { text: 'サーバー名', value: 'ServerName', width: '15%' },
-        { text: 'クライアント', value: 'Client', width: '15%' },
+        { text: 'サーバー', value: 'ServerName', width: '15%' },
+        { text: 'クライアント', value: 'Client', width: '10%' },
         { text: '回数', value: 'Total', width: '5%' },
         { text: '成功', value: 'Ok', width: '5%' },
         { text: '初回', value: 'First', width: '15%' },
         { text: '最終', value: 'Last', width: '15%' },
-        { text: '操作', value: 'actions', width: '5%' },
+        { text: '操作', value: 'actions', width: '10%' },
       ],
       users: [],
       selected: {},
@@ -125,16 +147,13 @@ export default {
       deleteError: false,
       resetDialog: false,
       resetError: false,
+      usersChartDialog: false,
     }
-  },
-  mounted() {
-    this.$makeUsersChart('UsersChart')
-    this.$showUsersChart(this.users)
   },
   methods: {
     doDelete() {
       this.$axios
-        .delete('/api/report/device/' + this.selected.ID)
+        .delete('/api/report/user/' + this.selected.ID)
         .then((r) => {
           this.$fetch()
         })
@@ -159,6 +178,18 @@ export default {
     openDeleteDialog(item) {
       this.selected = item
       this.deleteDialog = true
+    },
+    openUserChart() {
+      this.usersChartDialog = true
+      this.$nextTick(() => {
+        this.$showUsersChart('usersChart', this.users)
+      })
+    },
+    formatCount(n) {
+      return numeral(n).format('0,0')
+    },
+    formatBytes(n) {
+      return numeral(n).format('0.000b')
     },
   },
 }

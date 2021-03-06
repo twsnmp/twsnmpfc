@@ -1,9 +1,7 @@
 import * as echarts from 'echarts'
 
-let chart
-
-const makeFlowsChart = (div) => {
-  chart = echarts.init(document.getElementById(div))
+const showFlowsChart = (div, flows) => {
+  const chart = echarts.init(document.getElementById(div))
   const categories = [
     { name: 'RU' },
     { name: 'CN' },
@@ -71,6 +69,44 @@ const makeFlowsChart = (div) => {
       },
     ],
   }
+  if (!flows) {
+    return
+  }
+  const nodes = {}
+  flows.forEach((f) => {
+    if (option.series[0].links.length > 1000) {
+      return
+    }
+    const c = `${f.ClientName}(${f.Client})`
+    const s = `${f.ServerName}(${f.Server})`
+    if (!nodes[s]) {
+      nodes[s] = {
+        name: s,
+        category: getLocCategory(f.ServerLoc),
+        draggable: true,
+        value: f.ServerLoc,
+      }
+    }
+    if (!nodes[c]) {
+      nodes[c] = {
+        name: c,
+        category: getLocCategory(f.ClientLoc),
+        draggable: true,
+        value: f.ClientLoc,
+      }
+    }
+    option.series[0].links.push({
+      source: c,
+      target: s,
+      value: f.ServiceInfo + ':' + f.Score.toFixed(2),
+      lineStyle: {
+        color: getScoreColor(f.Score),
+      },
+    })
+  })
+  for (const k in nodes) {
+    option.series[0].data.push(nodes[k])
+  }
   chart.setOption(option)
   chart.resize()
 }
@@ -113,58 +149,6 @@ const getLocCategory = (l) => {
   return 5
 }
 
-const showFlowsChart = (flows) => {
-  if (!flows) {
-    return
-  }
-  const opt = {
-    series: [
-      {
-        data: [],
-        links: [],
-      },
-    ],
-  }
-  const nodes = {}
-  flows.forEach((f) => {
-    if (opt.series[0].links.length > 1000) {
-      return
-    }
-    const c = `${f.ClientName}(${f.Client})`
-    const s = `${f.ServerName}(${f.Server})`
-    if (!nodes[s]) {
-      nodes[s] = {
-        name: s,
-        category: getLocCategory(f.ServerLoc),
-        draggable: true,
-        value: f.ServerLoc,
-      }
-    }
-    if (!nodes[c]) {
-      nodes[c] = {
-        name: c,
-        category: getLocCategory(f.ClientLoc),
-        draggable: true,
-        value: f.ClientLoc,
-      }
-    }
-    opt.series[0].links.push({
-      source: c,
-      target: s,
-      value: f.ServiceInfo + ':' + f.Score.toFixed(2),
-      lineStyle: {
-        color: getScoreColor(f.Score),
-      },
-    })
-  })
-  for (const k in nodes) {
-    opt.series[0].data.push(nodes[k])
-  }
-  chart.setOption(opt)
-  chart.resize()
-}
-
 export default (context, inject) => {
-  inject('makeFlowsChart', makeFlowsChart)
   inject('showFlowsChart', showFlowsChart)
 }
