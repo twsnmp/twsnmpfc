@@ -180,9 +180,14 @@ export default {
           to: '/report/servers',
         },
         {
-          icon: 'mdi-link',
+          icon: 'mdi-swap-horizontal',
           title: 'フロー',
           to: '/report/flows',
+        },
+        {
+          icon: 'mdi-brain',
+          title: 'AI分析',
+          to: '/report/ai',
         },
       ],
       logMenus: [
@@ -202,7 +207,7 @@ export default {
           to: '/log/snmptrap',
         },
         {
-          icon: 'mdi-check-network',
+          icon: 'mdi-swap-horizontal',
           title: 'NetFlow',
           to: '/log/netflow',
         },
@@ -222,6 +227,16 @@ export default {
           icon: 'mdi-email-send',
           title: '通知',
           to: '/conf/notify',
+        },
+        {
+          icon: 'mdi-file-chart',
+          title: 'レポート',
+          to: '/conf/report',
+        },
+        {
+          icon: 'mdi-brain',
+          title: 'AI分析',
+          to: '/conf/ai',
         },
         {
           icon: 'mdi-av-timer',
