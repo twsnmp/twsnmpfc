@@ -76,9 +76,8 @@ export default {
       headers: [
         { text: 'スコア', value: 'Score', width: '10%' },
         { text: 'ノード', value: 'NodeName', width: '20%' },
-        { text: 'ポーリング', value: 'PollingName', width: '25%' },
+        { text: 'ポーリング', value: 'PollingName', width: '35%' },
         { text: 'データ数', value: 'Count', width: '10%' },
-        { text: 'ロス', value: 'LastLoss', width: '10%' },
         { text: '日時', value: 'Last', width: '15%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],

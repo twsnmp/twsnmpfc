@@ -10,6 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/montanaflynn/stats"
+	"github.com/twsnmp/golof/lof"
+
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -94,19 +97,14 @@ const yasumi = `date,name
 `
 
 func aiBackend(ctx context.Context) {
-	aiBusy := false
-	timer := time.NewTicker(time.Second * 10)
+	timer := time.NewTicker(time.Second * 60)
 	for {
 		select {
 		case <-ctx.Done():
 			timer.Stop()
 			return
-		case <-aiDone:
-			aiBusy = false
 		case <-timer.C:
-			if !aiBusy {
-				aiBusy = checkAI()
-			}
+			checkAI()
 		}
 	}
 }
@@ -128,45 +126,27 @@ func makeYasumiMap() {
 	}
 }
 
-func checkAI() bool {
+func checkAI() {
 	datastore.ForEachPollings(func(pe *datastore.PollingEnt) bool {
 		if pe.LogMode == datastore.LogModeAI {
-			if _, ok := checkAIMap[pe.ID]; !ok {
-				checkAIMap[pe.ID] = 0
-			}
+			doAI(pe)
 		}
 		return true
 	})
-	now := time.Now().Unix()
-	var selPolling *datastore.PollingEnt
-	for id, n := range checkAIMap {
-		p := datastore.GetPolling(id)
-		if p == nil {
-			delete(checkAIMap, id)
-			continue
-		}
-		if n > now {
-			continue
-		}
-		if selPolling == nil || checkAIMap[selPolling.ID] > n {
-			selPolling = p
-		}
-	}
-	if selPolling == nil {
-		return false
-	}
-	checkAIMap[selPolling.ID] = now + 60*5
-	return doAI(selPolling)
 }
 
 func resetAIResult(id string) {
 	if err := datastore.DeleteAIResult(id); err != nil {
 		log.Printf("loadAIReesult  id=%s err=%v", id, err)
 	}
-	checkAIMap[id] = 0
 }
 
+var nextAIReqTimeMap = make(map[string]int64)
+
 func checkLastAIResultTime(id string) bool {
+	if lt, ok := nextAIReqTimeMap[id]; ok {
+		return lt < time.Now().Unix()-60*60
+	}
 	last, err := datastore.LoadAIReesult(id)
 	if err != nil {
 		log.Printf("loadAIReesult  id=%s err=%v", id, err)
@@ -175,12 +155,14 @@ func checkLastAIResultTime(id string) bool {
 		}
 		return true
 	}
+	nextAIReqTimeMap[id] = last.LastTime
 	return last.LastTime < time.Now().Unix()-60*60
 }
 
-func doAI(pe *datastore.PollingEnt) bool {
+func doAI(pe *datastore.PollingEnt) {
 	if !checkLastAIResultTime(pe.ID) {
-		return false
+		log.Printf("doAI Skip time %s %s", pe.ID, pe.Name)
+		return
 	}
 	req := &aiReq{
 		PollingID: pe.ID,
@@ -191,13 +173,12 @@ func doAI(pe *datastore.PollingEnt) bool {
 		makeAIDataFromPolling(req)
 	}
 	if len(req.Data) < 10 {
-		log.Printf("doAI Skip No data %s %s %v", pe.ID, pe.Name, req)
-		return false
+		log.Printf("doAI Skip No data %s %s", pe.ID, pe.Name)
+		return
 	}
+	nextAIReqTimeMap[pe.ID] = time.Now().Unix() + 60*60
 	log.Printf("doAI Start %s %s %d", pe.ID, pe.Name, len(req.Data))
-	// AIのコンテナに送信する
-	go sendAIReq(req)
-	return true
+	go calcAIScore(req)
 }
 
 func makeAIDataFromSyslogPriPolling(req *aiReq) {
@@ -338,17 +319,12 @@ func getStateNum(s string) float64 {
 	return 0.0
 }
 
-func sendAIReq(req *aiReq) {
-	defer func() {
-		// 終了を知らせる
-		aiDone <- true
-	}()
-	var res datastore.AIResult
-	// ここでAI分析コンテナにリクエストを送信する。
+func calcAIScore(req *aiReq) {
+	res := calcLOF(req)
 	if len(res.ScoreData) < 1 {
 		return
 	}
-	if err := datastore.SaveAIResultToDB(&res); err != nil {
+	if err := datastore.SaveAIResultToDB(res); err != nil {
 		log.Printf("saveAIResultToDB err=%v", err)
 		return
 	}
@@ -372,9 +348,47 @@ func sendAIReq(req *aiReq) {
 			})
 		}
 		if datastore.InfluxdbConf.AIScore == "send" {
-			if err := datastore.SendAIScoreToInfluxdb(pe, &res); err != nil {
+			if err := datastore.SendAIScoreToInfluxdb(pe, res); err != nil {
 				log.Printf("sendAIScoreToInfluxdb err=%v", err)
 			}
 		}
 	}
+}
+
+func calcLOF(req *aiReq) *datastore.AIResult {
+	res := datastore.AIResult{}
+	samples := lof.GetSamplesFromFloat64s(req.Data)
+	lofGetter := lof.NewLOF(5)
+	if err := lofGetter.Train(samples); err != nil {
+		log.Printf("calcLOF err=%v", err)
+		return &res
+	}
+	r := make([]float64, len(samples))
+
+	for i, s := range samples {
+		r[i] = lofGetter.GetLOF(s, "fast")
+	}
+	max, err := stats.Max(r)
+	if err != nil || max == 0.0 {
+		return &res
+	}
+	for i := range r {
+		r[i] /= max
+		r[i] = (1.0 - r[i]) * 100.0
+	}
+	mean, err := stats.Mean(r)
+	if err != nil {
+		return &res
+	}
+	sd, err := stats.StandardDeviation(r)
+	if err != nil {
+		return &res
+	}
+	for i := range r {
+		score := ((10 * (float64(r[i]) - mean) / sd) + 50)
+		res.ScoreData = append(res.ScoreData, []float64{float64(req.TimeStamp[i]), score})
+	}
+	res.PollingID = req.PollingID
+	res.LastTime = req.TimeStamp[len(req.TimeStamp)-1]
+	return &res
 }

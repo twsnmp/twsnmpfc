@@ -22,6 +22,7 @@ require (
 	github.com/sleepinggenius2/gosmi v0.3.2
 	github.com/tehmaze/netflow v0.0.0-20170921210347-852af103667f
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
+	github.com/twsnmp/golof v1.0.0
 	github.com/twsnmp/gosnmp v1.28.4
 	github.com/vjeantet/grok v1.0.1
 	github.com/vmware/govmomi v0.24.0

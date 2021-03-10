@@ -9,15 +9,11 @@ var (
 	versionCheckState int
 	versionNum        string
 	yasumiMap         map[string]bool
-	aiDone            chan bool
-	checkAIMap        map[string]int64
 )
 
-func StartBackend(ctx context.Context, versionNum string) error {
-	versionNum = versionNum
+func StartBackend(ctx context.Context, vn string) error {
+	versionNum = vn
 	yasumiMap = make(map[string]bool)
-	checkAIMap = make(map[string]int64)
-	aiDone = make(chan bool)
 	makeYasumiMap()
 	go mapBackend(ctx)
 	go aiBackend(ctx)
