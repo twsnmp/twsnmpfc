@@ -49,7 +49,7 @@ func LoadAIReesult(id string) (*AIResult, error) {
 		return nil
 	})
 	if r == "" {
-		return &ret, nil
+		return &ret, fmt.Errorf("ai result not found id=%v", id)
 	}
 	if err := json.Unmarshal([]byte(r), &ret); err != nil {
 		return &ret, err

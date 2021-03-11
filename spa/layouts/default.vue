@@ -187,7 +187,7 @@ export default {
         {
           icon: 'mdi-brain',
           title: 'AI分析',
-          to: '/report/ai',
+          to: '/report/ailist',
         },
       ],
       logMenus: [

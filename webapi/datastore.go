@@ -48,13 +48,3 @@ func deleteReport(c echo.Context) error {
 	go datastore.ClearAllReport()
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
-
-func deleteAIResult(c echo.Context) error {
-	go func() {
-		datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
-			datastore.DeleteAIResult(p.ID)
-			return true
-		})
-	}()
-	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
-}

@@ -67,7 +67,7 @@
             <v-icon>mdi-delete</v-icon>
             レポート削除
           </v-btn>
-          <v-btn color="error" dark @click="deleteTarget = 'ai'">
+          <v-btn color="error" dark @click="deleteTarget = 'report/ai/all'">
             <v-icon>mdi-delete</v-icon>
             AI分析結果削除
           </v-btn>
@@ -204,7 +204,7 @@ export default {
       switch (this.deleteTarget) {
         case 'report':
           return 'レポート'
-        case 'ai':
+        case 'report/ai/all':
           return 'ai分析結果'
         case 'logs':
           return 'ログ'

@@ -52,7 +52,6 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.POST("/conf/backup", postBackup)
 	r.DELETE("/report", deleteReport)
 	r.DELETE("/logs", deleteLogs)
-	r.DELETE("/ai", deleteAIResult)
 	r.DELETE("/arp", deleteArp)
 	r.GET("/discover", getDiscover)
 	r.POST("/discover/start", postDiscoverStart)
@@ -93,6 +92,10 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.GET("/report/flows", getFlows)
 	r.DELETE("/report/flow/:id", deleteFlow)
 	r.POST("/report/flows/reset", resetFlows)
+	// AI
+	r.GET("/report/ailist", getAIList)
+	r.GET("/report/ai/:id", getAIResult)
+	r.DELETE("/report/ai/:id", deleteAIResult)
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
 }
 

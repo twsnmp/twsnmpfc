@@ -369,12 +369,21 @@ func calcLOF(req *aiReq) *datastore.AIResult {
 		r[i] = lofGetter.GetLOF(s, "fast")
 	}
 	max, err := stats.Max(r)
-	if err != nil || max == 0.0 {
+	if err != nil {
+		return &res
+	}
+	min, err := stats.Min(r)
+	if err != nil {
+		return &res
+	}
+	diff := max - min
+	if diff == 0 {
 		return &res
 	}
 	for i := range r {
-		r[i] /= max
-		r[i] = (1.0 - r[i]) * 100.0
+		r[i] /= diff
+		r[i] *= 100.0
+		// r[i] = (1.0 - r[i]) * 100.0
 	}
 	mean, err := stats.Mean(r)
 	if err != nil {

@@ -39,6 +39,13 @@
           >
             mdi-eye
           </v-icon>
+          <v-icon
+            v-if="item.LogMode > 1"
+            small
+            @click="$router.push({ path: '/report/ai/' + item.ID })"
+          >
+            mdi-brain
+          </v-icon>
           <v-icon small @click="editPollingFunc(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deletePollingFunc(item)"> mdi-delete </v-icon>
         </template>

@@ -42,6 +42,7 @@
           <v-icon small @click="$router.push({ path: '/polling/' + item.ID })">
             mdi-lan-check
           </v-icon>
+          <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -52,6 +53,28 @@
         </v-btn>
       </v-card-actions>
     </v-card>
+    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">AI分析結果削除</span>
+        </v-card-title>
+        <v-card-text>
+          {{ selected.NodeName }}
+          - {{ selected.PollingName }}の分析結果を削除しますか？
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="doDelete">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" @click="deleteDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -59,7 +82,7 @@
 import * as numeral from 'numeral'
 export default {
   async fetch() {
-    this.ai = await this.$axios.$get('/api/report/ai')
+    this.ai = await this.$axios.$get('/api/report/ailist')
     if (!this.ai) {
       return
     }
@@ -82,9 +105,28 @@ export default {
         { text: '操作', value: 'actions', width: '10%' },
       ],
       ai: [],
+      selected: {},
+      deleteDialog: false,
+      deleteError: false,
     }
   },
   methods: {
+    doDelete() {
+      this.$axios
+        .delete('/api/report/ai/' + this.selected.ID)
+        .then((r) => {
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.deleteError = true
+          this.$fetch()
+        })
+      this.deleteDialog = false
+    },
+    openDeleteDialog(item) {
+      this.selected = item
+      this.deleteDialog = true
+    },
     formatCount(n) {
       return numeral(n).format('0,0')
     },
