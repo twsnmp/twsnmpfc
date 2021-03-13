@@ -188,12 +188,12 @@ func openDB(path string) error {
 		db.Close()
 		return err
 	}
-	err = loadConfFromDB()
+	err = loadConf()
 	if err != nil {
 		db.Close()
 		return err
 	}
-	err = loadMapDataFromDB()
+	err = loadMapData()
 	if err != nil {
 		db.Close()
 		return err

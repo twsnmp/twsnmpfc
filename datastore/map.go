@@ -44,30 +44,6 @@ type MapConfEnt struct {
 	GeoIPInfo      string
 }
 
-type NotifyConfEnt struct {
-	MailServer         string
-	User               string
-	Password           string
-	InsecureSkipVerify bool
-	MailTo             string
-	MailFrom           string
-	Subject            string
-	Interval           int
-	Level              string
-	Report             bool
-	CheckUpdate        bool
-	NotifyRepair       bool
-}
-
-type DiscoverConfEnt struct {
-	StartIP string
-	EndIP   string
-	Timeout int
-	Retry   int
-	X       int
-	Y       int
-}
-
 func initConf() {
 	MapConf.Community = "public"
 	MapConf.PollInt = 60
@@ -89,7 +65,7 @@ func initConf() {
 	InfluxdbConf.DB = "twsnmp"
 }
 
-func loadConfFromDB() error {
+func loadConf() error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -140,16 +116,16 @@ func loadConfFromDB() error {
 	}
 	if err == nil && bSaveConf {
 		if err := SaveMapConf(); err != nil {
-			log.Printf("loadConfFromDB err=%v", err)
+			log.Printf("loadConf err=%v", err)
 		}
 		if err := SaveNotifyConf(); err != nil {
-			log.Printf("loadConfFromDB err=%v", err)
+			log.Printf("loadConf err=%v", err)
 		}
 		if err := SaveDiscoverConf(); err != nil {
-			log.Printf("loadConfFromDB err=%v", err)
+			log.Printf("loadConf err=%v", err)
 		}
 		if err := SaveInfluxdbConf(); err != nil {
-			log.Printf("loadConfFromDB err=%v", err)
+			log.Printf("loadConf err=%v", err)
 		}
 	}
 	return err
@@ -218,39 +194,5 @@ func SaveMapConf() error {
 			return fmt.Errorf("bucket config is nil")
 		}
 		return b.Put([]byte("mapConf"), s)
-	})
-}
-
-func SaveNotifyConf() error {
-	if db == nil {
-		return ErrDBNotOpen
-	}
-	s, err := json.Marshal(NotifyConf)
-	if err != nil {
-		return err
-	}
-	return db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("config"))
-		if b == nil {
-			return fmt.Errorf("bucket config is nil")
-		}
-		return b.Put([]byte("notifyConf"), s)
-	})
-}
-
-func SaveDiscoverConf() error {
-	if db == nil {
-		return ErrDBNotOpen
-	}
-	s, err := json.Marshal(DiscoverConf)
-	if err != nil {
-		return err
-	}
-	return db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("config"))
-		if b == nil {
-			return fmt.Errorf("bucket config is nil")
-		}
-		return b.Put([]byte("discoverConf"), s)
 	})
 }

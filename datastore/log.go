@@ -140,7 +140,7 @@ func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
 	})
 }
 
-// --
+// -- ここから下は削除予定
 
 type logFilterParamEnt struct {
 	StartKey    string
@@ -191,43 +191,6 @@ func getFilterParams(filter *LogFilterEnt) *logFilterParamEnt {
 		log.Printf("getFilterParams err=%v", err)
 		ret.RegexFilter = nil
 	}
-	return ret
-}
-
-func GetEventLogs(filter *LogFilterEnt) []EventLogEnt {
-	ret := []EventLogEnt{}
-	if db == nil {
-		return ret
-	}
-	f := getFilterParams(filter)
-	_ = db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("logs"))
-		if b == nil {
-			return nil
-		}
-		c := b.Cursor()
-		i := 0
-		for k, v := c.Seek([]byte(f.StartKey)); k != nil && i < MaxDispLog; k, v = c.Next() {
-			var e EventLogEnt
-			err := json.Unmarshal(v, &e)
-			if err != nil {
-				log.Printf("getEventLogs err=%v", err)
-				continue
-			}
-			if e.Time < f.StartTime {
-				continue
-			}
-			if e.Time > f.EndTime {
-				break
-			}
-			if f.RegexFilter != nil && !f.RegexFilter.Match(v) {
-				continue
-			}
-			ret = append(ret, e)
-			i++
-		}
-		return nil
-	})
 	return ret
 }
 
