@@ -326,7 +326,7 @@ func calcAIScore(req *aiReq) {
 		return
 	}
 	if err := datastore.SaveAIResult(res); err != nil {
-		log.Printf("saveAIResultToDB err=%v", err)
+		log.Printf("saveAIResult err=%v", err)
 		return
 	}
 	pe := datastore.GetPolling(req.PollingID)

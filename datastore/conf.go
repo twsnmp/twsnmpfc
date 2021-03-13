@@ -139,16 +139,16 @@ func loadConfFromDB() error {
 		initSecurityKey()
 	}
 	if err == nil && bSaveConf {
-		if err := SaveMapConfToDB(); err != nil {
+		if err := SaveMapConf(); err != nil {
 			log.Printf("loadConfFromDB err=%v", err)
 		}
-		if err := SaveNotifyConfToDB(); err != nil {
+		if err := SaveNotifyConf(); err != nil {
 			log.Printf("loadConfFromDB err=%v", err)
 		}
-		if err := SaveDiscoverConfToDB(); err != nil {
+		if err := SaveDiscoverConf(); err != nil {
 			log.Printf("loadConfFromDB err=%v", err)
 		}
-		if err := SaveInfluxdbConfToDB(); err != nil {
+		if err := SaveInfluxdbConf(); err != nil {
 			log.Printf("loadConfFromDB err=%v", err)
 		}
 	}
@@ -197,14 +197,14 @@ func initSecurityKey() {
 	MapConf.PublicKey = pubkey
 	MapConf.TLSCert = cert
 	log.Printf("initSecurityKey Public Key=%v", pubkey)
-	_ = SaveMapConfToDB()
+	_ = SaveMapConf()
 }
 
 func GetPrivateKey() string {
 	return security.GetRawKeyPem(MapConf.PrivateKey)
 }
 
-func SaveMapConfToDB() error {
+func SaveMapConf() error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -221,7 +221,7 @@ func SaveMapConfToDB() error {
 	})
 }
 
-func SaveNotifyConfToDB() error {
+func SaveNotifyConf() error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -238,7 +238,7 @@ func SaveNotifyConfToDB() error {
 	})
 }
 
-func SaveDiscoverConfToDB() error {
+func SaveDiscoverConf() error {
 	if db == nil {
 		return ErrDBNotOpen
 	}

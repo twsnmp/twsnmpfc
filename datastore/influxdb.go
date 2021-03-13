@@ -22,7 +22,7 @@ type InfluxdbConfEnt struct {
 	AIScore    string
 }
 
-func SaveInfluxdbConfToDB() error {
+func SaveInfluxdbConf() error {
 	if db == nil {
 		return ErrDBNotOpen
 	}

@@ -31,7 +31,7 @@ func TestDataStore(t *testing.T) {
 	defer os.RemoveAll(td)
 	InitDataStore(ctx, td, statikFS)
 	MapConf.MapName = "Test123"
-	if err := SaveMapConfToDB(); err != nil {
+	if err := SaveMapConf(); err != nil {
 		t.Fatal(err)
 	}
 	defer cancel()

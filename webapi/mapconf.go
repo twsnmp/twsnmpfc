@@ -66,7 +66,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.EnableArpWatch = mc.EnableArpWatch
 	datastore.MapConf.AILevel = mc.AILevel
 	datastore.MapConf.AIThreshold = mc.AIThreshold
-	if err := datastore.SaveMapConfToDB(); err != nil {
+	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
@@ -112,7 +112,7 @@ func postBackImage(c echo.Context) error {
 	datastore.MapConf.BackImage.Y = y
 	datastore.MapConf.BackImage.Width = w
 	datastore.MapConf.BackImage.Height = h
-	if err := datastore.SaveMapConfToDB(); err != nil {
+	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
@@ -134,7 +134,7 @@ func deleteBackImage(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	datastore.MapConf.BackImage.Path = ""
-	if err := datastore.SaveMapConfToDB(); err != nil {
+	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})

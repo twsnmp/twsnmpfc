@@ -28,7 +28,7 @@ func postDiscoverStart(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	datastore.DiscoverConf = *dc
-	if err := datastore.SaveDiscoverConfToDB(); err != nil {
+	if err := datastore.SaveDiscoverConf(); err != nil {
 		log.Printf("postDiscoverStart err=%v", err)
 		return echo.ErrBadRequest
 	}

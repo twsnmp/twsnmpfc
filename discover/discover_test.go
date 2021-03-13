@@ -37,7 +37,7 @@ func TestDiscover(t *testing.T) {
 	defer os.RemoveAll(td)
 	datastore.InitDataStore(ctx, td, statikFS)
 	datastore.MapConf.MapName = "Test123"
-	if err := datastore.SaveMapConfToDB(); err != nil {
+	if err := datastore.SaveMapConf(); err != nil {
 		t.Fatal(err)
 	}
 	datastore.MapConf.Community = "public"

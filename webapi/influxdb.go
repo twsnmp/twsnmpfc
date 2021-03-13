@@ -33,7 +33,7 @@ func postInfluxdb(c echo.Context) error {
 	datastore.InfluxdbConf.Duration = ic.Duration
 	datastore.InfluxdbConf.PollingLog = ic.PollingLog
 	datastore.InfluxdbConf.AIScore = ic.AIScore
-	if err := datastore.SaveInfluxdbConfToDB(); err != nil {
+	if err := datastore.SaveInfluxdbConf(); err != nil {
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})

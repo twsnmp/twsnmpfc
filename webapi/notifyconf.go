@@ -44,7 +44,7 @@ func postNotifyConf(c echo.Context) error {
 	if nc.Password != "" {
 		datastore.NotifyConf.Password = nc.Password
 	}
-	if err := datastore.SaveNotifyConfToDB(); err != nil {
+	if err := datastore.SaveNotifyConf(); err != nil {
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
