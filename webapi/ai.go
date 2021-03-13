@@ -37,7 +37,7 @@ func getAIList(c echo.Context) error {
 		if n == nil {
 			return true
 		}
-		air, err := datastore.LoadAIReesult(p.ID)
+		air, err := datastore.GetAIReesult(p.ID)
 		if err != nil || len(air.ScoreData) < 1 {
 			return true
 		}
@@ -67,7 +67,7 @@ func getAIResult(c echo.Context) error {
 		log.Printf("node not found")
 		return echo.ErrBadRequest
 	}
-	air, err := datastore.LoadAIReesult(p.ID)
+	air, err := datastore.GetAIReesult(p.ID)
 	if err != nil || len(air.ScoreData) < 1 {
 		log.Printf("ai result not found")
 		return echo.ErrNotFound

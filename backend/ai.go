@@ -149,7 +149,7 @@ func checkLastAIResultTime(id string) bool {
 	if lt, ok := nextAIReqTimeMap[id]; ok {
 		return lt < time.Now().Unix()-60*60
 	}
-	last, err := datastore.LoadAIReesult(id)
+	last, err := datastore.GetAIReesult(id)
 	if err != nil {
 		log.Printf("loadAIReesult  id=%s err=%v", id, err)
 		if err = datastore.DeleteAIResult(id); err != nil {
@@ -325,7 +325,7 @@ func calcAIScore(req *aiReq) {
 	if len(res.ScoreData) < 1 {
 		return
 	}
-	if err := datastore.SaveAIResultToDB(res); err != nil {
+	if err := datastore.SaveAIResult(res); err != nil {
 		log.Printf("saveAIResultToDB err=%v", err)
 		return
 	}

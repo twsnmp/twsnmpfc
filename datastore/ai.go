@@ -13,7 +13,7 @@ type AIResult struct {
 	ScoreData [][]float64
 }
 
-func SaveAIResultToDB(res *AIResult) error {
+func SaveAIResult(res *AIResult) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -30,7 +30,7 @@ func SaveAIResultToDB(res *AIResult) error {
 	})
 }
 
-func LoadAIReesult(id string) (*AIResult, error) {
+func GetAIReesult(id string) (*AIResult, error) {
 	var ret AIResult
 	r := ""
 	if db == nil {
