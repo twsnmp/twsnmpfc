@@ -37,24 +37,6 @@ type LineEnt struct {
 	State2     string
 }
 
-type PollingEnt struct {
-	ID         string
-	Name       string
-	NodeID     string
-	Type       string
-	Polling    string
-	Level      string
-	PollInt    int
-	Timeout    int
-	Retry      int
-	LogMode    int
-	NextTime   int64
-	LastTime   int64
-	LastResult string
-	LastVal    float64
-	State      string
-}
-
 func loadMapDataFromDB() error {
 	if db == nil {
 		return ErrDBNotOpen
@@ -258,87 +240,6 @@ func GetLine(lineID string) *LineEnt {
 func ForEachLines(f func(*LineEnt) bool) {
 	lines.Range(func(_, v interface{}) bool {
 		return f(v.(*LineEnt))
-	})
-}
-
-// AddPolling : ポーリングを追加する
-func AddPolling(p *PollingEnt) error {
-	if db == nil {
-		return ErrDBNotOpen
-	}
-	for {
-		p.ID = makeKey()
-		if _, ok := pollings.Load(p.ID); !ok {
-			break
-		}
-	}
-	s, err := json.Marshal(p)
-	if err != nil {
-		return err
-	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("pollings"))
-		return b.Put([]byte(p.ID), s)
-	})
-	pollings.Store(p.ID, p)
-	return nil
-}
-
-func UpdatePolling(p *PollingEnt) error {
-	if db == nil {
-		return ErrDBNotOpen
-	}
-	if _, ok := pollings.Load(p.ID); !ok {
-		return ErrInvalidID
-	}
-	p.LastTime = time.Now().UnixNano()
-	s, err := json.Marshal(p)
-	if err != nil {
-		return err
-	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("pollings"))
-		return b.Put([]byte(p.ID), s)
-	})
-	pollings.Store(p.ID, p)
-	return nil
-}
-
-func DeletePolling(pollingID string) error {
-	if db == nil {
-		return ErrDBNotOpen
-	}
-	if _, ok := pollings.Load(pollingID); !ok {
-		return ErrInvalidID
-	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("pollings"))
-		return b.Delete([]byte(pollingID))
-	})
-	pollings.Delete(pollingID)
-	// Delete lines
-	lines.Range(func(_, p interface{}) bool {
-		l := p.(*LineEnt)
-		if l.PollingID1 == pollingID || l.PollingID2 == pollingID {
-			_ = DeleteLine(l.ID)
-		}
-		return true
-	})
-	ClearPollingLog(pollingID)
-	DeleteAIResult(pollingID)
-	return nil
-}
-
-// GetPolling : ポーリングを取得する
-func GetPolling(id string) *PollingEnt {
-	p, _ := pollings.Load(id)
-	return p.(*PollingEnt)
-}
-
-// ForEachPollings : ポーリング毎の処理
-func ForEachPollings(f func(*PollingEnt) bool) {
-	pollings.Range(func(_, p interface{}) bool {
-		return f(p.(*PollingEnt))
 	})
 }
 
