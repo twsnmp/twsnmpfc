@@ -151,7 +151,7 @@ func sendMail(subject, body string) error {
 	}
 	defer c.Close()
 	if err = c.StartTLS(tlsconfig); err != nil {
-		log.Printf("StartTLS err=%s", err)
+		log.Printf("sendMail err=%s", err)
 	}
 	msv := datastore.NotifyConf.MailServer
 	a := strings.SplitN(datastore.NotifyConf.MailServer, ":", 2)
@@ -161,19 +161,23 @@ func sendMail(subject, body string) error {
 	if datastore.NotifyConf.User != "" {
 		auth := smtp.PlainAuth("", datastore.NotifyConf.User, datastore.NotifyConf.Password, msv)
 		if err = c.Auth(auth); err != nil {
+			log.Printf("sendMail err=%s", err)
 			return err
 		}
 	}
 	if err = c.Mail(datastore.NotifyConf.MailFrom); err != nil {
+		log.Printf("sendMail err=%s", err)
 		return err
 	}
 	for _, rcpt := range strings.Split(datastore.NotifyConf.MailTo, ",") {
 		if err = c.Rcpt(rcpt); err != nil {
+			log.Printf("sendMail err=%s", err)
 			return err
 		}
 	}
 	w, err := c.Data()
 	if err != nil {
+		log.Printf("sendMail err=%s", err)
 		return err
 	}
 	defer w.Close()
@@ -200,11 +204,12 @@ func SendTestMail(testConf *datastore.NotifyConfEnt) error {
 	}
 	c, err := smtp.Dial(testConf.MailServer)
 	if err != nil {
+		log.Printf("SendTestMail err=%s", err)
 		return err
 	}
 	defer c.Close()
 	if err = c.StartTLS(tlsconfig); err != nil {
-		log.Printf("StartTLS err=%s", err)
+		log.Printf("SendTestMail err=%s", err)
 	}
 	msv := testConf.MailServer
 	a := strings.SplitN(testConf.MailServer, ":", 2)
@@ -214,19 +219,23 @@ func SendTestMail(testConf *datastore.NotifyConfEnt) error {
 	if testConf.User != "" {
 		auth := smtp.PlainAuth("", testConf.User, testConf.Password, msv)
 		if err = c.Auth(auth); err != nil {
+			log.Printf("SendTestMail err=%s", err)
 			return err
 		}
 	}
 	if err = c.Mail(testConf.MailFrom); err != nil {
+		log.Printf("SendTestMail err=%s", err)
 		return err
 	}
 	for _, rcpt := range strings.Split(testConf.MailTo, ",") {
 		if err = c.Rcpt(rcpt); err != nil {
+			log.Printf("SendTestMail err=%s", err)
 			return err
 		}
 	}
 	w, err := c.Data()
 	if err != nil {
+		log.Printf("SendTestMail err=%s", err)
 		return err
 	}
 	defer w.Close()

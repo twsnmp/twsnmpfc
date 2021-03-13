@@ -10,7 +10,6 @@ import (
 type AIResult struct {
 	PollingID string
 	LastTime  int64
-	LossData  [][]float64
 	ScoreData [][]float64
 }
 

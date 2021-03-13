@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -86,14 +87,14 @@ func deleteAIResult(c echo.Context) error {
 	if id == "all" {
 		go func() {
 			datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
-				if err := datastore.DeleteAIResult(p.ID); err != nil {
+				if err := backend.DeleteAIResult(p.ID); err != nil {
 					log.Printf("deleteAIResult err=%v", err)
 				}
 				return true
 			})
 		}()
 	} else {
-		if err := datastore.DeleteAIResult(id); err != nil {
+		if err := backend.DeleteAIResult(id); err != nil {
 			log.Printf("deleteAIResult err=%v", err)
 		}
 	}

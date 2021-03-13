@@ -135,10 +135,12 @@ func checkAI() {
 	})
 }
 
-func resetAIResult(id string) {
-	if err := datastore.DeleteAIResult(id); err != nil {
-		log.Printf("loadAIReesult  id=%s err=%v", id, err)
+func DeleteAIResult(id string) error {
+	err := datastore.DeleteAIResult(id)
+	if err == nil {
+		delete(nextAIReqTimeMap, id)
 	}
+	return err
 }
 
 var nextAIReqTimeMap = make(map[string]int64)
@@ -161,7 +163,6 @@ func checkLastAIResultTime(id string) bool {
 
 func doAI(pe *datastore.PollingEnt) {
 	if !checkLastAIResultTime(pe.ID) {
-		log.Printf("doAI Skip time %s %s", pe.ID, pe.Name)
 		return
 	}
 	req := &aiReq{
