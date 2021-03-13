@@ -198,35 +198,14 @@ func checkServerReport(server, service string, bytes, t int64) {
 }
 
 func setFlowPenalty(f *datastore.FlowEnt) {
-	loc := ""
+	f.Penalty = 0
 	if f.ServerLoc != "" {
 		a := strings.Split(f.ServerLoc, ",")
 		if len(a) > 0 {
-			loc = a[0]
-		}
-	}
-	f.Penalty = 0
-	ids := []string{}
-	for service := range f.Services {
-		ids = append(ids, fmt.Sprintf("*:%s:*", service))
-		if loc != "" {
-			ids = append(ids, fmt.Sprintf("*:%s:%s", service, loc))
-		}
-		if as := datastore.GetAllowRule(service); as != nil {
-			if e, ok := as.Servers[f.Server]; !ok {
-				if e {
-					f.Penalty++
-				}
+			loc := a[0]
+			if loc == "RU" {
+				f.Penalty++
 			}
-		}
-	}
-	ids = append(ids, fmt.Sprintf("%s:*:*", f.Server))
-	if loc != "" {
-		ids = append(ids, fmt.Sprintf("*:*:%s", loc))
-	}
-	for _, id := range ids {
-		if datastore.GetDennyRule(id) {
-			f.Penalty++
 		}
 	}
 	// DNSで解決できない場合
@@ -241,32 +220,14 @@ func setFlowPenalty(f *datastore.FlowEnt) {
 }
 
 func setServerPenalty(s *datastore.ServerEnt) {
-	loc := ""
+	s.Penalty = 0
 	if s.Loc != "" {
 		a := strings.Split(s.Loc, ",")
 		if len(a) > 0 {
-			loc = a[0]
-		}
-	}
-	s.Penalty = 0
-	ids := []string{}
-	for service := range s.Services {
-		ids = append(ids, fmt.Sprintf("*:%s:*", service))
-		if loc != "" {
-			ids = append(ids, fmt.Sprintf("*:%s:%s", service, loc))
-		}
-		if as := datastore.GetAllowRule(service); as != nil {
-			if _, ok := as.Servers[s.Server]; !ok {
+			loc := a[0]
+			if loc == "RU" {
 				s.Penalty++
 			}
-		}
-	}
-	if loc != "" {
-		ids = append(ids, fmt.Sprintf("*:*:%s", loc))
-	}
-	for _, id := range ids {
-		if datastore.GetDennyRule(id) {
-			s.Penalty++
 		}
 	}
 	// DNSで解決できない場合

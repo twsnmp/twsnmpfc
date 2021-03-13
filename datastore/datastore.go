@@ -37,12 +37,10 @@ var (
 	lines    sync.Map
 	pollings sync.Map
 	// Report Data on Memory not export
-	devices    map[string]*DeviceEnt
-	users      map[string]*UserEnt
-	flows      map[string]*FlowEnt
-	servers    map[string]*ServerEnt
-	dennyRules map[string]bool
-	allowRules map[string]*AllowRuleEnt
+	devices map[string]*DeviceEnt
+	users   map[string]*UserEnt
+	flows   map[string]*FlowEnt
+	servers map[string]*ServerEnt
 	// MAP Changed check
 	stateChangedNodes sync.Map
 	lastLogAdded      time.Time
@@ -93,8 +91,6 @@ func InitDataStore(ctx context.Context, path string, fs http.FileSystem) error {
 	users = make(map[string]*UserEnt)
 	flows = make(map[string]*FlowEnt)
 	servers = make(map[string]*ServerEnt)
-	dennyRules = make(map[string]bool)
-	allowRules = make(map[string]*AllowRuleEnt)
 	eventLogCh = make(chan *EventLogEnt, 100)
 	protMap = map[int]string{
 		1:   "icmp",
@@ -204,7 +200,7 @@ func openDB(path string) error {
 func initDB() error {
 	buckets := []string{"config", "nodes", "lines", "pollings", "logs", "pollingLogs",
 		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report"}
-	reports := []string{"devices", "users", "flows", "servers", "allows", "dennys"}
+	reports := []string{"devices", "users", "flows", "servers"}
 	initConf()
 	return db.Update(func(tx *bbolt.Tx) error {
 		for _, b := range buckets {

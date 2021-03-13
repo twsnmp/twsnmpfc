@@ -2,8 +2,6 @@ package datastore
 
 import (
 	"encoding/json"
-	"fmt"
-	"strings"
 
 	"go.etcd.io/bbolt"
 )
@@ -74,12 +72,6 @@ type FlowEnt struct {
 	UpdateTime   int64
 }
 
-// AllowRuleEnt : 特定のサービスは特定のサーバーに限定するルール
-type AllowRuleEnt struct {
-	Service string // Service
-	Servers map[string]bool
-}
-
 func LoadReport() error {
 	if db == nil {
 		return ErrDBNotOpen
@@ -122,26 +114,6 @@ func LoadReport() error {
 				var f FlowEnt
 				if err := json.Unmarshal(v, &f); err == nil {
 					flows[f.ID] = &f
-				}
-				return nil
-			})
-		}
-		b = r.Bucket([]byte("dennys"))
-		if b != nil {
-			_ = b.ForEach(func(k, v []byte) error {
-				var en bool
-				if err := json.Unmarshal(v, &en); err == nil {
-					dennyRules[string(k)] = en
-				}
-				return nil
-			})
-		}
-		b = r.Bucket([]byte("allows"))
-		if b != nil {
-			_ = b.ForEach(func(k, v []byte) error {
-				var as AllowRuleEnt
-				if err := json.Unmarshal(v, &as); err == nil {
-					allowRules[as.Service] = &as
 				}
 				return nil
 			})
@@ -282,14 +254,6 @@ func DeleteUser(id string) {
 	delete(devices, id)
 }
 
-func GetDennyRule(id string) bool {
-	return dennyRules[id]
-}
-
-func GetAllowRule(id string) *AllowRuleEnt {
-	return allowRules[id]
-}
-
 func GetFlow(id string) *FlowEnt {
 	return flows[id]
 }
@@ -332,113 +296,6 @@ func ForEachServers(f func(*ServerEnt) bool) {
 
 func DeleteServer(id string) {
 	delete(servers, id)
-}
-
-func AddAllowRule(service, server string) error {
-	if db == nil {
-		return ErrDBNotOpen
-	}
-	as, ok := allowRules[service]
-	if ok {
-		as.Servers[server] = true
-	} else {
-		as = &AllowRuleEnt{
-			Service: service,
-			Servers: map[string]bool{server: true},
-		}
-		allowRules[service] = as
-	}
-	js, err := json.Marshal(as)
-	if err != nil {
-		return err
-	}
-	return db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("report"))
-		if b != nil {
-			r := b.Bucket([]byte("allows"))
-			if r != nil {
-				_ = r.Put([]byte(service), js)
-			}
-		}
-		return nil
-	})
-}
-
-func DeleteAllowRule(id string) error {
-	if db == nil {
-		return ErrDBNotOpen
-	}
-	a := strings.Split(id, ":")
-	if len(a) != 2 {
-		return fmt.Errorf("deleteAllowRule bad id %s", id)
-	}
-	server := a[0]
-	service := a[1]
-	as, ok := allowRules[service]
-	if !ok {
-		return nil
-	}
-	delete(as.Servers, server)
-	js := []byte{}
-	if len(as.Servers) > 0 {
-		js, _ = json.Marshal(as)
-	}
-	return db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("report"))
-		if b != nil {
-			r := b.Bucket([]byte("allows"))
-			if r != nil {
-				if len(js) < 1 {
-					_ = r.Delete([]byte(service))
-				} else {
-					_ = r.Put([]byte(service), js)
-				}
-			}
-		}
-		return nil
-	})
-}
-
-func AddDennyRule(id string) error {
-	if db == nil {
-		return ErrDBNotOpen
-	}
-	dennyRules[id] = true
-	js, err := json.Marshal(dennyRules[id])
-	if err != nil {
-		return err
-	}
-	return db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("report"))
-		if b != nil {
-			r := b.Bucket([]byte("dennys"))
-			if r != nil {
-				_ = r.Put([]byte(id), js)
-			}
-		}
-		return nil
-	})
-}
-
-func deleteDennyRule(id string) error {
-	if db == nil {
-		return ErrDBNotOpen
-	}
-	_, ok := dennyRules[id]
-	if !ok {
-		return nil
-	}
-	delete(dennyRules, id)
-	return db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("report"))
-		if b != nil {
-			r := b.Bucket([]byte("dennys"))
-			if r != nil {
-				_ = r.Delete([]byte(id))
-			}
-		}
-		return nil
-	})
 }
 
 func ClearAllReport() error {

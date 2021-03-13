@@ -94,17 +94,14 @@ func checkUserClient(u *datastore.UserEnt, client string) {
 	a := strings.Split(loc, ",")
 	if len(a) > 0 {
 		loc = a[0]
+		if loc == "RU" {
+			u.Penalty++
+		}
 	}
 	// DNSで解決できない場合
 	name, _ := findNodeInfoFromIP(client)
 	if client == name {
 		u.Penalty++
-	}
-	if loc != "" && loc != "LOCAL" {
-		id := fmt.Sprintf("*:*:%s", loc)
-		if datastore.GetDennyRule(id) {
-			u.Penalty++
-		}
 	}
 	if u.Penalty > 0 {
 		if _, ok := badIPs[client]; !ok {
