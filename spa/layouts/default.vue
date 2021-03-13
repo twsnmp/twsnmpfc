@@ -234,11 +234,6 @@ export default {
           to: '/conf/report',
         },
         {
-          icon: 'mdi-brain',
-          title: 'AI分析',
-          to: '/conf/ai',
-        },
-        {
           icon: 'mdi-av-timer',
           title: 'Influxdb',
           to: '/conf/influxdb',
