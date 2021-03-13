@@ -20,7 +20,7 @@ type DBBackupEnt struct {
 	Generation int
 }
 
-func SaveBackupToDB() error {
+func SaveBackup() error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -59,7 +59,7 @@ func CheckDBBackup() {
 		} else {
 			Backup.Mode = ""
 			nextBackup = 0
-			SaveBackupToDB()
+			SaveBackup()
 		}
 		go func() {
 			log.Printf("Backup start = %s", file)
@@ -68,8 +68,8 @@ func CheckDBBackup() {
 				Level: "info",
 				Event: "バックアップ開始:" + file,
 			})
-			if err := BackupDB(file); err != nil {
-				log.Printf("backupDB err=%v", err)
+			if err := backupDB(file); err != nil {
+				log.Printf("BackupDB err=%v", err)
 				AddEventLog(&EventLogEnt{
 					Type:  "system",
 					Level: "error",
@@ -88,7 +88,7 @@ func CheckDBBackup() {
 	}
 }
 
-func BackupDB(file string) error {
+func backupDB(file string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}

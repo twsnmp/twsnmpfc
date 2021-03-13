@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -30,6 +31,10 @@ func postBackup(c echo.Context) error {
 	datastore.Backup.Mode = bc.Mode
 	datastore.Backup.ConfigOnly = bc.ConfigOnly
 	datastore.Backup.Generation = bc.Generation
+	if err := datastore.SaveBackup(); err != nil {
+		log.Printf("postBackup err=%v", err)
+		return echo.ErrInternalServerError
+	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

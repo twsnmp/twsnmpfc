@@ -41,7 +41,7 @@ func TestDataStore(t *testing.T) {
 	}
 	defer os.Remove(backdb)
 	Backup.ConfigOnly = true
-	err = BackupDB(backdb)
+	err = backupDB(backdb)
 	if err != nil {
 		t.Fatal(err)
 	}
