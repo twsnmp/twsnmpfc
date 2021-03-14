@@ -15,25 +15,22 @@ func doPollingNTP(pe *datastore.PollingEnt) {
 		setPollingError("ntp", pe, fmt.Errorf("node not found"))
 		return
 	}
-	lr := make(map[string]string)
 	ok := false
 	for i := 0; !ok && i <= pe.Retry; i++ {
 		options := ntp.QueryOptions{Timeout: time.Duration(pe.Timeout) * time.Second}
 		r, err := ntp.QueryWithOptions(n.IP, options)
 		if err != nil {
 			log.Printf("doPollingNTP err=%v", err)
-			lr["error"] = fmt.Sprintf("%v", err)
+			pe.Result["error"] = fmt.Sprintf("%v", err)
 			continue
 		}
-		pe.LastVal = float64(r.RTT.Nanoseconds())
-		lr["rtt"] = fmt.Sprintf("%f", pe.LastVal)
-		lr["stratum"] = fmt.Sprintf("%d", r.Stratum)
-		lr["refid"] = fmt.Sprintf("%d", r.ReferenceID)
-		lr["offset"] = fmt.Sprintf("%d", r.ClockOffset.Nanoseconds())
-		delete(lr, "error")
+		pe.Result["rtt"] = float64(r.RTT.Nanoseconds())
+		pe.Result["stratum"] = float64(r.Stratum)
+		pe.Result["refid"] = float64(r.ReferenceID)
+		pe.Result["offset"] = float64(r.ClockOffset.Nanoseconds())
+		delete(pe.Result, "error")
 		ok = true
 	}
-	pe.LastResult = makeLastResult(lr)
 	if ok {
 		setPollingState(pe, "normal")
 		return

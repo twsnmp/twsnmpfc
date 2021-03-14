@@ -26,14 +26,9 @@ func doPollingVMWare(pe *datastore.PollingEnt) {
 		log.Printf("node not found nodeID=%s", pe.NodeID)
 		return
 	}
-	cmds := splitCmd(pe.Polling)
-	if len(cmds) != 3 {
-		setPollingError("vmware", pe, fmt.Errorf("invalid format"))
-		return
-	}
-	mode := cmds[0]
-	target := cmds[1]
-	script := cmds[2]
+	mode := pe.Mode
+	target := pe.Params
+	script := pe.Script
 	us := n.URL
 	if us == "" {
 		us = fmt.Sprintf("https://%s:%s@%s/sdk", n.User, n.Password, n.IP)
@@ -70,23 +65,14 @@ func doPollingVMWare(pe *datastore.PollingEnt) {
 		return
 	}
 	vm := otto.New()
-	lr := make(map[string]string)
 	for k, v := range rMap {
-		_ = vm.Set(k, v)
-		lr[k] = fmt.Sprintf("%f", v)
+		vm.Set(k, v)
+		pe.Result[k] = fmt.Sprintf("%f", v)
 	}
 	value, err := vm.Run(script)
 	if err != nil {
 		setPollingError("vmware", pe, err)
 		return
-	}
-	pe.LastResult = makeLastResult(lr)
-	pe.LastVal = 0.0
-	for k, v := range rMap {
-		if strings.Contains(script, k) {
-			pe.LastVal = v
-			break
-		}
 	}
 	if ok, _ := value.ToBoolean(); !ok {
 		setPollingState(pe, pe.Level)

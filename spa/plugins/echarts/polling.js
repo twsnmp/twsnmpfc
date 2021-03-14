@@ -92,15 +92,15 @@ const makePollingChart = (div) => {
 }
 
 const showPollingChart = (polling, logs, ent) => {
+  if (ent === '') {
+    return
+  }
   const data = []
   const dp = getDispParams(polling, ent)
   logs.forEach((l) => {
     const t = new Date(l.Time / (1000 * 1000))
     const ts = echarts.format.formatTime('yyyy/MM/dd hh:mm:ss', t)
-    let numVal = l.NumVal
-    if (ent !== '') {
-      numVal = getNumVal(ent, l.StrVal)
-    }
+    let numVal = getNumVal(ent, l.Result)
     numVal *= dp.mul
     data.push({
       name: ts,
@@ -128,35 +128,23 @@ const getChartModeName = (mode) => {
   return mode
 }
 
-const setDataList = (s, numValEntList) => {
-  try {
-    JSON.parse(s, (k, v) => {
-      if (
-        !isNaN(parseFloat(v)) &&
-        numValEntList.findIndex((e) => e.value === k) === -1
-      ) {
-        numValEntList.push({
-          text: getChartModeName(k),
-          value: k,
-        })
-      }
-    })
-  } catch (e) {}
+const setDataList = (r, numValEntList) => {
+  Object.keys(r).forEach((k) => {
+    const v = r[k]
+    if (
+      !isNaN(parseFloat(v)) &&
+      numValEntList.findIndex((e) => e.value === k) === -1
+    ) {
+      numValEntList.push({
+        text: getChartModeName(k),
+        value: k,
+      })
+    }
+  })
 }
 
-const getNumVal = (ent, s) => {
-  let ret = 0.0
-  try {
-    JSON.parse(s, (k, v) => {
-      if (k === ent) {
-        const nv = parseFloat(v)
-        if (!isNaN(nv)) {
-          ret = nv
-        }
-      }
-    })
-  } catch (e) {}
-  return ret
+const getNumVal = (key, r) => {
+  return r[key] || 0.0
 }
 
 const chartDispInfo = {

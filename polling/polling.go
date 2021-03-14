@@ -21,12 +21,10 @@ polling.go :ポーリング処理を行う
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"runtime"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -145,7 +143,7 @@ func doPolling(pe *datastore.PollingEnt, startTime int64) {
 		doPollingSnmp(pe)
 	case "tcp":
 		doPollingTCP(pe)
-	case "http", "https":
+	case "http":
 		doPollingHTTP(pe)
 	case "tls":
 		doPollingTLS(pe)
@@ -155,16 +153,6 @@ func doPolling(pe *datastore.PollingEnt, startTime int64) {
 		doPollingNTP(pe)
 	case "syslog", "trap", "netflow", "ipfix":
 		doPollingLog(pe)
-	case "syslogpri":
-		if !doPollingSyslogPri(pe) {
-			return
-		}
-	case "syslogdevice":
-		doPollingSyslogDevice(pe)
-	case "sysloguser":
-		doPollingSyslogUser(pe)
-	case "syslogflow":
-		doPollingSyslogFlow(pe)
 	case "cmd":
 		doPollingCmd(pe)
 	case "ssh":
@@ -221,46 +209,13 @@ func setPollingState(pe *datastore.PollingEnt, newState string) {
 			Level:    pe.State,
 			NodeID:   pe.NodeID,
 			NodeName: nodeName,
-			Event:    fmt.Sprintf("ポーリング状態変化:%s(%s):%s:%f:%s", pe.Name, pe.Type, oldState, pe.LastVal, pe.LastResult),
+			Event:    fmt.Sprintf("ポーリング状態変化:%s(%s):%s", pe.Name, pe.Type, oldState),
 		})
 	}
 }
 
 func setPollingError(s string, pe *datastore.PollingEnt, err error) {
-	log.Printf("%s error Polling=%s err=%v", s, pe.Polling, err)
-	lr := make(map[string]string)
-	lr["error"] = fmt.Sprintf("%v", err)
-	pe.LastResult = makeLastResult(lr)
+	log.Printf("%s error Polling=%s err=%v", s, pe.Name, err)
+	pe.Result["error"] = fmt.Sprintf("%v", err)
 	setPollingState(pe, "unknown")
-}
-
-// Util Functions
-
-func makeLastResult(lr map[string]string) string {
-	if js, err := json.Marshal(lr); err == nil {
-		return string(js)
-	}
-	return ""
-}
-
-func splitCmd(p string) []string {
-	ret := []string{}
-	bInQ := false
-	tmp := ""
-	for _, c := range p {
-		if c == '|' {
-			if !bInQ {
-				ret = append(ret, strings.TrimSpace(tmp))
-				tmp = ""
-			}
-			continue
-		}
-		if c == '`' {
-			bInQ = !bInQ
-		} else {
-			tmp += string(c)
-		}
-	}
-	ret = append(ret, strings.TrimSpace(tmp))
-	return ret
 }

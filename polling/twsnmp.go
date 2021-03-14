@@ -45,23 +45,20 @@ func doPollingTWSNMP(pe *datastore.PollingEnt) {
 		rTime = endTime - startTime
 		ok = true
 	}
-	pe.LastVal = float64(rTime)
+	pe.Result["rtt"] = float64(rTime)
 	if ok {
 		var ms restMapStatusEnt
 		if err := json.Unmarshal([]byte(body), &ms); err != nil {
 			setPollingError("twsnmp", pe, err)
 			return
 		}
-		lr := make(map[string]string)
-		lr["rtt"] = fmt.Sprintf("%f", pe.LastVal)
-		lr["state"] = ms.State
-		lr["high"] = fmt.Sprintf("%d", ms.High)
-		lr["low"] = fmt.Sprintf("%d", ms.Low)
-		lr["warn"] = fmt.Sprintf("%d", ms.Warn)
-		lr["normal"] = fmt.Sprintf("%d", ms.Normal)
-		lr["repair"] = fmt.Sprintf("%d", ms.Repair)
-		lr["dbsize"] = fmt.Sprintf("%d", ms.DBSize)
-		pe.LastResult = makeLastResult(lr)
+		pe.Result["state"] = ms.State
+		pe.Result["high"] = float64(ms.High)
+		pe.Result["low"] = float64(ms.Low)
+		pe.Result["warn"] = float64(ms.Warn)
+		pe.Result["normal"] = float64(ms.Normal)
+		pe.Result["repair"] = float64(ms.Repair)
+		pe.Result["dbsize"] = float64(ms.DBSize)
 		setPollingState(pe, ms.State)
 		return
 	}

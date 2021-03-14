@@ -3,7 +3,6 @@ package polling
 // SNMPのポーリング処理
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -60,35 +59,24 @@ func doPollingSnmp(pe *datastore.PollingEnt) {
 		return
 	}
 	defer agent.Conn.Close()
-	mode, params := parseSnmpPolling(pe.Polling)
+	mode := pe.Mode
 	if mode == "" {
 		setPollingError("snmp", pe, fmt.Errorf("invalid snmp polling"))
 		return
 	}
 	if mode == "sysUpTime" {
 		doPollingSnmpSysUpTime(pe, agent)
-	} else if strings.HasPrefix(mode, "ifOperStatus.") {
-		doPollingSnmpIF(pe, mode, agent)
+	} else if mode == "ifOperStatus" {
+		doPollingSnmpIF(pe, agent)
 	} else if mode == "count" {
-		doPollingSnmpCount(pe, params, agent)
+		doPollingSnmpCount(pe, agent)
 	} else if mode == "process" {
-		doPollingSnmpProcess(pe, params, agent)
+		doPollingSnmpProcess(pe, agent)
 	} else if mode == "stats" {
-		doPollingSnmpStats(pe, params, agent)
+		doPollingSnmpStats(pe, agent)
 	} else {
-		doPollingSnmpGet(pe, mode, params, agent)
+		doPollingSnmpGet(pe, agent)
 	}
-}
-
-func parseSnmpPolling(s string) (string, string) {
-	a := strings.SplitN(s, "|", 2)
-	if len(a) < 1 {
-		return "", ""
-	}
-	if len(a) < 2 {
-		return strings.TrimSpace(a[0]), ""
-	}
-	return strings.TrimSpace(a[0]), strings.TrimSpace(a[1])
 }
 
 func doPollingSnmpSysUpTime(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
@@ -109,39 +97,35 @@ func doPollingSnmpSysUpTime(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		setPollingError("snmpUpTime", pe, fmt.Errorf("uptime==0"))
 		return
 	}
-	lr := make(map[string]string)
-	json.Unmarshal([]byte(pe.LastResult), &lr)
-	if lut, ok := lr["sysUpTime"]; ok {
-		lastUptime, err := strconv.ParseInt(lut, 10, 64)
-		if err != nil {
-			delete(lr, "sysUpTime")
-			pe.LastResult = makeLastResult(lr)
-			setPollingError("snmp", pe, err)
+	if v, ok := pe.Result["sysUpTime"]; ok {
+		lastUptime, ok := v.(float64)
+		if !ok {
+			delete(pe.Result, "sysUpTime")
+			setPollingError("snmp", pe, fmt.Errorf("sysUpTime not floate64"))
 			return
+
 		}
-		pe.LastVal = float64(uptime - lastUptime)
-		lr["sysUpTime"] = fmt.Sprintf("%d", uptime)
-		pe.LastResult = makeLastResult(lr)
-		if lastUptime < uptime {
+		diff := float64(uptime) - lastUptime
+		pe.Result["sysUpTime"] = float64(uptime)
+		pe.Result["deltaSysUpTime"] = diff
+		if lastUptime < float64(uptime) {
 			setPollingState(pe, "normal")
 			return
 		}
 		setPollingState(pe, pe.Level)
 		return
 	}
-	pe.LastVal = 0.0
-	lr["sysUpTime"] = fmt.Sprintf("%d", uptime)
-	pe.LastResult = makeLastResult(lr)
+	pe.Result["sysUpTime"] = float64(uptime)
+	pe.Result["deltaSysUpTime"] = 0.0
 	setPollingState(pe, "unknown")
 }
 
-func doPollingSnmpIF(pe *datastore.PollingEnt, ps string, agent *gosnmp.GoSNMP) {
-	a := strings.Split(ps, ".")
-	if len(a) < 2 {
+func doPollingSnmpIF(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
+	if pe.Params == "" {
 		setPollingError("snmpif", pe, fmt.Errorf("invalid format"))
 		return
 	}
-	oids := []string{datastore.MIBDB.NameToOID("ifOperStatus." + a[1]), datastore.MIBDB.NameToOID("ifAdminStatus." + a[1])}
+	oids := []string{datastore.MIBDB.NameToOID("ifOperStatus." + pe.Params), datastore.MIBDB.NameToOID("ifAdminStatus." + pe.Params)}
 	result, err := agent.Get(oids)
 	if err != nil {
 		setPollingError("snmpif", pe, err)
@@ -156,11 +140,8 @@ func doPollingSnmpIF(pe *datastore.PollingEnt, ps string, agent *gosnmp.GoSNMP) 
 			admin = gosnmp.ToBigInt(variable.Value).Int64()
 		}
 	}
-	lr := make(map[string]string)
-	pe.LastVal = float64(oper)
-	lr["oper"] = fmt.Sprintf("%d", oper)
-	lr["admin"] = fmt.Sprintf("%d", admin)
-	pe.LastResult = makeLastResult(lr)
+	pe.Result["ifOperStatus"] = float64(oper)
+	pe.Result["ifAdminStatus"] = float64(admin)
 	if oper == 1 {
 		setPollingState(pe, "normal")
 		return
@@ -174,14 +155,10 @@ func doPollingSnmpIF(pe *datastore.PollingEnt, ps string, agent *gosnmp.GoSNMP) 
 	setPollingState(pe, "unknown")
 }
 
-func doPollingSnmpGet(pe *datastore.PollingEnt, mode, params string, agent *gosnmp.GoSNMP) {
-	a := strings.Split(params, "|")
-	if len(a) < 2 {
-		setPollingError("snmp", pe, fmt.Errorf("invalid format"))
-		return
-	}
-	names := strings.Split(a[0], ",")
-	script := a[1]
+func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
+	names := strings.Split(pe.Params, ",")
+	script := pe.Script
+	mode := pe.Mode
 	oids := []string{}
 	for _, n := range names {
 		if n == "" {
@@ -204,89 +181,84 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, mode, params string, agent *gosn
 		return
 	}
 	vm := otto.New()
-	lr := make(map[string]string)
+	lr := make(map[string]interface{})
 	for _, variable := range result.Variables {
 		if variable.Name == datastore.MIBDB.NameToOID("sysUpTime.0") {
 			sut := gosnmp.ToBigInt(variable.Value).Uint64()
-			_ = vm.Set("sysUpTime", sut)
-			lr["sysUpTime.0"] = fmt.Sprintf("%d", sut)
-			if mode == "ps" || mode == "delta" {
-				lr["sysUpTime.0_Last"] = fmt.Sprintf("%d", sut)
-			}
+			vm.Set("sysUpTime", sut)
+			lr["sysUpTime"] = float64(sut)
 			continue
 		}
 		n := datastore.MIBDB.OIDToName(variable.Name)
 		vn := getValueName(n)
 		if variable.Type == gosnmp.OctetString {
 			v := variable.Value.(string)
-			_ = vm.Set(vn, v)
+			vm.Set(vn, v)
 			lr[n] = v
 		} else if variable.Type == gosnmp.ObjectIdentifier {
 			v := datastore.MIBDB.OIDToName(variable.Value.(string))
-			_ = vm.Set(vn, v)
+			vm.Set(vn, v)
 			lr[n] = v
 		} else {
 			v := gosnmp.ToBigInt(variable.Value).Uint64()
-			_ = vm.Set(vn, v)
-			lr[n] = fmt.Sprintf("%d", v)
-			if mode == "ps" || mode == "delta" {
-				lr[n+"_Last"] = lr[n]
-			}
+			vm.Set(vn, v)
+			lr[n] = float64(v)
 		}
 	}
 	if mode == "ps" || mode == "delta" {
-		oldlr := make(map[string]string)
-		if err := json.Unmarshal([]byte(pe.LastResult), &oldlr); err != nil || oldlr["error"] != "" {
-			pe.LastResult = makeLastResult(lr)
+		if _, ok := pe.Result["lastTime"]; !ok {
+			lr["lastTime"] = float64(time.Now().UnixNano())
+			pe.Result = lr
 			setPollingState(pe, "unknown")
 			return
 		}
-		nvmap := make(map[string]int64)
 		for k, v := range lr {
-			if strings.HasPrefix(k, "_Last") {
-				continue
-			}
-			if vo, ok := oldlr[k+"_Last"]; ok {
-				if nv, err := strconv.ParseInt(v, 10, 64); err == nil {
-					if nvo, err := strconv.ParseInt(vo, 10, 64); err == nil {
-						nvmap[k] = nv - nvo
+			if vf, ok := v.(float64); ok {
+				if vo, ok := pe.Result[k]; ok {
+					if vof, ok := vo.(float64); ok {
+						d := vf - vof
+						lr[k+"_Delta"] = d
+						vm.Set(k+"_Delta", d)
 					}
 				}
 			}
 		}
-		sut := float64(1.0)
 		if mode == "ps" {
-			v, ok := nvmap["sysUpTime.0"]
-			if !ok || v == 0 {
-				setPollingError("snmp", pe, fmt.Errorf("invalid format %v", nvmap))
-				return
-			}
-			sut = float64(v)
-		}
-		for k, v := range nvmap {
-			lr[k] = fmt.Sprintf("%f", float64(v*100.0)/sut)
-			vn := getValueName(k)
-			_ = vm.Set(vn, float64(v*100.0)/sut)
-		}
-	}
-	value, err := vm.Run(script)
-	if err == nil {
-		if v, err := vm.Get("numVal"); err == nil {
-			if v.IsNumber() {
-				if vf, err := v.ToFloat(); err == nil {
-					pe.LastVal = vf
+			var diff float64
+			if v, ok := lr["sysUpTime_Delta"]; ok {
+				if vf, ok := v.(float64); ok {
+					diff = vf
+				}
+				if diff < 1.0 {
+					setPollingError("snmp", pe, fmt.Errorf("no sysUptime"))
+					return
+				}
+				for k, v := range lr {
+					if strings.HasPrefix(k, "_Delta") {
+						continue
+					}
+					if _, ok := v.(float64); ok {
+						if vd, ok := lr[k+"_Delta"]; ok {
+							if vdf, ok := vd.(float64); ok {
+								lr[k+"_PS"] = float64((vdf * 100.0) / diff)
+								vm.Set(k+"_PS", float64((vdf*100.0)/diff))
+							}
+						}
+					}
 				}
 			}
 		}
-		pe.LastResult = makeLastResult(lr)
-		if ok, _ := value.ToBoolean(); !ok {
-			setPollingState(pe, pe.Level)
+		value, err := vm.Run(script)
+		if err == nil {
+			if ok, _ := value.ToBoolean(); !ok {
+				setPollingState(pe, pe.Level)
+				return
+			}
+			setPollingState(pe, "normal")
 			return
 		}
-		setPollingState(pe, "normal")
-		return
+		setPollingError("snmp", pe, err)
 	}
-	setPollingError("snmp", pe, err)
 }
 
 func getValueName(n string) string {
@@ -294,15 +266,10 @@ func getValueName(n string) string {
 	return (a[0])
 }
 
-func doPollingSnmpCount(pe *datastore.PollingEnt, params string, agent *gosnmp.GoSNMP) {
-	cmds := splitCmd(params)
-	if len(cmds) < 3 {
-		setPollingError("snmp", pe, fmt.Errorf("invalid format"))
-		return
-	}
-	oid := datastore.MIBDB.NameToOID(cmds[0])
-	filter := datastore.ParseFilter(cmds[1])
-	script := cmds[2]
+func doPollingSnmpCount(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
+	oid := datastore.MIBDB.NameToOID(pe.Params)
+	filter := pe.Filter
+	script := pe.Script
 	count := 0
 	var regexFilter *regexp.Regexp
 	var err error
@@ -338,20 +305,10 @@ func doPollingSnmpCount(pe *datastore.PollingEnt, params string, agent *gosnmp.G
 		return
 	}
 	vm := otto.New()
-	lr := make(map[string]string)
-	_ = vm.Set("count", count)
-	lr["count"] = fmt.Sprintf("%d", count)
+	vm.Set("count", count)
+	pe.Result["count"] = float64(count)
 	value, err := vm.Run(script)
 	if err == nil {
-		pe.LastVal = float64(count)
-		if v, err := vm.Get("numVal"); err == nil {
-			if v.IsNumber() {
-				if vf, err := v.ToFloat(); err == nil {
-					pe.LastVal = vf
-				}
-			}
-		}
-		pe.LastResult = makeLastResult(lr)
 		if ok, _ := value.ToBoolean(); !ok {
 			setPollingState(pe, pe.Level)
 			return
@@ -362,15 +319,10 @@ func doPollingSnmpCount(pe *datastore.PollingEnt, params string, agent *gosnmp.G
 	setPollingError("snmp", pe, err)
 }
 
-func doPollingSnmpProcess(pe *datastore.PollingEnt, params string, agent *gosnmp.GoSNMP) {
-	cmds := splitCmd(params)
-	if len(cmds) < 2 {
-		setPollingError("snmp", pe, fmt.Errorf("doPollingSnmpProcess Invalid format"))
-		return
-	}
+func doPollingSnmpProcess(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	oid := datastore.MIBDB.NameToOID("hrSWRunName")
-	filter := datastore.ParseFilter(cmds[0])
-	script := cmds[1]
+	filter := pe.Filter
+	script := pe.Script
 	var regexFilter *regexp.Regexp
 	var err error
 	if filter != "" {
@@ -379,16 +331,13 @@ func doPollingSnmpProcess(pe *datastore.PollingEnt, params string, agent *gosnmp
 			regexFilter = nil
 		}
 	}
-	lastPidSum := 0
-	lr := make(map[string]string)
-	if err := json.Unmarshal([]byte(pe.LastResult), &lr); err == nil {
-		if s, ok := lr["pidSum"]; ok {
-			if n, err := strconv.Atoi(s); err == nil {
-				lastPidSum = n
-			}
+	lastPidSum := 0.0
+	if v, ok := pe.Result["pidSum"]; ok {
+		if vf, ok := v.(float64); ok {
+			lastPidSum = vf
 		}
 	}
-	pidSum := 0
+	pidSum := 0.0
 	count := 0
 	if err := agent.Walk(oid, func(variable gosnmp.SnmpPDU) error {
 		if variable.Type != gosnmp.OctetString {
@@ -407,7 +356,7 @@ func doPollingSnmpProcess(pe *datastore.PollingEnt, params string, agent *gosnmp
 		if regexFilter != nil && !regexFilter.Match([]byte(s)) {
 			return nil
 		}
-		pidSum += pid
+		pidSum += float64(pid)
 		count++
 		return nil
 	}); err != nil {
@@ -419,22 +368,13 @@ func doPollingSnmpProcess(pe *datastore.PollingEnt, params string, agent *gosnmp
 		changed = 1
 	}
 	vm := otto.New()
-	_ = vm.Set("count", count)
-	_ = vm.Set("changed", changed)
-	lr["count"] = fmt.Sprintf("%d", count)
-	lr["pidSum"] = fmt.Sprintf("%d", pidSum)
-	lr["changed"] = fmt.Sprintf("%d", changed)
+	vm.Set("count", count)
+	vm.Set("changed", changed)
+	pe.Result["count"] = float64(count)
+	pe.Result["pidSum"] = float64(pidSum)
+	pe.Result["changed"] = float64(changed)
 	value, err := vm.Run(script)
 	if err == nil {
-		pe.LastVal = float64(count)
-		if v, err := vm.Get("numVal"); err == nil {
-			if v.IsNumber() {
-				if vf, err := v.ToFloat(); err == nil {
-					pe.LastVal = vf
-				}
-			}
-		}
-		pe.LastResult = makeLastResult(lr)
 		if ok, _ := value.ToBoolean(); !ok {
 			setPollingState(pe, pe.Level)
 			return
@@ -445,14 +385,9 @@ func doPollingSnmpProcess(pe *datastore.PollingEnt, params string, agent *gosnmp
 	setPollingError("snmp", pe, err)
 }
 
-func doPollingSnmpStats(pe *datastore.PollingEnt, params string, agent *gosnmp.GoSNMP) {
-	cmds := splitCmd(params)
-	if len(cmds) < 2 {
-		setPollingError("snmp", pe, fmt.Errorf("invalid format"))
-		return
-	}
-	oid := datastore.MIBDB.NameToOID(cmds[0])
-	script := cmds[1]
+func doPollingSnmpStats(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
+	oid := datastore.MIBDB.NameToOID(pe.Params)
+	script := pe.Script
 	count := uint64(0)
 	sum := uint64(0)
 	if err := agent.Walk(oid, func(variable gosnmp.SnmpPDU) error {
@@ -476,24 +411,14 @@ func doPollingSnmpStats(pe *datastore.PollingEnt, params string, agent *gosnmp.G
 	}
 	avg := float64(sum) / float64(count)
 	vm := otto.New()
-	lr := make(map[string]string)
-	_ = vm.Set("count", count)
-	_ = vm.Set("sum", sum)
-	_ = vm.Set("avg", avg)
-	lr["count"] = fmt.Sprintf("%d", count)
-	lr["sum"] = fmt.Sprintf("%d", sum)
-	lr["avg"] = fmt.Sprintf("%f", avg)
+	vm.Set("count", count)
+	vm.Set("sum", sum)
+	vm.Set("avg", avg)
+	pe.Result["count"] = float64(count)
+	pe.Result["sum"] = float64(sum)
+	pe.Result["avg"] = float64(avg)
 	value, err := vm.Run(script)
 	if err == nil {
-		pe.LastVal = float64(avg)
-		if v, err := vm.Get("numVal"); err == nil {
-			if v.IsNumber() {
-				if vf, err := v.ToFloat(); err == nil {
-					pe.LastVal = vf
-				}
-			}
-		}
-		pe.LastResult = makeLastResult(lr)
 		if ok, _ := value.ToBoolean(); !ok {
 			setPollingState(pe, pe.Level)
 			return

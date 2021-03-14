@@ -5,36 +5,37 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math"
 	"time"
 
 	"go.etcd.io/bbolt"
 )
 
 type PollingEnt struct {
-	ID         string
-	Name       string
-	NodeID     string
-	Type       string
-	Polling    string
-	Level      string
-	PollInt    int
-	Timeout    int
-	Retry      int
-	LogMode    int
-	NextTime   int64
-	LastTime   int64
-	LastResult string
-	LastVal    float64
-	State      string
+	ID        string
+	Name      string
+	NodeID    string
+	Type      string
+	Mode      string
+	Params    string
+	Filter    string
+	Extractor string
+	Script    string
+	Level     string
+	PollInt   int
+	Timeout   int
+	Retry     int
+	LogMode   int
+	NextTime  int64
+	LastTime  int64
+	Result    map[string]interface{}
+	State     string
 }
 
 type PollingLogEnt struct {
 	Time      int64 // UnixNano()
 	PollingID string
 	State     string
-	NumVal    float64
-	StrVal    string
+	Result    map[string]interface{}
 }
 
 // AddPolling : ポーリングを追加する
@@ -56,6 +57,7 @@ func AddPolling(p *PollingEnt) error {
 		b := tx.Bucket([]byte("pollings"))
 		return b.Put([]byte(p.ID), s)
 	})
+	p.Result = make(map[string]interface{})
 	pollings.Store(p.ID, p)
 	return nil
 }
@@ -126,8 +128,7 @@ func AddPollingLog(p *PollingEnt) error {
 		Time:      time.Now().UnixNano(),
 		PollingID: p.ID,
 		State:     p.State,
-		NumVal:    p.LastVal,
-		StrVal:    p.LastResult,
+		Result:    p.Result,
 	}
 	s, err := json.Marshal(pl)
 	if err != nil {
@@ -159,9 +160,6 @@ func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bo
 				continue
 			}
 			if e.PollingID != pollingID {
-				continue
-			}
-			if math.IsNaN(e.NumVal) {
 				continue
 			}
 			if e.Time < st {

@@ -58,6 +58,9 @@ func loadMapData() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var p PollingEnt
 				if err := json.Unmarshal(v, &p); err == nil {
+					if p.Result == nil {
+						p.Result = make(map[string]interface{})
+					}
 					pollings.Store(p.ID, &p)
 				}
 				return nil

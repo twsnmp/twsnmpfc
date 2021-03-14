@@ -5,9 +5,7 @@ package polling
 import (
 	"fmt"
 	"log"
-	"math"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,16 +16,11 @@ import (
 )
 
 func doPollingCmd(pe *datastore.PollingEnt) {
-	cmds := splitCmd(pe.Polling)
-	if len(cmds) < 3 {
-		setPollingError("cmd", pe, fmt.Errorf("no cmd"))
-		return
-	}
-	cmd := cmds[0]
-	extractor := cmds[1]
-	script := cmds[2]
+	cmd := pe.Params
+	extractor := pe.Extractor
+	script := pe.Script
 	vm := otto.New()
-	lr := make(map[string]string)
+	pe.Result = make(map[string]interface{})
 	cl := strings.Split(cmd, " ")
 	if len(cl) < 1 {
 		setPollingError("cmd", pe, fmt.Errorf("no cmd"))
@@ -43,20 +36,19 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 		setPollingError("cmd", pe, err)
 		return
 	}
-	lr["lastTime"] = time.Now().Format("2006-01-02T15:04")
-	lr["stderr"] = stderr
-	lr["exitCode"] = fmt.Sprintf("%d", exitStatus.Code)
+	pe.Result["lastTime"] = time.Now().Format("2006-01-02T15:04")
+	pe.Result["stderr"] = stderr
+	pe.Result["exitCode"] = exitStatus.Code
 	if err := vm.Set("exitCode", exitStatus.Code); err != nil {
 		log.Printf("doPollingCmd err=%v", err)
 	}
 	if err := vm.Set("interval", pe.PollInt); err != nil {
 		log.Printf("doPollingCmd err=%v", err)
 	}
-	pe.LastVal = float64(exitStatus.Code)
 	if extractor != "" {
 		grokEnt := datastore.GetGrokEnt(extractor)
 		if grokEnt == nil {
-			log.Printf("No grok pattern Polling=%s", pe.Polling)
+			log.Printf("No grok pattern=%s", extractor)
 			setPollingError("cmd", pe, fmt.Errorf("no grok pattern"))
 			return
 		}
@@ -74,7 +66,7 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 			if err := vm.Set(k, v); err != nil {
 				log.Printf("doPollingCmd err=%v", err)
 			}
-			lr[k] = v
+			pe.Result[k] = v
 		}
 	}
 	value, err := vm.Run(script)
@@ -82,16 +74,6 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 		setPollingError("cmd", pe, err)
 		return
 	}
-	pe.LastVal = 0.0
-	for k, v := range lr {
-		if strings.Contains(script, k) {
-			if fv, err := strconv.ParseFloat(v, 64); err != nil || !math.IsNaN(fv) {
-				pe.LastVal = fv
-			}
-			break
-		}
-	}
-	pe.LastResult = makeLastResult(lr)
 	if ok, _ := value.ToBoolean(); ok {
 		setPollingState(pe, "normal")
 		return

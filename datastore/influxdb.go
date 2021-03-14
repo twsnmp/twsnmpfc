@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
@@ -141,17 +140,11 @@ func SendPollingLogToInfluxdb(pe *PollingEnt) error {
 		"nodeID":    n.ID,
 		"pollingID": pe.ID,
 	}
-	fields := map[string]interface{}{
-		"numVal": pe.LastVal,
-	}
-	lr := make(map[string]string)
-	if err := json.Unmarshal([]byte(pe.LastResult), &lr); err == nil {
-		for k, v := range lr {
-			if fv, err := strconv.ParseFloat(v, 64); err == nil {
-				fields[k] = fv
-			} else {
-				fields[k] = v
-			}
+	fields := map[string]interface{}{}
+	for k, v := range pe.Result {
+		// 数値だけ送信する
+		if fv, ok := v.(float64); ok {
+			fields[k] = fv
 		}
 	}
 	pt, err := client.NewPoint(pe.Name, tags, fields, time.Unix(0, pe.LastTime))

@@ -207,9 +207,18 @@ export default {
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
-      this.$setDataList(e.StrVal, this.numValEntList)
+      e.ResultStr = ''
+      Object.keys(e.Result).forEach((k) => {
+        e.ResultStr += k + '=' + e.Result[k] + ' '
+      })
+      this.$setDataList(e.Result, this.numValEntList)
     })
     this.$showLogStateChart(this.logs)
+    if (!this.selectedValEnt) {
+      if (this.numValEntList) {
+        this.selectedValEnt = this.numValEntList[0].value
+      }
+    }
     this.$showPollingChart(this.polling, this.logs, this.selectedValEnt)
   },
   data() {
@@ -220,8 +229,7 @@ export default {
       headers: [
         { text: '状態', value: 'State', width: '10%' },
         { text: '記録日時', value: 'TimeStr', width: '20%' },
-        { text: '数値結果', value: 'NumVal', width: '10%' },
-        { text: '文字列結果', value: 'StrVal', width: '60%' },
+        { text: '結果', value: 'ResultStr', width: '70%' },
       ],
       filterDialog: false,
       sdMenuShow: false,
@@ -236,7 +244,7 @@ export default {
       },
       logs: [],
       selectedValEnt: '',
-      numValEntList: [{ text: '数値データ', value: '' }],
+      numValEntList: [],
     }
   },
   mounted() {

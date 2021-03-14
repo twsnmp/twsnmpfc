@@ -257,10 +257,10 @@ func addFoundNode(dent *discoverInfoEnt) {
 		NodeName: n.Name,
 		Event:    "自動発見により追加",
 	})
-	addPollingToNode(dent, &n)
+	addBasicPolling(dent, &n)
 }
 
-func addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt) {
+func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 	p := &datastore.PollingEnt{
 		NodeID:  n.ID,
 		Name:    "PING監視",
@@ -278,32 +278,34 @@ func addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 	for s := range dent.ServerList {
 		name := ""
 		ptype := ""
-		polling := ""
+		params := ""
+		mode := ""
 		switch s {
 		case "http":
 			name = "HTTPサーバー監視"
 			ptype = "http"
-			polling = "http://" + n.IP
+			params = "http://" + n.IP
 		case "https":
 			name = "HTTPSサーバー監視"
-			ptype = "https"
-			polling = "https://" + n.IP
+			ptype = "http"
+			mode = "https"
+			params = "https://" + n.IP
 		case "smtp":
 			name = "SMTPサーバー監視"
 			ptype = "tcp"
-			polling = "25"
+			params = "25"
 		case "pop3":
 			name = "POP3サーバー監視"
 			ptype = "tcp"
-			polling = "110"
+			params = "110"
 		case "imap":
 			name = "IMAPサーバー監視"
 			ptype = "tcp"
-			polling = "143"
+			params = "143"
 		case "ssh":
 			name = "IMAPサーバー監視"
 			ptype = "tcp"
-			polling = "22"
+			params = "22"
 		default:
 			continue
 		}
@@ -311,7 +313,8 @@ func addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			NodeID:  n.ID,
 			Name:    name,
 			Type:    ptype,
-			Polling: polling,
+			Mode:    mode,
+			Params:  params,
 			Level:   "low",
 			State:   "unknown",
 			PollInt: datastore.MapConf.PollInt,
@@ -330,7 +333,7 @@ func addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 		NodeID:  n.ID,
 		Name:    "sysUptime監視",
 		Type:    "snmp",
-		Polling: "sysUpTime",
+		Mode:    "sysUpTime",
 		Level:   "low",
 		State:   "unknown",
 		PollInt: datastore.MapConf.PollInt,
@@ -346,7 +349,8 @@ func addPollingToNode(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			NodeID:  n.ID,
 			Type:    "snmp",
 			Name:    "IF " + i + "監視",
-			Polling: "ifOperStatus." + i,
+			Mode:    "ifOperStatus",
+			Params:  i,
 			Level:   "low",
 			State:   "unknown",
 			PollInt: datastore.MapConf.PollInt,

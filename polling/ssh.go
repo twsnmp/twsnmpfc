@@ -5,9 +5,7 @@ package polling
 import (
 	"fmt"
 	"log"
-	"math"
 	"net"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,20 +16,14 @@ import (
 )
 
 func doPollingSSH(pe *datastore.PollingEnt) {
-	cmds := splitCmd(pe.Polling)
-	if len(cmds) < 3 {
-		setPollingError("ssh", pe, fmt.Errorf("no cmd"))
-		return
-	}
-	cmd := cmds[0]
-	extractor := cmds[1]
-	script := cmds[2]
+	cmd := pe.Params
+	extractor := pe.Extractor
+	script := pe.Script
 	port := "22"
-	if len(cmds) > 3 {
-		port = cmds[3]
+	if pe.Mode != "" {
+		port = pe.Mode
 	}
 	vm := otto.New()
-	lr := make(map[string]string)
 	cl := strings.Split(cmd, " ")
 	if len(cl) < 1 {
 		setPollingError("ssh", pe, fmt.Errorf("no cmd"))
@@ -39,45 +31,36 @@ func doPollingSSH(pe *datastore.PollingEnt) {
 	}
 	client, session, err := sshConnectToHost(pe, port)
 	if err != nil {
-		log.Printf("ssh error Polling=%s err=%v", pe.Polling, err)
-		lr["error"] = fmt.Sprintf("%v", err)
-		pe.LastResult = makeLastResult(lr)
-		pe.LastVal = 0.0
-		setPollingState(pe, pe.Level)
+		setPollingError("ssh", pe, err)
 		return
 	}
 	defer func() {
 		session.Close()
 		client.Close()
 	}()
+	exitCode := 0
 	out, err := session.CombinedOutput(cmd)
 	if err != nil {
 		if e, ok := err.(*ssh.ExitError); ok {
-			pe.LastVal = float64(e.Waitmsg.ExitStatus())
+			exitCode = e.Waitmsg.ExitStatus()
 		} else {
-			log.Printf("ssh error Polling=%s err=%v", pe.Polling, err)
-			lr["error"] = fmt.Sprintf("%v", err)
-			pe.LastResult = makeLastResult(lr)
-			pe.LastVal = 0.0
-			setPollingState(pe, pe.Level)
+			setPollingError("ssh", pe, err)
 			return
 		}
-	} else {
-		pe.LastVal = 0.0
 	}
-	lr["lastTime"] = time.Now().Format("2006-01-02T15:04")
-	lr["exitCode"] = fmt.Sprintf("%d", int(pe.LastVal))
-	_ = vm.Set("interval", pe.PollInt)
-	_ = vm.Set("exitCode", int(pe.LastVal))
+	pe.Result["lastTime"] = time.Now().Format("2006-01-02T15:04")
+	pe.Result["exitCode"] = float64(exitCode)
+	vm.Set("interval", pe.PollInt)
+	vm.Set("exitCode", exitCode)
 	if extractor != "" {
 		grokEnt := datastore.GetGrokEnt(extractor)
 		if grokEnt == nil {
-			log.Printf("No grok pattern Polling=%s", pe.Polling)
+			log.Printf("No grok pattern Polling=%s", pe.Name)
 			setPollingError("ssh", pe, fmt.Errorf("no grok pattern"))
 			return
 		}
 		g, _ := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
-		_ = g.AddPattern(extractor, grokEnt.Pat)
+		g.AddPattern(extractor, grokEnt.Pat)
 		cap := fmt.Sprintf("%%{%s}", extractor)
 		values, err := g.Parse(cap, string(out))
 		if err != nil {
@@ -85,8 +68,8 @@ func doPollingSSH(pe *datastore.PollingEnt) {
 			return
 		}
 		for k, v := range values {
-			_ = vm.Set(k, v)
-			lr[k] = v
+			vm.Set(k, v)
+			pe.Result[k] = v
 		}
 	}
 	value, err := vm.Run(script)
@@ -94,16 +77,6 @@ func doPollingSSH(pe *datastore.PollingEnt) {
 		setPollingError("ssh", pe, err)
 		return
 	}
-	pe.LastVal = 0.0
-	for k, v := range lr {
-		if strings.Contains(script, k) {
-			if fv, err := strconv.ParseFloat(v, 64); err != nil || !math.IsNaN(fv) {
-				pe.LastVal = fv
-			}
-			break
-		}
-	}
-	pe.LastResult = makeLastResult(lr)
 	if ok, _ := value.ToBoolean(); ok {
 		setPollingState(pe, "normal")
 		return

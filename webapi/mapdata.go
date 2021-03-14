@@ -242,7 +242,11 @@ func postPollingUpdate(c echo.Context) error {
 	p.Name = pu.Name
 	p.NodeID = pu.NodeID
 	p.Type = pu.Type
-	p.Polling = pu.Polling
+	p.Params = pu.Params
+	p.Mode = pu.Mode
+	p.Script = pu.Script
+	p.Extractor = pu.Extractor
+	p.Filter = pu.Filter
 	p.Level = pu.Level
 	p.PollInt = pu.PollInt
 	p.Timeout = pu.Timeout

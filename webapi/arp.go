@@ -42,7 +42,6 @@ func postArp(c echo.Context) error {
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
 	datastore.ForEachLog(st, et, "arplog", func(l *datastore.LogEnt) bool {
-		log.Printf("arp=%v", l)
 		a := strings.Split(l.Log, ",")
 		if len(a) < 3 {
 			return true

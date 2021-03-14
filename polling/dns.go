@@ -1,7 +1,6 @@
 package polling
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"strings"
@@ -18,86 +17,79 @@ func doPollingDNS(pe *datastore.PollingEnt) {
 		setPollingError("dns", pe, fmt.Errorf("node not found"))
 		return
 	}
-	cmds := splitCmd(pe.Polling)
-	mode := "ipaddr"
-	target := pe.Polling
-	script := ""
-	if len(cmds) == 3 {
-		mode = cmds[0]
-		target = cmds[1]
-		script = cmds[2]
+	mode := pe.Mode
+	if mode == "" {
+		mode = "ipaddr"
 	}
+	target := pe.Params
+	script := pe.Script
 	ok := false
 	var rTime int64
 	var out []string
 	var err error
-	lr := make(map[string]string)
 	for i := 0; !ok && i <= pe.Retry; i++ {
 		startTime := time.Now().UnixNano()
 		if out, err = doLookup(mode, target); err != nil || len(out) < 1 {
-			lr["error"] = fmt.Sprintf("%v", err)
-			log.Printf("doLookup err=%v %v", err, cmds)
+			pe.Result["error"] = fmt.Sprintf("%v", err)
+			log.Printf("doLookup err=%v %s %s", err, mode, target)
 			continue
 		}
 		endTime := time.Now().UnixNano()
 		rTime = endTime - startTime
 		ok = true
-		delete(lr, "error")
+		delete(pe.Result, "error")
 	}
-	oldlr := make(map[string]string)
-	_ = json.Unmarshal([]byte(pe.LastResult), &oldlr)
 	if !ok {
-		for k, v := range oldlr {
-			if k != "error" {
-				lr[k] = v
-			}
-		}
-		pe.LastResult = makeLastResult(lr)
-		pe.LastVal = 0.0
+		pe.Result["rtt"] = 0.0
+		pe.Result["count"] = 0.0
+		pe.Result["ip"] = ""
 		setPollingState(pe, pe.Level)
 		return
 	}
-	pe.LastVal = float64(rTime)
 	vm := otto.New()
-	_ = vm.Set("rtt", pe.LastVal)
+	_ = vm.Set("rtt", rTime)
 	_ = vm.Set("count", len(out))
-	lr["rtt"] = fmt.Sprintf("%f", pe.LastVal)
-	lr["count"] = fmt.Sprintf("%d", len(out))
+	pe.Result["rtt"] = rTime
+	pe.Result["count"] = float64(len(out))
 	switch mode {
 	case "ipaddr":
-		lr["ip"] = out[0]
-		pe.LastResult = makeLastResult(lr)
-		if oldlr["ip"] != "" && oldlr["ip"] != lr["ip"] {
+		oldip := ""
+		if v, ok := pe.Result["ip"]; ok {
+			if s, ok := v.(string); ok {
+				oldip = s
+			}
+		}
+		pe.Result["ip"] = out[0]
+		if oldip != "" && oldip != pe.Result["ip"] {
 			setPollingState(pe, pe.Level)
 			return
 		}
 		setPollingState(pe, "normal")
 		return
 	case "addr":
-		_ = vm.Set("addr", out)
-		lr["addr"] = strings.Join(out, ",")
+		vm.Set("addr", out)
+		pe.Result["addr"] = strings.Join(out, ",")
 	case "host":
-		_ = vm.Set("host", out)
-		lr["host"] = strings.Join(out, ",")
+		vm.Set("host", out)
+		pe.Result["host"] = strings.Join(out, ",")
 	case "mx":
-		_ = vm.Set("mx", out)
-		lr["mx"] = strings.Join(out, ",")
+		vm.Set("mx", out)
+		pe.Result["mx"] = strings.Join(out, ",")
 	case "ns":
-		_ = vm.Set("ns", out)
-		lr["ns"] = strings.Join(out, ",")
+		vm.Set("ns", out)
+		pe.Result["ns"] = strings.Join(out, ",")
 	case "txt":
-		_ = vm.Set("txt", out)
-		lr["txt"] = strings.Join(out, ",")
+		vm.Set("txt", out)
+		pe.Result["txt"] = strings.Join(out, ",")
 	case "cname":
-		_ = vm.Set("cname", out[0])
-		lr["cname"] = out[0]
+		vm.Set("cname", out[0])
+		pe.Result["cname"] = out[0]
 	}
 	value, err := vm.Run(script)
 	if err != nil {
 		setPollingError("dns", pe, fmt.Errorf("%v", err))
 		return
 	}
-	pe.LastResult = makeLastResult(lr)
 	if ok, _ := value.ToBoolean(); ok {
 		setPollingState(pe, "normal")
 		return

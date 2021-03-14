@@ -46,7 +46,6 @@ type LogFilterEnt struct {
 
 func AddEventLog(e *EventLogEnt) {
 	e.Time = time.Now().UnixNano()
-	log.Printf("log=%v", e)
 	eventLogCh <- e
 }
 

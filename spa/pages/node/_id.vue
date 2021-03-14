@@ -97,18 +97,33 @@
         </v-card-title>
         <v-card-text>
           <v-text-field v-model="editPolling.Name" label="名前"></v-text-field>
-          <v-select v-model="editPolling.Type" :items="$typeList" label="種別">
-          </v-select>
           <v-select
             v-model="editPolling.Level"
             :items="$levelList"
             label="レベル"
           >
           </v-select>
+          <v-select v-model="editPolling.Type" :items="$typeList" label="種別">
+          </v-select>
           <v-text-field
-            v-model="editPolling.Polling"
-            label="定義"
+            v-model="editPolling.Params"
+            label="パラメータ"
           ></v-text-field>
+          <v-text-field
+            v-model="editPolling.Filter"
+            label="フィルター"
+          ></v-text-field>
+          <v-text-field
+            v-model="editPolling.Extractor"
+            label="抽出パターン"
+          ></v-text-field>
+          <v-textarea
+            v-model="editPolling.Script"
+            label="判定スクリプト"
+            clearable
+            rows="3"
+            clear-icon="mdi-close-circle"
+          ></v-textarea>
           <v-slider
             v-model="editPolling.PollInt"
             label="ポーリング間隔(Sec)"
@@ -217,18 +232,18 @@ export default {
     this.node = r.Node
     if (r.Logs) {
       this.logs = r.Logs
+      this.logs.forEach((e) => {
+        const t = new Date(e.Time / (1000 * 1000))
+        e.TimeStr = this.$timeFormat(t)
+      })
     }
-    this.logs.forEach((e) => {
-      const t = new Date(e.Time / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t)
-    })
     if (r.Pollings) {
       this.pollings = r.Pollings
+      this.pollings.forEach((e) => {
+        const t = new Date(e.LastTime / (1000 * 1000))
+        e.TimeStr = this.$timeFormat(t)
+      })
     }
-    this.pollings.forEach((e) => {
-      const t = new Date(e.LastTime / (1000 * 1000))
-      e.LastTimeStr = this.$timeFormat(t)
-    })
     this.$showLogLevelChart(this.logs)
   },
   data() {
@@ -252,13 +267,11 @@ export default {
       deletePolling: {},
       pollingSearch: '',
       pollingHeaders: [
-        { text: '状態', value: 'State', width: '10%' },
-        { text: 'ノード', value: 'NodeName', width: '15%' },
-        { text: '名前', value: 'Name', width: '20%' },
-        { text: 'レベル', value: 'Level', width: '10%' },
-        { text: '種別', value: 'Type', width: '5%' },
+        { text: '状態', value: 'State', width: '15%' },
+        { text: '名前', value: 'Name', width: '30%' },
+        { text: 'レベル', value: 'Level', width: '15%' },
+        { text: '種別', value: 'Type', width: '15%' },
         { text: '最終実施', value: 'TimeStr', width: '15%' },
-        { text: '数値', value: 'LastVal', width: '5%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
       pollings: [],

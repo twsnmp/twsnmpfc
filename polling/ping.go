@@ -10,7 +10,7 @@ import (
 )
 
 func doPollingPing(pe *datastore.PollingEnt) {
-	if pe.Polling == "line" {
+	if pe.Params == "line" {
 		doPollingCheckLineCond(pe)
 		return
 	}
@@ -20,21 +20,19 @@ func doPollingPing(pe *datastore.PollingEnt) {
 		return
 	}
 	size := 64
-	if pe.Polling != "" {
-		if i, err := strconv.Atoi(pe.Polling); err == nil {
+	if pe.Params != "" {
+		if i, err := strconv.Atoi(pe.Params); err == nil {
 			size = i
 		}
 	}
-	lr := make(map[string]string)
 	r := ping.DoPing(n.IP, pe.Timeout, pe.Retry, size)
-	pe.LastVal = float64(r.Time)
 	if r.Stat == ping.PingOK {
-		lr["rtt"] = fmt.Sprintf("%f", pe.LastVal)
-		pe.LastResult = makeLastResult(lr)
+		pe.Result["rtt"] = float64(r.Time)
+		delete(pe.Result, "error")
 		setPollingState(pe, "normal")
 	} else {
-		lr["error"] = fmt.Sprintf("%v", r.Error)
-		pe.LastResult = makeLastResult(lr)
+		pe.Result["rtt"] = 0.0
+		pe.Result["error"] = fmt.Sprintf("%v", r.Error)
 		setPollingState(pe, pe.Level)
 	}
 }
@@ -79,24 +77,24 @@ func doPollingCheckLineCond(pe *datastore.PollingEnt) {
 			fail += 1
 		}
 	}
-	lr := make(map[string]string)
 	if len(speed) < 3 {
-		lr["error"] = lastError
-		pe.LastVal = 0.0
-		pe.LastResult = makeLastResult(lr)
+		pe.Result["error"] = lastError
+		pe.Result["rtt"] = 0.0
+		pe.Result["rtt_cv"] = 0.0
+		pe.Result["speed"] = 0.0
+		pe.Result["speed_cv"] = 0.0
+		pe.Result["fail"] = float64(fail)
 		setPollingState(pe, pe.Level)
 		return
 	}
 	// 5回の測定から平均値と変動係数を計算
 	rm, rcv := calcMeanCV(rtt)
-	lr["rtt"] = fmt.Sprintf("%f", rm)
-	lr["rtt_cv"] = fmt.Sprintf("%f", rcv)
+	pe.Result["rtt"] = rm
+	pe.Result["rtt_cv"] = rcv
 	sm, scv := calcMeanCV(speed)
-	pe.LastVal = sm
-	lr["speed"] = fmt.Sprintf("%f", sm)
-	lr["speed_cv"] = fmt.Sprintf("%f", scv)
-	lr["fail"] = fmt.Sprintf("%d", fail)
-	pe.LastResult = makeLastResult(lr)
+	pe.Result["speed"] = sm
+	pe.Result["speed_cv"] = scv
+	pe.Result["fail"] = float64(fail)
 	setPollingState(pe, "normal")
 }
 
