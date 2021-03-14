@@ -3,6 +3,7 @@ package webapi
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -25,7 +26,16 @@ type selectEntWebAPI struct {
 }
 
 func Init(e *echo.Echo, p *WebAPI) {
-	e.Use(middleware.Logger())
+	e.HideBanner = true
+	e.HidePort = true
+
+	// Middleware
+	logger := middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format:           "${time_custom} ${method} ${status} ${uri} ${remote_ip} ${bytes_in} ${bytes_out} ${latency_human}\n",
+		Output:           os.Stdout,
+		CustomTimeFormat: "2006-01-02T15:04:05.000",
+	})
+	e.Use(logger)
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 	e.Use(middle(p))
