@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"regexp"
-	"strings"
 	"time"
 
 	"go.etcd.io/bbolt"
@@ -137,101 +135,6 @@ func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
 		}
 		return nil
 	})
-}
-
-// -- ここから下は削除予定
-
-type logFilterParamEnt struct {
-	StartKey    string
-	StartTime   int64
-	EndTime     int64
-	RegexFilter *regexp.Regexp
-}
-
-func ParseFilter(f string) string {
-	f = strings.TrimSpace(f)
-	if f == "``" {
-		return ""
-	}
-	if strings.HasPrefix(f, "`") && strings.HasSuffix(f, "`") {
-		return f[1 : len(f)-1]
-	}
-	f = regexp.QuoteMeta(f)
-	f = strings.ReplaceAll(f, "\\*", ".+")
-	return f
-}
-
-func getFilterParams(filter *LogFilterEnt) *logFilterParamEnt {
-	var err error
-	var t time.Time
-	ret := &logFilterParamEnt{}
-	t, err = time.Parse("2006-01-02T15:04 MST", filter.StartTime+" JST")
-	if err == nil {
-		ret.StartTime = t.UnixNano()
-	} else {
-		log.Printf("getFilterParams err=%v", err)
-		ret.StartTime = time.Now().Add(-time.Hour * 24).UnixNano()
-	}
-	t, err = time.Parse("2006-01-02T15:04 MST", filter.EndTime+" JST")
-	if err == nil {
-		ret.EndTime = t.UnixNano()
-	} else {
-		log.Printf("getFilterParams err=%v", err)
-		ret.EndTime = time.Now().UnixNano()
-	}
-	ret.StartKey = fmt.Sprintf("%016x", ret.StartTime)
-	filter.Filter = strings.TrimSpace(filter.Filter)
-	if filter.Filter == "" {
-		return ret
-	}
-	fs := ParseFilter(filter.Filter)
-	ret.RegexFilter, err = regexp.Compile(fs)
-	if err != nil {
-		log.Printf("getFilterParams err=%v", err)
-		ret.RegexFilter = nil
-	}
-	return ret
-}
-
-func GetLogs(filter *LogFilterEnt) []LogEnt {
-	ret := []LogEnt{}
-	if db == nil {
-		return ret
-	}
-	f := getFilterParams(filter)
-	_ = db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(filter.LogType))
-		if b == nil {
-			log.Printf("getLogs no Bucket=%s", filter.LogType)
-			return nil
-		}
-		c := b.Cursor()
-		i := 0
-		for k, v := c.Seek([]byte(f.StartKey)); k != nil && i < MaxDispLog; k, v = c.Next() {
-			if bytes.HasSuffix(v, []byte{0, 0, 255, 255}) {
-				v = deCompressLog(v)
-			}
-			var l LogEnt
-			err := json.Unmarshal(v, &l)
-			if err != nil {
-				log.Printf("getLogs err=%v", err)
-				continue
-			}
-			if l.Time < f.StartTime {
-				continue
-			}
-			if l.Time > f.EndTime {
-				break
-			}
-			if f.RegexFilter != nil && !f.RegexFilter.Match(v) {
-				continue
-			}
-			ret = append(ret, l)
-			i++
-		}
-		return nil
-	})
-	return ret
 }
 
 func deleteOldLog(bucket string, days int) error {

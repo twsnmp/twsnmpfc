@@ -197,7 +197,7 @@ func ClearPollingLog(pollingID string) error {
 	})
 }
 
-// GetAllPollingLog この関数も不要なので削除予定
+// GetAllPollingLog :全てのポーリングログを取得する
 func GetAllPollingLog(pollingID string) []PollingLogEnt {
 	ret := []PollingLogEnt{}
 	if db == nil {
@@ -211,7 +211,7 @@ func GetAllPollingLog(pollingID string) []PollingLogEnt {
 		}
 		c := b.Cursor()
 		i := 0
-		for k, v := c.First(); k != nil && i < MaxDispLog*100; k, v = c.Next() {
+		for k, v := c.First(); k != nil; k, v = c.Next() {
 			if !bytes.Contains(v, []byte(pollingID)) {
 				continue
 			}
