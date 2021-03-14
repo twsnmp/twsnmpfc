@@ -49,7 +49,7 @@ const makeDBStatsChart = (div) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.format.formatTime('MM/dd hh:mm', date)
+          return echarts.time.format(date, 'MM/dd hh:mm')
         },
       },
       nameTextStyle: {
@@ -137,11 +137,11 @@ const showDBStatsChart = (logs) => {
   logs.forEach((e) => {
     const t = new Date(e.Time / (1000 * 1000))
     speed.push({
-      name: echarts.format.formatTime('yyyy/MM/dd hh:mm:ss', t),
+      name: echarts.time.format(t, 'yyyy/MM/dd hh:mm:ss'),
       value: [t, e.Speed],
     })
     size.push({
-      name: echarts.format.formatTime('yyyy/MM/dd hh:mm:ss', t),
+      name: echarts.time.format(t, 'yyyy/MM/dd hh:mm:ss'),
       value: [t, e.Size],
     })
   })

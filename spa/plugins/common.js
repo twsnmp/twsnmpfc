@@ -135,7 +135,7 @@ const timeFormat = (date, format) => {
   if (!format) {
       format = 'yyyy/MM/dd hh:mm:ss'
   }
-  return echarts.format.formatTime(format, date)
+  return echarts.time.format(date,format)
 }
 
 const getScoreColor = (s) => {

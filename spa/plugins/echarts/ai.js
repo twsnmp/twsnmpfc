@@ -105,7 +105,7 @@ const showAIHeatMap = (div, scores, cb) => {
     },
     visualMap: {
       min: 40,
-      max: 100,
+      max: 80,
       textStyle: {
         color: '#ccc',
         fontSize: 8,
@@ -154,7 +154,7 @@ const showAIHeatMap = (div, scores, cb) => {
   scores.forEach((e) => {
     const t = new Date(e[0] * 1000)
     if (nD !== t.getDate()) {
-      option.xAxis.data.push(echarts.format.formatTime('yyyy/MM/dd', t))
+      option.xAxis.data.push(echarts.time.format(t, 'yyyy/MM/dd'))
       nD = t.getDate()
       x++
     }
@@ -280,7 +280,7 @@ const showAITimeChart = (div, scores, cb) => {
         fontSize: '8px',
         formatter(value, index) {
           const date = new Date(value)
-          return echarts.format.formatTime('MM/dd hh:mm', date)
+          return echarts.time.format(date, 'MM/dd hh:mm')
         },
       },
       axisLine: {
@@ -294,6 +294,7 @@ const showAITimeChart = (div, scores, cb) => {
     },
     yAxis: {
       type: 'value',
+      name: '異常スコア',
       nameTextStyle: {
         color: '#ccc',
         fontSize: 10,
@@ -323,7 +324,7 @@ const showAITimeChart = (div, scores, cb) => {
   if (scores) {
     scores.forEach((e) => {
       const t = new Date(e[0] * 1000)
-      const ts = echarts.format.formatTime('yyyy/MM/dd hh:mm:ss', t)
+      const ts = echarts.time.format(t, 'yyyy/MM/dd hh:mm:ss')
       option.series[0].data.push({
         name: ts,
         value: [t, e[1]],
