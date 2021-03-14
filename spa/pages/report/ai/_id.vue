@@ -145,7 +145,7 @@ export default {
       this.scores.push({
         Score: s[1],
         IconScore: s[1] >= 100.0 ? 1.0 : 100.0 - s[1],
-        Time: this.$timeFormat(new Date(s[0] * 1000), 'yyyy/MM/dd hh:mm:ss'),
+        Time: this.$timeFormat(new Date(s[0] * 1000)),
         UnixTime: s[0],
       })
     })
@@ -212,10 +212,10 @@ export default {
       const r = await this.$axios.$post(
         '/api/polling/' + this.$route.params.id,
         {
-          StartDate: this.$timeFormat(st, 'yyyy-MM-dd'),
-          StartTime: this.$timeFormat(st, 'hh:mm'),
-          EndDate: this.$timeFormat(et, 'yyyy-MM-dd'),
-          EndTime: this.$timeFormat(et, 'hh:mm'),
+          StartDate: this.$timeFormat(st, '{yyyy}-{MM}-{dd}'),
+          StartTime: this.$timeFormat(st, '{hh}:{mm}'),
+          EndDate: this.$timeFormat(et, '{yyyy}-{MM}-{dd}'),
+          EndTime: this.$timeFormat(et, '{hh}:{mm}'),
         }
       )
       if (!r.Logs) {

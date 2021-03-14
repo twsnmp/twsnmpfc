@@ -154,7 +154,7 @@ const showAIHeatMap = (div, scores, cb) => {
   scores.forEach((e) => {
     const t = new Date(e[0] * 1000)
     if (nD !== t.getDate()) {
-      option.xAxis.data.push(echarts.time.format(t, 'yyyy/MM/dd'))
+      option.xAxis.data.push(echarts.time.format(t, '{yyyy}/{MM}/{dd}'))
       nD = t.getDate()
       x++
     }
@@ -280,7 +280,7 @@ const showAITimeChart = (div, scores, cb) => {
         fontSize: '8px',
         formatter(value, index) {
           const date = new Date(value)
-          return echarts.time.format(date, 'MM/dd hh:mm')
+          return echarts.time.format(date, '{MM}/{dd} {hh}:{mm}')
         },
       },
       axisLine: {
@@ -324,7 +324,7 @@ const showAITimeChart = (div, scores, cb) => {
   if (scores) {
     scores.forEach((e) => {
       const t = new Date(e[0] * 1000)
-      const ts = echarts.time.format(t, 'yyyy/MM/dd hh:mm:ss')
+      const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}')
       option.series[0].data.push({
         name: ts,
         value: [t, e[1]],

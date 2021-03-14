@@ -124,11 +124,11 @@ export default {
     this.devices.forEach((d) => {
       d.First = this.$timeFormat(
         new Date(d.FirstTime / (1000 * 1000)),
-        'MM/dd hh:mm:ss'
+        '{MM}/{dd} {hh}:{mm}:{ss}'
       )
       d.Last = this.$timeFormat(
         new Date(d.LastTime / (1000 * 1000)),
-        'MM/dd hh:mm:ss'
+        '{MM}/{dd} {hh}:{mm}:{ss}'
       )
     })
   },

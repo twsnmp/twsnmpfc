@@ -42,7 +42,7 @@ const makeLogCountChart = (div) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, 'MM/dd hh:mm')
+          return echarts.time.format(date, '{MM}/{dd} {hh}:{mm}')
         },
       },
       nameTextStyle: {
@@ -105,13 +105,13 @@ const showLogCountChart = (logs) => {
     if (ctm !== newCtm) {
       let t = new Date(ctm * 60 * 1000)
       data.push({
-        name: echarts.time.format(t, 'yyyy/MM/dd hh:mm:ss'),
+        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}'),
         value: [t, count],
       })
       for (; ctm < newCtm; ctm++) {
         t = new Date(ctm * 60 * 1000)
         data.push({
-          name: echarts.time.format(t, 'yyyy/MM/dd hh:mm:ss'),
+          name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}'),
           value: [t, 0],
         })
       }

@@ -118,11 +118,11 @@ export default {
     this.users.forEach((u) => {
       u.First = this.$timeFormat(
         new Date(u.FirstTime / (1000 * 1000)),
-        'MM/dd hh:mm:ss'
+        '{MM}/{dd} {hh}:{mm}:{ss}'
       )
       u.Last = this.$timeFormat(
         new Date(u.LastTime / (1000 * 1000)),
-        'MM/dd hh:mm:ss'
+        '{MM}/{dd} {hh}:{mm}:{ss}'
       )
       u.Client = Object.keys(u.Clients).join()
     })

@@ -133,7 +133,7 @@ const getIconName = (icon) => {
 
 const timeFormat = (date, format) => {
   if (!format) {
-      format = 'yyyy/MM/dd hh:mm:ss'
+      format = '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}'
   }
   return echarts.time.format(date,format)
 }

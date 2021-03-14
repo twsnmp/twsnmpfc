@@ -42,7 +42,7 @@ const makeLogStateChart = (div) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, 'MM/dd hh:mm')
+          return echarts.time.format(date, '{MM}/{dd} {hh}:{mm}')
         },
       },
       nameTextStyle: {
@@ -160,7 +160,7 @@ const showLogStateChart = (logs) => {
       let t = new Date(cth * 3600 * 1000)
       for (const k in count) {
         data[k].push({
-          name: echarts.time.format(t, 'yyyy/MM/dd hh:mm:ss'),
+          name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}'),
           value: [t, count[k]],
         })
       }
@@ -168,7 +168,7 @@ const showLogStateChart = (logs) => {
         t = new Date(cth * 3600 * 1000)
         for (const k in count) {
           data[k].push({
-            name: echarts.time.format(t, 'yyyy/MM/dd hh:mm:ss'),
+            name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}'),
             value: [t, 0],
           })
         }
