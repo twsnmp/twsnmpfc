@@ -24,7 +24,6 @@ func ReportDevice(mac, ip string, t int64) {
 
 func ResetDevicesScore() {
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		d.Penalty = 0
 		setDevicePenalty(d)
 		d.UpdateTime = time.Now().UnixNano()
 		return true
@@ -62,6 +61,7 @@ func checkDeviceReport(dr *deviceReportEnt) {
 }
 
 func setDevicePenalty(d *datastore.DeviceEnt) {
+	d.Penalty = 0
 	// ベンダー禁止のもの
 	if d.Vendor == "Unknown" {
 		d.Penalty++

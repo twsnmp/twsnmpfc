@@ -60,6 +60,8 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.DELETE("/conf/influxdb", deleteInfluxdb)
 	r.GET("/conf/datastore", getDataStore)
 	r.POST("/conf/backup", postBackup)
+	r.GET("/conf/report", getReportConf)
+	r.POST("/conf/report", postReportConf)
 	r.DELETE("/report", deleteReport)
 	r.DELETE("/logs", deleteLogs)
 	r.DELETE("/arp", deleteArp)

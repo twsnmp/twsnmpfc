@@ -20,9 +20,17 @@ var (
 	userReportCh   chan *userReportEnt
 	flowReportCh   chan *flowReportEnt
 	badIPs         map[string]int64
+	allowDNS       map[string]bool
+	allowDHCP      map[string]bool
+	allowMail      map[string]bool
+	dennyCountries map[string]int64
+	dennyServices  map[string]int64
+	japanOnly      bool
 )
 
 func StartReport(ctx context.Context) error {
+	datastore.LaodReportConf()
+	UpdateReportConf()
 	datastore.LoadReport()
 	deviceReportCh = make(chan *deviceReportEnt, 100)
 	userReportCh = make(chan *userReportEnt, 100)
@@ -30,6 +38,53 @@ func StartReport(ctx context.Context) error {
 	badIPs = make(map[string]int64)
 	go reportBackend(ctx)
 	return nil
+}
+
+func UpdateReportConf() {
+	japanOnly = datastore.ReportConf.JapanOnly
+	if japanOnly || len(datastore.ReportConf.DenyCountries) < 1 {
+		dennyCountries = nil
+	} else {
+		dennyCountries = make(map[string]int64)
+		for _, c := range datastore.ReportConf.DenyCountries {
+			dennyCountries[c] = 0
+		}
+	}
+	if len(datastore.ReportConf.DenyServices) < 1 {
+		dennyServices = nil
+	} else {
+		dennyServices = make(map[string]int64)
+		for _, s := range datastore.ReportConf.DenyServices {
+			dennyServices[s] = 0
+		}
+	}
+	ips := strings.Split(datastore.ReportConf.AllowDNS, ",")
+	if len(ips) < 1 || ips[0] == "" {
+		allowDNS = nil
+	} else {
+		allowDNS = make(map[string]bool)
+		for _, ip := range ips {
+			allowDNS[ip] = true
+		}
+	}
+	ips = strings.Split(datastore.ReportConf.AllowDHCP, ",")
+	if len(ips) < 1 || ips[0] == "" {
+		allowDHCP = nil
+	} else {
+		allowDHCP = make(map[string]bool)
+		for _, ip := range ips {
+			allowDHCP[ip] = true
+		}
+	}
+	ips = strings.Split(datastore.ReportConf.AllowMail, ",")
+	if len(ips) < 1 || ips[0] == "" {
+		allowMail = nil
+	} else {
+		allowMail = make(map[string]bool)
+		for _, ip := range ips {
+			allowMail[ip] = true
+		}
+	}
 }
 
 func reportBackend(ctx context.Context) {
@@ -48,8 +103,8 @@ func reportBackend(ctx context.Context) {
 			}
 		case <-timer.C:
 			{
-				checkOldReport()
 				calcScore()
+				checkOldReport()
 				datastore.SaveReport(last)
 				last = time.Now().UnixNano()
 			}
@@ -64,113 +119,71 @@ func reportBackend(ctx context.Context) {
 }
 
 func checkOldReport() {
-	oh := -24
-	svs := datastore.LenServers()
-	if svs > 10000 {
-		oh = -12 / (svs / 10000)
-		if oh > -3 {
-			oh = -3
-		}
-	}
-	old := time.Now().Add(time.Hour * time.Duration(oh)).UnixNano()
-	tooOld := time.Now().AddDate(0, 0, -datastore.MapConf.LogDays).UnixNano()
-	checkOldServers(old, tooOld)
-	checkOldFlows(old, tooOld)
-	checkOldDevices(old)
-	checkOldUsers(old)
+	safeOld := time.Now().Add(time.Hour * time.Duration(-1*datastore.ReportConf.RetentionTimeForSafe)).UnixNano()
+	delOld := time.Now().AddDate(0, 0, -datastore.MapConf.LogDays).UnixNano()
+	checkOldServers(safeOld, delOld)
+	checkOldFlows(safeOld, delOld)
+	checkOldDevices(delOld)
+	checkOldUsers(delOld)
 }
 
-func checkOldServers(old, tooOld int64) {
+func checkOldServers(safeOld, delOld int64) {
 	count := 0
-	ids := []string{}
 	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
-		if s.LastTime < old {
-			if s.LastTime < tooOld || s.LastTime-s.FirstTime < 3600*1000*1000*1000 {
-				ids = append(ids, s.ID)
-			} else {
-				for k, n := range s.Services {
-					if n < 10 {
-						delete(s.Services, k)
-					}
-				}
-				if len(s.Services) < 1 {
-					ids = append(ids, s.ID)
-				}
+		if s.LastTime < safeOld {
+			if s.LastTime < delOld || s.Score > 55.0 {
+				datastore.DeleteReport("servers", s.ID)
+				count++
 			}
 		}
 		return true
 	})
-	for _, id := range ids {
-		datastore.DeleteReport("servers", id)
-		count++
-	}
 	if count > 0 {
-		log.Printf("DeleteSevers=%d", count)
+		log.Printf("Delete Severs=%d", count)
 	}
 }
 
-func checkOldFlows(old, tooOld int64) {
+func checkOldFlows(safeOld, delOld int64) {
 	count := 0
-	ids := []string{}
 	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
-		if f.LastTime < old {
-			if f.LastTime < tooOld || f.LastTime-f.FirstTime < 3600*1000*1000*1000 {
-				ids = append(ids, f.ID)
-			} else {
-				for k, n := range f.Services {
-					if n < 10 {
-						delete(f.Services, k)
-					}
-				}
-				if len(f.Services) < 1 {
-					ids = append(ids, f.ID)
-				}
+		if f.LastTime < safeOld {
+			if f.LastTime < delOld || f.Score > 55.0 {
+				datastore.DeleteReport("flows", f.ID)
+				count++
 			}
 		}
 		return true
 	})
-	for _, id := range ids {
-		datastore.DeleteReport("flows", id)
-		count++
-	}
 	if count > 0 {
-		log.Printf("DeleteFlows=%d", count)
+		log.Printf("Delete Flows=%d", count)
 	}
 }
 
-func checkOldDevices(tooOld int64) {
+func checkOldDevices(delOld int64) {
 	count := 0
-	ids := []string{}
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		if d.LastTime < tooOld {
-			ids = append(ids, d.ID)
+		if d.LastTime < delOld {
+			datastore.DeleteReport("devices", d.ID)
+			count++
 		}
 		return true
 	})
-	for _, id := range ids {
-		datastore.DeleteReport("devices", id)
-		count++
-	}
 	if count > 0 {
 		log.Printf("DeleteDevices=%d", count)
 	}
 }
 
-func checkOldUsers(tooOld int64) {
+func checkOldUsers(delOld int64) {
 	count := 0
-	ids := []string{}
 	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
-		if u.LastTime < tooOld {
-			ids = append(ids, u.ID)
+		if u.LastTime < delOld {
+			datastore.DeleteReport("users", u.ID)
+			count++
 		}
 		return true
 	})
-	for _, id := range ids {
-		datastore.DeleteReport("users", id)
-		count++
-	}
 	if count > 0 {
-		log.Printf("DeleteUsers=%d", count)
+		log.Printf("Delete Users=%d", count)
 	}
 }
 
@@ -341,6 +354,56 @@ func findNodeInfoFromIP(ip string) (string, string) {
 		return names[0], ""
 	}
 	return ip, ""
+}
+
+func isSafeCountry(loc string) bool {
+	if loc == "" {
+		return true
+	}
+	if !japanOnly || dennyCountries == nil {
+		return true
+	}
+	a := strings.Split(loc, ",")
+	if len(a) < 1 {
+		return true
+	}
+	c := a[0]
+	if japanOnly {
+		return c == "JP"
+	}
+	if _, ok := dennyCountries[c]; ok {
+		dennyCountries[c]++
+		return false
+	}
+	return true
+}
+
+func isSafeService(s, ip string) bool {
+	if s == "" {
+		return true
+	}
+	if dennyServices != nil {
+		if _, ok := dennyServices[s]; ok {
+			dennyServices[s]++
+			return false
+		}
+	}
+	if allowDNS != nil {
+		if strings.HasPrefix(s, "domain/") {
+			return allowDNS[ip]
+		}
+	}
+	if allowDHCP != nil {
+		if strings.HasPrefix(s, "bootps/") {
+			return allowDHCP[ip]
+		}
+	}
+	if allowMail != nil {
+		if strings.HasPrefix(s, "smtp") || strings.HasPrefix(s, "pop3") || strings.HasPrefix(s, "imap") {
+			return allowMail[ip]
+		}
+	}
+	return true
 }
 
 type ipInfoCache struct {

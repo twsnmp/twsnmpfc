@@ -199,20 +199,19 @@ func checkServerReport(server, service string, bytes, t int64) {
 
 func setFlowPenalty(f *datastore.FlowEnt) {
 	f.Penalty = 0
-	if f.ServerLoc != "" {
-		a := strings.Split(f.ServerLoc, ",")
-		if len(a) > 0 {
-			loc := a[0]
-			if loc == "RU" {
-				f.Penalty++
-			}
+	if !isSafeCountry(f.ServerLoc) {
+		f.Penalty++
+	}
+	for sv := range f.Services {
+		if !isSafeService(sv, f.Server) {
+			f.Penalty++
 		}
 	}
 	// DNSで解決できない場合
 	if f.ServerName == f.Server {
 		f.Penalty++
 	}
-	if f.Penalty > 0 {
+	if f.Penalty > 1 {
 		if n, ok := badIPs[f.Client]; !ok || n < f.Penalty {
 			badIPs[f.Client] = f.Penalty
 		}
@@ -221,13 +220,12 @@ func setFlowPenalty(f *datastore.FlowEnt) {
 
 func setServerPenalty(s *datastore.ServerEnt) {
 	s.Penalty = 0
-	if s.Loc != "" {
-		a := strings.Split(s.Loc, ",")
-		if len(a) > 0 {
-			loc := a[0]
-			if loc == "RU" {
-				s.Penalty++
-			}
+	if !isSafeCountry(s.Loc) {
+		s.Penalty++
+	}
+	for sv := range s.Services {
+		if !isSafeService(sv, s.Server) {
+			s.Penalty++
 		}
 	}
 	// DNSで解決できない場合

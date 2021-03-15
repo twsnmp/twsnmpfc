@@ -91,20 +91,16 @@ func checkUserClient(u *datastore.UserEnt, client string) {
 		return
 	}
 	loc := datastore.GetLoc(client)
-	a := strings.Split(loc, ",")
-	if len(a) > 0 {
-		loc = a[0]
-		if loc == "RU" {
-			u.Penalty++
-		}
+	if !isSafeCountry(loc) {
+		u.Penalty++
 	}
 	// DNSで解決できない場合
 	name, _ := findNodeInfoFromIP(client)
 	if client == name {
 		u.Penalty++
 	}
-	if u.Penalty > 0 {
-		if _, ok := badIPs[client]; !ok {
+	if u.Penalty > 1 {
+		if n, ok := badIPs[client]; !ok || n < u.Penalty {
 			badIPs[client] = u.Penalty
 		}
 	}
