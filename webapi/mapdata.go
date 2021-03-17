@@ -123,6 +123,10 @@ func postNodeUpdate(c echo.Context) error {
 			log.Printf("postNodeUpdate err=%v", err)
 			return echo.ErrBadRequest
 		}
+		from := c.QueryParam("from")
+		if from != "" {
+			copyPolling(nu.ID, from)
+		}
 		return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 	}
 	// ここで入力チェック
@@ -148,6 +152,21 @@ func postNodeUpdate(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func copyPolling(to, from string) {
+	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
+		if p.NodeID == from {
+			pn := *p
+			pn.ID = ""
+			pn.NodeID = to
+			pn.NextTime = 0
+			pn.State = "unknown"
+			pn.Result = make(map[string]interface{})
+			datastore.AddPolling(&pn)
+		}
+		return true
+	})
 }
 
 func postLineDelete(c echo.Context) error {

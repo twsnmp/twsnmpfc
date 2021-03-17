@@ -94,6 +94,11 @@
           ></v-text-field>
           <v-text-field v-model="editNode.URL" label="URL"></v-text-field>
           <v-text-field v-model="editNode.Descr" label="説明"></v-text-field>
+          <v-switch
+            v-if="copyFrom"
+            v-model="copyPolling"
+            label="ポーリングの設定も含めてコピーする"
+          ></v-switch>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -101,7 +106,14 @@
             <v-icon>mdi-content-save</v-icon>
             保存
           </v-btn>
-          <v-btn color="normal" dark @click="editNodeDialog = false">
+          <v-btn
+            color="normal"
+            dark
+            @click="
+              editNodeDialog = false
+              $fetch()
+            "
+          >
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -346,6 +358,8 @@ export default {
       showNodeContextMenu: false,
       x: 0,
       y: 0,
+      copyFrom: '',
+      copyPolling: false,
     }
   },
   computed: {
@@ -412,6 +426,7 @@ export default {
           if (!this.map.Nodes[r.Param]) {
             return
           }
+          this.copyFrom = ''
           this.editNode = this.map.Nodes[r.Param]
           this.showNodeDialog = true
           break
@@ -424,6 +439,7 @@ export default {
             if (!this.map.Nodes[r.Node]) {
               return
             }
+            this.copyFrom = ''
             this.editNode = this.map.Nodes[r.Node]
             this.deleteNodes = [r.Node]
             this.showNodeContextMenu = true
@@ -457,8 +473,12 @@ export default {
       this.deleteDialog = false
     },
     doUpdateNode() {
+      let url = '/api/node/update'
+      if (this.copyFrom && this.copyPolling) {
+        url += '?from=' + this.copyFrom
+      }
       this.$axios
-        .post('/api/node/update', this.editNode)
+        .post(url, this.editNode)
         .then(() => {
           this.$fetch()
           this.editNodeDialog = false
@@ -469,6 +489,7 @@ export default {
         })
     },
     addNode() {
+      this.copyFrom = ''
       this.editNode = {
         ID: '',
         Name: '新規ノード',
@@ -496,19 +517,13 @@ export default {
     },
     copyNode() {
       this.showNodeDialog = false
+      this.copyFrom = this.editNode.ID
       // 位置をずらして新規追加
       this.editNode.X += 64
       this.editNode.ID = ''
       this.editNode.State = 'unknown'
       this.editNode.Name += 'のコピー'
-      this.$axios
-        .post('/api/node/update', this.editNode)
-        .then(() => {
-          this.$fetch()
-        })
-        .catch((e) => {
-          this.$fetch()
-        })
+      this.editNodeDialog = true
     },
     showEditNodeDialog() {
       this.showNodeDialog = false
