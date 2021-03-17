@@ -208,7 +208,7 @@ func getSnmpInfo(t string, dent *discoverInfoEnt) {
 	for _, variable := range result.Variables {
 		if datastore.MIBDB.OIDToName(variable.Name) == "sysName.0" {
 			dent.SysName = variable.Value.(string)
-		} else if datastore.MIBDB.OIDToName(variable.Name) == "sysObjectI0" {
+		} else if datastore.MIBDB.OIDToName(variable.Name) == "sysObjectID.0" {
 			dent.SysObjectID = variable.Value.(string)
 		}
 	}

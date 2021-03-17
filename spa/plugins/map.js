@@ -34,11 +34,13 @@ const setMAP = (m,url) => {
   lines = m.Lines
   backImage = m.MapConf.BackImage
   backImage.Image = null
-  const _p5 = new P5()
-  _p5.loadImage(url+'/backimage',(img)=>{
-    backImage.Image = img
-    mapRedraw = true
-  })
+  if (backImage.Path){
+    const _p5 = new P5()
+    _p5.loadImage(url+'/backimage',(img)=>{
+      backImage.Image = img
+      mapRedraw = true
+    })
+  }
   mapRedraw = true
 }
 
@@ -175,7 +177,7 @@ const mapMain = (p5) => {
     ) {
       editLine()
       selectedNodes.length = 0
-      return true
+      return false
     } else  {
       setSelectNode(false)
     }
@@ -184,14 +186,24 @@ const mapMain = (p5) => {
     startMouseX = p5.mouseX
     startMouseY = p5.mouseY
     dragMode = 0
-    return true
+    return false
   }
 
-  p5.mouseReleased = () => {
+  p5.mouseReleased = (e) => {
     mapRedraw = true
     if(!clickInCanvas){
       selectedNodes.length = 0
-      return
+      return true
+    }
+    if(p5.mouseButton === p5.RIGHT && selectedNodes.length < 2) {
+      if (mapCallBack) {
+        mapCallBack({
+          Cmd: 'contextMenu',
+          Node: selectedNodes[0] || '',
+          x: p5.mouseX,
+          y: p5.mouseY,
+        })
+      }
     }
     clickInCanvas = false 
     if (dragMode === 0) {
@@ -205,6 +217,7 @@ const mapMain = (p5) => {
       return false
     }
     updateNodesPos()
+    return false
   }
 
   p5.keyReleased = () => {
@@ -224,9 +237,6 @@ const mapMain = (p5) => {
     if (selectedNodes.length === 1 ){
       // Show Node Info
       showNode()
-    } else if (selectedNodes.length === 0) {
-      // Add Node
-      addNode()
     }
     return true
   }
@@ -340,33 +350,6 @@ const mapMain = (p5) => {
       })
     }
   }
-  const addNode = () => {
-    if (mapCallBack) {
-      const n = {
-          ID: '',
-          Name: '新規ノード',
-          IP:'',
-          X: lastMouseX,
-          Y: lastMouseY,
-          Descr: '',
-          Icon: 'desktop',
-          MAC: '',
-          SnmpMode: '',
-          Community: '',
-          User: '',
-          Password: '',
-          PublicKey: '',
-          URL: '',
-          Type: '',
-          AddrMode: '',
-        }
-      checkNodePos(n)
-      mapCallBack({
-        Cmd: 'addNode',
-        Param: n,
-      })
-    }
-  }
   const editLine = () => {
     if (selectedNodes.length !== 2 ){
       return
@@ -383,14 +366,24 @@ const mapMain = (p5) => {
 }
 
 let  hasMAP = false
-
+let  contextMenu = true
 const showMAP = (div) => {
   mapRedraw = true
+  contextMenu = false
   if (hasMAP) {
     return
   }
+  document.oncontextmenu = (e) => {
+    if (!contextMenu) {
+      e.preventDefault()
+    }
+  }  
   new P5(mapMain, div) // eslint-disable-line no-new
   hasMAP = true
+}
+
+const setMapContextMenu = (e) => {
+  contextMenu = e
 }
 
 const refreshMAP = () => {
@@ -418,4 +411,5 @@ export default (context, inject) => {
   inject('setCallback', setCallback)
   inject('selectNode', selectNode)
   inject('refreshMAP', refreshMAP)
+  inject('setMapContextMenu', setMapContextMenu)
 }

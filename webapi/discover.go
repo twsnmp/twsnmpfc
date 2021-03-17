@@ -24,16 +24,20 @@ func getDiscover(c echo.Context) error {
 func postDiscoverStart(c echo.Context) error {
 	dc := new(datastore.DiscoverConfEnt)
 	if err := c.Bind(dc); err != nil {
-		log.Printf("postDiscoverStart err=%v", err)
+		log.Printf("start discover err=%v", err)
+		return echo.ErrBadRequest
+	}
+	if discover.Stat.Running {
+		log.Printf("discover already start")
 		return echo.ErrBadRequest
 	}
 	datastore.DiscoverConf = *dc
 	if err := datastore.SaveDiscoverConf(); err != nil {
-		log.Printf("postDiscoverStart err=%v", err)
+		log.Printf("start discover err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if err := discover.StartDiscover(); err != nil {
-		log.Printf("postDiscoverStart err=%v", err)
+		log.Printf("start discover err=%v", err)
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})

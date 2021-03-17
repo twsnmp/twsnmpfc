@@ -74,6 +74,13 @@
           >
             mdi-eye
           </v-icon>
+          <v-icon
+            v-if="item.LogMode > 1"
+            small
+            @click="$router.push({ path: '/report/ai/' + item.ID })"
+          >
+            mdi-brain
+          </v-icon>
           <v-icon small @click="editPollingFunc(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deletePollingFunc(item)"> mdi-delete </v-icon>
         </template>
@@ -105,6 +112,10 @@
           </v-select>
           <v-select v-model="editPolling.Type" :items="$typeList" label="種別">
           </v-select>
+          <v-text-field
+            v-model="editPolling.Mode"
+            label="モード"
+          ></v-text-field>
           <v-text-field
             v-model="editPolling.Params"
             label="パラメータ"

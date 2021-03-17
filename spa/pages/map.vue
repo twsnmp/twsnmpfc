@@ -198,10 +198,10 @@
           </v-btn>
           <v-btn color="normal" dark @click="showMIBBr">
             <v-icon>mdi-eye</v-icon>
-            MIBブラウザー
+            MIB...
           </v-btn>
           <v-btn color="primary" dark @click="showNodeInfoPage">
-            <v-icon>mdi-eye</v-icon>
+            <v-icon>mdi-card-search</v-icon>
             詳細...
           </v-btn>
           <v-btn color="primary" dark @click="showEditNodeDialog">
@@ -219,6 +219,80 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-menu
+      v-model="showMapContextMenu"
+      :position-x="x"
+      :position-y="y"
+      absolute
+    >
+      <v-list dense>
+        <v-list-item @click="addNode()">
+          <v-list-item-icon><v-icon>mdi-plus</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>新規ノード</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item :to="discoverURL">
+          <v-list-item-icon><v-icon>mdi-file-find</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>自動発見</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item to="/conf/map">
+          <v-list-item-icon><v-icon>mdi-cog</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>マップ設定</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+    <v-menu
+      v-model="showNodeContextMenu"
+      :position-x="x"
+      :position-y="y"
+      absolute
+    >
+      <v-list dense>
+        <v-list-item @click="editNodeDialog = true">
+          <v-list-item-icon><v-icon>mdi-pencil</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>編集</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="deleteDialog = true">
+          <v-list-item-icon
+            ><v-icon color="red">mdi-delete</v-icon></v-list-item-icon
+          >
+          <v-list-item-content>
+            <v-list-item-title>削除</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="copyNode()">
+          <v-list-item-icon><v-icon>mdi-content-copy</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>コピー</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="showMIBBr()">
+          <v-list-item-icon><v-icon>mdi-eye</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>MIBブラウザー</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="showNodeDialog = true">
+          <v-list-item-icon><v-icon>mdi-information</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>情報</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="showNodeInfoPage()">
+          <v-list-item-icon><v-icon>mdi-card-search</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>詳細</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-menu>
   </v-row>
 </template>
 
@@ -268,6 +342,10 @@ export default {
         { text: '関連ノード', value: 'NodeName', width: '15%' },
         { text: 'イベント', value: 'Event', width: '50%' },
       ],
+      showMapContextMenu: false,
+      showNodeContextMenu: false,
+      x: 0,
+      y: 0,
     }
   },
   computed: {
@@ -277,12 +355,18 @@ export default {
     pollingList2() {
       return this.pollingList(this.editLine.NodeID2)
     },
+    discoverURL() {
+      return `/discover?x=${this.x}&y=${this.y}`
+    },
   },
   mounted() {
     this.$setIconCodeMap(this.$iconList)
     this.$setStateColorMap(this.$stateList)
     this.$setCallback(this.callback)
     this.$showMAP('map')
+  },
+  beforeDestroy() {
+    this.$setMapContextMenu(true)
   },
   methods: {
     nodeName(id) {
@@ -331,9 +415,19 @@ export default {
           this.editNode = this.map.Nodes[r.Param]
           this.showNodeDialog = true
           break
-        case 'addNode':
-          this.editNode = r.Param
-          this.editNodeDialog = true
+        case 'contextMenu':
+          this.x = r.x
+          this.y = r.y
+          if (!r.Node) {
+            this.showMapContextMenu = true
+          } else {
+            if (!this.map.Nodes[r.Node]) {
+              return
+            }
+            this.editNode = this.map.Nodes[r.Node]
+            this.deleteNodes = [r.Node]
+            this.showNodeContextMenu = true
+          }
           break
       }
     },
@@ -374,6 +468,27 @@ export default {
           this.$fetch()
         })
     },
+    addNode() {
+      this.editNode = {
+        ID: '',
+        Name: '新規ノード',
+        IP: '',
+        X: this.x,
+        Y: this.y,
+        Descr: '',
+        Icon: 'desktop',
+        MAC: '',
+        SnmpMode: '',
+        Community: '',
+        User: '',
+        Password: '',
+        PublicKey: '',
+        URL: '',
+        Type: '',
+        AddrMode: '',
+      }
+      this.editNodeDialog = true
+    },
     deleteNode() {
       this.showNodeDialog = false
       this.deleteNodes = [this.editNode.ID]
@@ -384,6 +499,7 @@ export default {
       // 位置をずらして新規追加
       this.editNode.X += 64
       this.editNode.ID = ''
+      this.editNode.State = 'unknown'
       this.editNode.Name += 'のコピー'
       this.$axios
         .post('/api/node/update', this.editNode)

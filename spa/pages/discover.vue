@@ -72,6 +72,10 @@
         <v-icon>mdi-stop</v-icon>
         停止
       </v-btn>
+      <v-btn color="primary" to="/map">
+        <v-icon>mdi-lan</v-icon>
+        マップ
+      </v-btn>
     </v-card-actions>
   </v-card>
   <v-card v-else max-width="600" class="mx-auto">
@@ -126,6 +130,10 @@
           <v-icon>mdi-magnify</v-icon>
           開始
         </v-btn>
+        <v-btn color="primary" to="/map">
+          <v-icon>mdi-lan</v-icon>
+          マップ
+        </v-btn>
       </v-card-actions>
     </v-form>
   </v-card>
@@ -144,6 +152,8 @@ export default {
           EndIP: '',
           Timeout: 1,
           Retry: 1,
+          X: 0,
+          Y: 0,
         },
         Stat: {
           Running: false,
@@ -217,6 +227,8 @@ export default {
   },
   methods: {
     start() {
+      this.discover.Conf.X = this.$route.query.x * 1 || 0
+      this.discover.Conf.Y = this.$route.query.y * 1 || 0
       this.$axios
         .post('/api/discover/start', this.discover.Conf)
         .then((r) => {
