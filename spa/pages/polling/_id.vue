@@ -1,61 +1,193 @@
 <template>
   <v-row justify="center">
     <v-card style="width: 100%">
-      <v-card-title>
-        ポーリングログ - {{ node.Name }} - {{ polling.Name }}
-        <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
-      </v-card-title>
-      <div id="logStateChart" style="width: 100%; height: 200px"></div>
-      <v-data-table
-        :headers="headers"
-        :items="logs"
-        :search="search"
-        sort-by="TimeStr"
-        sort-desc
-        dense
-        :loading="$fetchState.pending"
-        loading-text="Loading... Please wait"
-        class="log"
-      >
-        <template v-slot:[`item.State`]="{ item }">
-          <v-icon :color="$getStateColor(item.State)">{{
-            $getStateIconName(item.State)
-          }}</v-icon>
-          {{ $getStateName(item.State) }}
+      <v-card-title> ポーリング情報 </v-card-title>
+      <v-simple-table dense>
+        <template v-slot:default>
+          <thead>
+            <tr>
+              <th class="text-left">項目</th>
+              <th class="text-left">値</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ノード名</td>
+              <td>{{ node.Name }}</td>
+            </tr>
+            <tr>
+              <td>ポーリング名</td>
+              <td>{{ polling.Name }}</td>
+            </tr>
+            <tr>
+              <td>状態</td>
+              <td>
+                <v-icon :color="$getStateColor(polling.State)">{{
+                  $getStateIconName(polling.State)
+                }}</v-icon>
+                {{ $getStateName(polling.State) }}
+              </td>
+            </tr>
+            <tr>
+              <td>レベル</td>
+              <td>
+                <v-icon :color="$getStateColor(polling.Level)">{{
+                  $getStateIconName(polling.Level)
+                }}</v-icon>
+                {{ $getStateName(polling.Level) }}
+              </td>
+            </tr>
+            <tr>
+              <td>種別</td>
+              <td>{{ polling.Type }}</td>
+            </tr>
+            <tr>
+              <td>モード</td>
+              <td>{{ polling.Mode }}</td>
+            </tr>
+            <tr>
+              <td>パラメータ</td>
+              <td>{{ polling.Params }}</td>
+            </tr>
+            <tr>
+              <td>検索フィルター</td>
+              <td>{{ polling.Filter }}</td>
+            </tr>
+            <tr>
+              <td>抽出フィルター</td>
+              <td>{{ polling.Extractor }}</td>
+            </tr>
+            <tr>
+              <td>判定スクリプト</td>
+              <td>{{ polling.Script }}</td>
+            </tr>
+            <tr>
+              <td>最終実施</td>
+              <td>{{ timeStr }}</td>
+            </tr>
+            <tr>
+              <td>結果</td>
+              <td>
+                <v-virtual-scroll
+                  height="100"
+                  item-height="20"
+                  :items="results"
+                >
+                  <template v-slot:default="{ item }">
+                    <v-list-item>
+                      <v-list-item-title>{{ item.title }}</v-list-item-title>
+                      {{ item.value }}
+                    </v-list-item>
+                  </template>
+                </v-virtual-scroll>
+              </td>
+            </tr>
+          </tbody>
         </template>
-      </v-data-table>
-      <v-card-title>
-        ポーリング結果 - {{ node.Name }} - {{ polling.Name }}
-        <v-spacer></v-spacer>
-        <v-select
-          v-model="selectedValEnt"
-          :items="numValEntList"
-          label="項目"
-          single-line
-          hide-details
-          @change="selectValEnt"
-        ></v-select>
-      </v-card-title>
-      <div id="pollingChart" style="width: 100%; height: 200px"></div>
+      </v-simple-table>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" dark @click="filterDialog = true">
-          <v-icon>mdi-calendar-clock</v-icon>
-          時間範囲
-        </v-btn>
+        <v-menu v-if="logs" offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              詳細
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="showPollingLog">
+              <v-list-item-icon><v-icon>mdi-eye</v-icon></v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>ポーリングログ</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showPollingResult">
+              <v-list-item-icon><v-icon>mdi-eye</v-icon></v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>ポーリング結果</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <v-btn color="normal" dark @click="$router.go(-1)">
           <v-icon>mdi-arrow-left</v-icon>
           戻る
         </v-btn>
       </v-card-actions>
     </v-card>
+    <v-dialog v-model="pollingLogDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          ポーリングログ - {{ node.Name }} - {{ polling.Name }}
+          <v-spacer></v-spacer>
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="検索"
+            single-line
+            hide-details
+          ></v-text-field>
+        </v-card-title>
+        <div id="logStateChart" style="width: 900px; height: 200px"></div>
+        <v-data-table
+          :headers="headers"
+          :items="logs"
+          :search="search"
+          sort-by="TimeStr"
+          sort-desc
+          dense
+          :loading="$fetchState.pending"
+          loading-text="Loading... Please wait"
+          class="log"
+        >
+          <template v-slot:[`item.State`]="{ item }">
+            <v-icon :color="$getStateColor(item.State)">{{
+              $getStateIconName(item.State)
+            }}</v-icon>
+            {{ $getStateName(item.State) }}
+          </template>
+        </v-data-table>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="filterDialog = true">
+            <v-icon>mdi-calendar-clock</v-icon>
+            時間範囲
+          </v-btn>
+          <v-btn color="normal" dark @click="pollingLogDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="pollingResultDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          ポーリング結果 - {{ node.Name }} - {{ polling.Name }}
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="selectedValEnt"
+            :items="numValEntList"
+            label="項目"
+            single-line
+            hide-details
+            @change="selectValEnt"
+          ></v-select>
+        </v-card-title>
+        <div id="pollingChart" style="width: 900px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="filterDialog = true">
+            <v-icon>mdi-calendar-clock</v-icon>
+            時間範囲
+          </v-btn>
+          <v-btn color="normal" dark @click="pollingResultDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="filterDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
@@ -201,9 +333,19 @@ export default {
     )
     this.node = r.Node
     this.polling = r.Polling
-    if (r.Logs) {
-      this.logs = r.Logs
+    this.timeStr = this.$timeFormat(
+      new Date(r.Polling.LastTime / (1000 * 1000))
+    )
+    Object.keys(r.Polling.Result).forEach((k) => {
+      this.results.push({
+        title: k,
+        value: r.Polling.Result[k],
+      })
+    })
+    if (!r.Logs) {
+      this.logs = null
     }
+    this.logs = r.Logs
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
@@ -213,13 +355,11 @@ export default {
       })
       this.$setDataList(e.Result, this.numValEntList)
     })
-    this.$showLogStateChart(this.logs)
     if (!this.selectedValEnt) {
       if (this.numValEntList) {
         this.selectedValEnt = this.numValEntList[0].value
       }
     }
-    this.$showPollingChart(this.polling, this.logs, this.selectedValEnt)
   },
   data() {
     return {
@@ -245,13 +385,11 @@ export default {
       logs: [],
       selectedValEnt: '',
       numValEntList: [],
+      results: [],
+      timeStr: [],
+      pollingLogDialog: false,
+      pollingResultDialog: false,
     }
-  },
-  mounted() {
-    this.$makeLogStateChart('logStateChart')
-    this.$showLogStateChart(this.logs)
-    this.$makePollingChart('pollingChart')
-    this.$showPollingChart(this.polling, this.logs, this.selectedValEnt)
   },
   methods: {
     selectValEnt() {
@@ -266,6 +404,20 @@ export default {
       }
       this.filterDialog = false
       this.$fetch()
+    },
+    showPollingLog() {
+      this.pollingLogDialog = true
+      this.$nextTick(() => {
+        this.$makeLogStateChart('logStateChart')
+        this.$showLogStateChart(this.logs)
+      })
+    },
+    showPollingResult() {
+      this.pollingResultDialog = true
+      this.$nextTick(() => {
+        this.$makePollingChart('pollingChart')
+        this.$showPollingChart(this.polling, this.logs, this.selectedValEnt)
+      })
     },
   },
 }

@@ -274,55 +274,7 @@ const chartDispInfo = {
   },
 }
 
-const snmpChartDispInfo = (polling) => {
-  const a = polling.Polling.split('|')
-  if (a.length < 4) {
-    return {
-      mul: 1.0,
-      axis: '',
-    }
-  }
-  const p = a[a.length - 1].split(',')
-  if (p.length !== 2) {
-    return {
-      mul: 1.0,
-      axis: '',
-    }
-  }
-  return {
-    mul: 1.0 * p[0],
-    axis: p[1],
-  }
-}
-
 const getDispParams = (p, ent) => {
-  if (ent === '') {
-    // 数値の場合はポーリングの種類から選ぶ
-    switch (p.Type) {
-      case 'ping':
-        if (p.Polling === 'line') {
-          ent = 'speed'
-          break
-        }
-        ent = 'rtt'
-        break
-      case 'tcp':
-      case 'http':
-      case 'https':
-      case 'dns':
-      case 'ntp':
-        ent = 'rtt'
-        break
-      case 'sysloguser':
-        ent = 'successRate'
-        break
-      case 'snmp':
-        return snmpChartDispInfo(p)
-      default:
-        ent = 'none'
-        break
-    }
-  }
   const r = chartDispInfo[ent]
   if (r) {
     return r

@@ -67,11 +67,7 @@
           {{ $getStateName(item.Level) }}
         </template>
         <template v-slot:[`item.actions`]="{ item }">
-          <v-icon
-            v-if="item.LogMode > 0"
-            small
-            @click="$router.push({ path: '/polling/' + item.ID })"
-          >
+          <v-icon small @click="$router.push({ path: '/polling/' + item.ID })">
             mdi-eye
           </v-icon>
           <v-icon
