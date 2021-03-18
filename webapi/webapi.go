@@ -87,6 +87,7 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.POST("/polling/delete", postPollingDelete)
 	// log
 	r.POST("/log/eventlogs", postEventLogs)
+	r.GET("/log/lastlogs/:st", postLastEventLogs)
 	r.POST("/log/syslog", postSyslog)
 	r.POST("/log/snmptrap", postSnmpTrap)
 	r.POST("/log/netflow", postNetFlow)

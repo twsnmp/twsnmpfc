@@ -97,10 +97,11 @@
       <v-btn v-if="isAuthenticated" @click="logout">
         <v-icon>mdi-logout</v-icon>
       </v-btn>
-      <v-btn v-if="isAuthenticated" icon @click.stop="notify = !notify">
-        <v-badge color="red" content="6" overlap>
+      <v-btn v-if="isAuthenticated" icon @click="notify = !notify">
+        <v-badge v-if="newLog" color="red" :content="newLog" overlap>
           <v-icon>mdi-bell</v-icon>
         </v-badge>
+        <v-icon v-else>mdi-bell</v-icon>
       </v-btn>
     </v-app-bar>
     <v-main>
@@ -115,13 +116,22 @@
       right
       temporary
       fixed
+      width="600"
     >
-      <v-list>
-        <v-list-item>
-          <v-list-item-action>
-            <v-icon light> mdi-repeat </v-icon>
-          </v-list-item-action>
-          <v-list-item-title>Switch drawer (click me)</v-list-item-title>
+      <v-list dense>
+        <v-subheader>イベントログ</v-subheader>
+        <v-list-item v-for="(log, i) in logs" :key="i">
+          <v-list-item-icon>
+            <v-icon :color="$getStateColor(log.Level)">{{
+              $getStateIconName(log.Level)
+            }}</v-icon>
+            {{ $getStateName(log.Level) }}
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>
+              {{ log.TimeStr }} {{ log.Type }} {{ log.Event }}
+            </v-list-item-title>
+          </v-list-item-content>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -246,6 +256,9 @@ export default {
       ],
       notify: false,
       selectedNodeID: '',
+      timer: null,
+      logs: [],
+      newLog: 0,
     }
   },
   computed: {
@@ -262,9 +275,41 @@ export default {
       return this.$store.state.map.nodeList
     },
   },
+  mounted() {
+    this.cron()
+  },
+  beforeDestroy() {
+    if (this.timer) {
+      clearTimeout(this.timer)
+      this.timer = null
+    }
+  },
   methods: {
     async logout() {
       await this.$auth.logout()
+    },
+    cron() {
+      if (this.$auth.loggedIn) {
+        if (this.$route.path === '/map') {
+          this.$refreshMAP()
+        } else {
+          this.checkNewLog()
+        }
+      }
+      this.timer = setTimeout(() => this.cron(), 30 * 1000)
+    },
+    async checkNewLog() {
+      const r = await this.$axios.$get(
+        '/api/log/lastlogs/' + this.$store.state.map.lastUpdate
+      )
+      if (r) {
+        this.logs = r
+        this.newLog = this.logs.length
+        this.logs.forEach((e) => {
+          const t = new Date(e.Time / (1000 * 1000))
+          e.TimeStr = this.$timeFormat(t)
+        })
+      }
     },
   },
 }

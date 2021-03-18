@@ -3,6 +3,8 @@ package webapi
 import (
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -58,6 +60,25 @@ func postEventLogs(c echo.Context) error {
 			return true
 		}
 		r.EventLogs = append(r.EventLogs, l)
+		i++
+		return i <= datastore.MapConf.LogDispSize
+	})
+	return c.JSON(http.StatusOK, r)
+}
+
+func postLastEventLogs(c echo.Context) error {
+	r := []*datastore.EventLogEnt{}
+	sts := c.Param("st")
+	st := time.Now().Add(-time.Hour * 1).UnixNano()
+	if sts != "" {
+		if nst, err := strconv.ParseInt(sts, 10, 64); err == nil && nst > st {
+			st = nst
+		}
+	}
+	et := time.Now().UnixNano()
+	i := 0
+	datastore.ForEachEventLog(st, et, func(l *datastore.EventLogEnt) bool {
+		r = append(r, l)
 		i++
 		return i <= datastore.MapConf.LogDispSize
 	})
