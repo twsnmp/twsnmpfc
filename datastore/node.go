@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"go.etcd.io/bbolt"
@@ -150,6 +151,18 @@ func FindNodeFromIP(ip string) *NodeEnt {
 	var ret *NodeEnt
 	nodes.Range(func(_, p interface{}) bool {
 		if p.(*NodeEnt).IP == ip {
+			ret = p.(*NodeEnt)
+			return false
+		}
+		return true
+	})
+	return ret
+}
+
+func FindNodeFromMAC(mac string) *NodeEnt {
+	var ret *NodeEnt
+	nodes.Range(func(_, p interface{}) bool {
+		if strings.HasPrefix(p.(*NodeEnt).MAC, mac) {
 			ret = p.(*NodeEnt)
 			return false
 		}

@@ -107,6 +107,7 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.GET("/report/flows", getFlows)
 	r.DELETE("/report/flow/:id", deleteFlow)
 	r.POST("/report/flows/reset", resetFlows)
+	r.GET("/report/address/:addr", getAddressInfo)
 	// AI
 	r.GET("/report/ailist", getAIList)
 	r.GET("/report/ai/:id", getAIResult)

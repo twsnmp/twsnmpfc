@@ -33,9 +33,15 @@
           <v-icon
             v-if="item.NodeID"
             small
-            @click="$router.push({ path: '/node/' + item.NodeID })"
+            @click="$router.push({ path: '/node/polling/' + item.NodeID })"
           >
             mdi-link
+          </v-icon>
+          <v-icon
+            small
+            @click="$router.push({ path: '/report/address/' + item.ID })"
+          >
+            mdi-file-find
           </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>

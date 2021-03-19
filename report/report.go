@@ -3,6 +3,7 @@ package report
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"strings"
@@ -360,7 +361,7 @@ func isSafeCountry(loc string) bool {
 	if loc == "" {
 		return true
 	}
-	if !japanOnly || dennyCountries == nil {
+	if !japanOnly && dennyCountries == nil {
 		return true
 	}
 	a := strings.Split(loc, ",")
@@ -406,9 +407,22 @@ func isSafeService(s, ip string) bool {
 	return true
 }
 
+type AddrInfoEnt struct {
+	Level string
+	Title string
+	Value string
+}
+
+func GetAddressInfo(addr string) *[]AddrInfoEnt {
+	if _, err := net.ParseMAC(addr); err == nil {
+		return getMACInfo(addr)
+	}
+	return getIPInfo(addr)
+}
+
 type ipInfoCache struct {
 	Time   int64
-	IPInfo *[][]string
+	IPInfo *[]AddrInfoEnt
 }
 
 var ipInfoCacheMap = make(map[string]*ipInfoCache)
@@ -469,13 +483,31 @@ var blacklists = []string{
 	"dnsbl.spfbl.net",
 }
 
-func getIPInfo(ip string) *[][]string {
+func getIPInfo(ip string) *[]AddrInfoEnt {
 	if c, ok := ipInfoCacheMap[ip]; ok {
-		if c.Time > time.Now().Unix()-60*60*24*7 {
+		if c.Time > time.Now().Unix()-60*60*24 {
 			return c.IPInfo
 		}
 	}
-	ret := [][]string{}
+	ret := []AddrInfoEnt{}
+	if n := datastore.FindNodeFromIP(ip); n != nil {
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "管理対象ノード", Value: n.Name})
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "管理対象ノード", Value: "いいえ"})
+	}
+	if names, err := net.LookupAddr(ip); err == nil && len(names) > 0 {
+		for _, n := range names {
+			ret = append(ret, AddrInfoEnt{Level: "info", Title: "DNSホスト名", Value: n})
+		}
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "warn", Title: "DNSホスト名", Value: "不明"})
+	}
+	loc := datastore.GetLoc(ip)
+	if !isSafeCountry(loc) {
+		ret = append(ret, AddrInfoEnt{Level: "high", Title: "位置", Value: loc})
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "位置", Value: loc})
+	}
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -484,14 +516,15 @@ func getIPInfo(ip string) *[][]string {
 		ri, err := client.QueryIP(ip)
 		if err != nil {
 			log.Printf("RDAP QueryIP error=%v", err)
+			ret = append(ret, AddrInfoEnt{Level: "warn", Title: "RDAP:error", Value: fmt.Sprintf("%v", err)})
 			return
 		}
-		ret = append(ret, []string{"RDAP:IP Version", ri.IPVersion}) //IPバージョン
-		ret = append(ret, []string{"RDAP:Type", ri.Type})            // 種類
-		ret = append(ret, []string{"RDAP:Handole", ri.Handle})       //範囲
-		ret = append(ret, []string{"RDAP:Name", ri.Name})            // 所有者
-		ret = append(ret, []string{"RDAP:Country", ri.Country})      // 国
-		ret = append(ret, []string{"RDAP:Whois Server", ri.Port43})  // Whoisの情報源
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "RDAP:IP Version", Value: ri.IPVersion}) //IPバージョン
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "RDAP:Type", Value: ri.Type})            // 種類
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "RDAP:Handole", Value: ri.Handle})       //範囲
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "RDAP:Name", Value: ri.Name})            // 所有者
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "RDAP:Country", Value: ri.Country})      // 国
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "RDAP:Whois Server", Value: ri.Port43})  // Whoisの情報源
 	}()
 	rblMap := &sync.Map{}
 	for i, source := range blacklists {
@@ -500,15 +533,21 @@ func getIPInfo(ip string) *[][]string {
 			defer wg.Done()
 			rbl := godnsbl.Lookup(source, ip)
 			if len(rbl.Results) > 0 && rbl.Results[0].Listed {
-				rblMap.Store(source, `<i class="fas fa-exclamation-circle state state_high"></i>Listed :`+rbl.Results[0].Text)
+				rblMap.Store(source, rbl.Results[0].Text)
 			} else {
-				rblMap.Store(source, `<i class="fas fa-check-circle state state_repair"></i>Not Listed`)
+				rblMap.Store(source, "")
 			}
 		}(i, source)
 	}
 	wg.Wait()
 	rblMap.Range(func(key, value interface{}) bool {
-		ret = append(ret, []string{"DNSBL:" + key.(string), value.(string)})
+		dnsbl := key.(string)
+		result := value.(string)
+		if result == "" {
+			ret = append(ret, AddrInfoEnt{Level: "info", Title: "DNSBL:" + dnsbl, Value: "掲載なし"})
+		} else {
+			ret = append(ret, AddrInfoEnt{Level: "high", Title: "DNSBL:" + dnsbl, Value: result})
+		}
 		return true
 	})
 	ipInfoCacheMap[ip] = &ipInfoCache{
@@ -516,4 +555,57 @@ func getIPInfo(ip string) *[][]string {
 		IPInfo: &ret,
 	}
 	return &ret
+}
+
+func getMACInfo(addr string) *[]AddrInfoEnt {
+	mac := normMACAddr(addr)
+	ret := []AddrInfoEnt{}
+	if n := datastore.FindNodeFromMAC(mac); n != nil {
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "ノード名", Value: n.Name})
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "IPアドレス", Value: n.IP})
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "説明", Value: n.Descr})
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "管理対象ノード", Value: "いいえ"})
+	}
+	ret = append(ret, AddrInfoEnt{Level: "info", Title: "ベンダー", Value: datastore.FindVendor(mac)})
+	ip := findIPFromArp(mac)
+	if ip == "" {
+		ret = append(ret, AddrInfoEnt{Level: "warn", Title: "ARP監視", Value: "なし"})
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "ARP監視", Value: ip})
+	}
+	d := datastore.GetDevice(mac)
+	if d == nil {
+		ret = append(ret, AddrInfoEnt{Level: "warn", Title: "デバイスレポート", Value: "なし"})
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "デバイスレポート:IP",
+			Value: d.IP})
+		lvl := "info"
+		if d.Score < 30.0 {
+			lvl = "high"
+		} else if d.Score < 50.0 {
+			lvl = "warn"
+		}
+		ret = append(ret, AddrInfoEnt{Level: lvl, Title: "デバイスレポート:スコア",
+			Value: fmt.Sprintf("%.02f", d.Score)})
+		t := time.Unix(0, d.FirstTime)
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "デバイスレポート:初回",
+			Value: t.Format("2006/01/02 15:04")})
+		t = time.Unix(0, d.LastTime)
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "デバイスレポート:最終",
+			Value: t.Format("2006/01/02 15:04")})
+	}
+	return &ret
+}
+
+func findIPFromArp(mac string) string {
+	ip := ""
+	datastore.ForEachArp(func(a *datastore.ArpEnt) bool {
+		if a.MAC == mac {
+			ip = a.IP
+			return false
+		}
+		return true
+	})
+	return ip
 }

@@ -16,6 +16,7 @@
         :headers="headers"
         :items="flows"
         :search="search"
+        :items-per-page="15"
         sort-by="Score"
         sort-asec
         dense
@@ -38,16 +39,26 @@
           <v-icon
             v-if="item.ClientNodeID"
             small
-            @click="$router.push({ path: '/node/' + item.ClientNodeID })"
+            @click="
+              $router.push({ path: '/node/polling/' + item.ClientNodeID })
+            "
           >
-            mdi-link
+            mdi-laptop
           </v-icon>
           <v-icon
             v-if="item.ServerNodeID"
             small
-            @click="$router.push({ path: '/node/' + item.ServerNodeID })"
+            @click="
+              $router.push({ path: '/node/polling/' + item.ServerNodeID })
+            "
           >
-            mdi-link
+            mdi-server
+          </v-icon>
+          <v-icon
+            small
+            @click="$router.push({ path: '/report/address/' + item.Server })"
+          >
+            mdi-file-find
           </v-icon>
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>

@@ -199,6 +199,11 @@ export default {
           title: 'AI分析',
           to: '/report/ailist',
         },
+        {
+          icon: 'mdi-file-find',
+          title: 'アドレス分析',
+          to: '/report/address/',
+        },
       ],
       logMenus: [
         {

@@ -36,7 +36,10 @@
           >
             mdi-eye
           </v-icon>
-          <v-icon small @click="$router.push({ path: '/node/' + item.NodeID })">
+          <v-icon
+            small
+            @click="$router.push({ path: '/node/polling/' + item.NodeID })"
+          >
             mdi-laptop
           </v-icon>
           <v-icon small @click="$router.push({ path: '/polling/' + item.ID })">
