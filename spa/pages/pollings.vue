@@ -18,7 +18,15 @@
       <v-alert v-model="updateError" type="error" dense dismissible>
         ポーリングを変更できませんでした
       </v-alert>
-      <v-data-table :headers="headers" :items="pollings" :search="search" dense>
+      <v-data-table
+        :headers="headers"
+        :items="pollings"
+        :search="search"
+        dense
+        :items-per-page="15"
+        sort-by="State"
+        sort-asec
+      >
         <template v-slot:[`item.State`]="{ item }">
           <v-icon :color="$getStateColor(item.State)">{{
             $getStateIconName(item.State)

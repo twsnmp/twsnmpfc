@@ -292,6 +292,7 @@ export default {
       if (this.$auth.loggedIn) {
         if (this.$route.path === '/map') {
           this.$refreshMAP()
+          this.newLog = 0
         } else {
           this.checkNewLog()
         }

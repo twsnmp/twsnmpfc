@@ -2,40 +2,10 @@
   <v-row justify="center">
     <v-card style="width: 100%">
       <v-card-title>
-        イベントログ - {{ node.Name }}
-        <v-spacer></v-spacer>
-        <v-text-field
-          v-model="logSearch"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
-      </v-card-title>
-      <div id="logCountChart" style="width: 100%; height: 200px"></div>
-      <v-data-table
-        :headers="logHeaders"
-        :items="logs"
-        :search="logSearch"
-        sort-by="TimeStr"
-        sort-desc
-        dense
-        :loading="$fetchState.pending"
-        loading-text="Loading... Please wait"
-        class="log"
-      >
-        <template v-slot:[`item.Level`]="{ item }">
-          <v-icon :color="$getStateColor(item.Level)">{{
-            $getStateIconName(item.Level)
-          }}</v-icon>
-          {{ $getStateName(item.Level) }}
-        </template>
-      </v-data-table>
-      <v-card-title>
         ポーリング - {{ node.Name }}
         <v-spacer></v-spacer>
         <v-text-field
-          v-model="pollingSearch"
+          v-model="search"
           append-icon="mdi-magnify"
           label="検索"
           single-line
@@ -48,12 +18,7 @@
       <v-alert v-model="updateError" type="error" dense dismissible>
         ポーリングを変更できませんでした
       </v-alert>
-      <v-data-table
-        :headers="pollingHeaders"
-        :items="pollings"
-        :search="pollingSearch"
-        dense
-      >
+      <v-data-table :headers="headers" :items="pollings" :search="search" dense>
         <template v-slot:[`item.State`]="{ item }">
           <v-icon :color="$getStateColor(item.State)">{{
             $getStateIconName(item.State)
@@ -235,15 +200,10 @@
 <script>
 export default {
   async fetch() {
-    const r = await this.$axios.$get('/api/node/' + this.$route.params.id)
+    const r = await this.$axios.$get(
+      '/api/node/polling/' + this.$route.params.id
+    )
     this.node = r.Node
-    if (r.Logs) {
-      this.logs = r.Logs
-      this.logs.forEach((e) => {
-        const t = new Date(e.Time / (1000 * 1000))
-        e.TimeStr = this.$timeFormat(t)
-      })
-    }
     if (r.Pollings) {
       this.pollings = r.Pollings
       this.pollings.forEach((e) => {
@@ -251,19 +211,10 @@ export default {
         e.TimeStr = this.$timeFormat(t)
       })
     }
-    this.$showLogLevelChart(this.logs)
   },
   data() {
     return {
       node: {},
-      logSearch: '',
-      logHeaders: [
-        { text: '状態', value: 'Level', width: '10%' },
-        { text: '発生日時', value: 'TimeStr', width: '15%' },
-        { text: '種別', value: 'Type', width: '10%' },
-        { text: 'イベント', value: 'Event', width: '50%' },
-      ],
-      logs: [],
       editDialog: false,
       deleteDialog: false,
       editIndex: -1,
@@ -272,8 +223,8 @@ export default {
       updateError: false,
       editPolling: {},
       deletePolling: {},
-      pollingSearch: '',
-      pollingHeaders: [
+      search: '',
+      headers: [
         { text: '状態', value: 'State', width: '15%' },
         { text: '名前', value: 'Name', width: '30%' },
         { text: 'レベル', value: 'Level', width: '15%' },
@@ -283,10 +234,6 @@ export default {
       ],
       pollings: [],
     }
-  },
-  mounted() {
-    this.$makeLogLevelChart('logCountChart')
-    this.$showLogLevelChart(this.logs)
   },
   methods: {
     editPollingFunc(item) {

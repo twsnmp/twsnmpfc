@@ -332,7 +332,29 @@ type nodeWebAPI struct {
 	Pollings []*datastore.PollingEnt
 }
 
-func getNode(c echo.Context) error {
+func getNodeLog(c echo.Context) error {
+	id := c.Param("id")
+	r := nodeWebAPI{}
+	r.Node = datastore.GetNode(id)
+	if r.Node == nil {
+		log.Printf("node not found")
+		return echo.ErrBadRequest
+	}
+	i := 0
+	st := time.Now().Add(-time.Hour * 24).UnixNano()
+	et := time.Now().UnixNano()
+	datastore.ForEachEventLog(st, et, func(l *datastore.EventLogEnt) bool {
+		if l.NodeID != id {
+			return true
+		}
+		r.Logs = append(r.Logs, l)
+		i++
+		return i <= datastore.MapConf.LogDispSize
+	})
+	return c.JSON(http.StatusOK, r)
+}
+
+func getNodePolling(c echo.Context) error {
 	id := c.Param("id")
 	r := nodeWebAPI{}
 	r.Node = datastore.GetNode(id)
@@ -346,18 +368,6 @@ func getNode(c echo.Context) error {
 		}
 		return true
 	})
-	i := 0
-	st := time.Now().Add(-time.Hour * 24).UnixNano()
-	et := time.Now().UnixNano()
-	datastore.ForEachEventLog(st, et, func(l *datastore.EventLogEnt) bool {
-		if l.NodeID != id {
-			return true
-		}
-		r.Logs = append(r.Logs, l)
-		i++
-		return i <= datastore.MapConf.LogDispSize
-	})
-
 	return c.JSON(http.StatusOK, r)
 }
 

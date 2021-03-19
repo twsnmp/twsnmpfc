@@ -202,6 +202,7 @@
             </tbody>
           </template>
         </v-simple-table>
+        <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="copyNode">
@@ -210,15 +211,23 @@
           </v-btn>
           <v-btn color="normal" dark @click="showMIBBr">
             <v-icon>mdi-eye</v-icon>
-            MIB...
+            MIB
           </v-btn>
-          <v-btn color="primary" dark @click="showNodeInfoPage">
-            <v-icon>mdi-card-search</v-icon>
-            詳細...
+          <v-btn color="primary" dark @click="showNodePollingPage">
+            <v-icon>mdi-lan-check</v-icon>
+            ポーリング
+          </v-btn>
+          <v-btn color="primary" dark @click="showNodeLogPage">
+            <v-icon>mdi-calendar-check</v-icon>
+            ログ
+          </v-btn>
+          <v-btn color="primary" dark @click="checkPolling(false)">
+            <v-icon>mdi-cached</v-icon>
+            再確認
           </v-btn>
           <v-btn color="primary" dark @click="showEditNodeDialog">
             <v-icon>mdi-pencil</v-icon>
-            編集...
+            編集
           </v-btn>
           <v-btn color="error" dark @click="deleteNode">
             <v-icon>mdi-delete</v-icon>
@@ -245,7 +254,7 @@
           </v-list-item-content>
         </v-list-item>
         <v-list-item @click="checkPolling(true)">
-          <v-list-item-icon><v-icon>mdi-plus</v-icon></v-list-item-icon>
+          <v-list-item-icon><v-icon>mdi-cached</v-icon></v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>全て再確認</v-list-item-title>
           </v-list-item-content>
@@ -278,7 +287,7 @@
           </v-list-item-content>
         </v-list-item>
         <v-list-item @click="checkPolling(false)">
-          <v-list-item-icon><v-icon>mdi-pencil</v-icon></v-list-item-icon>
+          <v-list-item-icon><v-icon>mdi-cached</v-icon></v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>再確認</v-list-item-title>
           </v-list-item-content>
@@ -309,10 +318,18 @@
             <v-list-item-title>情報</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item @click="showNodeInfoPage()">
-          <v-list-item-icon><v-icon>mdi-card-search</v-icon></v-list-item-icon>
+        <v-list-item @click="showNodePollingPage()">
+          <v-list-item-icon><v-icon>mdi-lan-check</v-icon></v-list-item-icon>
           <v-list-item-content>
-            <v-list-item-title>詳細</v-list-item-title>
+            <v-list-item-title>ポーリング</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="showNodeLogPage()">
+          <v-list-item-icon>
+            <v-icon>mdi-calendar-check</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>ログ</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -542,8 +559,11 @@ export default {
       this.showNodeDialog = false
       this.editNodeDialog = true
     },
-    showNodeInfoPage() {
-      this.$router.push({ path: '/node/' + this.editNode.ID })
+    showNodePollingPage() {
+      this.$router.push({ path: '/node/polling/' + this.editNode.ID })
+    },
+    showNodeLogPage() {
+      this.$router.push({ path: '/node/log/' + this.editNode.ID })
     },
     showMIBBr() {
       this.$router.push({ path: '/mibbr/' + this.editNode.ID })
@@ -581,6 +601,7 @@ export default {
         id = this.editNode.ID
       }
       this.$axios.$get('/api/polling/check/' + id)
+      this.showNodeDialog = false
     },
   },
 }

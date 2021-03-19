@@ -18,7 +18,15 @@
       <v-alert v-model="updateError" type="error" dense dismissible>
         ノードを変更できませんでした
       </v-alert>
-      <v-data-table :headers="headers" :items="nodes" :search="search" dense>
+      <v-data-table
+        :headers="headers"
+        :items="nodes"
+        :search="search"
+        dense
+        :items-per-page="15"
+        sort-by="State"
+        sort-asec
+      >
         <template v-slot:[`item.State`]="{ item }">
           <v-icon :color="$getStateColor(item.State)">{{
             $getIconName(item.Icon)
@@ -26,8 +34,14 @@
           {{ $getStateName(item.State) }}
         </template>
         <template v-slot:[`item.actions`]="{ item }">
-          <v-icon small @click="$router.push({ path: '/node/' + item.ID })">
-            mdi-eye
+          <v-icon
+            small
+            @click="$router.push({ path: '/node/polling/' + item.ID })"
+          >
+            mdi-lan-check
+          </v-icon>
+          <v-icon small @click="$router.push({ path: '/node/log/' + item.ID })">
+            mdi-calendar-check
           </v-icon>
           <v-icon small @click="editNodeFunc(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deleteNodeFunc(item)"> mdi-delete </v-icon>
