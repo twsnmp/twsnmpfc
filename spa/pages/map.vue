@@ -244,6 +244,12 @@
             <v-list-item-title>新規ノード</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item @click="checkPolling(true)">
+          <v-list-item-icon><v-icon>mdi-plus</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>全て再確認</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item :to="discoverURL">
           <v-list-item-icon><v-icon>mdi-file-find</v-icon></v-list-item-icon>
           <v-list-item-content>
@@ -269,6 +275,12 @@
           <v-list-item-icon><v-icon>mdi-pencil</v-icon></v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>編集</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="checkPolling(false)">
+          <v-list-item-icon><v-icon>mdi-pencil</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>再確認</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-item @click="deleteDialog = true">
@@ -435,6 +447,7 @@ export default {
           this.y = r.y
           if (!r.Node) {
             this.showMapContextMenu = true
+            this.editNode.ID = ''
           } else {
             if (!this.map.Nodes[r.Node]) {
               return
@@ -558,6 +571,16 @@ export default {
           this.lineError = true
           this.$fetch()
         })
+    },
+    checkPolling(all) {
+      let id = 'all'
+      if (!all) {
+        if (this.editNode.ID === '') {
+          return
+        }
+        id = this.editNode.ID
+      }
+      this.$axios.$get('/api/polling/check/' + id)
     },
   },
 }

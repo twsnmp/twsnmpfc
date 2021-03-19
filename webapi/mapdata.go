@@ -246,6 +246,36 @@ func postPollingDelete(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
+func getPollingCheck(c echo.Context) error {
+	id := c.Param("id")
+	all := id == "all"
+	nodeName := "全て"
+	if !all {
+		n := datastore.GetNode(id)
+		if n == nil {
+			log.Printf("getPollingCheck node not fond id=%s", id)
+			return echo.ErrBadRequest
+		}
+		nodeName = n.Name
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:     "user",
+		Level:    "info",
+		NodeID:   id,
+		NodeName: nodeName,
+		Event:    "ポーリングの再確認",
+	})
+	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
+		if (all || p.NodeID == id) && p.State != "normal" {
+			p.NextTime = 0
+			p.State = "unknown"
+			datastore.SetNodeStateChanged(p.NodeID)
+		}
+		return true
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
 func postPollingUpdate(c echo.Context) error {
 	pu := new(datastore.PollingEnt)
 	if err := c.Bind(pu); err != nil {
