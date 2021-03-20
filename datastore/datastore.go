@@ -4,6 +4,7 @@ package datastore
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -32,6 +33,7 @@ var (
 	Backup       DBBackupEnt
 	DBStats      DBStatsEnt
 	DBStatsLog   []DBStatsLogEnt
+	Yasumi       string
 	// Map Data on Memory not export
 	nodes    sync.Map
 	lines    sync.Map
@@ -149,6 +151,23 @@ func loadDataFromFS(fs http.FileSystem) {
 			loadOUIMap(r)
 		} else {
 			log.Fatalf("InitDataStore oui.txt err=%v", err)
+		}
+	}
+	// 休みの定義
+	if r, err := os.Open(filepath.Join(dspath, "yasumi.txt")); err == nil {
+		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+			Yasumi = string(b)
+		}
+		r.Close()
+	}
+	if Yasumi == "" {
+		if r, err := fs.Open("/conf/yasumi.txt"); err == nil {
+			if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+				Yasumi = string(b)
+			}
+			r.Close()
+		} else {
+			log.Printf("InitDataStore yasumi.txt err=%v", err)
 		}
 	}
 	// TLS暗号名の定義
