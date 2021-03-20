@@ -1,0 +1,23 @@
+[
+  {
+    "Name": "PING監視",
+    "Type": "ping",
+    "Level": "low",
+    "Descr": "普通のPING"
+  },
+  {
+    "Name": "サイズ指定PING",
+    "Type": "ping",
+    "Mode": "size",
+    "Params": "1000",
+    "Level": "low",
+    "Descr": "PINGパケットのサイズを指定"
+  },
+  {
+    "Name": "回線診断",
+    "Type": "ping",
+    "Mode": "line",
+    "Level": "low",
+    "Descr": "回線速度、遅延、それぞれの変動係数を測定"
+  }
+]

@@ -184,9 +184,37 @@ func loadDataFromFS(fs http.FileSystem) {
 	if _, err := os.Stat(p); err == nil {
 		openGeoIP(p)
 	}
-	p = filepath.Join(dspath, "grok.txt")
-	if _, err := os.Stat(p); err == nil {
-		loadGrokMap(p)
+	if r, err := fs.Open("/conf/grok.txt"); err == nil {
+		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+			loadGrokMap(string(b))
+		}
+		r.Close()
+	} else {
+		log.Printf("InitDataStore grok.txt err=%v", err)
+	}
+	if r, err := os.Open(filepath.Join(dspath, "grok.txt")); err == nil {
+		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+			loadGrokMap(string(b))
+		}
+		r.Close()
+	}
+	if r, err := fs.Open("/conf/polling.json"); err == nil {
+		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+			if err := loadPollingTemplate(b); err != nil {
+				log.Printf("InitDataStore polling.txt err=%v", err)
+			}
+		}
+		r.Close()
+	} else {
+		log.Printf("InitDataStore polling.txt err=%v", err)
+	}
+	if r, err := os.Open(filepath.Join(dspath, "polling.json")); err == nil {
+		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+			if err := loadPollingTemplate(b); err != nil {
+				log.Printf("InitDataStore polling.txt err=%v", err)
+			}
+		}
+		r.Close()
 	}
 }
 

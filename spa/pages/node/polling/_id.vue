@@ -44,10 +44,15 @@
           </v-icon>
           <v-icon small @click="editPollingFunc(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deletePollingFunc(item)"> mdi-delete </v-icon>
+          <v-icon small @click="copyPolling(item)"> mdi-content-copy </v-icon>
         </template>
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-btn color="primary" dark @click="showAutoAddDialog">
+          <v-icon>mdi-brain</v-icon>
+          自動追加
+        </v-btn>
         <v-btn color="primary" dark @click="addPolling">
           <v-icon>mdi-plus</v-icon>
           追加
@@ -162,6 +167,15 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn
+            v-if="editIndex === -1"
+            color="primary"
+            dark
+            @click="showTemplateDialog"
+          >
+            <v-icon>mdi-content-copy</v-icon>
+            テンプレート
+          </v-btn>
           <v-btn color="primary" dark @click="doUpdatePolling">
             <v-icon>mdi-content-save</v-icon>
             保存
@@ -188,6 +202,55 @@
             削除
           </v-btn>
           <v-btn color="normal" @click="closeDelete">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="templateDialog" persistent max-width="900px">
+      <v-card>
+        <v-card-title>
+          <span v-if="autoAdd" class="headline">テンプレートから自動追加</span>
+          <span v-else class="headline">テンプレートから選択</span>
+          <v-spacer></v-spacer>
+          <v-text-field
+            v-model="searchTemplate"
+            append-icon="mdi-magnify"
+            label="検索"
+            single-line
+            hide-details
+          ></v-text-field>
+        </v-card-title>
+        <v-data-table
+          v-model="selectedTemplate"
+          :headers="headersTemplate"
+          :items="templates"
+          :single-select="!autoAdd"
+          item-key="ID"
+          show-select
+          :items-per-page="15"
+          sort-by="Type"
+          dense
+        >
+          <template v-slot:[`item.Level`]="{ item }">
+            <v-icon :color="$getStateColor(item.Level)">{{
+              $getStateIconName(item.Level)
+            }}</v-icon>
+            {{ $getStateName(item.Level) }}
+          </template>
+        </v-data-table>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn v-if="autoAdd" color="primary" @click="doAutoAddPolling">
+            <v-icon>mdi-delete</v-icon>
+            追加
+          </v-btn>
+          <v-btn v-else color="primary" @click="selectTemplate">
+            <v-icon>mdi-delete</v-icon>
+            選択
+          </v-btn>
+          <v-btn color="normal" @click="templateDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -233,6 +296,18 @@ export default {
         { text: '操作', value: 'actions', width: '10%' },
       ],
       pollings: [],
+      autoAdd: false,
+      searchTemplate: '',
+      headersTemplate: [
+        { text: '名前', value: 'Name', width: '25%' },
+        { text: 'レベル', value: 'Level', width: '15%' },
+        { text: '種別', value: 'Type', width: '10%' },
+        { text: 'モード', value: 'Mode', width: '10%' },
+        { text: '説明', value: 'Descr', width: '40%' },
+      ],
+      selectedTemplate: [],
+      templateDialog: false,
+      templates: [],
     }
   },
   methods: {
@@ -241,13 +316,23 @@ export default {
       this.editPolling = Object.assign({}, item)
       this.editDialog = true
     },
+    copyPolling(item) {
+      this.editIndex = -1
+      this.editPolling = Object.assign({}, item)
+      this.editPolling.ID = ''
+      this.editDialog = true
+    },
     addPolling() {
       this.editIndex = -1
       this.editPolling = {
         Name: '',
         NodeID: this.node.ID,
         Type: 'ping',
-        Polling: '',
+        Mode: '',
+        Params: '',
+        Filter: '',
+        Extractor: '',
+        Script: '',
         Level: 'low',
         PollInt: 60,
         Timeout: 1,
@@ -302,6 +387,59 @@ export default {
           })
       }
       this.closeEdit()
+    },
+    async showTemplateDialog() {
+      this.autoAdd = false
+      this.selectedTemplate = []
+      const r = await this.$axios.$get('/api/polling/template')
+      if (r) {
+        this.templates = r
+        this.templateDialog = true
+      }
+    },
+    async showAutoAddDialog() {
+      this.selectedTemplate = []
+      const r = await this.$axios.$get('/api/polling/template')
+      if (r) {
+        this.templates = r
+        this.autoAdd = true
+        this.templateDialog = true
+      }
+    },
+    doAutoAddPolling() {
+      if (!this.selectedTemplate || this.selectedTemplate.length < 1) {
+        return
+      }
+      const p = {
+        NodeID: this.node.ID,
+        PollingTemplateIDs: [],
+      }
+      for (let i = 0; i < this.selectedTemplate.length; i++) {
+        p.PollingTemplateIDs.push(this.selectedTemplate[i].ID)
+      }
+      this.$axios
+        .post('/api/polling/auto', p)
+        .then(() => {
+          this.$fetch()
+          this.templateDialog = false
+        })
+        .catch((e) => {
+          this.updateError = true
+          this.$fetch()
+        })
+    },
+    selectTemplate() {
+      if (!this.selectedTemplate || this.selectedTemplate.length !== 1) {
+        return
+      }
+      this.editPolling.Name = this.selectedTemplate[0].Name
+      this.editPolling.Type = this.selectedTemplate[0].Type
+      this.editPolling.Mode = this.selectedTemplate[0].Mode
+      this.editPolling.Params = this.selectedTemplate[0].Params
+      this.editPolling.Filter = this.selectedTemplate[0].Filter
+      this.editPolling.Extractor = this.selectedTemplate[0].Extractor
+      this.editPolling.Script = this.selectedTemplate[0].Script
+      this.templateDialog = false
     },
   },
 }

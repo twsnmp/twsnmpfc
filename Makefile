@@ -35,7 +35,7 @@ $(DIST)/twsnmpfc: statik/statik.go
 ### nuxt.js アプリのビルド
 spa/dist/index.html:
 	cd spa && npm run generate
-statik/statik.go: spa/dist/index.html conf/mib.txt conf/yasumi.txt
+statik/statik.go: spa/dist/* conf/*
 	cp -a conf  spa/dist
 	statik -src spa/dist
 clean_spa:
