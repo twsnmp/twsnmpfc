@@ -61,6 +61,10 @@
           <v-icon>mdi-plus</v-icon>
           追加
         </v-btn>
+        <v-btn color="normal" dark @click="$fetch()">
+          <v-icon>mdi-cached</v-icon>
+          更新
+        </v-btn>
       </v-card-actions>
     </v-card>
     <v-dialog v-model="editDialog" persistent max-width="500px">
@@ -231,6 +235,7 @@
           v-model="selectedTemplate"
           :headers="headersTemplate"
           :items="templates"
+          :search="searchTemplate"
           single-select
           item-key="ID"
           show-select

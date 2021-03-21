@@ -161,6 +161,8 @@ func doPolling(pe *datastore.PollingEnt, startTime int64) {
 		doPollingVMWare(pe)
 	case "twsnmp":
 		doPollingTWSNMP(pe)
+	case "report":
+		doPollingReport(pe)
 	}
 	datastore.UpdatePolling(pe)
 	if pe.LogMode == datastore.LogModeAlways || pe.LogMode == datastore.LogModeAI || (pe.LogMode == datastore.LogModeOnChange && oldState != pe.State) {

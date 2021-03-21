@@ -57,6 +57,10 @@
           <v-icon>mdi-plus</v-icon>
           追加
         </v-btn>
+        <v-btn color="normal" dark @click="$fetch()">
+          <v-icon>mdi-cached</v-icon>
+          更新
+        </v-btn>
         <v-btn color="normal" dark @click="$router.go(-1)">
           <v-icon>mdi-arrow-left</v-icon>
           戻る
@@ -208,7 +212,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="templateDialog" persistent max-width="900px">
+    <v-dialog v-model="templateDialog" persistent max-width="90%">
       <v-card>
         <v-card-title>
           <span v-if="autoAdd" class="headline">テンプレートから自動追加</span>
@@ -227,6 +231,7 @@
           :headers="headersTemplate"
           :items="templates"
           :single-select="!autoAdd"
+          :search="searchTemplate"
           item-key="ID"
           show-select
           :items-per-page="15"

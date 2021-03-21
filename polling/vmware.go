@@ -67,7 +67,7 @@ func doPollingVMWare(pe *datastore.PollingEnt) {
 	vm := otto.New()
 	for k, v := range rMap {
 		vm.Set(k, v)
-		pe.Result[k] = fmt.Sprintf("%f", v)
+		pe.Result[k] = v
 	}
 	value, err := vm.Run(script)
 	if err != nil {

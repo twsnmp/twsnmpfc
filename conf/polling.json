@@ -359,6 +359,38 @@
     "Descr": "SYSLOG PRI監視"
   },
   {
+    "Name": "デバイスレポート信用スコア監視",
+    "Type": "report",
+    "Mode": "device",
+    "Level": "low",
+    "Script": "ScoreAvg > 50.0",
+    "Descr": "デバイスレポートの信用スコアを定期的に集計して監視"
+  },
+  {
+    "Name": "ユーザーレポート信用スコア監視",
+    "Type": "report",
+    "Mode": "user",
+    "Level": "low",
+    "Script": "ScoreAvg > 50.0",
+    "Descr": "ユーザーレポートの信用スコアを定期的に集計して監視"
+  },
+  {
+    "Name": "サーバーレポート信用スコア監視",
+    "Type": "report",
+    "Mode": "server",
+    "Level": "low",
+    "Script": "ScoreAvg > 50.0",
+    "Descr": "サーバーレポートの信用スコアを定期的に集計して監視"
+  },
+  {
+    "Name": "通信フローレポート信用スコア監視",
+    "Type": "report",
+    "Mode": "flow",
+    "Level": "low",
+    "Script": "ScoreAvg > 50.0",
+    "Descr": "通信レポートの信用スコアを定期的に集計して監視"
+  },
+  {
     "Name": "TWSNMP連携",
     "Type": "twsnmp",
     "Level": "low",

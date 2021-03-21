@@ -63,6 +63,7 @@ const typeList = [
   { text: 'IPFIX', value: 'ipfix' },
   { text: 'Command', value: 'cmd' },
   { text: 'SSH', value: 'ssh' },
+  { text: 'Report', value: 'report' },
   { text: 'TWSNMP', value: 'twsnmp' },
   { text: 'VMware', value: 'vmware' },
 ]
