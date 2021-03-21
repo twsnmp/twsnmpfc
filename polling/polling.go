@@ -108,7 +108,7 @@ func checkPolling() {
 	now := time.Now().UnixNano()
 	list := []*datastore.PollingEnt{}
 	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
-		if p.NextTime < (now + (10 * 1000 * 1000 * 1000)) {
+		if p.Level != "off" && p.NextTime < (now+(10*1000*1000*1000)) {
 			list = append(list, p)
 		}
 		return true

@@ -1,7 +1,6 @@
 package datastore
 
 import (
-	"log"
 	"strings"
 )
 
@@ -28,7 +27,6 @@ func loadGrokMap(s string) {
 			Ok:  e[2],
 		}
 	}
-	log.Printf("grok=%#v", grokMap)
 }
 
 func GetGrokEnt(k string) *GrokEnt {

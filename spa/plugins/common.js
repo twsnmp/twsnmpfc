@@ -9,6 +9,7 @@ const stateList = [
   { text: '情報', color: '#1f78b4', icon: 'mdi-information', value: 'info' },
   { text: '新規', color: '#1f78b4', icon: 'mdi-information', value: 'New' },
   { text: '変化', color: '#e31a1c', icon: 'mdi-autorenew', value: 'Change' },
+  { text: '停止', color: '#777', icon: 'mdi-stop', value: 'off' },
 ]
 const stateMap = {}
 
@@ -33,6 +34,7 @@ const levelList = [
   { text: '軽度', value: 'low' },
   { text: '注意', value: 'warn' },
   { text: '情報', value: 'info' },
+  { text: '停止', value: 'off' },
 ]
 
 const filterEventLevelList = [

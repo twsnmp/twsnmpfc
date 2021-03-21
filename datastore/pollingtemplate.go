@@ -49,7 +49,6 @@ func loadPollingTemplate(js []byte) error {
 			pollingTemplateList[list[i].ID] = &list[i]
 		}
 	}
-	log.Printf("pollingTemplateList=%#v", pollingTemplateList)
 	return nil
 }
 
