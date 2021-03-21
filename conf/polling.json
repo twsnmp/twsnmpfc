@@ -19,5 +19,349 @@
     "Mode": "line",
     "Level": "low",
     "Descr": "回線速度、遅延、それぞれの変動係数を測定"
+  },
+  {
+    "Name": "SNMP再起動監視",
+    "Type": "snmp",
+    "Mode": "sysUpTime",
+    "Level": "low",
+    "Descr": "対象ノードの再起動を検知"
+  },
+  {
+    "Name": "インターフェイス監視",
+    "Type": "snmp",
+    "Mode": "ifOperStatus",
+    "Params": "$i",
+    "Level": "low",
+    "AutoMode": "snmp:ifOperStatus",
+    "Descr": "インターフェイスの状態を監視"
+  },
+  {
+    "Name": "プロセス起動数監視",
+    "Type": "snmp",
+    "Mode": "count",
+    "Params": "hrSWRunName",
+    "Filter":"",
+    "Script":"count > 0",
+    "Level": "low",
+    "Descr": "プロセスの起動数の監視、フィルタでプロセス名を指定"
+  },
+  {
+    "Name": "TCP接続数監視",
+    "Type": "snmp",
+    "Mode": "count",
+    "Params": "tcpConnState",
+    "Filter":"5",
+    "Script":"count > 0",
+    "Level": "low",
+    "Descr": "TCP接続数を監視"
+  },
+  {
+    "Name": "プロセス再起動監視",
+    "Type": "snmp",
+    "Mode": "process",
+    "Params": "", 
+    "Filter": "",
+    "Script": "changed == 0",
+    "Level": "low",
+    "Descr": "監視対象のプロセスのPIDの変化を検知"
+  },
+  {
+    "Name": "プロセス起動監視",
+    "Type": "snmp",
+    "Mode": "process",
+    "Params": "", 
+    "Filter": "",
+    "Script": "count > 0",
+    "Level": "low",
+    "Descr": "フィルターで指定したプロセスの起動を検知"
+  },
+  {
+    "Name": "TCP接続数",
+    "Type": "snmp",
+    "Mode": "get",
+    "Params": "tcpCurrEstab.0",
+    "Script": "tcpCurrEstab < 10000",
+    "Level": "low",
+    "Descr": "TCP接続数の監視"
+  },
+  {
+    "Name": "LANポート送受信",
+    "Type": "snmp",
+    "Mode": "ps",
+    "Params": "ifInOctets.$i,ifOutOctets.$i",
+    "Script": "Mbps=8*(ifInOctets+ifOutOctets)/1000000;Mbps < 1000",
+    "Level": "low",
+    "AutoMode": "snmp:index",
+    "Descr": "LANポートの送受信の合計量をMbps単位で測定"
+  },
+  {
+    "Name": "LANポート受信",
+    "Type": "snmp",
+    "Mode": "ps",
+    "Params": "ifInOctets.$i",
+    "Script": "rxbytesps=ifInOctets;rxbytesps > 0",
+    "Level": "low",
+    "AutoMode": "snmp:index",
+    "Descr": "LANポート受信データ量"
+  },
+  {
+    "Name": "LANポート送信",
+    "Type": "snmp",
+    "Mode": "ps",
+    "Params": "ifOutOctets.$i",
+    "Script": "txbytesps=ifOutOctets;txbytesps > 0",
+    "Level": "low",
+    "AutoMode": "snmp:index",
+    "Descr": "LANポート送信データ量"
+  },
+  {
+    "Name": "CPUコア単位使用率",
+    "Type": "snmp",
+    "Mode": "get",
+    "Params": "hrProcessorLoad.$i",
+    "Script": "cpu=hrProcessorLoad; cpu < 90.0",
+    "Level": "low",
+    "AutoMode": "snmp:index",
+    "Descr": "CPUコア単位使用率"
+  },
+  {
+    "Name": "CPU平均使用率",
+    "Type": "snmp",
+    "Mode": "stats",
+    "Params": "hrProcessorLoad",
+    "Script": "avg > 90.0",
+    "Level": "low",
+    "Descr": "CPU平均使用率"
+  },
+  {
+    "Name": "ストレージ使用率",
+    "Type": "snmp",
+    "Mode": "get",
+    "Params": "hrStorageSize.$i,hrStorageUsed.$i",
+    "Script": "rate=hrStorageSize > 0 ? 100.0*(hrStorageUsed/hrStorageSize):0.0;rate > 90.0",
+    "Level": "low",
+    "AutoMode": "snmp:index",
+    "Descr": "ストレージ使用率"
+  },
+  {
+    "Name": "TCP接続",
+    "Type": "tcp",
+    "Mode": "",
+    "Params": "$p",
+    "Level": "low",
+    "AutoMode": "port:22,25,80,443",
+    "Descr": "TCP接続監視"
+  },
+  {
+    "Name": "HTTP応答監視",
+    "Type": "http",
+    "Mode": "",
+    "Params": "$url",
+    "Level": "low",
+    "Descr": "HTTP応答監視"
+  },
+  {
+    "Name": "気象情報",
+    "Type": "http",
+    "Mode": "https",
+    "Params": "https://api.openweathermap.org/data/2.5/weather?q=地域,jp&units=metric&APPID=取得したAPIキー",
+    "Extractor": "OPENWEATHER",
+    "Script": "temp > 35.0",
+    "Level": "low",
+    "Descr": "気象情報の取得"
+  },
+  {
+    "Name": "TLS証明書期限",
+    "Type": "tls",
+    "Mode": "expire",
+    "Params": "",
+    "Script": "30",
+    "Level": "low",
+    "Descr": "サーバー証明書の期限が３０日以内を検知"
+  },
+  {
+    "Name": "TLS v1.0 利用検知",
+    "Type": "tls",
+    "Mode": "version",
+    "Params": "",
+    "Script": "!1.0",
+    "Level": "low",
+    "Descr": "TLS v1.0の利用を検知"
+  },
+  {
+    "Name": "TLS証明書検証",
+    "Type": "tls",
+    "Mode": "verify",
+    "Params": "",
+    "Level": "low",
+    "Descr": "サーバー証明書を検証"
+  },
+  {
+    "Name": "NTPサーバー監視",
+    "Type": "ntp",
+    "Mode": "",
+    "Params": "",
+    "Level": "low",
+    "Descr": "NTPサーバー監視"
+  },
+  {
+    "Name": "DNS NSレコード",
+    "Type": "dns",
+    "Mode": "ns",
+    "Polling": "ホスト名",
+    "Script": "count > 0",
+    "Level": "low",
+    "AutoMode": "disable",
+    "Descr": "DNS NSレコード"
+  },
+  {
+    "Name": "DNS逆引き",
+    "Type": "dns",
+    "Mode": "addr",
+    "Params": "アドレス",
+    "Level": "low",
+    "Descr": "DNS逆引き"
+  },
+  {
+    "Name": "DNS TXTレコード",
+    "Type": "dns",
+    "Mode": "txt",
+    "Params": "ホスト名",
+    "Script": "count > 0",
+    "Level": "low",
+    "AutoMode": "disable",
+    "Descr": "DNS TXTレコード"
+  },
+  {
+    "Name": "DNS CNAMEレコード",
+    "Type": "dns",
+    "Mode": "cname",
+    "Params": "ホスト名",
+    "Script": "count > 0",
+    "Level": "low",
+    "AutoMode": "disable",
+    "Descr": "DNS CNAMEレコード"
+  },
+  {
+    "Name": "DNS MXレコード",
+    "Type": "dns",
+    "Mode": "mx",
+    "Params": "ホスト名",
+    "Script": "count > 0",
+    "Level": "low",
+    "AutoMode": "disable",
+    "Descr": "DNS MXレコード"
+  },
+  {
+    "Name": "DNSアドレス変化監視",
+    "Type": "dns",
+    "Mode": "change",
+    "Params": "ホスト名",
+    "Level": "low",
+    "Descr": "DNSアドレス変化監視"
+  },
+  {
+    "Name": "DNSアドレス解決",
+    "Type": "dns",
+    "Mode": "host",
+    "Params": "ホスト名",
+    "Script": "count > 0",
+    "Level": "low",
+    "AutoMode": "disable",
+    "Descr": "DNSアドレス解決"
+  },
+  {
+    "Name": "SSHポーリング",
+    "Type": "ssh",
+    "Mode": "",
+    "Params": "コマンド",
+    "Script": "exitCode == 0",
+    "Level": "low",
+    "Descr": "SSHポーリング"
+  },
+  {
+    "Name": "SSH uptimeポーリング",
+    "Type": "ssh",
+    "Params": "/usr/bin/uptime",
+    "Extractor": "UPTIME",
+    "Script": "load1m < 1.0",
+    "Level": "low",
+    "NodeType": "",
+    "Descr": "SSH uptimeポーリング"
+  },
+  {
+    "Name": "仮想マシン稼働状態",
+    "Type": "vmware",
+    "Mode": "VirtualMachine",
+    "Script": "up > 0",
+    "Level": "low",
+    "Descr": "仮想マシン稼働状態"
+  },
+  {
+    "Name": "仮想基盤CPU使用率",
+    "Type": "vmware",
+    "Mode": "HostSystem",
+    "Filter": "仮想基盤名",
+    "Script": "usageCPU < 80",
+    "Level": "low",
+    "Descr": "仮想基盤CPU使用率"
+  },
+  {
+    "Name": "仮想基盤データストア容量",
+    "Type": "vmware",
+    "Mode": "Datastore",
+    "Filter": "データストア名",
+    "Script": "usage < 80",
+    "Level": "low",
+    "Descr": "仮想基盤データストア容量"
+  },
+  {
+    "Name": "仮想基盤メモリー使用率",
+    "Type": "vmware",
+    "Mode": "HostSystem",
+    "Script": "usageMEM < 80",
+    "Level": "low",
+    "Descr": "仮想基盤メモリー使用率"
+  },
+  {
+    "Name": "Syslog件数",
+    "Type": "syslog",
+    "Mode": "count",
+    "Filter": "フィルター条件",
+    "Polling": "count < 1",
+    "Level": "low",
+    "Descr": "フィルター条件に一致するsyslogの件数をモニタ"
+  },
+  {
+    "Name": "TRAP受信",
+    "Type": "trap",
+    "Mode": "count",
+    "Filter": "フィルター条件",
+    "Polling": "count < 1",
+    "Level": "low",
+    "Descr": "フィルター条件に一致するsyslogの件数をモニタ"
+  },
+  {
+    "Name": "NetFlowで通信監視",
+    "Type": "netflow",
+    "Filter": "フィルター条件",
+    "Polling": "count < 1",
+    "Level": "low",
+    "Descr": "NetFlowで通信監視"
+  },
+  {
+    "Name": "SYSLOG PRI監視",
+    "Type": "syslog",
+    "Mode": "pri",
+    "Filter": "フィルター条件",
+    "Level": "low",
+    "Descr": "SYSLOG PRI監視"
+  },
+  {
+    "Name": "TWSNMP連携",
+    "Type": "twsnmp",
+    "Level": "low",
+    "Descr": "TWSNMP連携"
   }
 ]

@@ -243,11 +243,11 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn v-if="autoAdd" color="primary" @click="doAutoAddPolling">
-            <v-icon>mdi-delete</v-icon>
+            <v-icon>content-save</v-icon>
             追加
           </v-btn>
           <v-btn v-else color="primary" @click="selectTemplate">
-            <v-icon>mdi-delete</v-icon>
+            <v-icon>content-save</v-icon>
             選択
           </v-btn>
           <v-btn color="normal" @click="templateDialog = false">
