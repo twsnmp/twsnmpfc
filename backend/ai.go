@@ -68,10 +68,6 @@ func checkLastAIResultTime(id string) bool {
 	}
 	last, err := datastore.GetAIReesult(id)
 	if err != nil {
-		log.Printf("loadAIReesult  id=%s err=%v", id, err)
-		if err = datastore.DeleteAIResult(id); err != nil {
-			log.Printf("loadAIReesult  id=%s err=%v", id, err)
-		}
 		return true
 	}
 	nextAIReqTimeMap[id] = last.LastTime
@@ -86,29 +82,47 @@ func doAI(pe *datastore.PollingEnt) {
 		PollingID: pe.ID,
 	}
 	err := makeAIData(req)
+	if err != nil {
+		log.Printf("doAI skip makeAIData error %s %s err=%v", pe.ID, pe.Name, err)
+		return
+	}
 	if err != nil || len(req.Data) < 10 {
-		log.Printf("doAI Skip No data %s %s", pe.ID, pe.Name)
+		log.Printf("doAI skip AIData length  %s %s len=%d", pe.ID, pe.Name, len(req.Data))
 		return
 	}
 	nextAIReqTimeMap[pe.ID] = time.Now().Unix() + 60*60
-	log.Printf("doAI Start %s %s %d", pe.ID, pe.Name, len(req.Data))
+	log.Printf("doAI start %s %s %d", pe.ID, pe.Name, len(req.Data))
 	go calcAIScore(req)
 }
 
-const entLen = 20
+func getAIDataKeys(p *datastore.PollingEnt) []string {
+	keys := []string{}
+	if p.Type == "syslog" && p.Mode == "pri" {
+		for i := 0; i < 256; i++ {
+			keys = append(keys, fmt.Sprintf("pri_%d", i))
+		}
+		return keys
+	}
+	for k, v := range p.Result {
+		// lastTimeは、測定データに含めない
+		if k == "lastTime" {
+			continue
+		}
+		if _, ok := v.(float64); !ok {
+			log.Printf("skip key %s=%v", k, v)
+			continue
+		}
+		keys = append(keys, k)
+	}
+	return keys
+}
 
 func makeAIData(req *aiReq) error {
 	p := datastore.GetPolling(req.PollingID)
 	if p == nil {
 		return fmt.Errorf("no polling")
 	}
-	keys := []string{}
-	for k, v := range p.Result {
-		if _, ok := v.(float64); !ok {
-			continue
-		}
-		keys = append(keys, k)
-	}
+	keys := getAIDataKeys(p)
 	if len(keys) < 1 {
 		return fmt.Errorf("no keys")
 	}

@@ -49,7 +49,7 @@ func doPollingDNS(pe *datastore.PollingEnt) {
 	vm := otto.New()
 	_ = vm.Set("rtt", rTime)
 	_ = vm.Set("count", len(out))
-	pe.Result["rtt"] = rTime
+	pe.Result["rtt"] = float64(rTime)
 	pe.Result["count"] = float64(len(out))
 	switch mode {
 	case "ipaddr":

@@ -33,7 +33,7 @@
     "Mode": "ifOperStatus",
     "Params": "$i",
     "Level": "low",
-    "AutoMode": "snmp:ifOperStatus",
+    "AutoMode": "snmp:index",
     "Descr": "インターフェイスの状態を監視"
   },
   {
@@ -168,7 +168,8 @@
     "Params": "https://api.openweathermap.org/data/2.5/weather?q=地域,jp&units=metric&APPID=取得したAPIキー",
     "Extractor": "OPENWEATHER",
     "Script": "temp > 35.0",
-    "Level": "low",
+    "Level": "off",
+    "AutoMode": "disable",
     "Descr": "気象情報の取得"
   },
   {
@@ -221,6 +222,7 @@
     "Mode": "addr",
     "Params": "アドレス",
     "Level": "low",
+    "AutoMode": "disable",
     "Descr": "DNS逆引き"
   },
   {
@@ -294,9 +296,11 @@
     "Name": "仮想マシン稼働状態",
     "Type": "vmware",
     "Mode": "VirtualMachine",
+    "Filter": "仮想マシン名",
     "Script": "up > 0",
-    "Level": "low",
-    "Descr": "仮想マシン稼働状態"
+    "Level": "off",
+    "Descr": "仮想マシン稼働状態",
+    "AutoMode": "vmware:vm"
   },
   {
     "Name": "仮想基盤CPU使用率",
@@ -304,8 +308,18 @@
     "Mode": "HostSystem",
     "Filter": "仮想基盤名",
     "Script": "usageCPU < 80",
-    "Level": "low",
+    "Level": "off",
     "Descr": "仮想基盤CPU使用率"
+  },
+  {
+    "Name": "仮想基盤メモリー使用率",
+    "Type": "vmware",
+    "Mode": "HostSystem",
+    "Filter": "仮想基盤名",
+    "Script": "usageMEM < 80",
+    "Level": "off",
+    "Descr": "仮想基盤メモリー使用率",
+    "AutoMode": "vmware:hostsystem"
   },
   {
     "Name": "仮想基盤データストア容量",
@@ -313,16 +327,9 @@
     "Mode": "Datastore",
     "Filter": "データストア名",
     "Script": "usage < 80",
-    "Level": "low",
-    "Descr": "仮想基盤データストア容量"
-  },
-  {
-    "Name": "仮想基盤メモリー使用率",
-    "Type": "vmware",
-    "Mode": "HostSystem",
-    "Script": "usageMEM < 80",
-    "Level": "low",
-    "Descr": "仮想基盤メモリー使用率"
+    "Level": "off",
+    "Descr": "仮想基盤データストア容量",
+    "AutoMode": "vmware:datastore"
   },
   {
     "Name": "Syslog件数",
@@ -330,7 +337,7 @@
     "Mode": "count",
     "Filter": "フィルター条件",
     "Polling": "count < 1",
-    "Level": "low",
+    "Level": "off",
     "Descr": "フィルター条件に一致するsyslogの件数をモニタ"
   },
   {
@@ -340,14 +347,14 @@
     "Filter": "フィルター条件",
     "Polling": "count < 1",
     "Level": "low",
-    "Descr": "フィルター条件に一致するsyslogの件数をモニタ"
+    "Descr": "フィルター条件に一致するSNMP TARPの件数をモニタ"
   },
   {
     "Name": "NetFlowで通信監視",
     "Type": "netflow",
     "Filter": "フィルター条件",
     "Polling": "count < 1",
-    "Level": "low",
+    "Level": "off",
     "Descr": "NetFlowで通信監視"
   },
   {
@@ -355,8 +362,35 @@
     "Type": "syslog",
     "Mode": "pri",
     "Filter": "フィルター条件",
-    "Level": "low",
+    "Level": "off",
     "Descr": "SYSLOG PRI監視"
+  },
+  {
+    "Name": "SSHログからユーザーレポート",
+    "Type": "syslog",
+    "Mode": "user",
+    "Filter": "フィルター条件",
+    "Extractor": "SSHLOGIN",
+    "Level": "off",
+    "Descr": "SSHのログインのログからユーザーレポート作成"
+  },
+  {
+    "Name": "Syslogからデバイスレポート",
+    "Type": "syslog",
+    "Mode": "user",
+    "Filter": "フィルター条件",
+    "Extractor": "DEVICE",
+    "Level": "off",
+    "Descr": "Syslogからデバイスレポート作成"
+  },
+  {
+    "Name": "WELFログからフローレポート",
+    "Type": "syslog",
+    "Mode": "flow",
+    "Filter": "フィルター条件",
+    "Extractor": "WELFFLOW",
+    "Level": "off",
+    "Descr": "WELFログから通信フローレポート作成"
   },
   {
     "Name": "デバイスレポート信用スコア監視",

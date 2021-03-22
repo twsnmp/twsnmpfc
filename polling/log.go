@@ -31,7 +31,7 @@ func getLogContent(l string) string {
 }
 
 func doPollingLog(pe *datastore.PollingEnt) {
-	if pe.Type == "syslog" || pe.Mode == "pri" {
+	if pe.Type == "syslog" && pe.Mode == "pri" {
 		doPollingSyslogPri(pe)
 		return
 	}
@@ -94,7 +94,7 @@ func doPollingLog(pe *datastore.PollingEnt) {
 				return true
 			}
 			for k, v := range sl {
-				msg += k + "=" + fmt.Sprintf("%v", v)
+				msg += k + "=" + fmt.Sprintf("%v", v) + "\t"
 			}
 		}
 		if regexFilter != nil && !regexFilter.Match([]byte(msg)) {
@@ -185,9 +185,11 @@ func doPollingLog(pe *datastore.PollingEnt) {
 				}
 			} else {
 				failed = true
-				setPollingError("log", pe, fmt.Errorf("invalid log watch format"))
+				setPollingError("log", pe, fmt.Errorf("invalid script"))
 				return false
 			}
+		} else {
+			count++
 		}
 		return true
 	})
@@ -215,7 +217,7 @@ func doPollingLog(pe *datastore.PollingEnt) {
 	vm.Set("interval", pe.PollInt)
 	value, err := vm.Run(script)
 	if err == nil {
-		setPollingError("log", pe, fmt.Errorf("invalid log watch format"))
+		setPollingError("log", pe, fmt.Errorf("invalid script"))
 		return
 	}
 	if ok, _ := value.ToBoolean(); ok {
@@ -252,7 +254,7 @@ func doPollingSyslogPri(pe *datastore.PollingEnt) bool {
 			return true
 		}
 		for k, v := range sl {
-			msg += k + "=" + fmt.Sprintf("%v", v)
+			msg += k + "=" + fmt.Sprintf("%v", v) + "\t"
 		}
 		if regexFilter != nil && !regexFilter.Match([]byte(msg)) {
 			return true
