@@ -317,10 +317,6 @@ func AddServer(s *ServerEnt) {
 	servers.Store(s.ID, s)
 }
 
-// func LenServers() int {
-// 	return len(servers)
-// }
-
 func ForEachServers(f func(*ServerEnt) bool) {
 	servers.Range(func(k, v interface{}) bool {
 		s := v.(*ServerEnt)

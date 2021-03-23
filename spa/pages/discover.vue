@@ -227,8 +227,10 @@ export default {
   },
   methods: {
     start() {
-      this.discover.Conf.X = this.$route.query.x * 1 || 0
-      this.discover.Conf.Y = this.$route.query.y * 1 || 0
+      const x = this.$route.query.x * 1 || 0
+      const y = this.$route.query.y * 1 || 0
+      this.discover.Conf.X = Math.floor(x)
+      this.discover.Conf.Y = Math.floor(y)
       this.$axios
         .post('/api/discover/start', this.discover.Conf)
         .then((r) => {
