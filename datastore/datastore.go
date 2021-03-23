@@ -34,15 +34,15 @@ var (
 	DBStats      DBStatsEnt
 	DBStatsLog   []DBStatsLogEnt
 	Yasumi       string
-	// Map Data on Memory not export
+	// Map Data on Memory
 	nodes    sync.Map
 	lines    sync.Map
 	pollings sync.Map
-	// Report Data on Memory not export
-	devices map[string]*DeviceEnt
-	users   map[string]*UserEnt
-	flows   map[string]*FlowEnt
-	servers map[string]*ServerEnt
+	// Report Data on Memory
+	devices sync.Map
+	users   sync.Map
+	flows   sync.Map
+	servers sync.Map
 	// MAP Changed check
 	stateChangedNodes sync.Map
 	lastLogAdded      time.Time
@@ -89,10 +89,6 @@ var (
 
 func InitDataStore(ctx context.Context, path string, fs http.FileSystem) error {
 	dspath = path
-	devices = make(map[string]*DeviceEnt)
-	users = make(map[string]*UserEnt)
-	flows = make(map[string]*FlowEnt)
-	servers = make(map[string]*ServerEnt)
 	eventLogCh = make(chan *EventLogEnt, 100)
 	protMap = map[int]string{
 		1:   "icmp",

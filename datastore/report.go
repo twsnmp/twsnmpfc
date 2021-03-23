@@ -97,7 +97,7 @@ func LoadReport() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var d DeviceEnt
 				if err := json.Unmarshal(v, &d); err == nil {
-					devices[d.ID] = &d
+					devices.Store(d.ID, &d)
 				}
 				return nil
 			})
@@ -107,7 +107,7 @@ func LoadReport() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var u UserEnt
 				if err := json.Unmarshal(v, &u); err == nil {
-					users[u.ID] = &u
+					users.Store(u.ID, &u)
 				}
 				return nil
 			})
@@ -117,7 +117,7 @@ func LoadReport() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var s ServerEnt
 				if err := json.Unmarshal(v, &s); err == nil {
-					servers[s.ID] = &s
+					servers.Store(s.ID, &s)
 				}
 				return nil
 			})
@@ -127,7 +127,7 @@ func LoadReport() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var f FlowEnt
 				if err := json.Unmarshal(v, &f); err == nil {
-					flows[f.ID] = &f
+					flows.Store(f.ID, &f)
 				}
 				return nil
 			})
@@ -143,61 +143,73 @@ func SaveReport(last int64) error {
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		r := b.Bucket([]byte("devices"))
-		for _, d := range devices {
+		devices.Range(func(k, v interface{}) bool {
+			d := v.(*DeviceEnt)
 			if d.UpdateTime < last {
-				continue
+				return true
 			}
 			s, err := json.Marshal(d)
 			if err != nil {
-				return err
+				log.Printf("Save Report err=%v", err)
+				return true
 			}
 			err = r.Put([]byte(d.ID), s)
 			if err != nil {
-				return err
+				log.Printf("Save Report err=%v", err)
 			}
-		}
+			return true
+		})
 		r = b.Bucket([]byte("users"))
-		for _, u := range users {
+		users.Range(func(k, v interface{}) bool {
+			u := v.(*UserEnt)
 			if u.UpdateTime < last {
-				continue
+				return true
 			}
 			s, err := json.Marshal(u)
 			if err != nil {
-				return err
+				log.Printf("Save Report err=%v", err)
+				return true
 			}
 			err = r.Put([]byte(u.ID), s)
 			if err != nil {
-				return err
+				log.Printf("Save Report err=%v", err)
 			}
-		}
+			return true
+		})
 		r = b.Bucket([]byte("servers"))
-		for _, s := range servers {
+		servers.Range(func(k, v interface{}) bool {
+			s := v.(*ServerEnt)
 			if s.UpdateTime < last {
-				continue
+				return true
 			}
 			js, err := json.Marshal(s)
 			if err != nil {
-				return err
+				log.Printf("Save Report err=%v", err)
+				return true
 			}
 			err = r.Put([]byte(s.ID), js)
 			if err != nil {
-				return err
+				log.Printf("Save Report err=%v", err)
 			}
-		}
+			return true
+		})
 		r = b.Bucket([]byte("flows"))
-		for _, f := range flows {
+		flows.Range(func(k, v interface{}) bool {
+			f := v.(*FlowEnt)
 			if f.UpdateTime < last {
-				continue
+				return true
 			}
 			s, err := json.Marshal(f)
 			if err != nil {
-				return err
+				log.Printf("Save Report err=%v", err)
+				return true
 			}
 			err = r.Put([]byte(f.ID), s)
 			if err != nil {
-				return err
+				log.Printf("Save Report err=%v", err)
 			}
-		}
+			return true
+		})
 		return nil
 	})
 }
@@ -211,105 +223,113 @@ func DeleteReport(report, id string) error {
 		if b != nil {
 			r := b.Bucket([]byte(report))
 			if r != nil {
-				_ = r.Delete([]byte(id))
+				r.Delete([]byte(id))
 			}
 		}
 		return nil
 	})
 	if report == "devices" {
-		delete(devices, id)
+		devices.Delete(id)
 	} else if report == "users" {
-		delete(users, id)
+		users.Delete(id)
 	} else if report == "servers" {
-		delete(servers, id)
+		servers.Delete(id)
 	} else if report == "flows" {
-		delete(flows, id)
+		flows.Delete(id)
 	}
 	return nil
 }
 
 func GetDevice(id string) *DeviceEnt {
-	return devices[id]
+	if v, ok := devices.Load(id); ok {
+		return v.(*DeviceEnt)
+	}
+	return nil
 }
 
 func AddDevice(d *DeviceEnt) {
-	devices[d.ID] = d
+	devices.Store(d.ID, d)
 }
 
 func DeleteDevice(id string) {
-	delete(devices, id)
+	devices.Delete(id)
 }
 
 func ForEachDevices(f func(*DeviceEnt) bool) {
-	for _, d := range devices {
-		if !f(d) {
-			return
-		}
-	}
+	devices.Range(func(k, v interface{}) bool {
+		d := v.(*DeviceEnt)
+		return f(d)
+	})
 }
 
 func GetUser(id string) *UserEnt {
-	return users[id]
+	if v, ok := users.Load(id); ok {
+		return v.(*UserEnt)
+	}
+	return nil
 }
 
 func AddUser(u *UserEnt) {
-	users[u.ID] = u
+	users.Store(u.ID, u)
 }
 
 func ForEachUsers(f func(*UserEnt) bool) {
-	for _, u := range users {
-		if !f(u) {
-			return
-		}
-	}
+	users.Range(func(k, v interface{}) bool {
+		u := v.(*UserEnt)
+		return f(u)
+	})
 }
 
 func DeleteUser(id string) {
-	delete(devices, id)
+	devices.Delete(id)
 }
 
 func GetFlow(id string) *FlowEnt {
-	return flows[id]
+	if v, ok := flows.Load(id); ok {
+		return v.(*FlowEnt)
+	}
+	return nil
 }
 
 func AddFlow(f *FlowEnt) {
-	flows[f.ID] = f
+	flows.Store(f.ID, f)
 }
 
 func ForEachFlows(f func(*FlowEnt) bool) {
-	for _, fl := range flows {
-		if !f(fl) {
-			return
-		}
-	}
+	flows.Range(func(k, v interface{}) bool {
+		fl := v.(*FlowEnt)
+		return f(fl)
+	})
 }
 
 func DeleteFlow(id string) {
-	delete(flows, id)
+	flows.Delete(id)
 }
 
 func GetServer(id string) *ServerEnt {
-	return servers[id]
+	if v, ok := servers.Load(id); ok {
+		return v.(*ServerEnt)
+	}
+	return nil
 }
 
 func AddServer(s *ServerEnt) {
-	servers[s.ID] = s
+	servers.Store(s.ID, s)
 }
 
-func LenServers() int {
-	return len(servers)
-}
+// func LenServers() int {
+// 	return len(servers)
+// }
 
 func ForEachServers(f func(*ServerEnt) bool) {
-	for _, s := range servers {
-		if !f(s) {
-			return
-		}
-	}
+	servers.Range(func(k, v interface{}) bool {
+		s := v.(*ServerEnt)
+		return f(s)
+	})
 }
 
 func DeleteServer(id string) {
-	delete(servers, id)
+	servers.Delete(id)
 }
 
 func ClearAllReport() error {
@@ -326,10 +346,22 @@ func ClearAllReport() error {
 		}
 		return nil
 	})
-	devices = make(map[string]*DeviceEnt)
-	users = make(map[string]*UserEnt)
-	flows = make(map[string]*FlowEnt)
-	servers = make(map[string]*ServerEnt)
+	devices.Range(func(k, v interface{}) bool {
+		devices.Delete(k)
+		return true
+	})
+	users.Range(func(k, v interface{}) bool {
+		users.Delete(k)
+		return true
+	})
+	flows.Range(func(k, v interface{}) bool {
+		flows.Delete(k)
+		return true
+	})
+	servers.Range(func(k, v interface{}) bool {
+		servers.Delete(k)
+		return true
+	})
 	return nil
 }
 
