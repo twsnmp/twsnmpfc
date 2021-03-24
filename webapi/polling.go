@@ -208,7 +208,10 @@ func postPollingAutoAdd(c echo.Context) error {
 			log.Printf("node not found id=%s", paa.NodeID)
 			return echo.ErrBadRequest
 		}
-		if pt.AutoType != "" {
+		if pt.AutoMode == "disable" {
+			continue
+		}
+		if pt.AutoMode != "" {
 			// インデックスの展開などを行う
 			continue
 		}

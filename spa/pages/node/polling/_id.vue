@@ -304,11 +304,28 @@ export default {
       autoAdd: false,
       searchTemplate: '',
       headersTemplate: [
-        { text: '名前', value: 'Name', width: '25%' },
-        { text: 'レベル', value: 'Level', width: '15%' },
-        { text: '種別', value: 'Type', width: '10%' },
+        {
+          text: '名前',
+          value: 'Name',
+          width: '25%',
+        },
+        {
+          text: 'レベル',
+          value: 'Level',
+          width: '15%',
+          filter: this.filterAutoAdd,
+        },
+        {
+          text: '種別',
+          value: 'Type',
+          width: '10%',
+        },
         { text: 'モード', value: 'Mode', width: '10%' },
-        { text: '説明', value: 'Descr', width: '40%' },
+        {
+          text: '説明',
+          value: 'Descr',
+          width: '40%',
+        },
       ],
       selectedTemplate: [],
       templateDialog: false,
@@ -445,6 +462,9 @@ export default {
       this.editPolling.Extractor = this.selectedTemplate[0].Extractor
       this.editPolling.Script = this.selectedTemplate[0].Script
       this.templateDialog = false
+    },
+    filterAutoAdd(value, search, item) {
+      return !(this.autoAdd && item.AutoMode === 'disable')
     },
   },
 }

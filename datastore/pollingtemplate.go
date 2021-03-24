@@ -18,7 +18,7 @@ type PollingTemplateEnt struct {
 	Extractor string
 	Script    string
 	Descr     string
-	AutoType  string
+	AutoMode  string
 }
 
 var pollingTemplateList = make(map[string]*PollingTemplateEnt)

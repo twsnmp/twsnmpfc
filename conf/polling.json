@@ -3,29 +3,33 @@
     "Name": "PING監視",
     "Type": "ping",
     "Level": "low",
-    "Descr": "普通のPING"
+    "Descr": "普通のPING",
+    "AutoMode": ""
   },
   {
     "Name": "サイズ指定PING",
     "Type": "ping",
     "Mode": "size",
-    "Params": "1000",
+    "Params": "サイズを指定",
     "Level": "low",
-    "Descr": "PINGパケットのサイズを指定"
+    "Descr": "PINGパケットのサイズを指定",
+    "AutoMode": "disable"
   },
   {
     "Name": "回線診断",
     "Type": "ping",
     "Mode": "line",
     "Level": "low",
-    "Descr": "回線速度、遅延、それぞれの変動係数を測定"
+    "Descr": "回線速度、遅延、それぞれの変動係数を測定",
+    "AutoMode": ""
   },
   {
     "Name": "SNMP再起動監視",
     "Type": "snmp",
     "Mode": "sysUpTime",
     "Level": "low",
-    "Descr": "対象ノードの再起動を検知"
+    "Descr": "対象ノードの再起動を検知",
+    "AutoMode": ""
   },
   {
     "Name": "インターフェイス監視",
@@ -33,48 +37,52 @@
     "Mode": "ifOperStatus",
     "Params": "$i",
     "Level": "low",
-    "AutoMode": "snmp:index",
-    "Descr": "インターフェイスの状態を監視"
+    "Descr": "インターフェイスの状態を監視",
+    "AutoMode": "snmp:index"
   },
   {
     "Name": "プロセス起動数監視",
     "Type": "snmp",
     "Mode": "count",
     "Params": "hrSWRunName",
-    "Filter":"",
+    "Filter":"プロセス名を指定",
     "Script":"count > 0",
     "Level": "low",
-    "Descr": "プロセスの起動数の監視、フィルタでプロセス名を指定"
+    "Descr": "プロセスの起動数の監視、フィルタでプロセス名を指定",
+    "AutoMode": "disable"
   },
   {
-    "Name": "TCP接続数監視",
+    "Name": "TCP接続テーブル監視",
     "Type": "snmp",
     "Mode": "count",
     "Params": "tcpConnState",
-    "Filter":"5",
+    "Filter":"監視したい接続状態を数値で指定(例:5)",
     "Script":"count > 0",
     "Level": "low",
-    "Descr": "TCP接続数を監視"
+    "Descr": "TCP接続テーブルで状態別の数を監視",
+    "AutoMode": "disable"
   },
   {
     "Name": "プロセス再起動監視",
     "Type": "snmp",
     "Mode": "process",
     "Params": "", 
-    "Filter": "",
+    "Filter": "プロセス名",
     "Script": "changed == 0",
     "Level": "low",
-    "Descr": "監視対象のプロセスのPIDの変化を検知"
+    "Descr": "監視対象のプロセスのPIDの変化を検知",
+    "AutoMode": "disable"
   },
   {
     "Name": "プロセス起動監視",
     "Type": "snmp",
     "Mode": "process",
     "Params": "", 
-    "Filter": "",
+    "Filter": "プロセス名",
     "Script": "count > 0",
     "Level": "low",
-    "Descr": "フィルターで指定したプロセスの起動を検知"
+    "Descr": "フィルターで指定したプロセスの起動を検知",
+    "AutoMode": "disable"
   },
   {
     "Name": "TCP接続数",
@@ -83,7 +91,8 @@
     "Params": "tcpCurrEstab.0",
     "Script": "tcpCurrEstab < 10000",
     "Level": "low",
-    "Descr": "TCP接続数の監視"
+    "Descr": "TCP接続数の監視",
+    "AutoMode": ""
   },
   {
     "Name": "LANポート送受信",
@@ -92,8 +101,8 @@
     "Params": "ifInOctets.$i,ifOutOctets.$i",
     "Script": "Mbps=8*(ifInOctets+ifOutOctets)/1000000;Mbps < 1000",
     "Level": "low",
-    "AutoMode": "snmp:index",
-    "Descr": "LANポートの送受信の合計量をMbps単位で測定"
+    "Descr": "LANポートの送受信の合計量をMbps単位で測定",
+    "AutoMode": "snmp:index"
   },
   {
     "Name": "LANポート受信",
@@ -102,8 +111,8 @@
     "Params": "ifInOctets.$i",
     "Script": "rxbytesps=ifInOctets;rxbytesps > 0",
     "Level": "low",
-    "AutoMode": "snmp:index",
-    "Descr": "LANポート受信データ量"
+    "Descr": "LANポート受信データ量",
+    "AutoMode": "snmp:index"
   },
   {
     "Name": "LANポート送信",
@@ -112,8 +121,8 @@
     "Params": "ifOutOctets.$i",
     "Script": "txbytesps=ifOutOctets;txbytesps > 0",
     "Level": "low",
-    "AutoMode": "snmp:index",
-    "Descr": "LANポート送信データ量"
+    "Descr": "LANポート送信データ量",
+    "AutoMode": "snmp:index"
   },
   {
     "Name": "CPUコア単位使用率",
@@ -122,8 +131,8 @@
     "Params": "hrProcessorLoad.$i",
     "Script": "cpu=hrProcessorLoad; cpu < 90.0",
     "Level": "low",
-    "AutoMode": "snmp:index",
-    "Descr": "CPUコア単位使用率"
+    "Descr": "CPUコア単位使用率",
+    "AutoMode": "snmp:index"
   },
   {
     "Name": "CPU平均使用率",
@@ -132,7 +141,8 @@
     "Params": "hrProcessorLoad",
     "Script": "avg > 90.0",
     "Level": "low",
-    "Descr": "CPU平均使用率"
+    "Descr": "CPU平均使用率",
+    "AutoMode": "disable"
   },
   {
     "Name": "ストレージ使用率",
@@ -141,25 +151,26 @@
     "Params": "hrStorageSize.$i,hrStorageUsed.$i",
     "Script": "rate=hrStorageSize > 0 ? 100.0*(hrStorageUsed/hrStorageSize):0.0;rate > 90.0",
     "Level": "low",
-    "AutoMode": "snmp:index",
-    "Descr": "ストレージ使用率"
+    "Descr": "ストレージ使用率",
+    "AutoMode": "snmp:index"
   },
   {
     "Name": "TCP接続",
     "Type": "tcp",
     "Mode": "",
-    "Params": "$p",
+    "Params": "ポート番号を指定",
     "Level": "low",
-    "AutoMode": "port:22,25,80,443",
-    "Descr": "TCP接続監視"
+    "Descr": "TCP接続監視",
+    "AutoMode": "port:22,25,80,443"
   },
   {
     "Name": "HTTP応答監視",
     "Type": "http",
     "Mode": "",
-    "Params": "$url",
+    "Params": "URLを指定",
     "Level": "low",
-    "Descr": "HTTP応答監視"
+    "Descr": "HTTP応答監視",
+    "AutoMode": "disable"
   },
   {
     "Name": "気象情報",
@@ -169,8 +180,8 @@
     "Extractor": "OPENWEATHER",
     "Script": "temp > 35.0",
     "Level": "off",
-    "AutoMode": "disable",
-    "Descr": "気象情報の取得"
+    "Descr": "気象情報の取得のサンプル",
+    "AutoMode": "disable"
   },
   {
     "Name": "TLS証明書期限",
@@ -179,7 +190,8 @@
     "Params": "",
     "Script": "30",
     "Level": "low",
-    "Descr": "サーバー証明書の期限が３０日以内を検知"
+    "Descr": "サーバー証明書の期限が３０日以内を検知",
+    "AutoMode": ""
   },
   {
     "Name": "TLS v1.0 利用検知",
@@ -188,7 +200,8 @@
     "Params": "",
     "Script": "!1.0",
     "Level": "low",
-    "Descr": "TLS v1.0の利用を検知"
+    "Descr": "TLS v1.0の利用を検知",
+    "AutoMode": ""
   },
   {
     "Name": "TLS証明書検証",
@@ -196,7 +209,8 @@
     "Mode": "verify",
     "Params": "",
     "Level": "low",
-    "Descr": "サーバー証明書を検証"
+    "Descr": "サーバー証明書を検証",
+    "AutoMode": ""
   },
   {
     "Name": "NTPサーバー監視",
@@ -204,7 +218,8 @@
     "Mode": "",
     "Params": "",
     "Level": "low",
-    "Descr": "NTPサーバー監視"
+    "Descr": "NTPサーバー監視",
+    "AutoMode": ""
   },
   {
     "Name": "DNS NSレコード",
@@ -213,8 +228,8 @@
     "Polling": "ホスト名",
     "Script": "count > 0",
     "Level": "low",
-    "AutoMode": "disable",
-    "Descr": "DNS NSレコード"
+    "Descr": "DNS NSレコード",
+    "AutoMode": "disable"
   },
   {
     "Name": "DNS逆引き",
@@ -222,8 +237,8 @@
     "Mode": "addr",
     "Params": "アドレス",
     "Level": "low",
-    "AutoMode": "disable",
-    "Descr": "DNS逆引き"
+    "Descr": "DNS逆引き",
+    "AutoMode": "disable"
   },
   {
     "Name": "DNS TXTレコード",
@@ -232,8 +247,8 @@
     "Params": "ホスト名",
     "Script": "count > 0",
     "Level": "low",
-    "AutoMode": "disable",
-    "Descr": "DNS TXTレコード"
+    "Descr": "DNS TXTレコード",
+    "AutoMode": "disable"
   },
   {
     "Name": "DNS CNAMEレコード",
@@ -242,8 +257,8 @@
     "Params": "ホスト名",
     "Script": "count > 0",
     "Level": "low",
-    "AutoMode": "disable",
-    "Descr": "DNS CNAMEレコード"
+    "Descr": "DNS CNAMEレコード",
+    "AutoMode": "disable"
   },
   {
     "Name": "DNS MXレコード",
@@ -252,8 +267,8 @@
     "Params": "ホスト名",
     "Script": "count > 0",
     "Level": "low",
-    "AutoMode": "disable",
-    "Descr": "DNS MXレコード"
+    "Descr": "DNS MXレコード",
+    "AutoMode": "disable"
   },
   {
     "Name": "DNSアドレス変化監視",
@@ -261,7 +276,8 @@
     "Mode": "change",
     "Params": "ホスト名",
     "Level": "low",
-    "Descr": "DNSアドレス変化監視"
+    "Descr": "DNSアドレス変化監視",
+    "AutoMode": "disable"
   },
   {
     "Name": "DNSアドレス解決",
@@ -270,8 +286,8 @@
     "Params": "ホスト名",
     "Script": "count > 0",
     "Level": "low",
-    "AutoMode": "disable",
-    "Descr": "DNSアドレス解決"
+    "Descr": "DNSアドレス解決",
+    "AutoMode": "disable"
   },
   {
     "Name": "SSHポーリング",
@@ -280,7 +296,8 @@
     "Params": "コマンド",
     "Script": "exitCode == 0",
     "Level": "low",
-    "Descr": "SSHポーリング"
+    "Descr": "SSHポーリング",
+    "AutoMode": "disable"
   },
   {
     "Name": "SSH uptimeポーリング",
@@ -289,8 +306,8 @@
     "Extractor": "UPTIME",
     "Script": "load1m < 1.0",
     "Level": "low",
-    "NodeType": "",
-    "Descr": "SSH uptimeポーリング"
+    "Descr": "SSH uptime実行のサンプルポーリング",
+    "AutoMode": "disable"
   },
   {
     "Name": "仮想マシン稼働状態",
@@ -309,7 +326,8 @@
     "Filter": "仮想基盤名",
     "Script": "usageCPU < 80",
     "Level": "off",
-    "Descr": "仮想基盤CPU使用率"
+    "Descr": "仮想基盤CPU使用率",
+    "AutoMode": ""
   },
   {
     "Name": "仮想基盤メモリー使用率",
@@ -338,7 +356,8 @@
     "Filter": "フィルター条件",
     "Polling": "count < 1",
     "Level": "off",
-    "Descr": "フィルター条件に一致するsyslogの件数をモニタ"
+    "Descr": "フィルター条件に一致するsyslogの件数をモニタ",
+    "AutoMode": "disable"
   },
   {
     "Name": "TRAP受信",
@@ -347,7 +366,8 @@
     "Filter": "フィルター条件",
     "Polling": "count < 1",
     "Level": "low",
-    "Descr": "フィルター条件に一致するSNMP TARPの件数をモニタ"
+    "Descr": "フィルター条件に一致するSNMP TARPの件数をモニタ",
+    "AutoMode": "disable"
   },
   {
     "Name": "NetFlowで通信監視",
@@ -355,7 +375,8 @@
     "Filter": "フィルター条件",
     "Polling": "count < 1",
     "Level": "off",
-    "Descr": "NetFlowで通信監視"
+    "Descr": "NetFlowで通信監視",
+    "AutoMode": "disable"
   },
   {
     "Name": "SYSLOG PRI監視",
@@ -363,7 +384,8 @@
     "Mode": "pri",
     "Filter": "フィルター条件",
     "Level": "off",
-    "Descr": "SYSLOG PRI監視"
+    "Descr": "SYSLOG PRI監視",
+    "AutoMode": "disable"
   },
   {
     "Name": "SSHログからユーザーレポート",
@@ -372,7 +394,8 @@
     "Filter": "フィルター条件",
     "Extractor": "SSHLOGIN",
     "Level": "off",
-    "Descr": "SSHのログインのログからユーザーレポート作成"
+    "Descr": "SSHのログインのログからユーザーレポート作成",
+    "AutoMode": "disable"
   },
   {
     "Name": "Syslogからデバイスレポート",
@@ -381,7 +404,8 @@
     "Filter": "フィルター条件",
     "Extractor": "DEVICE",
     "Level": "off",
-    "Descr": "Syslogからデバイスレポート作成"
+    "Descr": "Syslogからデバイスレポート作成",
+    "AutoMode": "disable"
   },
   {
     "Name": "WELFログからフローレポート",
@@ -390,31 +414,35 @@
     "Filter": "フィルター条件",
     "Extractor": "WELFFLOW",
     "Level": "off",
-    "Descr": "WELFログから通信フローレポート作成"
+    "Descr": "WELFログから通信フローレポート作成",
+    "AutoMode": "disable"
   },
   {
     "Name": "デバイスレポート信用スコア監視",
     "Type": "report",
     "Mode": "device",
     "Level": "low",
-    "Script": "ScoreAvg > 50.0",
-    "Descr": "デバイスレポートの信用スコアを定期的に集計して監視"
+    "Script": "ScoreMin > 30.0",
+    "Descr": "デバイスレポートの信用スコアを定期的に集計して監視",
+    "AutoMode": "disable"
   },
   {
     "Name": "ユーザーレポート信用スコア監視",
     "Type": "report",
     "Mode": "user",
     "Level": "low",
-    "Script": "ScoreAvg > 50.0",
-    "Descr": "ユーザーレポートの信用スコアを定期的に集計して監視"
+    "Script": "ScoreMin > 30.0",
+    "Descr": "ユーザーレポートの信用スコアを定期的に集計して監視",
+    "AutoMode": "disable"
   },
   {
     "Name": "サーバーレポート信用スコア監視",
     "Type": "report",
     "Mode": "server",
     "Level": "low",
-    "Script": "ScoreAvg > 50.0",
-    "Descr": "サーバーレポートの信用スコアを定期的に集計して監視"
+    "Script": "ScoreMin > 30.0",
+    "Descr": "サーバーレポートの信用スコアを定期的に集計して監視",
+    "AutoMode": "disable"
   },
   {
     "Name": "通信フローレポート信用スコア監視",
@@ -422,12 +450,14 @@
     "Mode": "flow",
     "Level": "low",
     "Script": "ScoreAvg > 50.0",
-    "Descr": "通信レポートの信用スコアを定期的に集計して監視"
+    "Descr": "通信レポートの信用スコアを定期的に集計して監視",
+    "AutoMode": "disable"
   },
   {
     "Name": "TWSNMP連携",
     "Type": "twsnmp",
     "Level": "low",
-    "Descr": "TWSNMP連携"
+    "Descr": "TWSNMP連携",
+    "AutoMode": "disable"
   }
 ]
