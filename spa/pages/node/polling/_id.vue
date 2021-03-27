@@ -60,15 +60,19 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" dark @click="showAutoAddDialog">
-          <v-icon>mdi-brain</v-icon>
-          自動追加
-        </v-btn>
         <v-btn color="primary" dark @click="addPolling">
           <v-icon>mdi-plus</v-icon>
           追加
         </v-btn>
-        <v-btn color="error" @click="deleteSelectedPollingDialog = true">
+        <v-btn color="primary" dark @click="showAutoAddDialog">
+          <v-icon>mdi-brain</v-icon>
+          自動追加
+        </v-btn>
+        <v-btn
+          v-if="hasSelectedPollings"
+          color="error"
+          @click="deleteSelectedPollingDialog = true"
+        >
           <v-icon>mdi-delete</v-icon>
           一括削除
         </v-btn>
@@ -371,6 +375,11 @@ export default {
       selectedPollings: [],
       deleteSelectedPollingDialog: false,
     }
+  },
+  computed: {
+    hasSelectedPollings() {
+      return this.selectedPollings.length > 0
+    },
   },
   methods: {
     editPollingFunc(item) {

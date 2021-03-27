@@ -64,7 +64,11 @@
           <v-icon>mdi-plus</v-icon>
           追加
         </v-btn>
-        <v-btn color="error" @click="deleteSelectedPollingDialog = true">
+        <v-btn
+          v-if="hasSelectedPollings"
+          color="error"
+          @click="deleteSelectedPollingDialog = true"
+        >
           <v-icon>mdi-delete</v-icon>
           一括削除
         </v-btn>
@@ -348,6 +352,11 @@ export default {
       selectedPollings: [],
       deleteSelectedPollingDialog: false,
     }
+  },
+  computed: {
+    hasSelectedPollings() {
+      return this.selectedPollings.length > 0
+    },
   },
   methods: {
     editPollingFunc(item) {
