@@ -206,8 +206,8 @@ func postPollingAutoAdd(c echo.Context) error {
 	for _, id := range paa.PollingTemplateIDs {
 		pt := datastore.GetPollingTemplate(id)
 		if pt == nil {
-			log.Printf("node not found id=%s", paa.NodeID)
-			return echo.ErrBadRequest
+			log.Printf("template not found id=%s", id)
+			continue
 		}
 		if pt.AutoMode == "disable" {
 			continue

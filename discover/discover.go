@@ -17,6 +17,7 @@ import (
 	"github.com/twsnmp/gosnmp"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/ping"
+	"github.com/twsnmp/twsnmpfc/polling"
 )
 
 // GRID : 自動発見時にノードを配置する間隔
@@ -257,7 +258,52 @@ func addFoundNode(dent *discoverInfoEnt) {
 		NodeName: n.Name,
 		Event:    "自動発見により追加",
 	})
-	addBasicPolling(dent, &n)
+	if len(datastore.DiscoverConf.AutoAddPollings) < 1 {
+		return
+	}
+	if datastore.DiscoverConf.AutoAddPollings[0] == "basic" {
+		addBasicPolling(dent, &n)
+		return
+	}
+	autoAddPollings(&n)
+}
+
+func autoAddPollings(n *datastore.NodeEnt) {
+	for _, id := range datastore.DiscoverConf.AutoAddPollings {
+		pt := datastore.GetPollingTemplate(id)
+		if pt == nil {
+			log.Printf("template not found id=%s", id)
+			continue
+		}
+		if pt.AutoMode == "disable" {
+			continue
+		}
+		if pt.AutoMode != "" {
+			// インデックスの展開などを行う並列で処理する
+			go polling.AutoAddPolling(n, pt)
+			continue
+		}
+		p := new(datastore.PollingEnt)
+		p.Name = pt.Name
+		p.NodeID = n.ID
+		p.Type = pt.Type
+		p.Params = pt.Params
+		p.Mode = pt.Mode
+		p.Script = pt.Script
+		p.Extractor = pt.Extractor
+		p.Filter = pt.Filter
+		p.Level = pt.Level
+		p.PollInt = datastore.MapConf.PollInt
+		p.Timeout = datastore.MapConf.Timeout
+		p.Retry = datastore.MapConf.Timeout
+		p.LogMode = 0
+		p.NextTime = 0
+		p.State = "unknown"
+		if err := datastore.AddPolling(p); err != nil {
+			log.Printf("discover autoAddPollings err=%v", err)
+			return
+		}
+	}
 }
 
 func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {

@@ -8,12 +8,13 @@ import (
 )
 
 type DiscoverConfEnt struct {
-	StartIP string
-	EndIP   string
-	Timeout int
-	Retry   int
-	X       int
-	Y       int
+	StartIP         string
+	EndIP           string
+	AutoAddPollings []string
+	Timeout         int
+	Retry           int
+	X               int
+	Y               int
 }
 
 func SaveDiscoverConf() error {

@@ -78,7 +78,7 @@
       </v-btn>
     </v-card-actions>
   </v-card>
-  <v-card v-else max-width="600" class="mx-auto">
+  <v-card v-else max-width="95%" class="mx-auto">
     <v-form>
       <v-card-title primary-title> 自動発見 </v-card-title>
       <v-alert v-model="error" color="error" dense dismissible>
@@ -123,7 +123,42 @@
             ></v-text-field>
           </template>
         </v-slider>
+        <v-switch
+          v-model="basicPolling"
+          label="基本的なポーリングを自動追加"
+          dense
+        ></v-switch>
       </v-card-text>
+      <v-card-title v-if="!basicPolling">
+        <span class="headline">自動追加するポーリング</span>
+        <v-spacer></v-spacer>
+        <v-text-field
+          v-model="searchTemplate"
+          append-icon="mdi-magnify"
+          label="検索"
+          single-line
+          hide-details
+        ></v-text-field>
+      </v-card-title>
+      <v-data-table
+        v-if="!basicPolling"
+        v-model="selectedTemplate"
+        :headers="headersTemplate"
+        :items="templates"
+        :single-select="false"
+        :search="searchTemplate"
+        item-key="ID"
+        show-select
+        sort-by="Type"
+        dense
+      >
+        <template v-slot:[`item.Level`]="{ item }">
+          <v-icon :color="$getStateColor(item.Level)">{{
+            $getStateIconName(item.Level)
+          }}</v-icon>
+          {{ $getStateName(item.Level) }}
+        </template>
+      </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" dark @click="start">
@@ -143,6 +178,22 @@
 export default {
   async fetch() {
     this.discover = await this.$axios.$get('/api/discover')
+    if (!this.discover.Conf.AutoAddPollings) {
+      this.discover.Conf.AutoAddPollings = []
+    }
+    if (!this.discover.Stat.Running) {
+      this.selectedTemplate = []
+      const r = await this.$axios.$get('/api/polling/template')
+      if (r) {
+        this.templates = r
+        r.forEach((t) => {
+          if (this.discover.Conf.AutoAddPollings.includes(t.ID)) {
+            this.selectedTemplate.push(t)
+          }
+        })
+        this.basicPolling = this.selectedTemplate.length === 0
+      }
+    }
   },
   data() {
     return {
@@ -154,6 +205,7 @@ export default {
           Retry: 1,
           X: 0,
           Y: 0,
+          AutoAddPollings: [],
         },
         Stat: {
           Running: false,
@@ -170,6 +222,34 @@ export default {
       },
       error: false,
       reqStop: false,
+      basicPolling: true,
+      templates: [],
+      selectedTemplate: [],
+      searchTemplate: '',
+      headersTemplate: [
+        {
+          text: '名前',
+          value: 'Name',
+          width: '25%',
+        },
+        {
+          text: 'レベル',
+          value: 'Level',
+          width: '15%',
+          filter: this.filterAutoAdd,
+        },
+        {
+          text: '種別',
+          value: 'Type',
+          width: '10%',
+        },
+        { text: 'モード', value: 'Mode', width: '10%' },
+        {
+          text: '説明',
+          value: 'Descr',
+          width: '40%',
+        },
+      ],
     }
   },
   computed: {
@@ -231,6 +311,14 @@ export default {
       const y = this.$route.query.y * 1 || 0
       this.discover.Conf.X = Math.floor(x)
       this.discover.Conf.Y = Math.floor(y)
+      this.discover.Conf.AutoAddPollings = []
+      if (this.basicPolling) {
+        this.discover.Conf.AutoAddPollings = ['basic']
+      } else {
+        for (let i = 0; i < this.selectedTemplate.length; i++) {
+          this.discover.Conf.AutoAddPollings.push(this.selectedTemplate[i].ID)
+        }
+      }
       this.$axios
         .post('/api/discover/start', this.discover.Conf)
         .then((r) => {
@@ -251,6 +339,9 @@ export default {
         this.$fetch()
         setTimeout(this.update, 1000 * 10)
       }
+    },
+    filterAutoAdd(value, search, item) {
+      return item.AutoMode !== 'disable'
     },
   },
 }
