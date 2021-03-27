@@ -19,9 +19,12 @@
         ポーリングを変更できませんでした
       </v-alert>
       <v-data-table
+        v-model="selectedPollings"
         :headers="headers"
         :items="pollings"
         :search="search"
+        item-key="ID"
+        show-select
         dense
         :items-per-page="15"
         sort-by="State"
@@ -60,6 +63,10 @@
         <v-btn color="primary" dark @click="addPolling">
           <v-icon>mdi-plus</v-icon>
           追加
+        </v-btn>
+        <v-btn color="error" @click="deleteSelectedPollingDialog = true">
+          <v-icon>mdi-delete</v-icon>
+          一括削除
         </v-btn>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
@@ -218,6 +225,29 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog
+      v-model="deleteSelectedPollingDialog"
+      persistent
+      max-width="500px"
+    >
+      <v-card>
+        <v-card-title>
+          <span class="headline">ポーリング一括削除</span>
+        </v-card-title>
+        <v-card-text> 選択したポーリングを全て削除しますか？ </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="deletePollings">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" @click="deleteSelectedPollingDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="templateDialog" persistent max-width="900px">
       <v-card>
         <v-card-title>
@@ -315,6 +345,8 @@ export default {
       selectedTemplate: [],
       templateDialog: false,
       templates: [],
+      selectedPollings: [],
+      deleteSelectedPollingDialog: false,
     }
   },
   methods: {
@@ -343,6 +375,23 @@ export default {
           this.$fetch()
         })
       this.closeDelete()
+    },
+    deletePollings() {
+      const ids = []
+      this.selectedPollings.forEach((p) => {
+        ids.push(p.ID)
+      })
+      this.$axios
+        .post('/api/pollings/delete', ids)
+        .then(() => {
+          this.$fetch()
+          this.selectedPollings = []
+          this.deleteSelectedPollingDialog = false
+        })
+        .catch((e) => {
+          this.deleteError = true
+          this.$fetch()
+        })
     },
     closeDelete() {
       this.deleteDialog = false
