@@ -161,12 +161,10 @@ export default {
     },
     doDeleteNode() {
       this.nodes.splice(this.deleteIndex, 1)
-      this.$axios
-        .post('/api/node/delete', { ID: this.deleteNode.ID })
-        .catch((e) => {
-          this.deleteError = true
-          this.$fetch()
-        })
+      this.$axios.post('/api/nodes/delete', [this.deleteNode.ID]).catch((e) => {
+        this.deleteError = true
+        this.$fetch()
+      })
       this.closeDelete()
     },
     closeDelete() {

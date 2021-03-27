@@ -337,7 +337,7 @@ export default {
     doDeletePolling() {
       this.pollings.splice(this.deleteIndex, 1)
       this.$axios
-        .post('/api/polling/delete', { ID: this.deletePolling.ID })
+        .post('/api/pollings/delete', [this.deletePolling.ID])
         .catch((e) => {
           this.deleteError = true
           this.$fetch()

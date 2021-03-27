@@ -497,7 +497,7 @@ export default {
       this.lineDialog = true
     },
     doDeleteNode() {
-      this.$axios.post('/api/map/delete', this.deleteNodes).then(() => {
+      this.$axios.post('/api/nodes/delete', this.deleteNodes).then(() => {
         this.$fetch()
       })
       this.deleteDialog = false

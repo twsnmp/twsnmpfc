@@ -42,15 +42,17 @@ func getPollings(c echo.Context) error {
 	return c.JSON(http.StatusOK, r)
 }
 
-func postPollingDelete(c echo.Context) error {
-	id := new(idWebAPI)
-	if err := c.Bind(id); err != nil {
-		log.Printf("postPollingDelete err=%v", err)
+func deletePollings(c echo.Context) error {
+	ids := []string{}
+	if err := c.Bind(&ids); err != nil {
+		log.Printf("deletePolling err=%v", err)
 		return echo.ErrBadRequest
 	}
-	if err := datastore.DeletePolling(id.ID); err != nil {
-		log.Printf("postPollingDelete err=%v", err)
-		return echo.ErrBadRequest
+	for _, id := range ids {
+		if err := datastore.DeletePolling(id); err != nil {
+			log.Printf("deletePolling err=%v", err)
+			return echo.ErrBadRequest
+		}
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

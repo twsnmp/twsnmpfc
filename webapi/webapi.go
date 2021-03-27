@@ -15,11 +15,6 @@ type WebAPI struct {
 	DataStorePath string
 }
 
-// 削除のためにIDだけ受け取る
-type idWebAPI struct {
-	ID string
-}
-
 type selectEntWebAPI struct {
 	Text  string `json:"text"`
 	Value string `json:"value"`
@@ -69,7 +64,7 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.POST("/discover/start", postDiscoverStart)
 	r.POST("/discover/stop", postDiscoverStop)
 	r.GET("/nodes", getNodes)
-	r.POST("/node/delete", postNodeDelete)
+	r.POST("/nodes/delete", deleteNodes)
 	r.POST("/node/update", postNodeUpdate)
 	r.GET("/node/log/:id", getNodeLog)
 	r.GET("/node/polling/:id", getNodePolling)
@@ -77,8 +72,7 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.GET("/mibbr/:id", getMIBBr)
 	r.GET("/map", getMap)
 	r.POST("/map/update", postMapUpdate)
-	r.POST("/map/delete", postMapDelete)
-	r.POST("/line/delete", postLineDelete)
+	r.POST("/line/delete", deleteLine)
 	r.POST("/line/add", postLineAdd)
 
 	r.GET("/pollings", getPollings)
@@ -87,7 +81,7 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.POST("/polling/auto", postPollingAutoAdd)
 	r.POST("/polling/:id", postPolling)
 	r.POST("/polling/update", postPollingUpdate)
-	r.POST("/polling/delete", postPollingDelete)
+	r.POST("/pollings/delete", deletePollings)
 	r.GET("/polling/check/:id", getPollingCheck)
 	// log
 	r.POST("/log/eventlogs", postEventLogs)

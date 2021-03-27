@@ -75,21 +75,6 @@ func postMapUpdate(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
-func postMapDelete(c echo.Context) error {
-	list := []string{}
-	if err := c.Bind(&list); err != nil {
-		log.Printf("postMapDelete err=%v", err)
-		return echo.ErrBadRequest
-	}
-	for _, id := range list {
-		if err := datastore.DeleteNode(id); err != nil {
-			log.Printf("postMapDelete err=%v", err)
-			return echo.ErrBadRequest
-		}
-	}
-	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
-}
-
 func getNodes(c echo.Context) error {
 	r := []*datastore.NodeEnt{}
 	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
@@ -99,15 +84,17 @@ func getNodes(c echo.Context) error {
 	return c.JSON(http.StatusOK, r)
 }
 
-func postNodeDelete(c echo.Context) error {
-	id := new(idWebAPI)
-	if err := c.Bind(id); err != nil {
-		log.Printf("postNodeDelete err=%v", err)
+func deleteNodes(c echo.Context) error {
+	ids := []string{}
+	if err := c.Bind(&ids); err != nil {
+		log.Printf("deleteNodes err=%v", err)
 		return echo.ErrBadRequest
 	}
-	if err := datastore.DeleteNode(id.ID); err != nil {
-		log.Printf("postNodeDelete err=%v", err)
-		return echo.ErrBadRequest
+	for _, id := range ids {
+		if err := datastore.DeleteNode(id); err != nil {
+			log.Printf("deleteNodes err=%v", err)
+			return echo.ErrBadRequest
+		}
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -154,14 +141,14 @@ func postNodeUpdate(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
-func postLineDelete(c echo.Context) error {
+func deleteLine(c echo.Context) error {
 	l := new(datastore.LineEnt)
 	if err := c.Bind(l); err != nil {
-		log.Printf("postLineDelete err=%v", err)
+		log.Printf("deleteLine err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if err := datastore.DeleteLine(l.ID); err != nil {
-		log.Printf("postLineDelete err=%v", err)
+		log.Printf("deleteLine err=%v", err)
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
