@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -54,6 +55,40 @@ func deletePollings(c echo.Context) error {
 			return echo.ErrBadRequest
 		}
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("%dのポーリングを削除しました", len(ids)),
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func setPollingLevel(c echo.Context) error {
+	var params = struct {
+		Level string
+		IDs   []string
+	}{}
+	if err := c.Bind(&params); err != nil {
+		log.Printf("setPollingLevel err=%v", err)
+		return echo.ErrBadRequest
+	}
+	for _, id := range params.IDs {
+		p := datastore.GetPolling(id)
+		if p != nil {
+			p.Level = params.Level
+			p.State = "unknown"
+			p.NextTime = 0
+			if err := datastore.UpdatePolling(p); err != nil {
+				log.Printf("setPollingLevel err=%v", err)
+				return echo.ErrBadRequest
+			}
+		}
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("%dのポーリングのレベルを%sに変更しました", len(params.IDs), params.Level),
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

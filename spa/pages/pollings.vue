@@ -66,6 +66,15 @@
         </v-btn>
         <v-btn
           v-if="hasSelectedPollings"
+          color="primary"
+          dark
+          @click="setPollingLevelDialog = true"
+        >
+          <v-icon>mdi-cog</v-icon>
+          レベル変更
+        </v-btn>
+        <v-btn
+          v-if="hasSelectedPollings"
           color="error"
           @click="deleteSelectedPollingDialog = true"
         >
@@ -252,6 +261,28 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="setPollingLevelDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ポーリングレベル変更</span>
+        </v-card-title>
+        <v-card-text>
+          <v-select v-model="newLevel" :items="$levelList" label="レベル">
+          </v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="setPollingLevel">
+            <v-icon>mdi-content-</v-icon>
+            変更
+          </v-btn>
+          <v-btn color="normal" @click="setPollingLevelDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="templateDialog" persistent max-width="900px">
       <v-card>
         <v-card-title>
@@ -351,6 +382,8 @@ export default {
       templates: [],
       selectedPollings: [],
       deleteSelectedPollingDialog: false,
+      setPollingLevelDialog: false,
+      newLevel: 'off',
     }
   },
   computed: {
@@ -395,12 +428,35 @@ export default {
         .then(() => {
           this.$fetch()
           this.selectedPollings = []
-          this.deleteSelectedPollingDialog = false
         })
         .catch((e) => {
-          this.deleteError = true
           this.$fetch()
+          this.deleteError = true
         })
+      this.deleteSelectedPollingDialog = false
+    },
+    setPollingLevel() {
+      if (!this.newLevel) {
+        return
+      }
+      const ids = []
+      this.selectedPollings.forEach((p) => {
+        ids.push(p.ID)
+      })
+      this.$axios
+        .post('/api/pollings/setlevel', {
+          IDs: ids,
+          Level: this.newLevel,
+        })
+        .then(() => {
+          this.$fetch()
+          this.selectedPollings = []
+        })
+        .catch((e) => {
+          this.$fetch()
+          this.updateError = true
+        })
+      this.setPollingLevelDialog = false
     },
     closeDelete() {
       this.deleteDialog = false
