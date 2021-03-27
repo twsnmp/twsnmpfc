@@ -3,7 +3,7 @@
     <v-card min-width="800">
       <v-form>
         <v-card-title primary-title> データストア </v-card-title>
-        <v-alert v-if="$fetchState.error" type="error" dense>
+        <v-alert v-if="$fetchState.error" color="error" dense>
           データストア情報を取得できません
         </v-alert>
         <v-card-text>
@@ -83,7 +83,7 @@
         <v-card-title>
           <span class="headline">削除確認</span>
         </v-card-title>
-        <v-alert v-model="deleteError" type="error" dense dismissible>
+        <v-alert v-model="deleteError" color="error" dense dismissible>
           {{ deleteTargetName }}の削除に失敗しました
         </v-alert>
         <v-card-text>全ての{{ deleteTargetName }}を削除しますか？</v-card-text>
@@ -105,7 +105,7 @@
         <v-card-title>
           <span class="headline">バックアップ設定</span>
         </v-card-title>
-        <v-alert v-model="backupError" type="error" dense dismissible>
+        <v-alert v-model="backupError" color="error" dense dismissible>
           バックアップ設定の保存に失敗しました
         </v-alert>
         <v-card-text>

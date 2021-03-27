@@ -12,7 +12,7 @@
           hide-details
         ></v-text-field>
       </v-card-title>
-      <v-alert v-model="error" type="error" dense dismissible>
+      <v-alert v-model="error" color="error" dense dismissible>
         MIBを取得できませんでした
       </v-alert>
       <v-data-table

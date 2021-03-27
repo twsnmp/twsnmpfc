@@ -6,6 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/polling"
 )
 
 func copyPolling(to, from string) {
@@ -212,7 +213,8 @@ func postPollingAutoAdd(c echo.Context) error {
 			continue
 		}
 		if pt.AutoMode != "" {
-			// インデックスの展開などを行う
+			// インデックスの展開などを行う並列で処理する
+			go polling.AutoAddPolling(n, pt)
 			continue
 		}
 		p := new(datastore.PollingEnt)

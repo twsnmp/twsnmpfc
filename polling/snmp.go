@@ -428,3 +428,98 @@ func doPollingSnmpStats(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	}
 	setPollingError("snmp", pe, err)
 }
+
+func autoAddSnmpPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) {
+	indexMIB := ""
+	if strings.HasPrefix(pt.AutoMode, "index:") {
+		a := strings.SplitAfterN(pt.AutoMode, ":", 2)
+		if len(a) != 2 {
+			log.Printf("invalid format %v", pt.AutoMode)
+			return
+		}
+		indexMIB = a[1]
+	} else {
+		log.Printf("invalid format %v", pt.AutoMode)
+		return
+	}
+	indexes := getSnmpIndex(n, indexMIB)
+	for _, index := range indexes {
+		p := new(datastore.PollingEnt)
+		p.Name = pt.Name + " : " + index
+		if hasSameNamePolling(n.ID, p.Name) {
+			continue
+		}
+		p.NodeID = n.ID
+		p.Type = pt.Type
+		p.Params = strings.ReplaceAll(pt.Params, "$i", index)
+		p.Mode = pt.Mode
+		p.Script = pt.Script
+		p.Extractor = pt.Extractor
+		p.Filter = pt.Filter
+		p.Level = pt.Level
+		p.PollInt = datastore.MapConf.PollInt
+		p.Timeout = datastore.MapConf.Timeout
+		p.Retry = datastore.MapConf.Timeout
+		p.LogMode = 0
+		p.NextTime = 0
+		p.State = "unknown"
+		if err := datastore.AddPolling(p); err != nil {
+			log.Printf("autoAddSnmpPolling err=%v", err)
+			return
+		}
+	}
+}
+
+func getSnmpIndex(n *datastore.NodeEnt, name string) []string {
+	ret := []string{}
+	agent := &gosnmp.GoSNMP{
+		Target:             n.IP,
+		Port:               161,
+		Transport:          "udp",
+		Community:          n.Community,
+		Version:            gosnmp.Version2c,
+		Timeout:            time.Duration(datastore.MapConf.Timeout) * time.Second,
+		Retries:            datastore.MapConf.Retry,
+		ExponentialTimeout: true,
+		MaxOids:            gosnmp.MaxOids,
+	}
+	if n.SnmpMode != "" {
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		if n.SnmpMode == "v3auth" {
+			agent.MsgFlags = gosnmp.AuthNoPriv
+			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+				UserName:                 n.User,
+				AuthenticationProtocol:   gosnmp.SHA,
+				AuthenticationPassphrase: n.Password,
+			}
+		} else {
+			agent.MsgFlags = gosnmp.AuthPriv
+			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+				UserName:                 n.User,
+				AuthenticationProtocol:   gosnmp.SHA,
+				AuthenticationPassphrase: n.Password,
+				PrivacyProtocol:          gosnmp.AES,
+				PrivacyPassphrase:        n.Password,
+			}
+		}
+	}
+	err := agent.Connect()
+	if err != nil {
+		log.Printf("SNMP agent.Connect err=%v", err)
+		return ret
+	}
+	defer agent.Conn.Close()
+	oid := datastore.MIBDB.NameToOID(name)
+	if err := agent.Walk(oid, func(variable gosnmp.SnmpPDU) error {
+		n := datastore.MIBDB.OIDToName(variable.Name)
+		a := strings.SplitN(n, ".", 2)
+		if len(a) == 2 {
+			ret = append(ret, a[1])
+		}
+		return nil
+	}); err != nil {
+		return ret
+	}
+	return ret
+}

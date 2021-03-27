@@ -3,13 +3,13 @@
     <v-card min-width="600">
       <v-form>
         <v-card-title primary-title> Influxdb設定 </v-card-title>
-        <v-alert v-if="$fetchState.error" type="error" dense>
+        <v-alert v-if="$fetchState.error" color="error" dense>
           Influxdb設定を取得できません
         </v-alert>
-        <v-alert v-model="error" type="error" dense dismissible>
+        <v-alert v-model="error" color="error" dense dismissible>
           Influxdb設定の保存に失敗しました
         </v-alert>
-        <v-alert v-model="saved" type="primary" dense dismissible>
+        <v-alert v-model="saved" color="primary" dense dismissible>
           Influxdb設定を保存しました
         </v-alert>
         <v-card-text>
@@ -59,7 +59,7 @@
         <v-card-title>
           <span class="headline">Influxdb初期化</span>
         </v-card-title>
-        <v-alert v-model="initInfluxdbError" type="error" dense dismissible>
+        <v-alert v-model="initInfluxdbError" color="error" dense dismissible>
           Influxdbの初期化に失敗しました
         </v-alert>
         <v-card-text>Influxdbを初期化しますか？</v-card-text>

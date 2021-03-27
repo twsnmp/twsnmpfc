@@ -3,13 +3,13 @@
     <v-card min-width="600">
       <v-form>
         <v-card-title primary-title> レポート設定 </v-card-title>
-        <v-alert v-if="$fetchState.error" type="error" dense>
+        <v-alert v-if="$fetchState.error" color="error" dense>
           レポート設定を取得できません
         </v-alert>
-        <v-alert v-model="error" type="error" dense dismissible>
+        <v-alert v-model="error" color="error" dense dismissible>
           レポート設定の保存に失敗しました
         </v-alert>
-        <v-alert v-model="saved" type="primary" dense dismissible>
+        <v-alert v-model="saved" color="primary" dense dismissible>
           レポート設定を保存しました
         </v-alert>
         <v-card-text>

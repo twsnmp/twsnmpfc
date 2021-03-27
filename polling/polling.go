@@ -40,6 +40,19 @@ func StartPolling(ctx context.Context) error {
 	return nil
 }
 
+func AutoAddPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) {
+	switch pt.Type {
+	case "snmp":
+		autoAddSnmpPolling(n, pt)
+	case "vmware":
+		autoAddVMwarePolling(n, pt)
+	case "tcp", "http", "tls":
+		autoAddTCPPolling(n, pt)
+	default:
+		log.Printf("AutoAddPolling not supported type=%s", pt.Type)
+	}
+}
+
 func pollNowNode(nodeID string) {
 	n := datastore.GetNode(nodeID)
 	if n == nil {
@@ -220,4 +233,16 @@ func setPollingError(s string, pe *datastore.PollingEnt, err error) {
 	log.Printf("%s error Polling=%s err=%v", s, pe.Name, err)
 	pe.Result["error"] = fmt.Sprintf("%v", err)
 	setPollingState(pe, "unknown")
+}
+
+func hasSameNamePolling(nodeID, name string) bool {
+	r := false
+	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
+		if p.NodeID == nodeID && p.Name == name {
+			r = true
+			return false
+		}
+		return true
+	})
+	return r
 }

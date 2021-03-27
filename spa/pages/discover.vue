@@ -81,7 +81,7 @@
   <v-card v-else max-width="600" class="mx-auto">
     <v-form>
       <v-card-title primary-title> 自動発見 </v-card-title>
-      <v-alert v-model="error" type="error" dense dismissible>
+      <v-alert v-model="error" color="error" dense dismissible>
         自動発見を開始できません
       </v-alert>
       <v-card-text>

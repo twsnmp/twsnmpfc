@@ -144,7 +144,7 @@ func vmwareDatastore(ctx context.Context, c *vim25.Client, target string) (map[s
 	r["freeSpace"] = 0.0
 	r["total"] = 0.0
 	for _, ds := range dss {
-		if target != "" && target != ds.Summary.Name {
+		if target != "" && target != ds.Summary.Url {
 			continue
 		}
 		r["capacity"] += float64(ds.Summary.Capacity)
@@ -178,7 +178,7 @@ func vmwareVirtualMachine(ctx context.Context, c *vim25.Client, target string) (
 	r["total"] = 0.0
 	r["rate"] = 0.0
 	for _, vm := range vms {
-		if target != "" && target != vm.Summary.Config.Name {
+		if target != "" && target != vm.Summary.Config.InstanceUuid {
 			continue
 		}
 		if vm.Summary.Runtime.PowerState == "poweredOn" {
@@ -190,4 +190,152 @@ func vmwareVirtualMachine(ctx context.Context, c *vim25.Client, target string) (
 		r["rate"] = 100.0 * r["up"] / r["total"]
 	}
 	return r, nil
+}
+
+type vmwareIndexEnt struct {
+	id   string
+	name string
+}
+
+func autoAddVMwarePolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) {
+	indexes := getVMWareIndex(n, pt.Mode)
+	for _, index := range indexes {
+		p := new(datastore.PollingEnt)
+		p.Name = pt.Name + " : " + index.name
+		if hasSameNamePolling(n.ID, p.Name) {
+			continue
+		}
+		p.NodeID = n.ID
+		p.Type = pt.Type
+		p.Params = pt.Params
+		p.Mode = pt.Mode
+		p.Script = pt.Script
+		p.Extractor = pt.Extractor
+		p.Filter = index.id
+		p.Level = pt.Level
+		p.PollInt = datastore.MapConf.PollInt
+		p.Timeout = datastore.MapConf.Timeout
+		p.Retry = datastore.MapConf.Timeout
+		p.LogMode = 0
+		p.NextTime = 0
+		p.State = "unknown"
+		if err := datastore.AddPolling(p); err != nil {
+			log.Printf("autoAddSnmpPolling err=%v", err)
+			return
+		}
+	}
+}
+
+func getVMWareIndex(n *datastore.NodeEnt, mode string) []vmwareIndexEnt {
+	ret := []vmwareIndexEnt{}
+	us := n.URL
+	if us == "" {
+		us = fmt.Sprintf("https://%s:%s@%s/sdk", n.User, n.Password, n.IP)
+	}
+	if !strings.Contains(us, "/sdk") {
+		us += "/sdk"
+	}
+	u, err := soap.ParseURL(us)
+	if err != nil {
+		log.Printf("getVMWareInde err=%v", err)
+		return ret
+	}
+	if u.User == nil || u.User.String() == ":" {
+		u.User = url.UserPassword(n.User, n.Password)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(datastore.MapConf.Timeout)*time.Second)
+	defer cancel()
+	client, err := govmomi.NewClient(ctx, u, true)
+	if err != nil {
+		log.Printf("getVMWareInde err=%v", err)
+		return ret
+	}
+	switch mode {
+	case "HostSystem":
+		return getVMWareHostSystemIndex(ctx, client.Client)
+	case "Datastore":
+		return getVMWareDatastoreIndex(ctx, client.Client)
+	case "VirtualMachine":
+		return getVMWareVirtualMachineIndex(ctx, client.Client)
+	}
+	return ret
+}
+
+func getVMWareHostSystemIndex(ctx context.Context, c *vim25.Client) []vmwareIndexEnt {
+	ret := []vmwareIndexEnt{}
+	m := view.NewManager(c)
+	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder, []string{"HostSystem"}, true)
+	if err != nil {
+		log.Printf("getVMWareHostSystemIndex err=%v", err)
+		return ret
+	}
+	defer func() {
+		_ = v.Destroy(ctx)
+	}()
+	var hss []mo.HostSystem
+	err = v.Retrieve(ctx, []string{"HostSystem"}, []string{"summary"}, &hss)
+	if err != nil {
+		log.Printf("getVMWareHostSystemIndex err=%v", err)
+		return ret
+	}
+	for _, hs := range hss {
+		ret = append(ret, vmwareIndexEnt{
+			id:   hs.Summary.Config.Name,
+			name: hs.Summary.Config.Name,
+		})
+	}
+	return ret
+}
+
+func getVMWareDatastoreIndex(ctx context.Context, c *vim25.Client) []vmwareIndexEnt {
+	ret := []vmwareIndexEnt{}
+	m := view.NewManager(c)
+	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder, []string{"Datastore"}, true)
+	if err != nil {
+		log.Printf("getVMWareDatastoreIndex err=%v", err)
+		return ret
+	}
+	defer func() {
+		_ = v.Destroy(ctx)
+	}()
+	var dss []mo.Datastore
+	err = v.Retrieve(ctx, []string{"Datastore"}, []string{"summary"}, &dss)
+	if err != nil {
+		log.Printf("getVMWareDatastoreIndex err=%v", err)
+		return ret
+	}
+	for _, ds := range dss {
+		ret = append(ret, vmwareIndexEnt{
+			id:   ds.Summary.Url,
+			name: ds.Summary.Name + " - " + ds.Summary.Url,
+		})
+	}
+	return ret
+}
+
+func getVMWareVirtualMachineIndex(ctx context.Context, c *vim25.Client) []vmwareIndexEnt {
+	ret := []vmwareIndexEnt{}
+	m := view.NewManager(c)
+	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
+	if err != nil {
+		log.Printf("getVMWareVirtualMachineIndex err=%v", err)
+		return ret
+	}
+	defer func() {
+		_ = v.Destroy(ctx)
+	}()
+	var vms []mo.VirtualMachine
+	err = v.Retrieve(ctx, []string{"VirtualMachine"}, []string{"summary"}, &vms)
+	if err != nil {
+		log.Printf("getVMWareVirtualMachineIndex err=%v", err)
+		return ret
+	}
+	for _, vm := range vms {
+
+		ret = append(ret, vmwareIndexEnt{
+			id:   vm.Summary.Config.InstanceUuid,
+			name: vm.Summary.Config.Name,
+		})
+	}
+	return ret
 }

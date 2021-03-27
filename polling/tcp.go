@@ -11,6 +11,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -183,6 +184,8 @@ func doPollingTLS(pe *datastore.PollingEnt) {
 	target := pe.Params
 	if target == "" {
 		target = n.IP + ":443"
+	} else if !strings.Contains(target, ":") {
+		target = n.IP + ":" + target
 	}
 	script := pe.Script
 	conf := &tls.Config{
@@ -304,4 +307,61 @@ func getTLSConnectioStateInfo(pe *datastore.PollingEnt, host string, cs *tls.Con
 		pe.Result["notAfter"] = cert.NotAfter.Format("2006/01/02")
 		pe.Result["subjectKeyID"] = fmt.Sprintf("%x", cert.SubjectKeyId)
 	}
+}
+
+func autoAddTCPPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) {
+	ports := strings.Split(pt.AutoMode, ",")
+	for _, port := range ports {
+		if !checkTCPConnect(n, port) {
+			continue
+		}
+		p := new(datastore.PollingEnt)
+		p.NodeID = n.ID
+		p.Type = pt.Type
+		if pt.Type == "http" {
+			p.Name = pt.Name + " : " + port
+			p.Params = "http"
+			if pt.Mode == "https" {
+				p.Params += "s"
+			}
+			p.Params += "://" + n.IP + ":" + port
+		} else {
+			sn := "tcp/" + port
+			if nport, err := strconv.ParseInt(port, 10, 64); err == nil {
+				if s, ok := datastore.GetServiceName(6, int(nport)); ok {
+					sn = s
+				}
+			}
+			p.Name = pt.Name + " : " + sn
+			p.Params = port
+		}
+		if hasSameNamePolling(n.ID, p.Name) {
+			continue
+		}
+		p.Mode = pt.Mode
+		p.Script = pt.Script
+		p.Extractor = pt.Extractor
+		p.Filter = pt.Filter
+		p.Level = pt.Level
+		p.PollInt = datastore.MapConf.PollInt
+		p.Timeout = datastore.MapConf.Timeout
+		p.Retry = datastore.MapConf.Timeout
+		p.LogMode = 0
+		p.NextTime = 0
+		p.State = "unknown"
+		if err := datastore.AddPolling(p); err != nil {
+			log.Printf("autoAddSnmpPolling err=%v", err)
+			return
+		}
+	}
+}
+
+func checkTCPConnect(n *datastore.NodeEnt, port string) bool {
+	conn, err := net.DialTimeout("tcp", n.IP+":"+port, time.Duration(datastore.MapConf.Timeout)*time.Second)
+	if err != nil {
+		log.Printf("checkTCPConnect err=%v", err)
+		return false
+	}
+	conn.Close()
+	return true
 }

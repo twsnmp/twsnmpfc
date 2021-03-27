@@ -38,7 +38,7 @@
     "Params": "$i",
     "Level": "low",
     "Descr": "インターフェイスの状態を監視",
-    "AutoMode": "snmp:index"
+    "AutoMode": "index:ifIndex"
   },
   {
     "Name": "プロセス起動数監視",
@@ -102,7 +102,7 @@
     "Script": "Mbps=8*(ifInOctets+ifOutOctets)/1000000;Mbps < 1000",
     "Level": "low",
     "Descr": "LANポートの送受信の合計量をMbps単位で測定",
-    "AutoMode": "snmp:index"
+    "AutoMode": "index:ifIndex"
   },
   {
     "Name": "LANポート受信",
@@ -112,7 +112,7 @@
     "Script": "rxbytesps=ifInOctets;rxbytesps > 0",
     "Level": "low",
     "Descr": "LANポート受信データ量",
-    "AutoMode": "snmp:index"
+    "AutoMode": "index:ifIndex"
   },
   {
     "Name": "LANポート送信",
@@ -122,7 +122,7 @@
     "Script": "txbytesps=ifOutOctets;txbytesps > 0",
     "Level": "low",
     "Descr": "LANポート送信データ量",
-    "AutoMode": "snmp:index"
+    "AutoMode": "index:ifIndex"
   },
   {
     "Name": "CPUコア単位使用率",
@@ -132,7 +132,7 @@
     "Script": "cpu=hrProcessorLoad; cpu < 90.0",
     "Level": "low",
     "Descr": "CPUコア単位使用率",
-    "AutoMode": "snmp:index"
+    "AutoMode": "index:hrProcessorLoad"
   },
   {
     "Name": "CPU平均使用率",
@@ -142,7 +142,7 @@
     "Script": "avg > 90.0",
     "Level": "low",
     "Descr": "CPU平均使用率",
-    "AutoMode": "disable"
+    "AutoMode": ""
   },
   {
     "Name": "ストレージ使用率",
@@ -152,7 +152,7 @@
     "Script": "rate=hrStorageSize > 0 ? 100.0*(hrStorageUsed/hrStorageSize):0.0;rate > 90.0",
     "Level": "low",
     "Descr": "ストレージ使用率",
-    "AutoMode": "snmp:index"
+    "AutoMode": "index:hrStorageSize"
   },
   {
     "Name": "TCP接続",
@@ -161,7 +161,25 @@
     "Params": "ポート番号を指定",
     "Level": "low",
     "Descr": "TCP接続監視",
-    "AutoMode": "port:22,25,80,443"
+    "AutoMode": "20,21,22,25,80,110,143,443"
+  },
+  {
+    "Name": "HTTP接続",
+    "Type": "http",
+    "Mode": "",
+    "Params": "URLを指定",
+    "Level": "low",
+    "Descr": "HTTP接続監視",
+    "AutoMode": "80,443,2181,8080,8888"
+  },
+  {
+    "Name": "HTTPS接続",
+    "Type": "http",
+    "Mode": "https",
+    "Params": "URLを指定",
+    "Level": "low",
+    "Descr": "HTTPS接続監視",
+    "AutoMode": "443,2181,8080,8888"
   },
   {
     "Name": "HTTP応答監視",
@@ -187,30 +205,30 @@
     "Name": "TLS証明書期限",
     "Type": "tls",
     "Mode": "expire",
-    "Params": "",
+    "Params": "ポート番号または、ホスト名:ポート番号を指定",
     "Script": "30",
     "Level": "low",
     "Descr": "サーバー証明書の期限が３０日以内を検知",
-    "AutoMode": ""
+    "AutoMode": "443,2181,8080,8888"
   },
   {
-    "Name": "TLS v1.0 利用検知",
+    "Name": "TLS v1.0 接続検知",
     "Type": "tls",
     "Mode": "version",
-    "Params": "",
+    "Params": "ポート番号または、ホスト名:ポート番号を指定",
     "Script": "!1.0",
     "Level": "low",
-    "Descr": "TLS v1.0の利用を検知",
-    "AutoMode": ""
+    "Descr": "TLS v1.0で接続できることを検知",
+    "AutoMode": "443,2181,8080,8888"
   },
   {
     "Name": "TLS証明書検証",
     "Type": "tls",
     "Mode": "verify",
-    "Params": "",
+    "Params": "ポート番号または、ホスト名:ポート番号を指定",
     "Level": "low",
     "Descr": "サーバー証明書を検証",
-    "AutoMode": ""
+    "AutoMode": "443,2181,8080,8888"
   },
   {
     "Name": "NTPサーバー監視",
@@ -317,7 +335,7 @@
     "Script": "up > 0",
     "Level": "off",
     "Descr": "仮想マシン稼働状態",
-    "AutoMode": "vmware:vm"
+    "AutoMode": "index"
   },
   {
     "Name": "仮想基盤CPU使用率",
@@ -327,7 +345,7 @@
     "Script": "usageCPU < 80",
     "Level": "off",
     "Descr": "仮想基盤CPU使用率",
-    "AutoMode": ""
+    "AutoMode": "index"
   },
   {
     "Name": "仮想基盤メモリー使用率",
@@ -337,7 +355,7 @@
     "Script": "usageMEM < 80",
     "Level": "off",
     "Descr": "仮想基盤メモリー使用率",
-    "AutoMode": "vmware:hostsystem"
+    "AutoMode": "index"
   },
   {
     "Name": "仮想基盤データストア容量",
@@ -347,7 +365,7 @@
     "Script": "usage < 80",
     "Level": "off",
     "Descr": "仮想基盤データストア容量",
-    "AutoMode": "vmware:datastore"
+    "AutoMode": "index"
   },
   {
     "Name": "Syslog件数",
