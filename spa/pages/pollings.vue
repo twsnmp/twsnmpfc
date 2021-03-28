@@ -75,6 +75,15 @@
         </v-btn>
         <v-btn
           v-if="hasSelectedPollings"
+          color="primary"
+          dark
+          @click="setPollingLogModeDialog = true"
+        >
+          <v-icon>mdi-alert</v-icon>
+          ログモード変更
+        </v-btn>
+        <v-btn
+          v-if="hasSelectedPollings"
           color="error"
           @click="deleteSelectedPollingDialog = true"
         >
@@ -264,7 +273,7 @@
     <v-dialog v-model="setPollingLevelDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
-          <span class="headline">ポーリングレベル変更</span>
+          <span class="headline">レベル変更</span>
         </v-card-title>
         <v-card-text>
           <v-select v-model="newLevel" :items="$levelList" label="レベル">
@@ -277,6 +286,32 @@
             変更
           </v-btn>
           <v-btn color="normal" @click="setPollingLevelDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="setPollingLogModeDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ログモード変更</span>
+        </v-card-title>
+        <v-card-text>
+          <v-select
+            v-model="newLogMode"
+            :items="$logModeList"
+            label="ログモード"
+          >
+          </v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="setPollingLogMode">
+            <v-icon>mdi-content-</v-icon>
+            変更
+          </v-btn>
+          <v-btn color="normal" @click="setPollingLogModeDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -359,13 +394,13 @@ export default {
       deletePolling: {},
       search: '',
       headers: [
-        { text: '状態', value: 'State', width: '11%' },
-        { text: 'ノード', value: 'NodeName', width: '15%' },
+        { text: '状態', value: 'State', width: '12%' },
+        { text: 'ノード', value: 'NodeName', width: '18%' },
         { text: '名前', value: 'Name', width: '20%' },
-        { text: 'レベル', value: 'Level', width: '11%' },
+        { text: 'レベル', value: 'Level', width: '15%' },
         { text: '種別', value: 'Type', width: '8%' },
         { text: '最終実施', value: 'TimeStr', width: '15%' },
-        { text: '操作', value: 'actions', width: '10%' },
+        { text: '操作', value: 'actions', width: '12%' },
       ],
       nodeList: [],
       pollings: [],
@@ -375,7 +410,7 @@ export default {
         { text: 'レベル', value: 'Level', width: '15%' },
         { text: '種別', value: 'Type', width: '10%' },
         { text: 'モード', value: 'Mode', width: '10%' },
-        { text: '説明', value: 'Descr', width: '40%' },
+        { text: '説明', value: 'Descr', width: '35%' },
       ],
       selectedTemplate: [],
       templateDialog: false,
@@ -384,6 +419,8 @@ export default {
       deleteSelectedPollingDialog: false,
       setPollingLevelDialog: false,
       newLevel: 'off',
+      setPollingLogModeDialog: false,
+      newLogMode: 0,
     }
   },
   computed: {
@@ -457,6 +494,26 @@ export default {
           this.updateError = true
         })
       this.setPollingLevelDialog = false
+    },
+    setPollingLogMode() {
+      const ids = []
+      this.selectedPollings.forEach((p) => {
+        ids.push(p.ID)
+      })
+      this.$axios
+        .post('/api/pollings/setlogmode', {
+          IDs: ids,
+          LogMode: this.newLogMode,
+        })
+        .then(() => {
+          this.$fetch()
+          this.selectedPollings = []
+        })
+        .catch((e) => {
+          this.$fetch()
+          this.updateError = true
+        })
+      this.setPollingLogModeDialog = false
     },
     closeDelete() {
       this.deleteDialog = false

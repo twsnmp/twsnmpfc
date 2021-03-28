@@ -92,6 +92,42 @@ func setPollingLevel(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
+func setPollingLogMode(c echo.Context) error {
+	var params = struct {
+		LogMode int
+		IDs     []string
+	}{}
+	if err := c.Bind(&params); err != nil {
+		log.Printf("setPollingLevel err=%v", err)
+		return echo.ErrBadRequest
+	}
+	for _, id := range params.IDs {
+		p := datastore.GetPolling(id)
+		if p != nil {
+			p.LogMode = params.LogMode
+			if err := datastore.UpdatePolling(p); err != nil {
+				log.Printf("setPollingLevel err=%v", err)
+				return echo.ErrBadRequest
+			}
+		}
+	}
+	modeName := "しない"
+	switch params.LogMode {
+	case datastore.LogModeAlways:
+		modeName = "常時記録"
+	case datastore.LogModeOnChange:
+		modeName = "状態変化時のみ記録"
+	case datastore.LogModeAI:
+		modeName = "AI分析"
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("%dのポーリングのログモードを%sに変更しました", len(params.IDs), modeName),
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
 func getPollingCheck(c echo.Context) error {
 	id := c.Param("id")
 	all := id == "all"
