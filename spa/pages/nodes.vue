@@ -47,6 +47,17 @@
           <v-icon small @click="deleteNodeFunc(item)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" dark @click="checkAllPolling">
+          <v-icon>mdi-cached</v-icon>
+          すべて再確認
+        </v-btn>
+        <v-btn color="normal" dark @click="$fetch()">
+          <v-icon>mdi-cached</v-icon>
+          更新
+        </v-btn>
+      </v-card-actions>
     </v-card>
     <v-dialog v-model="editDialog" persistent max-width="500px">
       <v-card>
@@ -139,11 +150,11 @@ export default {
       deleteNode: {},
       search: '',
       headers: [
-        { text: '状態', value: 'State', width: '15%' },
-        { text: '名前', value: 'Name', width: '20%' },
+        { text: '状態', value: 'State', width: '12%' },
+        { text: '名前', value: 'Name', width: '23%' },
         { text: 'IPアドレス', value: 'IP', width: '15%' },
-        { text: '説明', value: 'Descr', width: '40%' },
-        { text: '操作', value: 'actions', width: '10%' },
+        { text: '説明', value: 'Descr', width: '35%' },
+        { text: '操作', value: 'actions', width: '15%' },
       ],
       nodes: [],
     }
@@ -188,6 +199,12 @@ export default {
         })
       }
       this.closeEdit()
+    },
+    async checkAllPolling() {
+      await this.$axios.$get('/api/polling/check/all')
+      this.$nextTick(() => {
+        this.$fetch()
+      })
     },
   },
 }
