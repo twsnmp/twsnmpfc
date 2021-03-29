@@ -1,9 +1,7 @@
 import * as echarts from 'echarts'
 
-let chart
-
-const makeDBStatsChart = (div) => {
-  chart = echarts.init(document.getElementById(div))
+const showDBStatsChart = (div, logs) => {
+  const chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
       show: false,
@@ -110,55 +108,36 @@ const makeDBStatsChart = (div) => {
       {
         name: 'データ数/秒',
         type: 'bar',
-        color: '#1f78b4',
         large: true,
         data: [],
       },
       {
         name: 'DBサイズ',
         type: 'line',
-        color: '#e31a1c',
         large: true,
+        symbol: 'none',
         yAxisIndex: 1,
         data: [],
       },
     ],
   }
+  if (logs) {
+    logs.forEach((e) => {
+      const t = new Date(e.Time / (1000 * 1000))
+      option.series[0].data.push({
+        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}'),
+        value: [t, e.Speed],
+      })
+      option.series[1].data.push({
+        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}'),
+        value: [t, e.Size],
+      })
+    })
+  }
   chart.setOption(option)
   chart.resize()
 }
 
-const showDBStatsChart = (logs) => {
-  const speed = []
-  const size = []
-  if (!logs) {
-    return
-  }
-  logs.forEach((e) => {
-    const t = new Date(e.Time / (1000 * 1000))
-    speed.push({
-      name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}'),
-      value: [t, e.Speed],
-    })
-    size.push({
-      name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}'),
-      value: [t, e.Size],
-    })
-  })
-  chart.setOption({
-    series: [
-      {
-        data: speed,
-      },
-      {
-        data: size,
-      },
-    ],
-  })
-  chart.resize()
-}
-
 export default (context, inject) => {
-  inject('makeDBStatsChart', makeDBStatsChart)
   inject('showDBStatsChart', showDBStatsChart)
 }

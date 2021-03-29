@@ -51,29 +51,20 @@
               </tbody>
             </template>
           </v-simple-table>
-          <div id="dbStatsChart" style="width: 900px; height: 250px"></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" dark @click="deleteTarget = 'logs'">
+          <v-btn color="error" dark @click="cleanupDialog = true">
             <v-icon>mdi-delete</v-icon>
-            ログ削除
+            クリーンアップ
           </v-btn>
-          <v-btn color="error" dark @click="deleteTarget = 'arp'">
-            <v-icon>mdi-delete</v-icon>
-            ARP監視削除
-          </v-btn>
-          <v-btn color="error" dark @click="deleteTarget = 'report'">
-            <v-icon>mdi-delete</v-icon>
-            レポート削除
-          </v-btn>
-          <v-btn color="error" dark @click="deleteTarget = 'report/ai/all'">
-            <v-icon>mdi-delete</v-icon>
-            AI分析結果削除
+          <v-btn color="primary" dark @click="openDBStatsChart">
+            <v-icon>mdi-chart-line</v-icon>
+            統計グラフ
           </v-btn>
           <v-btn color="primary" dark @click="backupDialog = true">
             <v-icon>mdi-image</v-icon>
-            バックアップ設定
+            バックアップ
           </v-btn>
           <v-btn color="normal" dark to="/map">
             <v-icon>mdi-lan</v-icon>
@@ -82,22 +73,44 @@
         </v-card-actions>
       </v-form>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="dbStatsChartDialog" persistent max-width="1000px">
       <v-card>
         <v-card-title>
-          <span class="headline">削除確認</span>
+          <span class="headline"> データベース統計 </span>
         </v-card-title>
-        <v-alert v-model="deleteError" color="error" dense dismissible>
-          {{ deleteTargetName }}の削除に失敗しました
-        </v-alert>
-        <v-card-text>全ての{{ deleteTargetName }}を削除しますか？</v-card-text>
+        <div id="dbStatsChart" style="width: 1000px; height: 400px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" @click="doDelete">
-            <v-icon>mdi-delete</v-icon>
-            削除
+          <v-btn color="normal" @click="dbStatsChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
           </v-btn>
-          <v-btn color="normal" @click="deleteTarget = ''">
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="cleanupDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">データストアのクリーンアップ</span>
+        </v-card-title>
+        <v-alert v-model="cleanupError" color="error" dense dismissible>
+          クリーンアップに失敗しました
+        </v-alert>
+        <v-card-text>
+          <v-select
+            v-model="cleanupTarget"
+            :items="cleanupTargetList"
+            label="クリーンアップ対象"
+          >
+          </v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="doCleanup">
+            <v-icon>mdi-delete</v-icon>
+            クリーンアップ
+          </v-btn>
+          <v-btn color="normal" @click="cleanupDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -167,7 +180,6 @@ export default {
       numeral(r.DBStats.AvgSpeed).format('0.000a') + ' Write/Sec'
     this.dbStatsLog = r.DBStatsLog
     this.backup = r.Backup
-    this.$showDBStatsChart(this.dbStatsLog)
   },
   data() {
     return {
@@ -199,46 +211,31 @@ export default {
         { text: '2日分', value: 1 },
         { text: '1週間分', value: 6 },
       ],
-      deleteTarget: '',
-      deleteError: false,
+      cleanupTarget: '',
+      cleanupTargetList: [
+        { text: 'レポート', value: 'report' },
+        { text: 'AI分析結果', value: 'report/ai/all' },
+        { text: 'ログ', value: 'log' },
+        { text: 'ARP監視', value: 'arp' },
+      ],
+      cleanupDialog: false,
+      cleanupError: false,
+      dbStatsChartDialog: false,
     }
   },
-  computed: {
-    deleteTargetName() {
-      switch (this.deleteTarget) {
-        case 'report':
-          return 'レポート'
-        case 'report/ai/all':
-          return 'ai分析結果'
-        case 'logs':
-          return 'ログ'
-        case 'arp':
-          return 'ARP監視情報'
-        default:
-          return ''
-      }
-    },
-    deleteDialog() {
-      return this.deleteTarget !== ''
-    },
-  },
-  mounted() {
-    this.$makeDBStatsChart('dbStatsChart')
-    this.$showDBStatsChart(this.dbStatsLog)
-  },
   methods: {
-    doDelete() {
-      if (this.deleteTarget === '') {
+    doCleanup() {
+      if (this.cleanupTarget === '') {
         return
       }
       this.$axios
-        .delete('/api/' + this.deleteTarget)
+        .delete('/api/' + this.cleanupTarget)
         .then((r) => {
-          this.deleteTarget = ''
+          this.cleanupDialog = false
           this.$fetch()
         })
         .catch((e) => {
-          this.deleteError = true
+          this.cleanupError = true
           this.$fetch()
         })
     },
@@ -251,6 +248,12 @@ export default {
         .catch((e) => {
           this.backupError = true
         })
+    },
+    openDBStatsChart() {
+      this.dbStatsChartDialog = true
+      this.$nextTick(() => {
+        this.$showDBStatsChart('dbStatsChart', this.dbStatsLog)
+      })
     },
     strTime(t) {
       if (t < 1000) {
