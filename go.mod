@@ -18,9 +18,11 @@ require (
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/rakyll/statik v0.1.7
 	github.com/robertkrimen/otto v0.0.0-20200922221731-ef014fd054ac
+	github.com/shirou/gopsutil v3.21.2+incompatible
 	github.com/signalsciences/ipv4 v1.4.0
 	github.com/sleepinggenius2/gosmi v0.3.2
 	github.com/tehmaze/netflow v0.0.0-20170921210347-852af103667f
+	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
 	github.com/twsnmp/golof v1.0.0
 	github.com/twsnmp/gosnmp v1.28.4

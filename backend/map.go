@@ -12,6 +12,7 @@ import (
 )
 
 func mapBackend(ctx context.Context) {
+	log.Println("start map backend")
 	clearPollingState()
 	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
 		updateNodeState(n)

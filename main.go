@@ -79,7 +79,7 @@ func main() {
 	if err = polling.StartPolling(ctx); err != nil {
 		log.Fatalln(err)
 	}
-	if err = backend.StartBackend(ctx, version); err != nil {
+	if err = backend.StartBackend(ctx, dataStorePath, version); err != nil {
 		log.Fatalln(err)
 	}
 	if err = notify.StartNotify(ctx); err != nil {

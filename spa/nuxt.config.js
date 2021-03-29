@@ -39,6 +39,7 @@ export default {
     '@/plugins/echarts/flows3d.js',
     '@/plugins/echarts/servicepie.js',
     '@/plugins/echarts/ai.js',
+    '@/plugins/echarts/monitor.js',
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)

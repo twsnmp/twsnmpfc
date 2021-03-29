@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/twsnmp/twsnmpfc/backend"
 )
 
 type WebAPI struct {
@@ -110,7 +111,12 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.GET("/report/ailist", getAIList)
 	r.GET("/report/ai/:id", getAIResult)
 	r.DELETE("/report/ai/:id", deleteAIResult)
+	r.GET("/monitor", getMonitor)
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
+}
+
+func getMonitor(c echo.Context) error {
+	return c.JSON(http.StatusOK, backend.MonitorDataes)
 }
 
 func middle(p *WebAPI) echo.MiddlewareFunc {

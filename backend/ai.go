@@ -14,6 +14,7 @@ import (
 )
 
 func aiBackend(ctx context.Context) {
+	log.Println("start ai backend")
 	timer := time.NewTicker(time.Second * 60)
 	for {
 		select {

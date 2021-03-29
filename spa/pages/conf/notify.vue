@@ -94,6 +94,10 @@
             <v-icon>mdi-content-save</v-icon>
             保存
           </v-btn>
+          <v-btn color="normal" dark to="/map">
+            <v-icon>mdi-lan</v-icon>
+            マップ
+          </v-btn>
         </v-card-actions>
       </v-form>
     </v-card>

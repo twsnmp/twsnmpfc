@@ -258,6 +258,11 @@ export default {
           title: 'データストア',
           to: '/conf/datastore',
         },
+        {
+          icon: 'mdi-finance',
+          title: 'モニター',
+          to: '/conf/monitor',
+        },
       ],
       notify: false,
       selectedNodeID: '',

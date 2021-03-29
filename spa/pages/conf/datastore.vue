@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="800">
+    <v-card min-width="900">
       <v-form>
         <v-card-title primary-title> データストア </v-card-title>
         <v-alert v-if="$fetchState.error" color="error" dense>
@@ -51,7 +51,7 @@
               </tbody>
             </template>
           </v-simple-table>
-          <div id="dbStatsChart" style="width: 95%; height: 300px"></div>
+          <div id="dbStatsChart" style="width: 900px; height: 250px"></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -74,6 +74,10 @@
           <v-btn color="primary" dark @click="backupDialog = true">
             <v-icon>mdi-image</v-icon>
             バックアップ設定
+          </v-btn>
+          <v-btn color="normal" dark to="/map">
+            <v-icon>mdi-lan</v-icon>
+            マップ
           </v-btn>
         </v-card-actions>
       </v-form>

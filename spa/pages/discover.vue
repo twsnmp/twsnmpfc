@@ -165,7 +165,7 @@
           <v-icon>mdi-magnify</v-icon>
           開始
         </v-btn>
-        <v-btn color="primary" to="/map">
+        <v-btn color="normal" to="/map">
           <v-icon>mdi-lan</v-icon>
           マップ
         </v-btn>
