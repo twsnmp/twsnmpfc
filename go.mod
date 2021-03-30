@@ -4,10 +4,12 @@ go 1.15
 
 require (
 	github.com/Songmu/timeout v0.4.0
+	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20201120081800-1786d5ef83d4 // indirect
 	github.com/beevik/ntp v0.3.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab
 	github.com/labstack/echo/v4 v4.1.17
 	github.com/labstack/gommon v0.3.0

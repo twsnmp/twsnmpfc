@@ -9,6 +9,8 @@ ZIP          = zip
 
 ### ターゲットパラメータ
 DIST = dist
+SRC = ./main.go backend/*.go datastore/*.go discover/*.go logger/*.go notify/*.go \
+      ping/*.go report/*.go security/*.go webapi/*.go
 TARGETS     = $(DIST)/twsnmpfc.exe $(DIST)/twsnmpfc.app $(DIST)/twsnmpfc $(DIST)/twsnmpfc.arm
 GO_PKGROOT  = ./...
 
@@ -23,17 +25,17 @@ zip: $(TARGETS)
 	$(ZIP) $(DIST)/twsnmpfc.zip $(TARGETS)
 
 ### 実行ファイルのビルドルール
-$(DIST)/twsnmpfc.exe: statik/statik.go
+$(DIST)/twsnmpfc.exe: statik/statik.go $(SRC)
 	env GO111MODULE=on GOOS=windows GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
-$(DIST)/twsnmpfc.app: statik/statik.go
+$(DIST)/twsnmpfc.app: statik/statik.go $(SRC)
 	env GO111MODULE=on GOOS=darwin GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
-$(DIST)/twsnmpfc.arm: statik/statik.go
+$(DIST)/twsnmpfc.arm: statik/statik.go $(SRC)
 	env GO111MODULE=on GOOS=linux GOARCH=arm GOARM=7 $(GO_BUILD) $(GO_LDFLAGS) -o $@
-$(DIST)/twsnmpfc: statik/statik.go
+$(DIST)/twsnmpfc: statik/statik.go $(SRC)
 	env GO111MODULE=on GOOS=linux GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
 
 ### nuxt.js アプリのビルド
-spa/dist/index.html:
+spa/dist/index.html: spa/*.js* spa/pages/* spa/plugins/* spa/plugins/echarts/*
 	cd spa && npm run generate
 statik/statik.go: spa/dist/* conf/*
 	cp -a conf  spa/dist
