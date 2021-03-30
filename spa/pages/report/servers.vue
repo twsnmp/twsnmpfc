@@ -39,11 +39,9 @@
           <v-icon
             v-if="item.ServerNodeID"
             small
-            @click="
-              $router.push({ path: '/node/polling/' + item.ServerNodeID })
-            "
+            @click="$router.push({ path: '/map?node=' + item.ServerNodeID })"
           >
-            mdi-link
+            mdi-lan
           </v-icon>
           <v-icon
             small

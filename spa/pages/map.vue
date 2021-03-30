@@ -347,6 +347,10 @@ export default {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
     })
+    const nodeID = this.$route.query.node
+    if (nodeID && this.map.Nodes[nodeID]) {
+      this.$selectNode(nodeID)
+    }
   },
   data() {
     return {

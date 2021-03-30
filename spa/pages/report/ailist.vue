@@ -38,9 +38,9 @@
           </v-icon>
           <v-icon
             small
-            @click="$router.push({ path: '/node/polling/' + item.NodeID })"
+            @click="$router.push({ path: '/map?node=' + item.NodeID })"
           >
-            mdi-laptop
+            mdi-lan
           </v-icon>
           <v-icon small @click="$router.push({ path: '/polling/' + item.ID })">
             mdi-lan-check
