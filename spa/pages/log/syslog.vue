@@ -248,6 +248,10 @@ export default {
   mounted() {
     this.$makeLogLevelChart('logCountChart')
     this.$showLogLevelChart(this.logs)
+    window.addEventListener('resize', this.$resizeLogLevelChart)
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.$resizeLogLevelChart)
   },
   methods: {
     doFilter() {

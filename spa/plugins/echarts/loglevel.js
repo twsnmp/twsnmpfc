@@ -187,11 +187,13 @@ const showLogLevelChart = (logs) => {
   })
   chart.resize()
 }
+
 const resizeLogLevelChart = () => {
   if (chart) {
     chart.resize()
   }
 }
+
 export default (context, inject) => {
   inject('makeLogLevelChart', makeLogLevelChart)
   inject('showLogLevelChart', showLogLevelChart)

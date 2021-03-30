@@ -229,6 +229,10 @@ export default {
   mounted() {
     this.$makeLogCountChart('logCountChart')
     this.$showLogCountChart(this.logs)
+    window.addEventListener('resize', this.$resizeLogCountChart)
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.$resizeLogCountChart)
   },
   methods: {
     doFilter() {

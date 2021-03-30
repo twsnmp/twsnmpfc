@@ -129,7 +129,14 @@ const showLogCountChart = (logs) => {
   chart.resize()
 }
 
+const resizeLogCountChart = () => {
+  if (chart) {
+    chart.resize()
+  }
+}
+
 export default (context, inject) => {
   inject('makeLogCountChart', makeLogCountChart)
   inject('showLogCountChart', showLogCountChart)
+  inject('resizeLogCountChart', resizeLogCountChart)
 }
