@@ -9,7 +9,7 @@ tmp_dir = "/tmp"
 # Just plain old shell command. You could use `make` as well.
 cmd = "go build -o /tmp/main ."
 # Binary file yields from `cmd`.
-bin = "/tmp/main"
+bin = "/tmp/main -datastore ./tmp"
 # Watch these filename extensions.
 include_ext = ["go"]
 # Ignore these filename extensions or directories.

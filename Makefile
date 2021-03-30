@@ -1,4 +1,4 @@
-.PHONY: all test clean zip mac clean_spa
+.PHONY: all test clean zip mac clean_spa docker
 
 ### コマンドの定義
 GO          = go
@@ -23,6 +23,10 @@ clean: clean_spa
 mac: $(DIST)/twsnmpfc.app
 zip: $(TARGETS)
 	$(ZIP) $(DIST)/twsnmpfc.zip $(TARGETS)
+
+docker:  dist/twsnmpfc Docker/Dockerfile
+	cp dist/twsnmpfc Docker/
+	cd Docker && docker build -t twsnmp/twsnmpfc .
 
 ### 実行ファイルのビルドルール
 $(DIST)/twsnmpfc.exe: statik/statik.go $(SRC)

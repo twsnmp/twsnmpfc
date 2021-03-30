@@ -33,7 +33,7 @@ var port string
 const version = "1000"
 
 func init() {
-	flag.StringVar(&dataStorePath, "datastore", "./tmp", "Path to Data Store directory")
+	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
 	flag.StringVar(&password, "password", "twsnmpfc!", "Master Password")
 	flag.StringVar(&port, "port", "8080", "port")
 	flag.VisitAll(func(f *flag.Flag) {
