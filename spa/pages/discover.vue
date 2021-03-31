@@ -57,6 +57,28 @@
     </v-list-item>
     <v-list-item three-line>
       <v-list-item-content>
+        <v-list-item-title>ファイルサーバー</v-list-item-title>
+        <v-list-item-subtitle>
+          <v-progress-linear v-model="fileRate" height="20"></v-progress-linear>
+        </v-list-item-subtitle>
+        <v-list-item-subtitle>
+          発見数:{{ discover.Stat.File }}
+        </v-list-item-subtitle>
+      </v-list-item-content>
+    </v-list-item>
+    <v-list-item three-line>
+      <v-list-item-content>
+        <v-list-item-title>画面共有サーバー</v-list-item-title>
+        <v-list-item-subtitle>
+          <v-progress-linear v-model="rdpRate" height="20"></v-progress-linear>
+        </v-list-item-subtitle>
+        <v-list-item-subtitle>
+          発見数:{{ discover.Stat.RDP }}
+        </v-list-item-subtitle>
+      </v-list-item-content>
+    </v-list-item>
+    <v-list-item three-line>
+      <v-list-item-content>
         <v-list-item-title>SSHサーバー</v-list-item-title>
         <v-list-item-subtitle>
           <v-progress-linear v-model="sshRate" height="20"></v-progress-linear>
@@ -282,6 +304,18 @@ export default {
         return 0
       }
       return (100 * this.discover.Stat.Mail) / this.discover.Stat.Found
+    },
+    fileRate() {
+      if (!this.discover.Stat.Found) {
+        return 0
+      }
+      return (100 * this.discover.Stat.File) / this.discover.Stat.Found
+    },
+    rdpRate() {
+      if (!this.discover.Stat.Found) {
+        return 0
+      }
+      return (100 * this.discover.Stat.RDP) / this.discover.Stat.Found
     },
     sshRate() {
       if (!this.discover.Stat.Found) {

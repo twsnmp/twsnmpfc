@@ -39,6 +39,8 @@ type DiscoverStat struct {
 	Web       uint32
 	Mail      uint32
 	SSH       uint32
+	File      uint32
+	RDP       uint32
 	StartTime int64
 	Now       int64
 }
@@ -90,6 +92,8 @@ func StartDiscover() error {
 	Stat.Web = 0
 	Stat.Mail = 0
 	Stat.SSH = 0
+	Stat.File = 0
+	Stat.RDP = 0
 	Stat.Running = true
 	Stat.StartTime = time.Now().Unix()
 	Stat.Now = Stat.StartTime
@@ -136,6 +140,12 @@ func StartDiscover() error {
 					}
 					if dent.ServerList["http"] || dent.ServerList["https"] {
 						Stat.Web++
+					}
+					if dent.ServerList["cifs"] || dent.ServerList["nfs"] {
+						Stat.File++
+					}
+					if dent.ServerList["rdp"] || dent.ServerList["vnc"] {
+						Stat.RDP++
 					}
 					if dent.ServerList["smtp"] || dent.ServerList["imap"] || dent.ServerList["pop3"] {
 						Stat.Mail++
@@ -231,7 +241,7 @@ func addFoundNode(dent *discoverInfoEnt) {
 		Icon:  "desktop",
 		X:     dent.X,
 		Y:     dent.Y,
-		Descr: "自動登録:" + time.Now().Format(time.RFC3339),
+		Descr: time.Now().Format("2006/01/02") + "に発見",
 	}
 	if n.Name == "" {
 		if dent.SysName != "" {
@@ -246,6 +256,15 @@ func addFoundNode(dent *discoverInfoEnt) {
 		n.Password = datastore.MapConf.SnmpPassword
 		n.Community = datastore.MapConf.Community
 		n.Icon = "hdd"
+		n.Descr += " / snmp対応"
+	}
+	if len(dent.ServerList) > 0 {
+		n.Descr += " / "
+		sl := []string{}
+		for s := range dent.ServerList {
+			sl = append(sl, s)
+		}
+		n.Descr += strings.Join(sl, ",") + "対応"
 	}
 	if err := datastore.AddNode(&n); err != nil {
 		log.Printf("discover AddNode err=%v", err)
@@ -326,6 +345,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 		ptype := ""
 		params := ""
 		mode := ""
+		level := "off"
 		switch s {
 		case "http":
 			name = "HTTPサーバー監視"
@@ -336,10 +356,12 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			ptype = "http"
 			mode = "https"
 			params = "https://" + n.IP
+			level = "low"
 		case "smtp":
 			name = "SMTPサーバー監視"
 			ptype = "tcp"
 			params = "25"
+			level = "low"
 		case "pop3":
 			name = "POP3サーバー監視"
 			ptype = "tcp"
@@ -348,10 +370,27 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			name = "IMAPサーバー監視"
 			ptype = "tcp"
 			params = "143"
+			level = "low"
 		case "ssh":
-			name = "IMAPサーバー監視"
+			name = "SSHサーバー監視"
 			ptype = "tcp"
 			params = "22"
+		case "cifs":
+			name = "ファイル共有(CIFS)サーバー監視"
+			ptype = "tcp"
+			params = "445"
+		case "nfs":
+			name = "ファイル共有(NFS)サーバー監視"
+			ptype = "tcp"
+			params = "2049"
+		case "vnc":
+			name = "画面共有(VNC)サーバー監視"
+			ptype = "tcp"
+			params = "5900"
+		case "rdp":
+			name = "RDPサーバー監視"
+			ptype = "tcp"
+			params = "3389"
 		default:
 			continue
 		}
@@ -361,7 +400,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			Type:    ptype,
 			Mode:    mode,
 			Params:  params,
-			Level:   "low",
+			Level:   level,
 			State:   "unknown",
 			PollInt: datastore.MapConf.PollInt,
 			Timeout: datastore.MapConf.Timeout,
@@ -380,7 +419,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 		Name:    "sysUptime監視",
 		Type:    "snmp",
 		Mode:    "sysUpTime",
-		Level:   "low",
+		Level:   "off",
 		State:   "unknown",
 		PollInt: datastore.MapConf.PollInt,
 		Timeout: datastore.MapConf.Timeout,
@@ -397,7 +436,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			Name:    "IF " + i + "監視",
 			Mode:    "ifOperStatus",
 			Params:  i,
-			Level:   "low",
+			Level:   "off",
 			State:   "unknown",
 			PollInt: datastore.MapConf.PollInt,
 			Timeout: datastore.MapConf.Timeout,
@@ -419,6 +458,10 @@ func checkServer(dent *discoverInfoEnt) {
 		"imap":  "143",
 		"smtp":  "25",
 		"ssh":   "22",
+		"cifs":  "445",
+		"nfs":   "2049",
+		"vnc":   "5900",
+		"rdp":   "3389",
 	}
 	for s, p := range checkList {
 		if doTCPConnect(dent.IP + ":" + p) {

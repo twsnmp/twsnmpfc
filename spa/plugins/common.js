@@ -173,7 +173,7 @@ const getScoreIconName = (s) => {
 
 // Service Name Map
 const serviceNameArray = [
-  ["submission/tcp", "SMTP"],
+  ["submission/tcp", "SMTPSUB"],
   ["http/tcp", "HTTP"],
   ["https/tcp", "HTTPS"],
   ["ldap/tcp", "LDAP"],
@@ -186,14 +186,17 @@ const serviceNameArray = [
   ["pop3/tcp", "POP3"],
   ["pop3s/tcp", "POP3S"],
   ["imap/tcp", "IMAP"],
+  ["imap3/tcp", "IMAP3"],
   ["imaps/tcp", "IMAPS"],
   ["ssh/tcp", "SSH"],
   ["telnet/tcp", "TELNET"],
   ["ftp/tcp", "FTP"],
   ["bootps/udp", "DHCP"],
   ["syslog/udp", "SYSLOG"],
+  ["nfsd/tcp", "NFS"],
   ["microsoft-ds/tcp", "CIFS"],
-  ["rfb/tcp", "RFB"],
+  ["ms-wbt-server/tcp", "RDP"],
+  ["rfb/tcp", "VNC"],
   ["netbios-ns/udp", "NETBIOS"],
   ["netbios-dgm/udp", "NETBIOS"],
   ["icmp", "ICMP"],
