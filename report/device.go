@@ -70,6 +70,12 @@ func setDevicePenalty(d *datastore.DeviceEnt) {
 	if d.IP == d.Name {
 		d.Penalty++
 	}
+	// 使用してよいローカルIP
+	if allowLocalIP != nil {
+		if !allowLocalIP.MatchString(d.IP) {
+			d.Penalty++
+		}
+	}
 	ip := net.ParseIP(d.IP)
 	if !datastore.IsPrivateIP(ip) {
 		d.Penalty++

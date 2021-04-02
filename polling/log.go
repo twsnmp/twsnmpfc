@@ -165,10 +165,18 @@ func doPollingLog(pe *datastore.PollingEnt) {
 						nBytes += nB
 					}
 				}
+				nPackets := 0
+				for _, b := range []string{"spkt", "rpkt"} {
+					pkts, ok := values[b]
+					if ok {
+						nP, _ := strconv.Atoi(pkts)
+						nPackets += nP
+					}
+				}
 				nProt := getProt(prot)
 				nSPort, _ := strconv.Atoi(sport)
 				nDPort, _ := strconv.Atoi(dport)
-				report.ReportFlow(src, nSPort, dst, nDPort, nProt, int64(nBytes), l.Time)
+				report.ReportFlow(src, nSPort, dst, nDPort, nProt, int64(nPackets), int64(nBytes), l.Time)
 				count++
 			}
 			count++

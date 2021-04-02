@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -24,6 +25,8 @@ var (
 	allowDNS       map[string]bool
 	allowDHCP      map[string]bool
 	allowMail      map[string]bool
+	allowLDAP      map[string]bool
+	allowLocalIP   *regexp.Regexp
 	dennyCountries map[string]int64
 	dennyServices  map[string]int64
 	japanOnly      bool
@@ -84,6 +87,28 @@ func UpdateReportConf() {
 		allowMail = make(map[string]bool)
 		for _, ip := range ips {
 			allowMail[ip] = true
+		}
+	}
+	ips = strings.Split(datastore.ReportConf.AllowLDAP, ",")
+	if len(ips) < 1 || ips[0] == "" {
+		allowLDAP = nil
+	} else {
+		allowLDAP = make(map[string]bool)
+		for _, ip := range ips {
+			allowLDAP[ip] = true
+		}
+	}
+	allowLocalIP = nil
+	if datastore.ReportConf.AllowLocalIP != "" {
+		p := strings.TrimSpace(datastore.ReportConf.AllowLocalIP)
+		if strings.HasSuffix(p, "*") {
+			p = strings.ReplaceAll(p, ".", "\\.")
+			p = "$" + strings.ReplaceAll(p, "*", ".*")
+		}
+		if reg, err := regexp.Compile(p); err == nil {
+			allowLocalIP = reg
+		} else {
+			log.Printf("UpdateReportConf err=%v", err)
 		}
 	}
 }
@@ -402,6 +427,11 @@ func isSafeService(s, ip string) bool {
 	if allowMail != nil {
 		if strings.HasPrefix(s, "smtp") || strings.HasPrefix(s, "pop3") || strings.HasPrefix(s, "imap") {
 			return allowMail[ip]
+		}
+	}
+	if allowLDAP != nil {
+		if strings.HasPrefix(s, "ldap") || strings.HasPrefix(s, "kerberos") {
+			return allowLDAP[ip]
 		}
 	}
 	return true

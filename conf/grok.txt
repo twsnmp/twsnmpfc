@@ -3,7 +3,7 @@ FZLOGIN	FileZen: %{IP:client} %{USER:user} "Authentication %{GREEDYDATA:stat}	su
 NAOSLOGIN	Login %{GREEDYDATA:stat}: \[.+\] %{USER:user}	Success
 DEVICE	mac=%{MAC:mac}.+ip=%{IP:ip}	
 DEVICER	ip=%{IP:ip}.+mac=%{MAC:mac}	
-WELFFLOW	src=%{IP:src}:%{BASE10NUM:sport}:.+dst=%{IP:dst}:%{BASE10NUM:dport}:.+proto=%{WORD:prot}.+sent=%{BASE10NUM:sent}.+rcvd=%{BASE10NUM:rcvd}	
+WELFFLOW	src=%{IP:src}:%{BASE10NUM:sport}:.+dst=%{IP:dst}:%{BASE10NUM:dport}:.+proto=%{WORD:prot}.+sent=%{BASE10NUM:sent}.+rcvd=%{BASE10NUM:rcvd}.+spkt=%{BASE10NUM:spkt}.+rpkt=%{BASE10NUM:rpkt}	
 OPENWEATHER	"weather":.+"main":\s*"%{WORD:weather}".+"main":.+"temp":\s*%{BASE10NUM:temp}.+"feels_like":\s*%{BASE10NUM:feels_like}.+"temp_min":\s*%{BASE10NUM:temp_min}.+"temp_max":\s*%{BASE10NUM:temp_max}.+"pressure":\s*%{BASE10NUM:pressure}.+"humidity":\s*%{BASE10NUM:humidity}.+"wind":\s*{"speed":\s*%{BASE10NUM:wind}	
 UPTIME	load average: %{BASE10NUM:load1m}, %{BASE10NUM:load5m}, %{BASE10NUM:load15m}	
 SSHLOGIN	%{GREEDYDATA:stat} (password|publickey) for( invalid user | )%{USER:user} from %{IP:client}`, Ok: "Accepted"	

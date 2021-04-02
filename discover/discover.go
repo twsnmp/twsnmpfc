@@ -41,6 +41,7 @@ type DiscoverStat struct {
 	SSH       uint32
 	File      uint32
 	RDP       uint32
+	LDAP      uint32
 	StartTime int64
 	Now       int64
 }
@@ -146,6 +147,9 @@ func StartDiscover() error {
 					}
 					if dent.ServerList["rdp"] || dent.ServerList["vnc"] {
 						Stat.RDP++
+					}
+					if dent.ServerList["ldap"] || dent.ServerList["ldaps"] || dent.ServerList["kerberos"] {
+						Stat.LDAP++
 					}
 					if dent.ServerList["smtp"] || dent.ServerList["imap"] || dent.ServerList["pop3"] {
 						Stat.Mail++
@@ -391,6 +395,18 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			name = "RDPサーバー監視"
 			ptype = "tcp"
 			params = "3389"
+		case "kerberos":
+			name = "AD(kerberos)サーバー監視"
+			ptype = "tcp"
+			params = "88"
+		case "ldap":
+			name = "LDAPサーバー監視"
+			ptype = "tcp"
+			params = "389"
+		case "ldaps":
+			name = "LDAPSサーバー監視"
+			ptype = "tcp"
+			params = "88"
 		default:
 			continue
 		}
@@ -452,16 +468,19 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 // サーバーの確認
 func checkServer(dent *discoverInfoEnt) {
 	checkList := map[string]string{
-		"http":  "80",
-		"https": "443",
-		"pop3":  "110",
-		"imap":  "143",
-		"smtp":  "25",
-		"ssh":   "22",
-		"cifs":  "445",
-		"nfs":   "2049",
-		"vnc":   "5900",
-		"rdp":   "3389",
+		"http":     "80",
+		"https":    "443",
+		"pop3":     "110",
+		"imap":     "143",
+		"smtp":     "25",
+		"ssh":      "22",
+		"cifs":     "445",
+		"nfs":      "2049",
+		"vnc":      "5900",
+		"rdp":      "3389",
+		"ldap":     "389",
+		"ldaps":    "636",
+		"kerberos": "88",
 	}
 	for s, p := range checkList {
 		if doTCPConnect(dent.IP + ":" + p) {

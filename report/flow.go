@@ -19,7 +19,12 @@ type flowReportEnt struct {
 	Bytes   int64
 }
 
-func ReportFlow(src string, sp int, dst string, dp, prot int, bytes int64, t int64) {
+func ReportFlow(src string, sp int, dst string, dp, prot int, pkts, bytes int64, t int64) {
+	if prot == 6 &&
+		pkts < int64(datastore.ReportConf.DropFlowThTCPPacket) {
+		log.Printf("drop flow pkts=%d", pkts)
+		return
+	}
 	flowReportCh <- &flowReportEnt{
 		Time:    t,
 		SrcIP:   src,

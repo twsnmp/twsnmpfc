@@ -132,6 +132,7 @@ func logIPFIX(p *ipfix.Message) {
 						record["destinationIPv4Address"].(net.IP).String(),
 						int(record["destinationTransportPort"].(uint16)),
 						int(record["protocolIdentifier"].(uint8)),
+						int64(record["packetDeltaCount"].(uint64)),
 						int64(record["octetDeltaCount"].(uint64)),
 						time.Now().UnixNano(),
 					)
@@ -143,6 +144,7 @@ func logIPFIX(p *ipfix.Message) {
 						record["destinationIPv4Address"].(net.IP).String(),
 						int(tc%265),
 						1,
+						int64(record["packetDeltaCount"].(uint64)),
 						int64(record["octetDeltaCount"].(uint64)),
 						time.Now().UnixNano(),
 					)
@@ -197,6 +199,7 @@ func logNetflow(p *netflow5.Packet) {
 				record["dstAddr"].(net.IP).String(),
 				int(record["dstPort"].(uint16)),
 				int(record["protocol"].(uint8)),
+				int64(r.Packets),
 				int64(r.Bytes),
 				time.Now().UnixNano(),
 			)

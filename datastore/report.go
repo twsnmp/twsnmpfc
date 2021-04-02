@@ -14,7 +14,10 @@ type ReportConfEnt struct {
 	AllowDNS             string
 	AllowDHCP            string
 	AllowMail            string
+	AllowLDAP            string
+	AllowLocalIP         string
 	JapanOnly            bool
+	DropFlowThTCPPacket  int
 	RetentionTimeForSafe int
 }
 

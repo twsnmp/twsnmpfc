@@ -199,6 +199,7 @@ const serviceNameArray = [
   ["rfb/tcp", "VNC"],
   ["netbios-ns/udp", "NETBIOS"],
   ["netbios-dgm/udp", "NETBIOS"],
+  ["kerberos/tcp", "kerberos"],
   ["icmp", "ICMP"],
   ["igmp", "IGMP"]
 ]
