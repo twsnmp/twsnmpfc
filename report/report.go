@@ -99,12 +99,13 @@ func UpdateReportConf() {
 		}
 	}
 	allowLocalIP = nil
-	if datastore.ReportConf.AllowLocalIP != "" {
-		p := strings.TrimSpace(datastore.ReportConf.AllowLocalIP)
+	p := strings.TrimSpace(datastore.ReportConf.AllowLocalIP)
+	if p != "" {
 		if strings.HasSuffix(p, "*") {
 			p = strings.ReplaceAll(p, ".", "\\.")
-			p = "$" + strings.ReplaceAll(p, "*", ".*")
+			p = "^" + strings.ReplaceAll(p, "*", ".*")
 		}
+		log.Printf("allowLocalIP=%s", p)
 		if reg, err := regexp.Compile(p); err == nil {
 			allowLocalIP = reg
 		} else {
