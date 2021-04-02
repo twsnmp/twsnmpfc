@@ -140,13 +140,13 @@ func loadDataFromFS(fs http.FileSystem) {
 	}
 	makeMibTreeList()
 	// OUIの定義
-	if r, err := os.Open(filepath.Join(dspath, "oui.txt")); err == nil {
+	if r, err := os.Open(filepath.Join(dspath, "mac-vendors-export.csv")); err == nil {
 		loadOUIMap(r)
 	} else {
-		if r, err := fs.Open("/conf/oui.txt"); err == nil {
+		if r, err := fs.Open("/conf/mac-vendors-export.csv"); err == nil {
 			loadOUIMap(r)
 		} else {
-			log.Fatalf("InitDataStore oui.txt err=%v", err)
+			log.Fatalf("InitDataStore mac-vendors-export.csv err=%v", err)
 		}
 	}
 	// 休みの定義

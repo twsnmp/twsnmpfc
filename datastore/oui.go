@@ -1,7 +1,8 @@
 package datastore
 
 import (
-	"bufio"
+	"encoding/csv"
+	"encoding/hex"
 	"io"
 	"strings"
 )
@@ -9,20 +10,27 @@ import (
 // OUI Map
 // Download oui.txt from
 // http://standards-oui.ieee.org/oui/oui.txt
+// をやめて
+// https://maclookup.app/downloads/csv-database
 
 // LoadOUIMap : Load OUI Data from io.ReadCloser
 func loadOUIMap(f io.ReadCloser) {
-	s := bufio.NewScanner(f)
-	for s.Scan() {
-		l := strings.TrimSpace(s.Text())
-		if len(l) < 1 {
+	r := csv.NewReader(f)
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if len(record) < 2 {
 			continue
 		}
-		f := strings.Fields(l)
-		if len(f) < 4 || f[1] != "(base" {
+		oui := record[0]
+		if !strings.Contains(oui, ":") {
 			continue
 		}
-		ouiMap[f[0]] = strings.Join(f[3:], " ")
+		oui = strings.TrimSpace(oui)
+		oui = strings.ReplaceAll(oui, ":", "")
+		ouiMap[oui] = record[1]
 	}
 }
 
@@ -35,6 +43,16 @@ func FindVendor(mac string) string {
 		mac = strings.ToUpper(mac)
 		if n, ok := ouiMap[mac[:6]]; ok {
 			return n
+		}
+		if h, err := hex.DecodeString(mac); err == nil {
+			if (h[0] & 0x02) == 0x02 {
+				h[0] = h[0] & 0xfd
+				mac = strings.ToUpper(hex.EncodeToString(h))
+				if n, ok := ouiMap[mac[:6]]; ok {
+					return n + "(Local)"
+				}
+				return "Local"
+			}
 		}
 	}
 	return "Unknown"
