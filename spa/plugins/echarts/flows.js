@@ -120,7 +120,7 @@ const getScoreColor = (s) => {
     return '#dfdf22'
   } else if (s > 33) {
     return '#fb9a99'
-  } else if (s <= 0) {
+  } else if (s === 0) {
     return '#aaa'
   }
   return '#e31a1c'
