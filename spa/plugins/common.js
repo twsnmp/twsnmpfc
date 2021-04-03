@@ -169,21 +169,21 @@ const getScoreIconName = (s) => {
 
 // Service Name Map
 const serviceNameArray = [
-  ["submission/tcp", "SMTPSUB"],
-  ["http/tcp", "HTTP"],
-  ["https/tcp", "HTTPS"],
+  ["submission/tcp", "MAIL"],
+  ["http/tcp", "WEB"],
+  ["https/tcp", "WEB"],
   ["ldap/tcp", "LDAP"],
-  ["ldaps/tcp", "LDAPS"],
+  ["ldaps/tcp", "LDAP"],
   ["domain/tcp", "DNS"],
   ["domain/udp", "DNS"],
   ["snmp/udp", "SNMP"],
   ["ntp/udp", "NTP"],
-  ["smtp/tcp", "SMTP"],
-  ["pop3/tcp", "POP3"],
-  ["pop3s/tcp", "POP3S"],
-  ["imap/tcp", "IMAP"],
-  ["imap3/tcp", "IMAP3"],
-  ["imaps/tcp", "IMAPS"],
+  ["smtp/tcp", "MAIL"],
+  ["pop3/tcp", "MAIL"],
+  ["pop3s/tcp", "MAIL"],
+  ["imap/tcp", "MAIL"],
+  ["imap3/tcp", "MAIL"],
+  ["imaps/tcp", "MAIL"],
   ["ssh/tcp", "SSH"],
   ["telnet/tcp", "TELNET"],
   ["ftp/tcp", "FTP"],
@@ -195,7 +195,7 @@ const serviceNameArray = [
   ["rfb/tcp", "VNC"],
   ["netbios-ns/udp", "NETBIOS"],
   ["netbios-dgm/udp", "NETBIOS"],
-  ["kerberos/tcp", "kerberos"],
+  ["kerberos/tcp", "AD"],
   ["icmp", "ICMP"],
   ["igmp", "IGMP"]
 ]
@@ -203,7 +203,7 @@ const serviceNameArray = [
 const serviceNameMap = new Map(serviceNameArray);
 
 function getServiceName(s) {
-  const ret = serviceNameMap.get(s);
+  const ret = serviceNameMap.get(s)
   return ret || 'Other'
 }
 
@@ -213,7 +213,11 @@ function getServiceNames(services) {
     const n = getServiceName(services[i]);
     sns.set(n, true);
   }
-  return Array.from(sns.keys()).join();
+  const ks = sns.keys()
+  while (ks.length > 5) {
+    ks.pop()
+  }
+  return Array.from(ks).join() + "(" + services.length + ")"
 }
 
 function getLocInfo(l) {
