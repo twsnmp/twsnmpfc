@@ -11,7 +11,9 @@ import (
 func getServers(c echo.Context) error {
 	r := []*datastore.ServerEnt{}
 	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
-		r = append(r, s)
+		if s.ValidScore {
+			r = append(r, s)
+		}
 		return true
 	})
 	return c.JSON(http.StatusOK, r)

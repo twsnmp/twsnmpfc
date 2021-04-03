@@ -7,8 +7,6 @@ export const getScoreIndex = (s) => {
     return 3
   } else if (s > 33) {
     return 2
-  } else if (s <= 0) {
-    return 6
   }
   return 1
 }

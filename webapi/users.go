@@ -11,7 +11,9 @@ import (
 func getUsers(c echo.Context) error {
 	r := []*datastore.UserEnt{}
 	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
-		r = append(r, u)
+		if u.ValidScore {
+			r = append(r, u)
+		}
 		return true
 	})
 	return c.JSON(http.StatusOK, r)

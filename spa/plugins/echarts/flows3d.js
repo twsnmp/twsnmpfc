@@ -12,7 +12,7 @@ const showFlows3DChart = (div, flows) => {
         fontSize: 10,
         color: '#ccc',
       },
-      data: ['32以下', '33-41', '42-50', '51-66', '67以上', '調査中'],
+      data: ['32以下', '33-41', '42-50', '51-66', '67以上'],
     },
     globe: {
       baseTexture: '/images/world.topo.bathy.200401.jpg',
@@ -87,18 +87,6 @@ const showFlows3DChart = (div, flows) => {
         lineStyle: {
           width: 1,
           color: '#1f78b4',
-          opacity: 0.1,
-        },
-        data: [],
-      },
-      {
-        type: 'lines3D',
-        coordinateSystem: 'globe',
-        blendMode: 'lighter',
-        name: '調査中',
-        lineStyle: {
-          width: 1,
-          color: '#999',
           opacity: 0.1,
         },
         data: [],

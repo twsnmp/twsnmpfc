@@ -20,7 +20,7 @@ const showUsersChart = (div, users) => {
         type: 'shadow',
       },
     },
-    color: ['#e31a1c', '#fb9a99', '#dfdf22', '#a6cee3', '#1f78b4', '#999'],
+    color: ['#e31a1c', '#fb9a99', '#dfdf22', '#a6cee3', '#1f78b4'],
     legend: {
       orient: 'vertical',
       top: 50,
@@ -29,7 +29,7 @@ const showUsersChart = (div, users) => {
         fontSize: 10,
         color: '#ccc',
       },
-      data: ['32以下', '33-41', '42-50', '51-66', '67以上', '調査中'],
+      data: ['32以下', '33-41', '42-50', '51-66', '67以上'],
     },
     grid: {
       top: '3%',
@@ -103,12 +103,6 @@ const showUsersChart = (div, users) => {
         stack: '人数',
         data: [],
       },
-      {
-        name: '調査中',
-        type: 'bar',
-        stack: '人数',
-        data: [],
-      },
     ],
   }
   if (!users) {
@@ -117,7 +111,7 @@ const showUsersChart = (div, users) => {
   const data = {}
   users.forEach((u) => {
     if (!data[u.Server]) {
-      data[u.Server] = [0, 0, 0, 0, 0, 0, 0]
+      data[u.Server] = [0, 0, 0, 0, 0, 0]
     }
     data[u.Server][0]++
     const si = getScoreIndex(u.Score)
@@ -133,7 +127,7 @@ const showUsersChart = (div, users) => {
   }
   for (; i >= 0; i--) {
     option.yAxis.data.push(keys[i])
-    for (let j = 0; j < 6; j++) {
+    for (let j = 0; j < 5; j++) {
       option.series[j].data.push(data[keys[i]][j + 1])
     }
   }

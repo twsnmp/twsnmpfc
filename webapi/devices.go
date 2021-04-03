@@ -11,7 +11,9 @@ import (
 func getDevices(c echo.Context) error {
 	r := []*datastore.DeviceEnt{}
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		r = append(r, d)
+		if d.ValidScore {
+			r = append(r, d)
+		}
 		return true
 	})
 	return c.JSON(http.StatusOK, r)

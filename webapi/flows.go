@@ -11,7 +11,9 @@ import (
 func getFlows(c echo.Context) error {
 	r := []*datastore.FlowEnt{}
 	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
-		r = append(r, f)
+		if f.ValidScore {
+			r = append(r, f)
+		}
 		return true
 	})
 	return c.JSON(http.StatusOK, r)

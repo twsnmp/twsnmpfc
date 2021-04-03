@@ -240,6 +240,7 @@ func calcDeviceScore() {
 	}
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 		d.Score = ((10 * (float64(100-d.Penalty) - m) / sd) + 50)
+		d.ValidScore = true
 		return true
 	})
 }
@@ -259,6 +260,7 @@ func calcFlowScore() {
 	}
 	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
 		f.Score = ((10 * (float64(100-f.Penalty) - m) / sd) + 50)
+		f.ValidScore = true
 		return true
 	})
 }
@@ -278,6 +280,7 @@ func calcUserScore() {
 	}
 	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 		u.Score = ((10 * (float64(100-u.Penalty) - m) / sd) + 50)
+		u.ValidScore = true
 		return true
 	})
 }
@@ -297,6 +300,7 @@ func calcServerScore() {
 	}
 	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
 		s.Score = ((10 * (float64(100-s.Penalty) - m) / sd) + 50)
+		s.ValidScore = true
 		return true
 	})
 }

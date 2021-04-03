@@ -29,6 +29,7 @@ type DeviceEnt struct {
 	Vendor     string
 	Services   map[string]int64
 	Score      float64
+	ValidScore bool
 	Penalty    int64
 	FirstTime  int64
 	LastTime   int64
@@ -45,6 +46,7 @@ type UserEnt struct {
 	Total        int
 	Ok           int
 	Score        float64
+	ValidScore   bool
 	Penalty      int64
 	FirstTime    int64
 	LastTime     int64
@@ -61,6 +63,7 @@ type ServerEnt struct {
 	ServerNodeID string
 	Loc          string
 	Score        float64
+	ValidScore   bool
 	Penalty      int64
 	FirstTime    int64
 	LastTime     int64
@@ -81,6 +84,7 @@ type FlowEnt struct {
 	ServerNodeID string
 	ServerLoc    string
 	Score        float64
+	ValidScore   bool
 	Penalty      int64
 	FirstTime    int64
 	LastTime     int64

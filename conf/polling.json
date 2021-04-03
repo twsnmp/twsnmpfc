@@ -440,7 +440,7 @@
     "Type": "report",
     "Mode": "device",
     "Level": "low",
-    "Script": "ScoreMin > 30.0",
+    "Script": "",
     "Descr": "デバイスレポートの信用スコアを定期的に集計して監視",
     "AutoMode": "disable"
   },
@@ -449,7 +449,7 @@
     "Type": "report",
     "Mode": "user",
     "Level": "low",
-    "Script": "ScoreMin > 30.0",
+    "Script": "",
     "Descr": "ユーザーレポートの信用スコアを定期的に集計して監視",
     "AutoMode": "disable"
   },
@@ -458,7 +458,7 @@
     "Type": "report",
     "Mode": "server",
     "Level": "low",
-    "Script": "ScoreMin > 30.0",
+    "Script": "",
     "Descr": "サーバーレポートの信用スコアを定期的に集計して監視",
     "AutoMode": "disable"
   },
@@ -467,7 +467,7 @@
     "Type": "report",
     "Mode": "flow",
     "Level": "low",
-    "Script": "ScoreAvg > 50.0",
+    "Script": "",
     "Descr": "通信レポートの信用スコアを定期的に集計して監視",
     "AutoMode": "disable"
   },

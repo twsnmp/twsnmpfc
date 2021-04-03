@@ -150,8 +150,6 @@ const getScoreColor = (s) => {
     return getStateColor('warn')
   } else if (s > 33) {
     return getStateColor('low')
-  } else if (s === 0) {
-    return getStateColor('unknown')
   }
   return getStateColor('high')
 }
@@ -165,8 +163,6 @@ const getScoreIconName = (s) => {
     return 'mdi-emoticon-sad-outline'
   } else if (s > 33) {
     return 'mdi-emoticon-sick-outline'
-  } else if (s === 0) {
-    return 'mdi-help-circle-outline'
   }
   return 'mdi-emoticon-dead-outline'
 }

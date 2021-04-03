@@ -20,14 +20,14 @@ const showVendorChart = (div, devices) => {
         type: 'shadow',
       },
     },
-    color: ['#e31a1c', '#fb9a99', '#dfdf22', '#a6cee3', '#1f78b4', '#999'],
+    color: ['#e31a1c', '#fb9a99', '#dfdf22', '#a6cee3', '#1f78b4'],
     legend: {
       top: 15,
       textStyle: {
         fontSize: 10,
         color: '#ccc',
       },
-      data: ['32以下', '33-41', '42-50', '51-66', '67以上', '調査中'],
+      data: ['32以下', '33-41', '42-50', '51-66', '67以上'],
     },
     grid: {
       top: '10%',
@@ -101,12 +101,6 @@ const showVendorChart = (div, devices) => {
         stack: '台数',
         data: [],
       },
-      {
-        name: '調査中',
-        type: 'bar',
-        stack: '台数',
-        data: [],
-      },
     ],
   }
   if (!devices) {
@@ -115,7 +109,7 @@ const showVendorChart = (div, devices) => {
   const data = {}
   devices.forEach((d) => {
     if (!data[d.Vendor]) {
-      data[d.Vendor] = [0, 0, 0, 0, 0, 0, 0]
+      data[d.Vendor] = [0, 0, 0, 0, 0, 0]
     }
     data[d.Vendor][0]++
     const si = getScoreIndex(d.Score)
@@ -131,7 +125,7 @@ const showVendorChart = (div, devices) => {
   }
   for (; i >= 0; i--) {
     option.yAxis.data.push(keys[i])
-    for (let j = 0; j < 6; j++) {
+    for (let j = 0; j < 5; j++) {
       option.series[j].data.push(data[keys[i]][j + 1])
     }
   }
