@@ -48,10 +48,24 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" dark @click="openVendorChart()">
-          <v-icon>mdi-map-marker</v-icon>
-          メーカー別
-        </v-btn>
+        <v-menu offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフ表示
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openVendorChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>メーカー別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <v-btn color="error" dark @click="resetDialog = true">
           <v-icon>mdi-calculator</v-icon>
           再計算

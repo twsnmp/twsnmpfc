@@ -62,14 +62,34 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" dark @click="openFlowsChart()">
-          <v-icon>mdi-map-marker</v-icon>
-          力学モデル
-        </v-btn>
-        <v-btn color="primary" dark @click="openFlows3DChart()">
-          <v-icon>mdi-map-marker</v-icon>
-          地球儀
-        </v-btn>
+        <v-menu offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフ表示
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openFlowsChart">
+              <v-list-item-icon>
+                <v-icon>mdi-lan-connect</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>力学モデル</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="openFlows3DChart">
+              <v-list-item-icon>
+                <v-icon>mdi-earth</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>地球儀</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <v-btn color="error" dark @click="resetDialog = true">
           <v-icon>mdi-calculator</v-icon>
           再計算

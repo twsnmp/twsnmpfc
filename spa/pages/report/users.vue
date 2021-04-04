@@ -35,10 +35,24 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" dark @click="openUserChart()">
-          <v-icon>mdi-account-check</v-icon>
-          ユーザー別
-        </v-btn>
+        <v-menu offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフ表示
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openUserChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>ユーザー別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <v-btn color="error" dark @click="resetDialog = true">
           <v-icon>mdi-calculator</v-icon>
           再計算

@@ -34,18 +34,40 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" dark @click="openHeatMap()">
-          <v-icon>mdi-calendar-check</v-icon>
-          ヒートマップ
-        </v-btn>
-        <v-btn color="primary" dark @click="openPieChart()">
-          <v-icon>mdi-chart-pie</v-icon>
-          異常割合
-        </v-btn>
-        <v-btn color="primary" dark @click="openTimeChart()">
-          <v-icon>mdi-chart-timeline-variant</v-icon>
-          時系列
-        </v-btn>
+        <v-menu offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフ表示
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openHeatMap">
+              <v-list-item-icon>
+                <v-icon>mdi-calendar-check</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>ヒートマップ</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openPieChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-pie</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>異常割合</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openTimeChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-timeline-variant</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>時系列</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <v-btn color="normal" dark @click="$router.go(-1)">
           <v-icon>mdi-arrow-left</v-icon>
           戻る
