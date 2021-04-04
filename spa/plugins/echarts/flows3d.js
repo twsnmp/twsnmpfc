@@ -37,9 +37,9 @@ const showFlows3DChart = (div, flows) => {
         blendMode: 'lighter',
         name: '32以下',
         lineStyle: {
-          width: 1,
+          width: 2,
           color: '#e31a1c',
-          opacity: 0.1,
+          opacity: 0.8,
         },
         data: [],
       },
@@ -49,9 +49,9 @@ const showFlows3DChart = (div, flows) => {
         blendMode: 'lighter',
         name: '33-41',
         lineStyle: {
-          width: 1,
+          width: 2,
           color: '#fb9a99',
-          opacity: 0.1,
+          opacity: 0.5,
         },
         data: [],
       },
@@ -63,7 +63,7 @@ const showFlows3DChart = (div, flows) => {
         lineStyle: {
           width: 1,
           color: '#dfdf22',
-          opacity: 0.1,
+          opacity: 0.3,
         },
         data: [],
       },
@@ -96,9 +96,9 @@ const showFlows3DChart = (div, flows) => {
   if (!flows) {
     return
   }
-
+  let count = 0
   flows.forEach((f) => {
-    if (option.series[0].data.length > 5000) {
+    if (count > 20000) {
       return
     }
     if (!f.ServerLatLong && !f.ClientLatLong) {
@@ -107,6 +107,10 @@ const showFlows3DChart = (div, flows) => {
     const s = getLatLong(f.ServerLatLong)
     const c = getLatLong(f.ClientLatLong)
     const si = getScoreIndex(f.Score) - 1
+    if (si > 2 && count > 1000) {
+      return
+    }
+    count++
     option.series[si].data.push([c, s])
   })
   chart.setOption(option)

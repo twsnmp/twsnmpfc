@@ -149,9 +149,20 @@
         <v-card-title>
           <span class="headline">通信フロー（力学モデル）</span>
         </v-card-title>
+        <v-alert v-model="over" color="error" dense dismissible>
+          対象の通信フローが多すぎます。フィルターしてください。
+        </v-alert>
         <div id="flowsChart" style="width: 1000px; height: 600px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn color="primary" @click="filterDialog = true">
+            <v-icon>mdi-magnify</v-icon>
+            フィルター
+          </v-btn>
+          <v-btn v-if="hasFilter" color="normal" @click="clearFilter">
+            <v-icon>mdi-cancel</v-icon>
+            フィルター解除
+          </v-btn>
           <v-btn color="normal" @click="flowsChartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
@@ -301,6 +312,47 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="filterDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">表示条件</span>
+        </v-card-title>
+        <v-card-text>
+          <v-select
+            v-model="filter.Service"
+            :items="filterServiceList"
+            label="サービス"
+          ></v-select>
+          <v-text-field
+            v-model="filter.ClientName"
+            label="クライアント名(正規表現)"
+          ></v-text-field>
+          <v-text-field
+            v-model="filter.ClientIP"
+            label="クライアントIP"
+          ></v-text-field>
+          <v-text-field
+            v-model="filter.ServerName"
+            label="サーバー名(正規表現)"
+          ></v-text-field>
+          <v-text-field
+            v-model="filter.ServerIP"
+            label="サーバーIP"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="doFilter">
+            <v-icon>mdi-magnify</v-icon>
+            適用
+          </v-btn>
+          <v-btn color="normal" dark @click="filterDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -356,7 +408,46 @@ export default {
       flowsChartDialog: false,
       flows3DChartDialog: false,
       countryChartDialog: false,
+      filterDialog: false,
+      over: false,
+      filter: {
+        Cervice: '',
+        ClientName: '',
+        ClientIP: '',
+        CerverName: '',
+        CerverIP: '',
+      },
+      filterServiceList: [
+        { text: 'DNS', value: 'domain/udp' },
+        { text: 'DHCP', value: 'bootps/udp' },
+        { text: 'TELNET', value: 'telnet/tcp' },
+        { text: 'SSH', value: 'ssh/tcp' },
+        { text: 'HTTP', value: 'http/tcp' },
+        { text: 'HTTPS', value: 'https/tcp' },
+        { text: 'FTP', value: 'ftp/tcp' },
+        { text: 'LDAP', value: 'ldap/tcp' },
+        { text: 'LDAPS', value: 'ldaps/tcp' },
+        { text: 'CIFS', value: 'microsoft-ds/tcp' },
+        { text: 'NFS', value: 'nfsd/tcp' },
+        { text: 'NETBIOS', value: 'netbios-dgm/udp' },
+        { text: 'RDP', value: 'ms-wbt-server/tcp' },
+        { text: 'VNC', value: 'rfb/tcp' },
+        { text: 'NTP', value: 'ntp/udp' },
+        { text: 'SYSLOG', value: 'syslog/udp' },
+        { text: 'SNMP', value: 'snmp/udp' },
+      ],
     }
+  },
+  computed: {
+    hasFilter() {
+      return (
+        this.filter.Service ||
+        this.filter.ClientName ||
+        this.filter.ClientIP ||
+        this.filter.ServerName ||
+        this.filter.ServerIP
+      )
+    },
   },
   methods: {
     doDelete() {
@@ -411,7 +502,7 @@ export default {
     openFlowsChart() {
       this.flowsChartDialog = true
       this.$nextTick(() => {
-        this.$showFlowsChart('flowsChart', this.flows)
+        this.over = this.$showFlowsChart('flowsChart', this.flows, this.filter)
       })
     },
     openFlows3DChart() {
@@ -425,6 +516,27 @@ export default {
       this.$nextTick(() => {
         this.$showCountryChart('countryChart', this.flows)
       })
+    },
+    openFilterDialog() {
+      this.flowsChartDialog = false
+      this.filterDialog = true
+    },
+    doFilter() {
+      this.flowsChartDialog = true
+      this.filterDialog = false
+      this.$nextTick(() => {
+        this.over = this.$showFlowsChart('flowsChart', this.flows, this.filter)
+      })
+    },
+    clearFilter() {
+      this.filter = {
+        Cervice: '',
+        ClientName: '',
+        ClientIP: '',
+        CerverName: '',
+        CerverIP: '',
+      }
+      this.doFilter()
     },
     formatCount(n) {
       return numeral(n).format('0,0')

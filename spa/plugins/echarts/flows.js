@@ -1,6 +1,6 @@
 import * as echarts from 'echarts'
 
-const showFlowsChart = (div, flows) => {
+const showFlowsChart = (div, flows, filter) => {
   const chart = echarts.init(document.getElementById(div))
   const categories = [
     { name: 'RU' },
@@ -70,12 +70,45 @@ const showFlowsChart = (div, flows) => {
     ],
   }
   if (!flows) {
-    return
+    return false
   }
+  if (filter.ClientName) {
+    filter.ClientNameReg = new RegExp(filter.ClientName)
+  }
+  if (filter.ServerName) {
+    filter.ServerNameReg = new RegExp(filter.ServerName)
+  }
+  let bOver = false
   const nodes = {}
   flows.forEach((f) => {
     if (option.series[0].links.length > 1000) {
+      bOver = true
       return
+    }
+    if (filter.Service) {
+      if (!f.Services || !f.Services[filter.Service]) {
+        return
+      }
+    }
+    if (filter.ClientNameReg) {
+      if (!f.ClientName.match(filter.ClinetNameReg)) {
+        return
+      }
+    }
+    if (filter.ClientIP) {
+      if (f.Client !== filter.ClientIP) {
+        return
+      }
+    }
+    if (filter.ServerNameReg) {
+      if (!f.ServerName.match(filter.ServerNameReg)) {
+        return
+      }
+    }
+    if (filter.ServerIP) {
+      if (f.Server !== filter.ServerIP) {
+        return
+      }
     }
     const c = `${f.ClientName}(${f.Client})`
     const s = `${f.ServerName}(${f.Server})`
@@ -109,6 +142,7 @@ const showFlowsChart = (div, flows) => {
   }
   chart.setOption(option)
   chart.resize()
+  return bOver
 }
 
 const getScoreColor = (s) => {
