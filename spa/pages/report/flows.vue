@@ -203,7 +203,7 @@
     <v-dialog v-model="infoDialog" persistent max-width="900px">
       <v-card>
         <v-card-title>
-          <span class="headline">サーバー情報</span>
+          <span class="headline">フロー情報</span>
         </v-card-title>
         <v-simple-table dense>
           <template v-slot:default>
@@ -282,7 +282,7 @@
                 <td>サービス</td>
                 <td>
                   <v-virtual-scroll
-                    height="100"
+                    height="200"
                     item-height="20"
                     :items="selected.ServiceList"
                   >
@@ -298,9 +298,12 @@
             </tbody>
           </template>
         </v-simple-table>
-        <div id="servicePieChart" style="width: 900px; height: 600px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="showServicePieChart">
+            <v-icon>mdi-chart-pie</v-icon>
+            サービス割合
+          </v-btn>
           <v-btn color="error" dark @click="doDelete">
             <v-icon>mdi-delete</v-icon>
             削除
@@ -308,6 +311,21 @@
           <v-btn color="normal" dark @click="infoDialog = false">
             <v-icon>mdi-close</v-icon>
             キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="servicePieChartDialog" persistent max-width="900px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">サービス割合</span>
+        </v-card-title>
+        <div id="servicePieChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="servicePieChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -405,6 +423,7 @@ export default {
       resetDialog: false,
       resetError: false,
       infoDialog: false,
+      servicePieChartDialog: false,
       flowsChartDialog: false,
       flows3DChartDialog: false,
       countryChartDialog: false,
@@ -495,6 +514,12 @@ export default {
         })
       }
       this.infoDialog = true
+    },
+    showServicePieChart() {
+      if (!this.selected || !this.selected.ServiceList) {
+        return
+      }
+      this.servicePieChartDialog = true
       this.$nextTick(() => {
         this.$showServicePieChart('servicePieChart', this.selected.ServiceList)
       })
