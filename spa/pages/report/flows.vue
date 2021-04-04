@@ -78,14 +78,20 @@
                 <v-list-item-title>力学モデル</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-          </v-list>
-          <v-list>
             <v-list-item @click="openFlows3DChart">
               <v-list-item-icon>
                 <v-icon>mdi-earth</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title>地球儀</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openCountryChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>国別</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -138,12 +144,12 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="flowsChartDialog" persistent max-width="800px">
+    <v-dialog v-model="flowsChartDialog" persistent max-width="1000px">
       <v-card>
         <v-card-title>
           <span class="headline">通信フロー（力学モデル）</span>
         </v-card-title>
-        <div id="flowsChart" style="width: 800px; height: 400px"></div>
+        <div id="flowsChart" style="width: 1000px; height: 600px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="flowsChartDialog = false">
@@ -168,7 +174,22 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="800px">
+    <v-dialog v-model="countryChartDialog" persistent max-width="900px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">国別</span>
+        </v-card-title>
+        <div id="countryChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="countryChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="infoDialog" persistent max-width="900px">
       <v-card>
         <v-card-title>
           <span class="headline">サーバー情報</span>
@@ -266,7 +287,7 @@
             </tbody>
           </template>
         </v-simple-table>
-        <div id="servicePieChart" style="width: 900px; height: 500px"></div>
+        <div id="servicePieChart" style="width: 900px; height: 600px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="error" dark @click="doDelete">
@@ -308,6 +329,7 @@ export default {
       f.ServerLatLong = loc.LatLong
       f.ServerLocInfo = loc.LocInfo
       f.Country = loc.Country
+      f.Loc = f.ServerLoc
     })
   },
   data() {
@@ -333,6 +355,7 @@ export default {
       infoDialog: false,
       flowsChartDialog: false,
       flows3DChartDialog: false,
+      countryChartDialog: false,
     }
   },
   methods: {
@@ -395,6 +418,12 @@ export default {
       this.flows3DChartDialog = true
       this.$nextTick(() => {
         this.$showFlows3DChart('flows3DChart', this.flows)
+      })
+    },
+    openCountryChart() {
+      this.countryChartDialog = true
+      this.$nextTick(() => {
+        this.$showCountryChart('countryChart', this.flows)
       })
     },
     formatCount(n) {

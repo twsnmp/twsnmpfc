@@ -71,6 +71,14 @@
                 <v-list-item-title>サーバー位置</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="openCountryChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>国別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <v-btn color="error" dark @click="resetDialog = true">
@@ -121,15 +129,30 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="mapChartDialog" persistent max-width="800px">
+    <v-dialog v-model="mapChartDialog" persistent max-width="1000px">
       <v-card>
         <v-card-title>
           <span class="headline">サーバー位置</span>
         </v-card-title>
-        <div id="mapChart" style="width: 800px; height: 400px"></div>
+        <div id="mapChart" style="width: 1000px; height: 600px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="mapChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="countryChartDialog" persistent max-width="900px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">国別</span>
+        </v-card-title>
+        <div id="countryChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="countryChartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -275,6 +298,7 @@ export default {
       resetDialog: false,
       resetError: false,
       mapChartDialog: false,
+      countryChartDialog: false,
     }
   },
   methods: {
@@ -331,6 +355,12 @@ export default {
       this.mapChartDialog = true
       this.$nextTick(() => {
         this.$showServerMapChart('mapChart', this.servers)
+      })
+    },
+    openCountryChart() {
+      this.countryChartDialog = true
+      this.$nextTick(() => {
+        this.$showCountryChart('countryChart', this.servers)
       })
     },
     formatCount(n) {
