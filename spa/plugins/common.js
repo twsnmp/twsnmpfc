@@ -213,11 +213,11 @@ function getServiceNames(services) {
     const n = getServiceName(services[i]);
     sns.set(n, true);
   }
-  const ks = sns.keys()
+  const ks = Array.from(sns.keys())
   while (ks.length > 5) {
     ks.pop()
   }
-  return Array.from(ks).join() + "(" + services.length + ")"
+  return ks.join() + "(" + services.length + ")"
 }
 
 function getLocInfo(l) {
