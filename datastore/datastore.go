@@ -180,20 +180,7 @@ func loadDataFromFS(fs http.FileSystem) {
 	if _, err := os.Stat(p); err == nil {
 		openGeoIP(p)
 	}
-	if r, err := fs.Open("/conf/grok.txt"); err == nil {
-		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
-			loadGrokMap(string(b))
-		}
-		r.Close()
-	} else {
-		log.Printf("InitDataStore grok.txt err=%v", err)
-	}
-	if r, err := os.Open(filepath.Join(dspath, "grok.txt")); err == nil {
-		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
-			loadGrokMap(string(b))
-		}
-		r.Close()
-	}
+	loadGrokMap()
 	if r, err := fs.Open("/conf/polling.json"); err == nil {
 		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
 			if err := loadPollingTemplate(b); err != nil {
@@ -242,7 +229,7 @@ func openDB(path string) error {
 
 func initDB() error {
 	buckets := []string{"config", "nodes", "lines", "pollings", "logs", "pollingLogs",
-		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report"}
+		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report", "grok"}
 	reports := []string{"devices", "users", "flows", "servers"}
 	initConf()
 	return db.Update(func(tx *bbolt.Tx) error {

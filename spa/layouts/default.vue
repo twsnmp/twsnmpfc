@@ -254,6 +254,11 @@ export default {
           to: '/conf/influxdb',
         },
         {
+          icon: 'mdi-av-timer',
+          title: '抽出パターン',
+          to: '/conf/grok',
+        },
+        {
           icon: 'mdi-database-cog',
           title: 'データストア',
           to: '/conf/datastore',

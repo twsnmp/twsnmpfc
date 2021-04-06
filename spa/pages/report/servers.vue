@@ -182,6 +182,14 @@
                 <td>{{ selected.Server }}</td>
               </tr>
               <tr>
+                <td>信用スコア</td>
+                <td>{{ selected.Score }}</td>
+              </tr>
+              <tr>
+                <td>ペナリティー</td>
+                <td>{{ selected.Penalty }}</td>
+              </tr>
+              <tr>
                 <td>初回日時</td>
                 <td>{{ selected.First }}</td>
               </tr>
@@ -247,7 +255,7 @@
           </v-btn>
           <v-btn color="normal" dark @click="infoDialog = false">
             <v-icon>mdi-close</v-icon>
-            キャンセル
+            閉じる
           </v-btn>
         </v-card-actions>
       </v-card>

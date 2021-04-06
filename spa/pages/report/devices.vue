@@ -43,6 +43,7 @@
           >
             mdi-file-find
           </v-icon>
+          <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
@@ -131,6 +132,68 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="infoDialog" persistent max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">デバイス情報</span>
+        </v-card-title>
+        <v-simple-table dense>
+          <template v-slot:default>
+            <thead>
+              <tr>
+                <th class="text-left">項目</th>
+                <th class="text-left">値</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>名前</td>
+                <td>{{ selected.Name }}</td>
+              </tr>
+              <tr>
+                <td>MACアドレス</td>
+                <td>{{ selected.ID }}</td>
+              </tr>
+              <tr>
+                <td>IPアドレス</td>
+                <td>{{ selected.IP }}</td>
+              </tr>
+              <tr>
+                <td>ベンダー</td>
+                <td>{{ selected.Vendor }}</td>
+              </tr>
+              <tr>
+                <td>信用スコア</td>
+                <td>{{ selected.Score }}</td>
+              </tr>
+              <tr>
+                <td>ペナリティー</td>
+                <td>{{ selected.Penalty }}</td>
+              </tr>
+              <tr>
+                <td>初回日時</td>
+                <td>{{ selected.First }}</td>
+              </tr>
+              <tr>
+                <td>最終日時</td>
+                <td>{{ selected.Last }}</td>
+              </tr>
+            </tbody>
+          </template>
+        </v-simple-table>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" dark @click="doDelete">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" dark @click="infoDialog = false">
+            <v-icon>mdi-close</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -172,6 +235,8 @@ export default {
       resetDialog: false,
       resetError: false,
       vendorDialog: false,
+      selected: {},
+      infoDialog: false,
     }
   },
   methods: {
@@ -208,6 +273,10 @@ export default {
       this.$nextTick(() => {
         this.$showVendorChart('vendorChart', this.devices)
       })
+    },
+    openInfoDialog(item) {
+      this.selected = item
+      this.infoDialog = true
     },
   },
 }

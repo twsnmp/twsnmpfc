@@ -27,7 +27,6 @@ type DeviceEnt struct {
 	IP         string
 	NodeID     string
 	Vendor     string
-	Services   map[string]int64
 	Score      float64
 	ValidScore bool
 	Penalty    int64

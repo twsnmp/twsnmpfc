@@ -30,6 +30,14 @@
           {{ item.Score.toFixed(1) }}
         </template>
         <template v-slot:[`item.actions`]="{ item }">
+          <v-icon
+            v-if="item.ServerNodeID"
+            small
+            @click="$router.push({ path: '/map?node=' + item.ServerNodeID })"
+          >
+            mdi-lan
+          </v-icon>
+          <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
@@ -118,6 +126,93 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="infoDialog" persistent max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ユーザー情報</span>
+        </v-card-title>
+        <v-simple-table dense>
+          <template v-slot:default>
+            <thead>
+              <tr>
+                <th class="text-left">項目</th>
+                <th class="text-left">値</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ユーザーID</td>
+                <td>{{ selected.UserID }}</td>
+              </tr>
+              <tr>
+                <td>サーバー名</td>
+                <td>{{ selected.ServerName }}</td>
+              </tr>
+              <tr>
+                <td>サーバーIP</td>
+                <td>{{ selected.Server }}</td>
+              </tr>
+              <tr>
+                <td>クライアント</td>
+                <td>
+                  <v-virtual-scroll
+                    height="200"
+                    item-height="20"
+                    :items="selected.ClientList"
+                  >
+                    <template v-slot:default="{ item }">
+                      <v-list-item>
+                        <v-list-item-title>{{ item.title }}</v-list-item-title>
+                        {{ formatCount(item.value) }}
+                      </v-list-item>
+                    </template>
+                  </v-virtual-scroll>
+                </td>
+              </tr>
+              <tr>
+                <td>ログイン回数</td>
+                <td>{{ selected.Total }}</td>
+              </tr>
+              <tr>
+                <td>成功回数</td>
+                <td>{{ selected.Ok }}</td>
+              </tr>
+              <tr>
+                <td>成功率</td>
+                <td>{{ selected.Rate }}</td>
+              </tr>
+              <tr>
+                <td>信用スコア</td>
+                <td>{{ selected.Score }}</td>
+              </tr>
+              <tr>
+                <td>ペナリティー</td>
+                <td>{{ selected.Penalty }}</td>
+              </tr>
+              <tr>
+                <td>初回日時</td>
+                <td>{{ selected.First }}</td>
+              </tr>
+              <tr>
+                <td>最終日時</td>
+                <td>{{ selected.Last }}</td>
+              </tr>
+            </tbody>
+          </template>
+        </v-simple-table>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" dark @click="doDelete">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" dark @click="infoDialog = false">
+            <v-icon>mdi-close</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -162,6 +257,7 @@ export default {
       resetDialog: false,
       resetError: false,
       usersChartDialog: false,
+      infoDialog: false,
     }
   },
   methods: {
@@ -198,6 +294,24 @@ export default {
       this.$nextTick(() => {
         this.$showUsersChart('usersChart', this.users)
       })
+    },
+    openInfoDialog(item) {
+      this.selected = item
+      if (!this.selected.ClientList) {
+        this.selected.ClientList = []
+        Object.keys(this.selected.Clients).forEach((k) => {
+          this.selected.ClientList.push({
+            title: k,
+            value: this.selected.Clients[k],
+          })
+        })
+        this.selected.ClientList.sort((a, b) => {
+          if (a.value > b.value) return -1
+          if (a.value < b.value) return 1
+          return 0
+        })
+      }
+      this.infoDialog = true
     },
     formatCount(n) {
       return numeral(n).format('0,0')

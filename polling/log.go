@@ -65,8 +65,12 @@ func doPollingLog(pe *datastore.PollingEnt) {
 			return
 		}
 		grokOk = grokEnt.Ok
-		g, _ := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
-		if err := g.AddPattern(extractor, grokEnt.Pat); err != nil {
+		grokExtractor, err = grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
+		if err != nil {
+			setPollingError("log", pe, fmt.Errorf("no extractor pattern"))
+			return
+		}
+		if err = grokExtractor.AddPattern(extractor, grokEnt.Pat); err != nil {
 			setPollingError("log", pe, fmt.Errorf("no extractor pattern"))
 			return
 		}
@@ -133,6 +137,7 @@ func doPollingLog(pe *datastore.PollingEnt) {
 				if ok {
 					okCount++
 				}
+				log.Printf("yamai2= %s %s %s %v", user, server, client, ok)
 				report.ReportUser(user, server, client, ok, l.Time)
 				return true
 			}
