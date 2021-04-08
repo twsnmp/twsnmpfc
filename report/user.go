@@ -28,7 +28,6 @@ func ReportUser(user, server, client string, ok bool, t int64) {
 
 func ResetUsersScore() {
 	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
-		u.Penalty = 0
 		setUserPenalty(u)
 		u.UpdateTime = time.Now().UnixNano()
 		return true
@@ -37,8 +36,22 @@ func ResetUsersScore() {
 }
 
 func setUserPenalty(u *datastore.UserEnt) {
-	u.Penalty = int64(u.Total) - int64(u.Ok)
-	u.Penalty += int64(len(u.Clients))
+	u.Penalty = 0
+	if len(u.Clients) > 5 {
+		u.Penalty++
+	}
+	for c, p := range u.Clients {
+		// クライアント毎に場所
+		if !checkUserClient(c) {
+			u.Penalty++
+		}
+		if p > 0 {
+			u.Penalty++
+			if n, ok := badIPs[c]; !ok && n < 5 {
+				badIPs[c]++
+			}
+		}
+	}
 }
 
 func checkUserReport(ur *userReportEnt) {
@@ -49,18 +62,19 @@ func checkUserReport(ur *userReportEnt) {
 		u.Total++
 		if ur.Ok {
 			u.Ok++
-		} else {
-			u.Penalty++
 		}
-		if _, ok := u.Clients[ur.Client]; ok {
+		if _, ok := u.Clients[ur.Client]; !ok {
+			u.Clients[ur.Client] = 0
+		}
+		if ur.Ok {
+			u.Clients[ur.Client]--
+		} else {
 			u.Clients[ur.Client]++
-		} else {
-			// 複数の場所からログインは問題
-			u.Penalty++
-			u.Clients[ur.Client] = 1
-			checkUserClient(u, ur.Client)
 		}
-		u.ServerName, u.ServerNodeID = findNodeInfoFromIP(ur.Server)
+		setUserPenalty(u)
+		if u.ServerName == "" {
+			u.ServerName, u.ServerNodeID = findNodeInfoFromIP(ur.Server)
+		}
 		u.LastTime = ur.Time
 		u.UpdateTime = now
 		return
@@ -76,32 +90,27 @@ func checkUserReport(ur *userReportEnt) {
 		UpdateTime: now,
 	}
 	u.ServerName, u.ServerNodeID = findNodeInfoFromIP(ur.Server)
-	u.Clients[ur.Client] = 1
-	checkUserClient(u, ur.Client)
+	if ur.Ok {
+		u.Clients[ur.Client] = -1
+	} else {
+		u.Clients[ur.Client] = 1
+	}
 	if ur.Ok {
 		u.Ok = 1
-	} else {
-		u.Penalty = 1
 	}
+	setUserPenalty(u)
 	datastore.AddUser(u)
 }
 
-func checkUserClient(u *datastore.UserEnt, client string) {
+func checkUserClient(client string) bool {
 	if !strings.Contains(client, ".") {
-		return
+		return false
 	}
 	loc := datastore.GetLoc(client)
 	if !isSafeCountry(loc) {
-		u.Penalty++
+		return false
 	}
 	// DNSで解決できない場合
 	name, _ := findNodeInfoFromIP(client)
-	if client == name {
-		u.Penalty++
-	}
-	if u.Penalty > 1 {
-		if n, ok := badIPs[client]; !ok || n < u.Penalty {
-			badIPs[client] = u.Penalty
-		}
-	}
+	return client == name
 }

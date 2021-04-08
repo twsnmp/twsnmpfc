@@ -287,7 +287,7 @@ func ForEachUsers(f func(*UserEnt) bool) {
 }
 
 func DeleteUser(id string) {
-	devices.Delete(id)
+	users.Delete(id)
 }
 
 func GetFlow(id string) *FlowEnt {

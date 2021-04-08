@@ -130,10 +130,12 @@ func reportBackend(ctx context.Context) {
 			}
 		case <-timer.C:
 			{
+				log.Printf("start calc report score")
 				calcScore()
 				checkOldReport()
 				datastore.SaveReport(last)
 				last = time.Now().UnixNano()
+				log.Printf("end calc report score")
 			}
 		case dr := <-deviceReportCh:
 			checkDeviceReport(dr)
@@ -235,11 +237,12 @@ func calcDeviceScore() {
 		return true
 	})
 	m, sd := getMeanSD(&xs)
-	if sd == 0 {
-		return
-	}
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		d.Score = ((10 * (float64(100-d.Penalty) - m) / sd) + 50)
+		if sd != 0 {
+			d.Score = ((10 * (float64(100-d.Penalty) - m) / sd) + 50)
+		} else {
+			d.Score = 50.0
+		}
 		d.ValidScore = true
 		return true
 	})
@@ -255,11 +258,12 @@ func calcFlowScore() {
 		return true
 	})
 	m, sd := getMeanSD(&xs)
-	if sd == 0 {
-		return
-	}
 	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
-		f.Score = ((10 * (float64(100-f.Penalty) - m) / sd) + 50)
+		if sd != 0 {
+			f.Score = ((10 * (float64(100-f.Penalty) - m) / sd) + 50)
+		} else {
+			f.Score = 50.0
+		}
 		f.ValidScore = true
 		return true
 	})
@@ -275,11 +279,12 @@ func calcUserScore() {
 		return true
 	})
 	m, sd := getMeanSD(&xs)
-	if sd == 0 {
-		return
-	}
 	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
-		u.Score = ((10 * (float64(100-u.Penalty) - m) / sd) + 50)
+		if sd != 0 {
+			u.Score = ((10 * (float64(100-u.Penalty) - m) / sd) + 50)
+		} else {
+			u.Score = 50.0
+		}
 		u.ValidScore = true
 		return true
 	})
@@ -295,11 +300,12 @@ func calcServerScore() {
 		return true
 	})
 	m, sd := getMeanSD(&xs)
-	if sd == 0 {
-		return
-	}
 	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
-		s.Score = ((10 * (float64(100-s.Penalty) - m) / sd) + 50)
+		if sd != 0 {
+			s.Score = ((10 * (float64(100-s.Penalty) - m) / sd) + 50)
+		} else {
+			s.Score = 50.0
+		}
 		s.ValidScore = true
 		return true
 	})

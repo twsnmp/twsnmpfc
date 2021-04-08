@@ -19,21 +19,21 @@ var defGrockList = []GrokEnt{
 		ID:    "EPSLOGIN",
 		Name:  "EPSの認証",
 		Descr: "EPSで認証した時のユーザーID、クライアントを抽出",
-		Pat:   `Login %{GREEDYDATA:stat}: \[%{USER:user}\].+cli %{MAC:client}`,
+		Pat:   `Login %{NOTSPACE:stat}: \[%{USER:user}\].+cli %{MAC:client}`,
 		Ok:    "OK",
 	},
 	{
 		ID:    "FZLOGIN",
 		Name:  "FileZenログイン",
 		Descr: "FileZenにログインした時のユーザーID、クラアンとを抽出",
-		Pat:   `FileZen: %{IP:client} %{USER:user} "Authentication %{GREEDYDATA:stat}`,
+		Pat:   `FileZen: %{IP:client} %{USER:user} "Authentication %{NOTSPACE:stat}`,
 		Ok:    "succeeded.",
 	},
 	{
 		ID:    "NAOSLOGIN",
 		Name:  "NAOSログイン",
 		Descr: "NAOSのログイン",
-		Pat:   `Login %{GREEDYDATA:stat}: \[.+\] %{USER:user}`,
+		Pat:   `Login %{NOTSPACE:stat}: \[.+\] %{USER:user}`,
 		Ok:    "Success",
 	},
 	{
@@ -70,7 +70,7 @@ var defGrockList = []GrokEnt{
 		ID:    "SSHLOGIN",
 		Name:  "SSHのログイン",
 		Descr: "SSHでログインした時のユーザーID、クライアントを取得",
-		Pat:   `%{GREEDYDATA:stat} (password|publickey) for( invalid user | )%{USER:user} from %{IP:client}`,
+		Pat:   `%{NOTSPACE:stat} (password|publickey) for( invalid user | )%{USER:user} from %{IP:client}`,
 		Ok:    "Accepted",
 	},
 }

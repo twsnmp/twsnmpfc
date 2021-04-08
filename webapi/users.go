@@ -21,7 +21,7 @@ func getUsers(c echo.Context) error {
 
 func deleteUser(c echo.Context) error {
 	id := c.Param("id")
-	datastore.DeleteDevice(id)
+	datastore.DeleteUser(id)
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

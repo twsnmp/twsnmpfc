@@ -202,7 +202,14 @@
         </v-simple-table>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" dark @click="doDelete">
+          <v-btn
+            color="error"
+            dark
+            @click="
+              infoDialog = false
+              deleteDialog = true
+            "
+          >
             <v-icon>mdi-delete</v-icon>
             削除
           </v-btn>
@@ -233,6 +240,9 @@ export default {
         new Date(u.LastTime / (1000 * 1000)),
         '{MM}/{dd} {hh}:{mm}:{ss}'
       )
+      if (u.Total > 0) {
+        u.Rate = ((100 * u.Ok) / u.Total).toFixed(2)
+      }
       u.Client = Object.keys(u.Clients).join()
     })
   },

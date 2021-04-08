@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -89,6 +90,7 @@ func doPollingLog(pe *datastore.PollingEnt) {
 	failed := false
 	datastore.ForEachLog(st, et, pe.Type, func(l *datastore.LogEnt) bool {
 		msg := ""
+		keys := []string{}
 		if pe.Type == "arp" {
 			msg = l.Log
 		} else {
@@ -97,8 +99,16 @@ func doPollingLog(pe *datastore.PollingEnt) {
 				log.Printf("doPollingLog err=%v", err)
 				return true
 			}
-			for k, v := range sl {
-				msg += k + "=" + fmt.Sprintf("%v", v) + "\t"
+			if len(keys) < 1 {
+				for k := range sl {
+					keys = append(keys, k)
+				}
+				sort.Strings(keys)
+			}
+			for _, k := range keys {
+				if v, ok := sl[k]; ok {
+					msg += k + "\t" + fmt.Sprintf("%v", v) + "\n"
+				}
 			}
 		}
 		if regexFilter != nil && !regexFilter.Match([]byte(msg)) {
@@ -107,6 +117,7 @@ func doPollingLog(pe *datastore.PollingEnt) {
 		if grokExtractor != nil {
 			values, err := grokExtractor.Parse(grokCap, msg)
 			if err != nil {
+				log.Printf("grock err=%v", err)
 				return true
 			}
 			if mode == "device" {
@@ -137,7 +148,6 @@ func doPollingLog(pe *datastore.PollingEnt) {
 				if ok {
 					okCount++
 				}
-				log.Printf("yamai2= %s %s %s %v", user, server, client, ok)
 				report.ReportUser(user, server, client, ok, l.Time)
 				return true
 			}
