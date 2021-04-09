@@ -57,6 +57,7 @@ func Init(e *echo.Echo, p *WebAPI) {
 	r.GET("/conf/grok", getGrok)
 	r.GET("/export/grok", getExportGrok)
 	r.POST("/conf/grok", postGrok)
+	r.POST("/test/grok", postTestGrok)
 	r.POST("/import/grok", postImportGrok)
 	r.DELETE("/conf/grok/:id", deleteGrok)
 	r.GET("/conf/datastore", getDataStore)

@@ -70,9 +70,60 @@
             <v-icon>mdi-content-save</v-icon>
             保存
           </v-btn>
+          <v-btn color="normal" dark @click="testDialog = true">
+            <v-icon>mdi-check</v-icon>
+            テスト
+          </v-btn>
           <v-btn color="normal" @click="editDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="testDialog" persistent max-width="900px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> 抽出パターン(Grok)テスト </span>
+        </v-card-title>
+        <v-alert v-model="testError" color="error" dense dismissible>
+          抽出パターンのテストに失敗しました
+        </v-alert>
+        <v-alert v-model="testNoData" color="lime" dense dismissible>
+          抽出したデータはありません。
+        </v-alert>
+        <v-card-text>
+          <v-text-field
+            v-model="selected.Pat"
+            label="パターン(Grok)"
+          ></v-text-field>
+          <v-textarea
+            v-model="testData"
+            label="テストデータ"
+            clearable
+            rows="5"
+            clear-icon="mdi-close-circle"
+          ></v-textarea>
+        </v-card-text>
+        <v-card-subtitle> 抽出結果 </v-card-subtitle>
+        <v-card-text>
+          <v-data-table
+            :headers="extractHeader"
+            :items="extractDatas"
+            :items-per-page="10"
+            dense
+          >
+          </v-data-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="doTestGrok">
+            <v-icon>mdi-content-save</v-icon>
+            実行
+          </v-btn>
+          <v-btn color="normal" @click="testDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -159,6 +210,12 @@ export default {
       importDialog: false,
       importError: false,
       grokFile: null,
+      testError: false,
+      testNoData: false,
+      testDialog: false,
+      testData: '',
+      extractHeader: [],
+      extractDatas: [],
     }
   },
   methods: {
@@ -186,6 +243,42 @@ export default {
           this.updateError = true
           this.$fetch()
         })
+    },
+    doTestGrok() {
+      this.testNoData = false
+      this.testError = false
+      this.$axios
+        .post('/api/test/grok', { Pat: this.selected.Pat, Data: this.testData })
+        .then((resp) => {
+          this.setExtractData(resp.data)
+        })
+        .catch((e) => {
+          this.testError = true
+        })
+    },
+    setExtractData(r) {
+      this.extractDatas = []
+      this.extractHeader = []
+      if (r.ExtractHeader.length < 1 || r.ExtractDatas.length < 1) {
+        this.testNoData = true
+        return
+      }
+      r.ExtractHeader.forEach((col) => {
+        this.extractHeader.push({
+          text: col,
+          value: col,
+        })
+      })
+      r.ExtractDatas.forEach((row) => {
+        if (row.length !== r.ExtractHeader.length) {
+          return
+        }
+        const e = {}
+        for (let i = 0; i < r.ExtractHeader.length; i++) {
+          e[r.ExtractHeader[i]] = row[i]
+        }
+        this.extractDatas.push(e)
+      })
     },
     exportGrok() {
       this.$axios

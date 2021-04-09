@@ -4,9 +4,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/vjeantet/grok"
 	"gopkg.in/yaml.v2"
 )
 
@@ -89,4 +92,52 @@ func postImportGrok(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 
+}
+
+type grockTestEnt struct {
+	Pat  string
+	Data string
+}
+
+type grockTestRespEnt struct {
+	ExtractHeader []string
+	ExtractDatas  [][]string
+}
+
+func postTestGrok(c echo.Context) error {
+	gt := new(grockTestEnt)
+	if err := c.Bind(gt); err != nil {
+		return echo.ErrBadRequest
+	}
+	grokExtractor, err := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+	if err = grokExtractor.AddPattern("TEST", gt.Pat); err != nil {
+		return echo.ErrBadRequest
+	}
+	r := new(grockTestRespEnt)
+	r.ExtractDatas = [][]string{}
+	r.ExtractHeader = []string{}
+	for _, l := range strings.Split(gt.Data, "\n") {
+		values, err := grokExtractor.Parse("%{TEST}", l)
+		if err != nil {
+			log.Printf("grock err=%v", err)
+			continue
+		} else if len(values) > 0 {
+			if len(r.ExtractHeader) < 1 {
+				for k := range values {
+					r.ExtractHeader = append(r.ExtractHeader, k)
+					sort.Strings(r.ExtractHeader)
+				}
+			}
+			e := []string{}
+			for _, k := range r.ExtractHeader {
+				e = append(e, values[k])
+			}
+			r.ExtractDatas = append(r.ExtractDatas, e)
+		}
+	}
+	log.Printf("%v", r)
+	return c.JSON(http.StatusOK, r)
 }
