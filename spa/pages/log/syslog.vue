@@ -41,6 +41,14 @@
           <v-icon>mdi-cached</v-icon>
           再検索
         </v-btn>
+        <v-btn
+          v-if="extractDatas.length > 0"
+          color="primary"
+          @click="extractDialog = true"
+        >
+          <v-icon>content-save</v-icon>
+          抽出情報
+        </v-btn>
         <v-btn color="normal" dark to="/map">
           <v-icon>mdi-lan</v-icon>
           マップ
@@ -187,6 +195,11 @@
             v-model="filter.Message"
             label="メッセージ（正規表現）"
           ></v-text-field>
+          <v-select
+            v-model="filter.Extractor"
+            :items="filterExtractorList"
+            label="抽出パターン"
+          ></v-select>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -201,18 +214,86 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="extractDialog" persistent max-width="90%">
+      <v-card>
+        <v-card-title>
+          <span class="headline">抽出した情報</span>
+          <v-spacer></v-spacer>
+          <v-text-field
+            v-model="searchExtract"
+            append-icon="mdi-magnify"
+            label="検索"
+            single-line
+            hide-details
+          ></v-text-field>
+        </v-card-title>
+        <v-data-table
+          :headers="extractHeader"
+          :items="extractDatas"
+          :search="searchExtract"
+          :items-per-page="15"
+          sort-by="TimeStr"
+          dense
+        >
+        </v-data-table>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="extractDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
 <script>
 export default {
   async fetch() {
-    this.logs = await this.$axios.$post('/api/log/syslog', this.filter)
+    const r = await this.$axios.$post('/api/log/syslog', this.filter)
+    if (!r) {
+      return
+    }
+    this.logs = r.Logs ? r.Logs : []
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
     })
     this.$showLogLevelChart(this.logs)
+    if (this.filterExtractorList.length < 1) {
+      const groks = await this.$axios.$get('/api/conf/grok')
+      if (groks) {
+        this.filterExtractorList = []
+        groks.forEach((g) => {
+          this.filterExtractorList.push({
+            text: g.Name,
+            value: g.ID,
+          })
+        })
+      }
+    }
+    this.extractDatas = []
+    this.extractHeader = []
+    if (r.ExtractHeader.length < 1 || r.ExtractDatas.length < 1) {
+      return
+    }
+    r.ExtractHeader.forEach((col) => {
+      this.extractHeader.push({
+        text: col,
+        value: col,
+      })
+    })
+    r.ExtractDatas.forEach((row) => {
+      if (row.length !== r.ExtractHeader.length) {
+        return
+      }
+      const e = {}
+      for (let i = 0; i < r.ExtractHeader.length; i++) {
+        e[r.ExtractHeader[i]] = row[i]
+      }
+      this.extractDatas.push(e)
+    })
   },
   data() {
     return {
@@ -232,6 +313,7 @@ export default {
         Type: '',
         Tag: '',
         Message: '',
+        Extractor: '',
       },
       search: '',
       headers: [
@@ -243,6 +325,11 @@ export default {
         { text: 'メッセージ', value: 'Message', width: '45%' },
       ],
       logs: [],
+      extractDialog: false,
+      searchExtract: '',
+      extractDatas: [],
+      extractHeader: [],
+      filterExtractorList: [],
     }
   },
   mounted() {

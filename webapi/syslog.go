@@ -2,11 +2,15 @@ package webapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"sort"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/vjeantet/grok"
 )
 
 type syslogFilter struct {
@@ -19,9 +23,16 @@ type syslogFilter struct {
 	Host      string
 	Tag       string
 	Message   string
+	Extractor string
 }
 
 type syslogWebAPI struct {
+	Logs          []*syslogWebAPILogEnt
+	ExtractHeader []string
+	ExtractDatas  [][]string
+}
+
+type syslogWebAPILogEnt struct {
 	Time    int64
 	Level   string
 	Host    string
@@ -101,7 +112,7 @@ func getSyslogType(sv, fac int) string {
 }
 
 func postSyslog(c echo.Context) error {
-	r := []*syslogWebAPI{}
+	r := new(syslogWebAPI)
 	filter := new(syslogFilter)
 	if err := c.Bind(filter); err != nil {
 		log.Printf("postSyslog err=%v", err)
@@ -114,7 +125,26 @@ func postSyslog(c echo.Context) error {
 	levelFilter := getLogLevelFilter(filter.Level)
 	st := makeTimeFilter(filter.StartDate, filter.StartTime, 3)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
+	grokCap := ""
+	var grokExtractor *grok.Grok
+	if filter.Extractor != "" {
+		grokEnt := datastore.GetGrokEnt(filter.Extractor)
+		if grokEnt != nil {
+			var err error
+			grokExtractor, err = grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
+			if err == nil {
+				if err = grokExtractor.AddPattern(filter.Extractor, grokEnt.Pat); err == nil {
+					grokCap = fmt.Sprintf("%%{%s}", filter.Extractor)
+				}
+			}
+			log.Printf("grok = %s", grokCap)
+		} else {
+			log.Printf("no grok %s", filter.Extractor)
+		}
+	}
 	i := 0
+	r.ExtractDatas = [][]string{}
+	r.ExtractHeader = []string{}
 	datastore.ForEachLog(st, et, "syslog", func(l *datastore.LogEnt) bool {
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
@@ -122,7 +152,7 @@ func postSyslog(c echo.Context) error {
 			return true
 		}
 		var ok bool
-		re := new(syslogWebAPI)
+		re := new(syslogWebAPILogEnt)
 		if re.Message, ok = sl["content"].(string); !ok {
 			log.Printf("postSyslog no content")
 			return true
@@ -163,9 +193,33 @@ func postSyslog(c echo.Context) error {
 		if hostFilter != nil && !hostFilter.Match([]byte(re.Host)) {
 			return true
 		}
-		r = append(r, re)
+		if grokExtractor != nil {
+			values, err := grokExtractor.Parse(grokCap, re.Message)
+			if err != nil {
+				log.Printf("grock err=%v", err)
+			} else if len(values) > 0 {
+				if len(r.ExtractHeader) < 1 {
+					r.ExtractHeader = append(r.ExtractHeader, "TimeStr")
+					for k := range values {
+						r.ExtractHeader = append(r.ExtractHeader, k)
+						sort.Strings(r.ExtractHeader)
+					}
+				}
+				e := []string{}
+				for _, k := range r.ExtractHeader {
+					if k == "TimeStr" {
+						e = append(e, time.Unix(0, l.Time).Format("2006/01/02T15:04:05"))
+					} else {
+						e = append(e, values[k])
+					}
+				}
+				r.ExtractDatas = append(r.ExtractDatas, e)
+			}
+		}
+		r.Logs = append(r.Logs, re)
 		i++
 		return i <= datastore.MapConf.LogDispSize
 	})
+	log.Printf("r.ExtractDatas=%v", r.ExtractDatas)
 	return c.JSON(http.StatusOK, r)
 }
