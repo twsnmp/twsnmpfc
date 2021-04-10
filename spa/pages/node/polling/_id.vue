@@ -356,11 +356,11 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn v-if="autoAdd" color="primary" @click="doAutoAddPolling">
-            <v-icon>content-save</v-icon>
+            <v-icon>mdi-plus</v-icon>
             追加
           </v-btn>
           <v-btn v-else color="primary" @click="selectTemplate">
-            <v-icon>content-save</v-icon>
+            <v-icon>md-check</v-icon>
             選択
           </v-btn>
           <v-btn color="normal" @click="templateDialog = false">

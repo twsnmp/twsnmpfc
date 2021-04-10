@@ -46,7 +46,7 @@
           color="primary"
           @click="extractDialog = true"
         >
-          <v-icon>content-save</v-icon>
+          <v-icon>mdi-view-list</v-icon>
           抽出情報
         </v-btn>
         <v-btn color="normal" dark to="/map">
