@@ -131,10 +131,11 @@
             v-model="editPolling.Filter"
             label="フィルター"
           ></v-text-field>
-          <v-text-field
+          <v-select
             v-model="editPolling.Extractor"
+            :items="extractorList"
             label="抽出パターン"
-          ></v-text-field>
+          ></v-select>
           <v-textarea
             v-model="editPolling.Script"
             label="判定スクリプト"
@@ -387,6 +388,18 @@ export default {
         e.TimeStr = this.$timeFormat(t)
       })
     }
+    if (this.extractorList.length < 1) {
+      const groks = await this.$axios.$get('/api/conf/grok')
+      if (groks) {
+        this.extractorList = []
+        groks.forEach((g) => {
+          this.extractorList.push({
+            text: g.Name,
+            value: g.ID,
+          })
+        })
+      }
+    }
   },
   data() {
     return {
@@ -399,6 +412,7 @@ export default {
       updateError: false,
       editPolling: {},
       deletePolling: {},
+      extractorList: [],
       search: '',
       headers: [
         { text: '状態', value: 'State', width: '15%' },
