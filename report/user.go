@@ -47,8 +47,8 @@ func setUserPenalty(u *datastore.UserEnt) {
 		}
 		if p > 0 {
 			u.Penalty++
-			if n, ok := badIPs[c]; !ok && n < 5 {
-				badIPs[c]++
+			if _, ok := badIPs[c]; !ok {
+				badIPs[c] = true
 			}
 		}
 	}

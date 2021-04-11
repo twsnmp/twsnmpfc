@@ -217,8 +217,8 @@ func setFlowPenalty(f *datastore.FlowEnt) {
 		f.Penalty++
 	}
 	if f.Penalty > 1 {
-		if n, ok := badIPs[f.Client]; !ok || n < f.Penalty {
-			badIPs[f.Client] = f.Penalty
+		if _, ok := badIPs[f.Client]; !ok {
+			badIPs[f.Client] = true
 		}
 	}
 }

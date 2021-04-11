@@ -136,7 +136,9 @@
       </v-list>
     </v-navigation-drawer>
     <v-footer absolute app>
-      <span>&copy; {{ new Date().getFullYear() }} Masayuki Yamai</span>
+      <span>
+        TWSNMP FC v1.0.0 &copy; {{ new Date().getFullYear() }} Masayuki Yamai
+      </span>
     </v-footer>
   </v-app>
 </template>
