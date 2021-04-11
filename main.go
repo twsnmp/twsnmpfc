@@ -35,7 +35,8 @@ var ip string
 var tls bool
 var local bool
 
-const version = "1000"
+const version = "010000"
+const strVersion = "v1.0.0"
 
 func init() {
 	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
@@ -103,6 +104,7 @@ func main() {
 		Host:          host,
 		Password:      password,
 		DataStorePath: dataStorePath,
+		Version:       strVersion,
 	}
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)

@@ -112,7 +112,7 @@ func checkNewVersion() {
 	if !datastore.NotifyConf.CheckUpdate || versionCheckState > 1 {
 		return
 	}
-	url := "https://lhx98.linkclub.jp/twise.co.jp/cgi-bin/twsnmp/twsnmp.cgi?twsver=" + versionNum
+	url := "https://lhx98.linkclub.jp/twise.co.jp/cgi-bin/twsnmpfc.cgi?ver=" + versionNum
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Printf("checkNewVersion err=%v", err)
@@ -124,7 +124,8 @@ func checkNewVersion() {
 		log.Printf("checkNewVersion err=%v", err)
 		return
 	}
-	if strings.Contains(string(ba), "#TWSNMPVEROK#") {
+	log.Printf("version %v", string(ba))
+	if strings.TrimSpace(string(ba)) == versionNum {
 		if versionCheckState == 0 {
 			datastore.AddEventLog(&datastore.EventLogEnt{
 				Type:  "system",

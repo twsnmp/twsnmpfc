@@ -27,6 +27,7 @@ type WebAPI struct {
 	Local         bool
 	Password      string
 	DataStorePath string
+	Version       string
 }
 
 type selectEntWebAPI struct {
