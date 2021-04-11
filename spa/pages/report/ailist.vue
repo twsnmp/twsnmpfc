@@ -92,7 +92,7 @@ export default {
     this.ai.forEach((a) => {
       a.Last = this.$timeFormat(
         new Date(a.LastTime * 1000),
-        '{MM}/{dd} {hh}:{mm}:{ss}'
+        '{MM}/{dd} {HH}:{mm}:{ss}'
       )
     })
   },

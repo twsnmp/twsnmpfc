@@ -234,11 +234,11 @@ export default {
     this.users.forEach((u) => {
       u.First = this.$timeFormat(
         new Date(u.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {hh}:{mm}:{ss}'
+        '{MM}/{dd} {HH}:{mm}:{ss}'
       )
       u.Last = this.$timeFormat(
         new Date(u.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {hh}:{mm}:{ss}'
+        '{MM}/{dd} {HH}:{mm}:{ss}'
       )
       if (u.Total > 0) {
         u.Rate = ((100 * u.Ok) / u.Total).toFixed(2)

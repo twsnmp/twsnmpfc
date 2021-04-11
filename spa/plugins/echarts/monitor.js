@@ -60,7 +60,7 @@ const showSysResChart = (div, monitor) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {hh}:{mm}')
+          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
         },
       },
       nameTextStyle: {
@@ -122,7 +122,7 @@ const showSysResChart = (div, monitor) => {
   }
   monitor.forEach((m) => {
     const t = new Date(m.At * 1000)
-    const name = echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}')
+    const name = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
     option.series[0].data.push({
       name,
       value: [t, m.CPU],
@@ -196,7 +196,7 @@ const showSysNetChart = (div, monitor) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {hh}:{mm}')
+          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
         },
       },
       nameTextStyle: {
@@ -272,7 +272,7 @@ const showSysNetChart = (div, monitor) => {
   }
   monitor.forEach((m) => {
     const t = new Date(m.At * 1000)
-    const name = echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}')
+    const name = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
     option.series[0].data.push({
       name,
       value: [t, m.Net],
@@ -333,7 +333,7 @@ const showSysProcChart = (div, monitor) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {hh}:{mm}')
+          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
         },
       },
       nameTextStyle: {
@@ -409,7 +409,7 @@ const showSysProcChart = (div, monitor) => {
   }
   monitor.forEach((m) => {
     const t = new Date(m.At * 1000)
-    const name = echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}')
+    const name = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
     option.series[0].data.push({
       name,
       value: [t, m.Load],

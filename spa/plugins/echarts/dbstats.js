@@ -47,7 +47,7 @@ const showDBStatsChart = (div, logs) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {hh}:{mm}')
+          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
         },
       },
       nameTextStyle: {
@@ -125,11 +125,11 @@ const showDBStatsChart = (div, logs) => {
     logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
       option.series[0].data.push({
-        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}'),
+        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
         value: [t, e.Speed],
       })
       option.series[1].data.push({
-        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}'),
+        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
         value: [t, e.Size],
       })
     })

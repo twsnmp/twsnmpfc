@@ -384,7 +384,7 @@ export default {
     this.pollings.forEach((e) => {
       e.NodeName = nodeMap[e.NodeID]
       const t = new Date(e.LastTime / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t, '{MM}/{dd} {hh}:{mm}:{ss}')
+      e.TimeStr = this.$timeFormat(t, '{MM}/{dd} {HH}:{mm}:{ss}')
     })
     if (this.extractorList.length < 1) {
       const groks = await this.$axios.$get('/api/conf/grok')

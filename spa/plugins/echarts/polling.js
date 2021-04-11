@@ -47,7 +47,7 @@ const makePollingChart = (div) => {
         fontSize: '8px',
         formatter(value, index) {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {hh}:{mm}')
+          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
         },
       },
       axisLine: {
@@ -99,7 +99,7 @@ const showPollingChart = (polling, logs, ent) => {
   const dp = getDispParams(polling, ent)
   logs.forEach((l) => {
     const t = new Date(l.Time / (1000 * 1000))
-    const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {hh}:{mm}:{ss}')
+    const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
     let numVal = getNumVal(ent, l.Result)
     numVal *= dp.mul
     data.push({

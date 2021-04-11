@@ -289,11 +289,11 @@ export default {
     this.servers.forEach((s) => {
       s.First = this.$timeFormat(
         new Date(s.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {hh}:{mm}:{ss}'
+        '{MM}/{dd} {HH}:{mm}:{ss}'
       )
       s.Last = this.$timeFormat(
         new Date(s.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {hh}:{mm}:{ss}'
+        '{MM}/{dd} {HH}:{mm}:{ss}'
       )
       s.ServiceInfo = this.$getServiceNames(Object.keys(s.Services))
       const loc = this.$getLocInfo(s.Loc)

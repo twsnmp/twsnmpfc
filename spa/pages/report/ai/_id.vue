@@ -235,9 +235,9 @@ export default {
         '/api/polling/' + this.$route.params.id,
         {
           StartDate: this.$timeFormat(st, '{yyyy}-{MM}-{dd}'),
-          StartTime: this.$timeFormat(st, '{hh}:{mm}'),
+          StartTime: this.$timeFormat(st, '{HH}:{mm}'),
           EndDate: this.$timeFormat(et, '{yyyy}-{MM}-{dd}'),
-          EndTime: this.$timeFormat(et, '{hh}:{mm}'),
+          EndTime: this.$timeFormat(et, '{HH}:{mm}'),
         }
       )
       if (!r.Logs) {

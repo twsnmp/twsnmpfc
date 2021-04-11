@@ -393,11 +393,11 @@ export default {
     this.flows.forEach((f) => {
       f.First = this.$timeFormat(
         new Date(f.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {hh}:{mm}:{ss}'
+        '{MM}/{dd} {HH}:{mm}:{ss}'
       )
       f.Last = this.$timeFormat(
         new Date(f.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {hh}:{mm}:{ss}'
+        '{MM}/{dd} {HH}:{mm}:{ss}'
       )
       f.ServiceInfo = this.$getServiceNames(Object.keys(f.Services))
       let loc = this.$getLocInfo(f.ClientLoc)
