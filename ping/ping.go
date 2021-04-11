@@ -64,7 +64,7 @@ type packet struct {
 	ttl    int
 }
 
-func StartPing(ctx context.Context) error {
+func Start(ctx context.Context) error {
 	pingSendCh = make(chan *PingEnt, 100)
 	randGen = rand.New(rand.NewSource(time.Now().UnixNano()))
 	go pingBackend(ctx)

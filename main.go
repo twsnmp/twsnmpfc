@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/echo/v4"
 	"github.com/rakyll/statik/fs"
 	"github.com/twsnmp/twsnmpfc/logger"
 	"github.com/twsnmp/twsnmpfc/notify"
@@ -29,6 +28,10 @@ import (
 var dataStorePath string
 var password string
 var port string
+var host string
+var ip string
+var tls bool
+var local bool
 
 const version = "1000"
 
@@ -36,6 +39,10 @@ func init() {
 	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
 	flag.StringVar(&password, "password", "twsnmpfc!", "Master Password")
 	flag.StringVar(&port, "port", "8080", "port")
+	flag.StringVar(&host, "host", "", "Host Name for TLS Cert")
+	flag.StringVar(&ip, "ip", "", "IP Address for TLS Cert")
+	flag.BoolVar(&tls, "tls", false, "Use TLS")
+	flag.BoolVar(&local, "local", false, "Local only")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
 			f.Value.Set(s)
@@ -59,7 +66,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	if err = datastore.InitDataStore(ctx, dataStorePath, statikFS); err != nil {
+	if err = datastore.Init(ctx, dataStorePath, statikFS); err != nil {
 		log.Fatalln(err)
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
@@ -67,51 +74,45 @@ func main() {
 		Level: "info",
 		Event: "TWSNMP FC起動",
 	})
-	if err = ping.StartPing(ctx); err != nil {
+	if err = ping.Start(ctx); err != nil {
 		log.Fatalln(err)
 	}
-	if err = report.StartReport(ctx); err != nil {
+	if err = report.Start(ctx); err != nil {
 		log.Fatalln(err)
 	}
-	if err = logger.StartLogger(ctx); err != nil {
+	if err = logger.Start(ctx); err != nil {
 		log.Fatalln(err)
 	}
-	if err = polling.StartPolling(ctx); err != nil {
+	if err = polling.Start(ctx); err != nil {
 		log.Fatalln(err)
 	}
-	if err = backend.StartBackend(ctx, dataStorePath, version); err != nil {
+	if err = backend.Start(ctx, dataStorePath, version); err != nil {
 		log.Fatalln(err)
 	}
-	if err = notify.StartNotify(ctx); err != nil {
+	if err = notify.Start(ctx); err != nil {
 		log.Fatalln(err)
 	}
 	w := &webapi.WebAPI{
 		Statik:        http.FileServer(statikFS),
+		Port:          port,
+		UseTLS:        tls,
+		Local:         local,
+		IP:            ip,
+		Host:          host,
 		Password:      password,
 		DataStorePath: dataStorePath,
 	}
-	e := echo.New()
-	webapi.Init(e, w)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
-	go func() {
-		if err := e.Start(":" + port); err != nil {
-			log.Println(err)
-		}
-	}()
-	log.Println("Sig")
-	sig := <-quit
-	log.Println(sig)
+	go webapi.Start(w)
+	<-quit
+	log.Println("quit by signal")
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
 		Level: "info",
 		Event: "TWSNMP FC停止",
 	})
-	ctxStopWeb, cancelWeb := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancelWeb()
-	if err := e.Shutdown(ctxStopWeb); err != nil {
-		log.Printf("webui shutdown err=%v", err)
-	}
+	webapi.Stop()
 	cancel()
 	time.Sleep(time.Second * 2)
 }

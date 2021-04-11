@@ -24,7 +24,7 @@ var (
 	lastExecLevel int
 )
 
-func StartNotify(ctx context.Context) error {
+func Start(ctx context.Context) error {
 	lastExecLevel = -1
 	go notifyBackend(ctx)
 	return nil

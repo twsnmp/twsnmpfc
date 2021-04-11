@@ -34,7 +34,7 @@ var (
 	doPollingCh chan bool
 )
 
-func StartPolling(ctx context.Context) error {
+func Start(ctx context.Context) error {
 	doPollingCh = make(chan bool)
 	go pollingBackend(ctx)
 	return nil

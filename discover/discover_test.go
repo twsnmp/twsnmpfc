@@ -23,7 +23,7 @@ func getTmpDBFile() (string, error) {
 
 func TestDiscover(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	ping.StartPing(ctx)
+	ping.Start(ctx)
 	defer cancel()
 	time.Sleep(time.Second * 1)
 	statikFS, err := fs.New()
@@ -35,7 +35,7 @@ func TestDiscover(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(td)
-	datastore.InitDataStore(ctx, td, statikFS)
+	datastore.Init(ctx, td, statikFS)
 	datastore.MapConf.MapName = "Test123"
 	if err := datastore.SaveMapConf(); err != nil {
 		t.Fatal(err)

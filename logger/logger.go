@@ -16,7 +16,7 @@ import (
 
 var logCh chan *datastore.LogEnt
 
-func StartLogger(ctx context.Context) error {
+func Start(ctx context.Context) error {
 	log.Println("Start Logger")
 	logCh = make(chan *datastore.LogEnt, 100)
 	go logger(ctx)

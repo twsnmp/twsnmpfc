@@ -13,7 +13,7 @@ var (
 	dspath            string
 )
 
-func StartBackend(ctx context.Context, dsp, vn string) error {
+func Start(ctx context.Context, dsp, vn string) error {
 	log.Println("start backend")
 	dspath = dsp
 	versionNum = vn

@@ -19,22 +19,22 @@ type backImage struct {
 
 // MapConfEnt :  マップ設定
 type MapConfEnt struct {
-	MapName        string
-	BackImage      backImage
-	UserID         string
-	Password       string
-	PollInt        int
-	Timeout        int
-	Retry          int
-	LogDays        int
-	LogDispSize    int
-	SnmpMode       string
-	Community      string
-	SnmpUser       string
-	SnmpPassword   string
-	PublicKey      string
-	PrivateKey     string
-	TLSCert        string
+	MapName      string
+	BackImage    backImage
+	UserID       string
+	Password     string
+	PollInt      int
+	Timeout      int
+	Retry        int
+	LogDays      int
+	LogDispSize  int
+	SnmpMode     string
+	Community    string
+	SnmpUser     string
+	SnmpPassword string
+	PublicKey    string
+	PrivateKey   string
+	//	TLSCert        string
 	EnableSyslogd  bool
 	EnableTrapd    bool
 	EnableNetflowd bool
@@ -154,7 +154,7 @@ func GetBackImage() ([]byte, error) {
 }
 
 func initSecurityKey() {
-	key, err := security.GenPrivateKey(4096)
+	key, err := security.GenPrivateKey(4096, "")
 	if err != nil {
 		log.Printf("initSecurityKey err=%v", err)
 		return
@@ -164,20 +164,14 @@ func initSecurityKey() {
 		log.Printf("initSecurityKey err=%v", err)
 		return
 	}
-	cert, err := security.GenSelfSignCert(key)
-	if err != nil {
-		log.Printf("initSecurityKey err=%v", err)
-		return
-	}
 	MapConf.PrivateKey = key
 	MapConf.PublicKey = pubkey
-	MapConf.TLSCert = cert
 	log.Printf("initSecurityKey Public Key=%v", pubkey)
 	_ = SaveMapConf()
 }
 
 func GetPrivateKey() string {
-	return security.GetRawKeyPem(MapConf.PrivateKey)
+	return security.GetRawKeyPem(MapConf.PrivateKey, "")
 }
 
 func SaveMapConf() error {

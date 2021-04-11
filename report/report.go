@@ -32,7 +32,7 @@ var (
 	japanOnly      bool
 )
 
-func StartReport(ctx context.Context) error {
+func Start(ctx context.Context) error {
 	datastore.LaodReportConf()
 	UpdateReportConf()
 	datastore.LoadReport()

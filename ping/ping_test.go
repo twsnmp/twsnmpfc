@@ -9,7 +9,7 @@ import (
 
 func TestPing(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	StartPing(ctx)
+	Start(ctx)
 	defer cancel()
 	time.Sleep(time.Second * 1)
 	ip := ""

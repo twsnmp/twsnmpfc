@@ -2,16 +2,29 @@
 package webapi
 
 import (
+	"context"
+	"crypto/tls"
+	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/twsnmp/twsnmpfc/backend"
+	"github.com/twsnmp/twsnmpfc/security"
 )
 
 type WebAPI struct {
 	Statik        http.Handler
+	Port          string
+	UseTLS        bool
+	Host          string
+	IP            string
+	Local         bool
 	Password      string
 	DataStorePath string
 }
@@ -21,7 +34,25 @@ type selectEntWebAPI struct {
 	Value string `json:"value"`
 }
 
-func Init(e *echo.Echo, p *WebAPI) {
+var e *echo.Echo
+
+func Start(p *WebAPI) {
+	e = echo.New()
+	setup(p)
+	if err := e.StartServer(makeServer(p)); err != nil {
+		log.Println(err)
+	}
+}
+
+func Stop() {
+	ctxStopWeb, cancelWeb := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelWeb()
+	if err := e.Shutdown(ctxStopWeb); err != nil {
+		log.Printf("webui shutdown err=%v", err)
+	}
+}
+
+func setup(p *WebAPI) {
 	e.HideBanner = true
 	e.HidePort = true
 
@@ -135,4 +166,62 @@ func middle(p *WebAPI) echo.MiddlewareFunc {
 			return nil
 		}
 	}
+}
+
+func makeServer(p *WebAPI) *http.Server {
+	sv := &http.Server{}
+	if p.Local {
+		sv.Addr = fmt.Sprintf("127.0.0.1:%s", p.Port)
+		return sv
+	}
+	sv.Addr = fmt.Sprintf(":%s", p.Port)
+	if !p.UseTLS {
+		return sv
+	}
+	cert := getServerCert(p)
+	sv.TLSConfig = &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		CipherSuites: []uint16{
+			tls.TLS_AES_128_GCM_SHA256,
+			tls.TLS_AES_256_GCM_SHA384,
+		},
+		MinVersion:               tls.VersionTLS13,
+		PreferServerCipherSuites: true,
+		InsecureSkipVerify:       true,
+	}
+	return sv
+}
+
+func getServerCert(p *WebAPI) tls.Certificate {
+	//証明書、秘密鍵ファイルがある場合
+	kpath := filepath.Join(p.DataStorePath, "key.pem")
+	cpath := filepath.Join(p.DataStorePath, "cert.pem")
+	keyPem, err := ioutil.ReadFile(kpath)
+	if err == nil {
+		certPem, err := ioutil.ReadFile(cpath)
+		if err == nil {
+			keyPem = []byte(security.GetRawKeyPem(string(keyPem), p.Password))
+			cert, err := tls.X509KeyPair(certPem, keyPem)
+			if err == nil {
+				return cert
+			}
+		}
+	}
+	// 秘密鍵と証明書を自動作成する
+	certPem, keyPem, err := security.MakeWebAPICert(p.Host, p.Password, p.IP)
+	if err != nil {
+		log.Fatalf("getServerCert err=%v", err)
+	}
+	keyPemRaw := []byte(security.GetRawKeyPem(string(keyPem), p.Password))
+	cert, err := tls.X509KeyPair(certPem, keyPemRaw)
+	if err != nil {
+		log.Fatalf("getServerCert err=%v", err)
+	}
+	if err := ioutil.WriteFile(kpath, keyPem, 0600); err != nil {
+		log.Printf("getServerCert err=%v", err)
+	}
+	if err := ioutil.WriteFile(cpath, certPem, 0600); err != nil {
+		log.Printf("getServerCert err=%v", err)
+	}
+	return cert
 }

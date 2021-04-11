@@ -87,7 +87,7 @@ var (
 	ErrInvalidID     = fmt.Errorf("invalid id")
 )
 
-func InitDataStore(ctx context.Context, path string, fs http.FileSystem) error {
+func Init(ctx context.Context, path string, fs http.FileSystem) error {
 	dspath = path
 	eventLogCh = make(chan *EventLogEnt, 100)
 	protMap = map[int]string{
