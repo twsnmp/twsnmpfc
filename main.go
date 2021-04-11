@@ -7,7 +7,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
+	"runtime"
 	"strings"
 	"time"
 
@@ -105,6 +107,10 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	go webapi.Start(w)
+	if local {
+		time.Sleep(3 * time.Second)
+		openURL(fmt.Sprintf("http://127.0.0.1:%s", port))
+	}
 	<-quit
 	log.Println("quit by signal")
 	datastore.AddEventLog(&datastore.EventLogEnt{
@@ -115,4 +121,23 @@ func main() {
 	webapi.Stop()
 	cancel()
 	time.Sleep(time.Second * 2)
+}
+
+func openURL(url string) error {
+	var err error
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		log.Printf("openUrl err=%v", err)
+		return err
+	}
+	return err
 }
