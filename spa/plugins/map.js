@@ -200,8 +200,8 @@ const mapMain = (p5) => {
         mapCallBack({
           Cmd: 'contextMenu',
           Node: selectedNodes[0] || '',
-          x: p5.mouseX,
-          y: p5.mouseY,
+          x: p5.winMouseX,
+          y: p5.winMouseY,
         })
       }
     }
