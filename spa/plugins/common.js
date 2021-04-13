@@ -10,6 +10,7 @@ const stateList = [
   { text: '新規', color: '#1f78b4', icon: 'mdi-information', value: 'New' },
   { text: '変化', color: '#e31a1c', icon: 'mdi-autorenew', value: 'Change' },
   { text: '停止', color: '#777', icon: 'mdi-stop', value: 'off' },
+  { text: 'Debug', color: '#777', icon: 'mdi-bug', value: 'debug' },
 ]
 const stateMap = {}
 
