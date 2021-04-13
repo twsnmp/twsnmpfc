@@ -94,15 +94,16 @@ export default {
         new Date(a.LastTime * 1000),
         '{MM}/{dd} {HH}:{mm}:{ss}'
       )
+      a.IconScore = a.Score >= 100.0 ? 1.0 : 100.0 - a.Score
     })
   },
   data() {
     return {
       search: '',
       headers: [
-        { text: 'スコア', value: 'Score', width: '10%' },
+        { text: '異常スコア', value: 'Score', width: '15%' },
         { text: 'ノード', value: 'NodeName', width: '20%' },
-        { text: 'ポーリング', value: 'PollingName', width: '35%' },
+        { text: 'ポーリング', value: 'PollingName', width: '30%' },
         { text: 'データ数', value: 'Count', width: '10%' },
         { text: '日時', value: 'Last', width: '15%' },
         { text: '操作', value: 'actions', width: '10%' },
