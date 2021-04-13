@@ -58,7 +58,7 @@ func deletePollings(c echo.Context) error {
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",
 		Level: "info",
-		Event: fmt.Sprintf("%dのポーリングを削除しました", len(ids)),
+		Event: fmt.Sprintf("%d件のポーリングを削除しました", len(ids)),
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -87,7 +87,7 @@ func setPollingLevel(c echo.Context) error {
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",
 		Level: "info",
-		Event: fmt.Sprintf("%dのポーリングのレベルを%sに変更しました", len(params.IDs), params.Level),
+		Event: fmt.Sprintf("%d件のポーリングのレベルを%sに変更しました", len(params.IDs), params.Level),
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -123,7 +123,7 @@ func setPollingLogMode(c echo.Context) error {
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",
 		Level: "info",
-		Event: fmt.Sprintf("%dのポーリングのログモードを%sに変更しました", len(params.IDs), modeName),
+		Event: fmt.Sprintf("%d件のポーリングのログモードを%sに変更しました", len(params.IDs), modeName),
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
