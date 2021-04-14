@@ -31,16 +31,17 @@ func mapBackend(ctx context.Context) {
 		case <-newVersionTimer.C:
 			go checkNewVersion()
 		case <-timer.C:
-			bHit := false
+			change := 0
 			datastore.ForEachStateChangedNodes(func(id string) bool {
 				if n := datastore.GetNode(id); n != nil {
 					updateNodeState(n)
-					bHit = true
+					change++
 				}
 				datastore.DeleteNodeStateChanged(id)
 				return true
 			})
-			if bHit {
+			if change > 0 {
+				log.Printf("state changed node count=%d", change)
 				updateLineState()
 			}
 			i++
@@ -79,6 +80,13 @@ func updateNodeState(n *datastore.NodeEnt) {
 			return true
 		}
 		if n.State == "low" {
+			return true
+		}
+		if s == "warn" {
+			n.State = "warn"
+			return true
+		}
+		if n.State == "warn" {
 			return true
 		}
 		if s == "repair" {

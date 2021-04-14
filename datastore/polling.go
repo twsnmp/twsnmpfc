@@ -59,6 +59,7 @@ func AddPolling(p *PollingEnt) error {
 	})
 	p.Result = make(map[string]interface{})
 	pollings.Store(p.ID, p)
+	SetNodeStateChanged(p.NodeID)
 	return nil
 }
 
@@ -79,6 +80,7 @@ func UpdatePolling(p *PollingEnt) error {
 		return b.Put([]byte(p.ID), s)
 	})
 	pollings.Store(p.ID, p)
+	SetNodeStateChanged(p.NodeID)
 	return nil
 }
 
@@ -86,8 +88,11 @@ func DeletePolling(pollingID string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	if _, ok := pollings.Load(pollingID); !ok {
+	if e, ok := pollings.Load(pollingID); !ok {
 		return ErrInvalidID
+	} else {
+		p := e.(*PollingEnt)
+		SetNodeStateChanged(p.NodeID)
 	}
 	_ = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollings"))

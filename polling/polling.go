@@ -53,18 +53,19 @@ func AutoAddPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) {
 	}
 }
 
-func pollNowNode(nodeID string) {
+func PollNowNode(nodeID string) {
 	n := datastore.GetNode(nodeID)
 	if n == nil {
 		return
 	}
+	n.State = "unknown"
 	datastore.ForEachPollings(func(pe *datastore.PollingEnt) bool {
 		if pe.NodeID == nodeID && pe.State != "normal" {
 			pe.State = "unknown"
 			pe.NextTime = 0
 			datastore.AddEventLog(&datastore.EventLogEnt{
 				Type:     "user",
-				Level:    pe.State,
+				Level:    "info",
 				NodeID:   pe.NodeID,
 				NodeName: n.Name,
 				Event:    "ポーリング再確認:" + pe.Name,
@@ -86,9 +87,10 @@ func CheckAllPoll() {
 			if n == nil {
 				return true
 			}
+			n.State = "unknown"
 			datastore.AddEventLog(&datastore.EventLogEnt{
 				Type:     "user",
-				Level:    pe.State,
+				Level:    "info",
 				NodeID:   pe.NodeID,
 				NodeName: n.Name,
 				Event:    "ポーリング再確認:" + pe.Name,

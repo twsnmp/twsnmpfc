@@ -604,8 +604,10 @@ export default {
         }
         id = this.editNode.ID
       }
-      this.$axios.$get('/api/polling/check/' + id)
-      this.showNodeDialog = false
+      this.$axios.get('/api/polling/check/' + id).then(() => {
+        this.showNodeDialog = false
+        this.$ftech()
+      })
     },
   },
 }
