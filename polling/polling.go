@@ -60,7 +60,7 @@ func PollNowNode(nodeID string) {
 	}
 	n.State = "unknown"
 	datastore.ForEachPollings(func(pe *datastore.PollingEnt) bool {
-		if pe.NodeID == nodeID && pe.State != "normal" {
+		if pe.NodeID == nodeID && pe.State != "normal" && pe.Level != "off" {
 			pe.State = "unknown"
 			pe.NextTime = 0
 			datastore.AddEventLog(&datastore.EventLogEnt{
@@ -80,7 +80,7 @@ func PollNowNode(nodeID string) {
 
 func CheckAllPoll() {
 	datastore.ForEachPollings(func(pe *datastore.PollingEnt) bool {
-		if pe.State != "normal" {
+		if pe.State != "normal" && pe.Level != "off" {
 			pe.State = "unknown"
 			pe.NextTime = 0
 			n := datastore.GetNode(pe.NodeID)
