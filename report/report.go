@@ -367,6 +367,10 @@ func resetPenalty(report string) {
 
 // utils
 func normMACAddr(m string) string {
+	if hw, err := net.ParseMAC(m); err == nil {
+		m = strings.ToUpper(hw.String())
+		return m
+	}
 	m = strings.Replace(m, "-", ":", -1)
 	a := strings.Split(m, ":")
 	r := ""
@@ -548,6 +552,13 @@ func getIPInfo(ip string) *[]AddrInfoEnt {
 		ret = append(ret, AddrInfoEnt{Level: "high", Title: "位置", Value: loc})
 	} else {
 		ret = append(ret, AddrInfoEnt{Level: "info", Title: "位置", Value: loc})
+	}
+	if strings.Contains(loc, "LOCAL,") {
+		ipInfoCacheMap[ip] = &ipInfoCache{
+			Time:   time.Now().Unix(),
+			IPInfo: &ret,
+		}
+		return &ret
 	}
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

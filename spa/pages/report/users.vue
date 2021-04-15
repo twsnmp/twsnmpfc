@@ -162,7 +162,19 @@
                   >
                     <template v-slot:default="{ item }">
                       <v-list-item>
-                        <v-list-item-title>{{ item.title }}</v-list-item-title>
+                        <v-list-item-title>
+                          {{ item.title }}
+                          <v-icon
+                            small
+                            @click="
+                              $router.push({
+                                path: '/report/address/' + item.title,
+                              })
+                            "
+                          >
+                            mdi-file-find
+                          </v-icon>
+                        </v-list-item-title>
                         {{ formatCount(item.value) }}
                       </v-list-item>
                     </template>
@@ -243,7 +255,8 @@ export default {
       if (u.Total > 0) {
         u.Rate = ((100 * u.Ok) / u.Total).toFixed(2)
       }
-      u.Client = Object.keys(u.Clients).join()
+      const cl = Object.keys(u.Clients)
+      u.Client = cl.length
     })
   },
   data() {
@@ -252,8 +265,8 @@ export default {
       headers: [
         { text: '信用スコア', value: 'Score', width: '10%' },
         { text: 'ユーザーID', value: 'UserID', width: '15%' },
-        { text: 'サーバー', value: 'ServerName', width: '15%' },
-        { text: 'クライアント', value: 'Client', width: '10%' },
+        { text: 'サーバー', value: 'ServerName', width: '20%' },
+        { text: 'CL数', value: 'Client', width: '5%' },
         { text: '回数', value: 'Total', width: '5%' },
         { text: '成功', value: 'Ok', width: '5%' },
         { text: '初回', value: 'First', width: '15%' },

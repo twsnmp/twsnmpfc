@@ -2,7 +2,7 @@ package report
 
 import (
 	"fmt"
-	"strings"
+	"net"
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -37,7 +37,7 @@ func ResetUsersScore() {
 
 func setUserPenalty(u *datastore.UserEnt) {
 	u.Penalty = 0
-	if len(u.Clients) > 5 {
+	if len(u.Clients) > 3 {
 		u.Penalty++
 	}
 	for c, p := range u.Clients {
@@ -47,8 +47,10 @@ func setUserPenalty(u *datastore.UserEnt) {
 		}
 		if p > 0 {
 			u.Penalty++
-			if _, ok := badIPs[c]; !ok {
-				badIPs[c] = true
+			if ip := net.ParseIP(c); ip != nil {
+				if _, ok := badIPs[c]; !ok {
+					badIPs[c] = true
+				}
 			}
 		}
 	}
@@ -103,7 +105,15 @@ func checkUserReport(ur *userReportEnt) {
 }
 
 func checkUserClient(client string) bool {
-	if !strings.Contains(client, ".") {
+	if _, err := net.ParseMAC(client); err == nil {
+		mac := normMACAddr(client)
+		d := datastore.GetDevice(mac)
+		if d != nil && d.Penalty > 0 {
+			return false
+		}
+		return true
+	}
+	if ip := net.ParseIP(client); ip == nil {
 		return false
 	}
 	loc := datastore.GetLoc(client)

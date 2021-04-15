@@ -39,7 +39,9 @@ $(DIST)/twsnmpfc: statik/statik.go $(SRC)
 	env GO111MODULE=on GOOS=linux GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
 
 ### nuxt.js アプリのビルド
-spa/dist/index.html: spa/*.js* spa/pages/* spa/layouts/* spa/plugins/* spa/plugins/echarts/*
+spa/dist/index.html: spa/*.js* spa/pages/* spa/pages/report/* spa/pages/conf/*  \
+    spa/pages/log/* spa/pages/node/*/* spa/pages/polling/* spa/pages/mibbr/* \
+    spa/pages/report/*/* spa/layouts/* spa/plugins/* spa/plugins/echarts/*
 	cd spa && npm run generate
 statik/statik.go: spa/dist/* conf/*
 	cp -a conf  spa/dist
