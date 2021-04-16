@@ -19,10 +19,13 @@ all: $(TARGETS)
 test:
 	env GOOS=$(GOOS) $(GO_TEST) $(GO_PKGROOT)
 clean: clean_spa
-	rm -rf $(TARGETS) $(DIST)/twsnmpfc.zip
+	rm -rf $(TARGETS) $(DIST)/*.zip
 mac: $(DIST)/twsnmpfc.app
 zip: $(TARGETS)
-	$(ZIP) $(DIST)/twsnmpfc.zip $(TARGETS)
+	cd dist && $(ZIP) twsnmpfc_win.zip twsnmpfc.exe
+	cd dist && $(ZIP) twsnmpfc_mac.zip twsnmpfc.app
+	cd dist && $(ZIP) twsnmpfc_linux_amd64.zip twsnmpfc
+	cd dist && $(ZIP) twsnmpfc_linux_arm.zip twsnmpfc.arm
 
 docker:  dist/twsnmpfc Docker/Dockerfile
 	cp dist/twsnmpfc Docker/
