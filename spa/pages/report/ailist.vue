@@ -18,14 +18,14 @@
         :search="search"
         :items-per-page="15"
         sort-by="Score"
-        sort-asec
+        sort-desc
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
       >
         <template v-slot:[`item.Score`]="{ item }">
-          <v-icon :color="$getScoreColor(item.Score)">{{
-            $getScoreIconName(item.Score)
+          <v-icon :color="$getScoreColor(item.IconScore)">{{
+            $getScoreIconName(item.IconScore)
           }}</v-icon>
           {{ item.Score.toFixed(1) }}
         </template>
