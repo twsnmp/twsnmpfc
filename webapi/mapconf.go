@@ -163,12 +163,14 @@ func postGeoIP(c echo.Context) error {
 		log.Printf("postGeoIP err=%v", err)
 		return echo.ErrInternalServerError
 	}
-	defer dst.Close()
 	if _, err = io.Copy(dst, src); err != nil {
+		dst.Close()
 		log.Printf("postGeoIP err=%v", err)
 		return echo.ErrInternalServerError
 	}
+	dst.Close()
 	if err := datastore.UpdateGeoIP(dp); err != nil {
+		log.Printf("postGeoIP err=%v", err)
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
