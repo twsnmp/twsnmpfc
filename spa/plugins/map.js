@@ -30,6 +30,9 @@ const setIconCodeMap = (list) => {
 }
 
 const setMAP = (m,url) => {
+  if (!url || url === '/') {
+    url = window.location.origin
+  }
   nodes = m.Nodes
   lines = m.Lines
   backImage = m.MapConf.BackImage
