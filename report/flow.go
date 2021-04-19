@@ -60,9 +60,14 @@ func ResetServersScore() {
 func getFlowDir(fr *flowReportEnt) (server, client, service string) {
 	guc1 := datastore.IsGlobalUnicast(fr.SrcIP)
 	guc2 := datastore.IsGlobalUnicast(fr.DstIP)
-	if !guc1 && !guc2 {
-		// 両方ユニキャストでない場合は含めない。
+	if !guc1 && !guc2 && !strings.HasPrefix(fr.SrcIP, "fe80::") {
+		// 両方ユニキャストでない場合は含めない。IPv6のリンクローカルは含める
+		log.Println("getFlowDir src and dst address is not unicast")
 		return
+	}
+	if fr.Prot == 1 {
+		// ICMP
+		return getFlowDirICMP(fr)
 	}
 	s1, ok1 := datastore.GetServiceName(fr.Prot, fr.SrcPort)
 	s2, ok2 := datastore.GetServiceName(fr.Prot, fr.DstPort)
@@ -111,6 +116,28 @@ func getFlowDir(fr *flowReportEnt) (server, client, service string) {
 				service = s2
 			}
 		}
+	}
+	return
+}
+
+func getFlowDirICMP(fr *flowReportEnt) (server, client, service string) {
+	icmpType := (fr.DstPort / 256)
+	switch icmpType {
+	case 0, 3, 11, 12:
+		// Rourer Serverが応答するもの
+		service = fmt.Sprintf("%d/icmp", icmpType)
+		server = fr.SrcIP
+		client = fr.DstIP
+	case 5, 8, 13:
+		// Clientから送信するもの
+		service = fmt.Sprintf("%d/icmp", icmpType)
+		server = fr.DstIP
+		client = fr.SrcIP
+	default:
+		//未定義廃止されたicmp
+		service = "-1/icmp"
+		server = fr.DstIP
+		client = fr.SrcIP
 	}
 	return
 }

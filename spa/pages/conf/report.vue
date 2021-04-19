@@ -171,6 +171,8 @@ export default {
         { text: 'VNC', value: 'rfb/tcp' },
         { text: 'CIFS', value: 'microsoft-ds/tcp' },
         { text: 'NFS', value: 'nfsd/tcp' },
+        { text: 'ICMP到達不能', value: '3/icmp' },
+        { text: 'ICMPリダイレクト', value: '5/icmp' },
       ],
     }
   },

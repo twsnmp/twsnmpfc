@@ -216,7 +216,7 @@
             <tbody>
               <tr>
                 <td>クライアント名</td>
-                <td>{{ selected.ServerName }}</td>
+                <td>{{ selected.ClientName }}</td>
               </tr>
               <tr>
                 <td>クライアントIPアドレス</td>

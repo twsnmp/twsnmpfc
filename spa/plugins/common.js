@@ -205,7 +205,13 @@ const serviceNameMap = new Map(serviceNameArray);
 
 function getServiceName(s) {
   const ret = serviceNameMap.get(s)
-  return ret || 'Other'
+  if (ret) {
+    return ret
+  }
+  if (s.indexOf("/icmp") > 0) {
+    return "ICMP"
+  }
+  return 'Other'
 }
 
 function getServiceNames(services) {
