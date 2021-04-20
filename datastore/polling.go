@@ -80,7 +80,6 @@ func UpdatePolling(p *PollingEnt) error {
 		return b.Put([]byte(p.ID), s)
 	})
 	pollings.Store(p.ID, p)
-	SetNodeStateChanged(p.NodeID)
 	return nil
 }
 

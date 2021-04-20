@@ -25,17 +25,21 @@ import (
 	"log"
 	"runtime"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
+const maxPolling = 300
+
 var (
-	doPollingCh chan bool
+	doPollingCh  chan string
+	busyPollings sync.Map
 )
 
 func Start(ctx context.Context) error {
-	doPollingCh = make(chan bool)
+	doPollingCh = make(chan string, maxPolling)
 	go pollingBackend(ctx)
 	return nil
 }
@@ -71,11 +75,11 @@ func PollNowNode(nodeID string) {
 				Event:    "ポーリング再確認:" + pe.Name,
 			})
 			datastore.UpdatePolling(pe)
+			doPollingCh <- pe.ID
 		}
 		return true
 	})
 	datastore.SetNodeStateChanged(n.ID)
-	doPollingCh <- true
 }
 
 func CheckAllPoll() {
@@ -97,10 +101,10 @@ func CheckAllPoll() {
 			})
 			datastore.SetNodeStateChanged(n.ID)
 			datastore.UpdatePolling(pe)
+			doPollingCh <- pe.ID
 		}
 		return true
 	})
-	doPollingCh <- true
 }
 
 // pollingBackend :  ポーリングのバックグランド処理
@@ -113,8 +117,14 @@ func pollingBackend(ctx context.Context) {
 			return
 		case <-timer.C:
 			checkPolling()
-		case <-doPollingCh:
-			checkPolling()
+		case id := <-doPollingCh:
+			pe := datastore.GetPolling(id)
+			if pe != nil && pe.NextTime <= time.Now().UnixNano() {
+				if _, busy := busyPollings.Load(id); !busy {
+					busyPollings.Store(id, pe)
+					go doPolling(pe)
+				}
+			}
 		}
 	}
 }
@@ -123,33 +133,30 @@ func checkPolling() {
 	now := time.Now().UnixNano()
 	list := []*datastore.PollingEnt{}
 	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
-		if p.Level != "off" && p.NextTime < (now+(10*1000*1000*1000)) {
-			list = append(list, p)
+		if p.Level != "off" && p.NextTime <= now {
+			if _, busy := busyPollings.Load(p.ID); !busy {
+				list = append(list, p)
+			}
 		}
 		return true
 	})
 	if len(list) < 1 {
 		return
 	}
-	log.Printf("doPolling=%d NumGoroutine=%d", len(list), runtime.NumGoroutine())
+	log.Printf("checkPolling len(list)=%d NumGoroutine=%d", len(list), runtime.NumGoroutine())
 	sort.Slice(list, func(i, j int) bool {
 		return list[i].NextTime < list[j].NextTime
 	})
-	for i := 0; i < len(list); i++ {
-		startTime := list[i].NextTime
-		if startTime < now {
-			startTime = now
-		}
-		list[i].NextTime = startTime + (int64(list[i].PollInt) * 1000 * 1000 * 1000)
-		go doPolling(list[i], startTime)
-		time.Sleep(time.Millisecond * 2)
+	for i := 0; i < len(list) && i < maxPolling; i++ {
+		doPollingCh <- list[i].ID
 	}
 }
 
-func doPolling(pe *datastore.PollingEnt, startTime int64) {
-	for startTime > time.Now().UnixNano() {
-		time.Sleep(time.Millisecond * 100)
-	}
+func doPolling(pe *datastore.PollingEnt) {
+	defer func() {
+		busyPollings.Delete(pe.ID)
+		pe.NextTime = time.Now().UnixNano() + (int64(pe.PollInt) * 1000 * 1000 * 1000)
+	}()
 	oldState := pe.State
 	switch pe.Type {
 	case "ping":
