@@ -193,7 +193,7 @@
           ></v-text-field>
           <v-text-field
             v-model="filter.Message"
-            label="メッセージ（正規表現）"
+            label="メッセージ（パイプライン正規表現）"
           ></v-text-field>
           <v-select
             v-model="filter.Extractor"

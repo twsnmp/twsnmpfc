@@ -118,7 +118,7 @@ func postSyslog(c echo.Context) error {
 		log.Printf("postSyslog err=%v", err)
 		return echo.ErrBadRequest
 	}
-	messageFilter := makeStringFilter(filter.Message)
+	messageFilter := makePipeFilter(filter.Message)
 	typeFilter := makeStringFilter(filter.Type)
 	hostFilter := makeStringFilter(filter.Host)
 	tagFilter := makeStringFilter(filter.Tag)
@@ -137,7 +137,6 @@ func postSyslog(c echo.Context) error {
 					grokCap = fmt.Sprintf("%%{%s}", filter.Extractor)
 				}
 			}
-			log.Printf("grok = %s", grokCap)
 		} else {
 			log.Printf("no grok %s", filter.Extractor)
 		}
@@ -178,8 +177,16 @@ func postSyslog(c echo.Context) error {
 		re.Time = l.Time
 		re.Level = getLevelFromSeverity(int(sv))
 		re.Type = getSyslogType(int(sv), int(fac))
-		if messageFilter != nil && !messageFilter.Match([]byte(re.Message)) {
-			return true
+		for _, mf := range messageFilter {
+			if mf.reg.Match([]byte(re.Message)) {
+				if mf.not {
+					return true
+				}
+			} else {
+				if !mf.not {
+					return true
+				}
+			}
 		}
 		if tagFilter != nil && !tagFilter.Match([]byte(re.Tag)) {
 			return true
@@ -220,6 +227,5 @@ func postSyslog(c echo.Context) error {
 		i++
 		return i <= datastore.MapConf.LogDispSize
 	})
-	log.Printf("r.ExtractDatas=%v", r.ExtractDatas)
 	return c.JSON(http.StatusOK, r)
 }

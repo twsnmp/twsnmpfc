@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -36,6 +37,53 @@ func makeStringFilter(f string) *regexp.Regexp {
 		return nil
 	}
 	return r
+}
+
+func splitFilter(p string) []string {
+	ret := []string{}
+	bInQ := false
+	tmp := ""
+	for _, c := range p {
+		if c == '|' {
+			if !bInQ {
+				ret = append(ret, strings.TrimSpace(tmp))
+				tmp = ""
+			}
+			continue
+		}
+		if c == '`' {
+			bInQ = !bInQ
+		} else {
+			tmp += string(c)
+		}
+	}
+	ret = append(ret, strings.TrimSpace(tmp))
+	return ret
+}
+
+type pipeFilterEnt struct {
+	reg *regexp.Regexp
+	not bool
+}
+
+func makePipeFilter(f string) []pipeFilterEnt {
+	var ret []pipeFilterEnt
+	if f == "" {
+		return ret
+	}
+	a := splitFilter(f)
+	for _, e := range a {
+		r, err := regexp.Compile(strings.TrimPrefix(e, "!"))
+		if err != nil {
+			log.Printf("makeSyslogMsgFilter err=%v", err)
+			return ret
+		}
+		ret = append(ret, pipeFilterEnt{
+			reg: r,
+			not: strings.HasPrefix(e, "!"),
+		})
+	}
+	return ret
 }
 
 func getLogLevelFilter(f string) *regexp.Regexp {
