@@ -19,7 +19,7 @@ var defGrockList = []GrokEnt{
 		ID:    "EPSLOGIN",
 		Name:  "EPSの認証",
 		Descr: "EPSで認証した時のユーザーID、クライアントを抽出",
-		Pat:   `Login %{NOTSPACE:stat}: \[%{USER:user}\].+cli %{MAC:client}`,
+		Pat:   `Login %{NOTSPACE:stat}: \[(host/)*%{USER:user}\].+cli %{MAC:client}`,
 		Ok:    "OK",
 	},
 	{
