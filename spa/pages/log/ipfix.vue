@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card style="width: 100%">
       <v-card-title>
-        NetFlow
+        IPFIX
         <v-spacer></v-spacer>
         <v-text-field
           v-model="search"
@@ -192,7 +192,7 @@
 <script>
 export default {
   async fetch() {
-    this.logs = await this.$axios.$post('/api/log/netflow', this.filter)
+    this.logs = await this.$axios.$post('/api/log/ipfix', this.filter)
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
@@ -215,7 +215,6 @@ export default {
         Src: '',
         Dst: '',
         Protocol: '',
-        FlowType: 'netflow',
       },
       search: '',
       headers: [

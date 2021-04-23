@@ -229,6 +229,11 @@ export default {
           to: '/log/netflow',
         },
         {
+          icon: 'mdi-swap-horizontal',
+          title: 'IPFIX',
+          to: '/log/ipfix',
+        },
+        {
           icon: 'mdi-check-network',
           title: 'ARP Log',
           to: '/log/arp',

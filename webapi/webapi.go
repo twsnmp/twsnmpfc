@@ -129,6 +129,7 @@ func setup(p *WebAPI) {
 	r.POST("/log/syslog", postSyslog)
 	r.POST("/log/snmptrap", postSnmpTrap)
 	r.POST("/log/netflow", postNetFlow)
+	r.POST("/log/ipfix", postIPFIX)
 	r.POST("/log/arp", postArp)
 	// report
 	r.GET("/report/devices", getDevices)
