@@ -175,7 +175,7 @@
                             mdi-file-find
                           </v-icon>
                         </v-list-item-title>
-                        {{ formatCount(item.value) }}
+                        {{ item.value }}
                       </v-list-item>
                     </template>
                   </v-virtual-scroll>
@@ -255,7 +255,7 @@ export default {
       if (u.Total > 0) {
         u.Rate = ((100 * u.Ok) / u.Total).toFixed(2)
       }
-      const cl = Object.keys(u.Clients)
+      const cl = u.ClientMap ? Object.keys(u.ClientMap) : 0
       u.Client = cl.length
     })
   },
@@ -265,12 +265,12 @@ export default {
       headers: [
         { text: '信用スコア', value: 'Score', width: '10%' },
         { text: 'ユーザーID', value: 'UserID', width: '15%' },
-        { text: 'サーバー', value: 'ServerName', width: '20%' },
-        { text: 'CL数', value: 'Client', width: '5%' },
-        { text: '回数', value: 'Total', width: '5%' },
-        { text: '成功', value: 'Ok', width: '5%' },
-        { text: '初回', value: 'First', width: '15%' },
-        { text: '最終', value: 'Last', width: '15%' },
+        { text: 'サーバー', value: 'ServerName', width: '15%' },
+        { text: 'CL数', value: 'Client', width: '8%' },
+        { text: '回数', value: 'Total', width: '8%' },
+        { text: '成功率%', value: 'Rate', width: '10%' },
+        { text: '初回', value: 'First', width: '12%' },
+        { text: '最終', value: 'Last', width: '12%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
       users: [],
@@ -322,15 +322,22 @@ export default {
       this.selected = item
       if (!this.selected.ClientList) {
         this.selected.ClientList = []
-        Object.keys(this.selected.Clients).forEach((k) => {
+        if (!this.selected.ClientMap) {
+          return
+        }
+        Object.keys(this.selected.ClientMap).forEach((k) => {
           this.selected.ClientList.push({
             title: k,
-            value: this.selected.Clients[k],
+            value:
+              this.selected.ClientMap[k].Ok +
+              '/' +
+              this.selected.ClientMap[k].Total,
+            total: this.selected.ClientMap[k].Total,
           })
         })
         this.selected.ClientList.sort((a, b) => {
-          if (a.value > b.value) return -1
-          if (a.value < b.value) return 1
+          if (a.total > b.total) return -1
+          if (a.total < b.total) return 1
           return 0
         })
       }

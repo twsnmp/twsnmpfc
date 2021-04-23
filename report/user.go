@@ -37,21 +37,42 @@ func ResetUsersScore() {
 
 func setUserPenalty(u *datastore.UserEnt) {
 	u.Penalty = 0
-	if len(u.Clients) > 3 {
+	if len(u.ClientMap) > 3 {
 		u.Penalty++
 	}
-	for c, p := range u.Clients {
+	for c, e := range u.ClientMap {
 		// クライアント毎に場所
 		if !checkUserClient(c) {
 			u.Penalty++
 		}
-		if p > 0 {
-			u.Penalty++
-			if ip := net.ParseIP(c); ip != nil {
-				if _, ok := badIPs[c]; !ok {
-					badIPs[c] = true
+		if e.Total > 0 {
+			r := float32(e.Ok) / float32(e.Total)
+			if r < 0.95 {
+				u.Penalty++
+				if r < 0.8 {
+					u.Penalty++
+					if r < 0.2 {
+						u.Penalty++
+					}
+					setBadIPFromClient(c)
 				}
 			}
+		}
+	}
+}
+
+func setBadIPFromClient(c string) {
+	if _, err := net.ParseMAC(c); err == nil {
+		mac := normMACAddr(c)
+		d := datastore.GetDevice(mac)
+		if d == nil {
+			return
+		}
+		c = d.IP
+	}
+	if ip := net.ParseIP(c); ip != nil {
+		if _, ok := badIPs[c]; !ok {
+			badIPs[c] = true
 		}
 	}
 }
@@ -61,18 +82,20 @@ func checkUserReport(ur *userReportEnt) {
 	id := fmt.Sprintf("%s:%s", ur.UserID, ur.Server)
 	u := datastore.GetUser(id)
 	if u != nil {
+		if u.ClientMap == nil {
+			u.ClientMap = make(map[string]datastore.UserClientEnt)
+		}
+		e, ok := u.ClientMap[ur.Client]
+		if !ok {
+			e = datastore.UserClientEnt{}
+		}
 		u.Total++
+		e.Total++
 		if ur.Ok {
+			e.Ok++
 			u.Ok++
 		}
-		if _, ok := u.Clients[ur.Client]; !ok {
-			u.Clients[ur.Client] = 0
-		}
-		if ur.Ok {
-			u.Clients[ur.Client]--
-		} else {
-			u.Clients[ur.Client]++
-		}
+		u.ClientMap[ur.Client] = e
 		setUserPenalty(u)
 		if u.ServerName == "" {
 			u.ServerName, u.ServerNodeID = findNodeInfoFromIP(ur.Server)
@@ -85,21 +108,19 @@ func checkUserReport(ur *userReportEnt) {
 		ID:         id,
 		UserID:     ur.UserID,
 		Server:     ur.Server,
-		Clients:    make(map[string]int64),
+		ClientMap:  make(map[string]datastore.UserClientEnt),
 		Total:      1,
 		FirstTime:  ur.Time,
 		LastTime:   ur.Time,
 		UpdateTime: now,
 	}
 	u.ServerName, u.ServerNodeID = findNodeInfoFromIP(ur.Server)
+	e := datastore.UserClientEnt{Total: 1}
 	if ur.Ok {
-		u.Clients[ur.Client] = -1
-	} else {
-		u.Clients[ur.Client] = 1
-	}
-	if ur.Ok {
+		e.Ok = 1
 		u.Ok = 1
 	}
+	u.ClientMap[ur.Client] = e
 	setUserPenalty(u)
 	datastore.AddUser(u)
 }

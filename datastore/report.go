@@ -35,13 +35,18 @@ type DeviceEnt struct {
 	UpdateTime int64
 }
 
+type UserClientEnt struct {
+	Total int32
+	Ok    int32
+}
+
 type UserEnt struct {
 	ID           string // User ID + Server
 	UserID       string
 	Server       string
 	ServerName   string
 	ServerNodeID string
-	Clients      map[string]int64
+	ClientMap    map[string]UserClientEnt
 	Total        int
 	Ok           int
 	Score        float64
