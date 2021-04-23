@@ -283,11 +283,11 @@
                 <td>{{ formatBytes(selected.Bytes) }}</td>
               </tr>
               <tr>
-                <td>サービス数</td>
-                <td>{{ selected.ServiceList.length }}</td>
+                <td>サービス概要</td>
+                <td>{{ selected.ServiceInfo }}</td>
               </tr>
               <tr>
-                <td>サービス</td>
+                <td>サービス詳細</td>
                 <td>
                   <v-virtual-scroll
                     height="200"
@@ -399,7 +399,9 @@ export default {
         new Date(f.LastTime / (1000 * 1000)),
         '{MM}/{dd} {HH}:{mm}:{ss}'
       )
-      f.ServiceInfo = this.$getServiceNames(Object.keys(f.Services))
+      const sl = Object.keys(f.Services)
+      f.ServiceCount = sl.length
+      f.ServiceInfo = this.$getServiceNames(sl)
       let loc = this.$getLocInfo(f.ClientLoc)
       f.ClientLatLong = loc.LatLong
       f.ClientLocInfo = loc.LocInfo
@@ -418,7 +420,7 @@ export default {
         { text: 'クライアント', value: 'ClientName', width: '16%' },
         { text: 'サーバー', value: 'ServerName', width: '16%' },
         { text: '国', value: 'Country', width: '8%' },
-        { text: 'サービス', value: 'ServiceInfo', width: '12%' },
+        { text: 'サービス', value: 'ServiceCount', width: '12%' },
         { text: '回数', value: 'Count', width: '8%' },
         { text: '通信量', value: 'Bytes', width: '8%' },
         { text: '最終', value: 'Last', width: '12%' },
@@ -462,6 +464,9 @@ export default {
         { text: 'NTP', value: 'ntp/udp' },
         { text: 'SYSLOG', value: 'syslog/udp' },
         { text: 'SNMP', value: 'snmp/udp' },
+        { text: 'ICMP到達不能', value: '3/icmp' },
+        { text: 'ICMP非推奨', value: '-1/icmp' },
+        { text: 'PING', value: '8/icmp' },
       ],
     }
   },

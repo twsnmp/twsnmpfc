@@ -220,11 +220,11 @@
                 </td>
               </tr>
               <tr>
-                <td>サービス数</td>
-                <td>{{ selected.ServiceList.length }}</td>
+                <td>サービス概要</td>
+                <td>{{ selected.ServiceInfo }}</td>
               </tr>
               <tr>
-                <td>サービス</td>
+                <td>サービス詳細</td>
                 <td>
                   <v-virtual-scroll
                     height="200"
@@ -295,7 +295,9 @@ export default {
         new Date(s.LastTime / (1000 * 1000)),
         '{MM}/{dd} {HH}:{mm}:{ss}'
       )
-      s.ServiceInfo = this.$getServiceNames(Object.keys(s.Services))
+      const sl = Object.keys(s.Services)
+      s.ServiceCount = sl.length
+      s.ServiceInfo = this.$getServiceNames(sl)
       const loc = this.$getLocInfo(s.Loc)
       s.LatLong = loc.LatLong
       s.LocInfo = loc.LocInfo
@@ -307,9 +309,9 @@ export default {
       search: '',
       headers: [
         { text: '信用スコア', value: 'Score', width: '10%' },
-        { text: 'サーバー', value: 'ServerName', width: '17%' },
+        { text: 'サーバー', value: 'ServerName', width: '19%' },
         { text: '国', value: 'Country', width: '8%' },
-        { text: 'サービス', value: 'ServiceInfo', width: '15%' },
+        { text: 'サービス数', value: 'ServiceCount', width: '12%' },
         { text: '回数', value: 'Count', width: '8%' },
         { text: '通信量', value: 'Bytes', width: '8%' },
         { text: '初回', value: 'First', width: '12%' },
