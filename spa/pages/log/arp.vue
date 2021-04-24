@@ -4,19 +4,11 @@
       <v-card-title>
         ARP Log
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
       </v-card-title>
       <div id="logCountChart" style="width: 100%; height: 200px"></div>
       <v-data-table
         :headers="headers"
         :items="logs"
-        :search="search"
         sort-by="TimeStr"
         sort-desc
         dense
@@ -29,6 +21,33 @@
             $getStateIconName(item.State)
           }}</v-icon>
           {{ $getStateName(item.State) }}
+        </template>
+        <template v-slot:[`body.append`]>
+          <tr>
+            <td>
+              <v-select v-model="state" :items="stateList" label="state">
+              </v-select>
+            </td>
+            <td></td>
+            <td>
+              <v-text-field v-model="ip" label="ip"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="mac" label="mac"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="vendor" label="vendor"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="oldmac" label="old mac"></v-text-field>
+            </td>
+            <td>
+              <v-text-field
+                v-model="oldvendor"
+                label="old vendor"
+              ></v-text-field>
+            </td>
+          </tr>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -217,17 +236,75 @@ export default {
         IP: '',
         MAC: '',
       },
-      search: '',
       headers: [
+        {
+          text: '状態',
+          value: 'State',
+          width: '10%',
+          filter: (value) => {
+            if (!this.state) return true
+            return this.state === value
+          },
+        },
         { text: '記録日時', value: 'TimeStr', width: '15%' },
-        { text: '状態', value: 'State', width: '10%' },
-        { text: 'IPアドレス', value: 'IP', width: '15%' },
-        { text: 'MACアドレス', value: 'MAC', width: '15%' },
-        { text: 'ベンダー', value: 'Vendor', width: '15%' },
-        { text: '前MACアドレス', value: 'OldMAC', width: '15%' },
-        { text: '前ベンダー', value: 'OldVendor', width: '15%' },
+        {
+          text: 'IPアドレス',
+          value: 'IP',
+          width: '15%',
+          filter: (value) => {
+            if (!this.ip) return true
+            return value.includes(this.ip)
+          },
+        },
+        {
+          text: 'MACアドレス',
+          value: 'MAC',
+          width: '15%',
+          filter: (value) => {
+            if (!this.mac) return true
+            return value.includes(this.mac)
+          },
+        },
+        {
+          text: 'ベンダー',
+          value: 'Vendor',
+          width: '15%',
+          filter: (value) => {
+            if (!this.vendor) return true
+            return value.includes(this.vendor)
+          },
+        },
+        {
+          text: '前MACアドレス',
+          value: 'OldMAC',
+          width: '15%',
+          filter: (value) => {
+            if (!this.oldmac) return true
+            return value.includes(this.oldmac)
+          },
+        },
+        {
+          text: '前ベンダー',
+          value: 'OldVendor',
+          width: '15%',
+          filter: (value) => {
+            if (!this.oldvendor) return true
+            return value.includes(this.oldvendor)
+          },
+        },
       ],
       logs: [],
+      state: '',
+      ip: '',
+      mac: '',
+      vendor: '',
+      oldmac: '',
+      oldvendor: '',
+      stateList: [
+        { text: '', value: '' },
+        { text: '新規', value: 'New' },
+        { text: '変化', value: 'Change' },
+      ],
     }
   },
   mounted() {
