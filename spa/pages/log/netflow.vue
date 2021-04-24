@@ -4,19 +4,11 @@
       <v-card-title>
         NetFlow
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
       </v-card-title>
       <div id="logCountChart" style="width: 100%; height: 200px"></div>
       <v-data-table
         :headers="headers"
         :items="logs"
-        :search="search"
         sort-by="TimeStr"
         sort-desc
         dense
@@ -24,6 +16,24 @@
         loading-text="Loading... Please wait"
         class="log"
       >
+        <template v-slot:[`body.append`]>
+          <tr>
+            <td></td>
+            <td>
+              <v-text-field v-model="src" label="src"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="dst" label="dst"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="prot" label="prot"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="tcpflag" label="tcp flag"></v-text-field>
+            </td>
+            <td colspan="3"></td>
+          </tr>
+        </template>
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -217,18 +227,53 @@ export default {
         Protocol: '',
         FlowType: 'netflow',
       },
-      search: '',
       headers: [
         { text: '受信日時', value: 'TimeStr', width: '15%' },
-        { text: '送信元', value: 'Src', width: '20%' },
-        { text: '宛先', value: 'Dst', width: '20%' },
-        { text: 'プロトコル', value: 'Protocol', width: '10%' },
-        { text: 'TCPフラグ', value: 'TCPFlags', width: '10%' },
+        {
+          text: '送信元',
+          value: 'Src',
+          width: '20%',
+          filter: (value) => {
+            if (!this.src) return true
+            return value.includes(this.src)
+          },
+        },
+        {
+          text: '宛先',
+          value: 'Dst',
+          width: '20%',
+          filter: (value) => {
+            if (!this.dst) return true
+            return value.includes(this.dst)
+          },
+        },
+        {
+          text: 'プロトコル',
+          value: 'Protocol',
+          width: '10%',
+          filter: (value) => {
+            if (!this.prot) return true
+            return value.includes(this.prot)
+          },
+        },
+        {
+          text: 'TCPフラグ',
+          value: 'TCPFlags',
+          width: '10%',
+          filter: (value) => {
+            if (!this.tcpflag) return true
+            return value.includes(this.tcpflag)
+          },
+        },
         { text: 'パケット数', value: 'Packets', width: '5%' },
         { text: 'バイト数', value: 'Bytes', width: '10%' },
         { text: '期間(Sec)', value: 'Duration', width: '10%' },
       ],
       logs: [],
+      src: '',
+      dst: '',
+      prot: '',
+      tcpflag: '',
     }
   },
   mounted() {

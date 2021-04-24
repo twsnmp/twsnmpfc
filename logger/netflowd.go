@@ -99,6 +99,12 @@ func logIPFIX(p *ipfix.Message) {
 				if f.Translated != nil {
 					if f.Translated.Name != "" {
 						record[f.Translated.Name] = f.Translated.Value
+						if f.Translated.Name == "protocolIdentifier" {
+							record["protocolStr"] = read.Protocol(f.Translated.Value.(uint8))
+						}
+						if f.Translated.Name == "tcpControlBits" {
+							record["tcpflagsStr"] = read.TCPFlags(uint8(f.Translated.Value.(uint16)))
+						}
 					} else {
 						record[fmt.Sprintf("%d.%d", f.Translated.EnterpriseNumber, f.Translated.InformationElementID)] = f.Bytes
 					}

@@ -41,7 +41,7 @@ func postNetFlow(c echo.Context) error {
 	srcFilter := makeStringFilter(filter.Src)
 	dstFilter := makeStringFilter(filter.Dst)
 	protocolFilter := makeStringFilter(filter.Protocol)
-	st := makeTimeFilter(filter.StartDate, filter.StartTime, 3)
+	st := makeTimeFilter(filter.StartDate, filter.StartTime, 1)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
 	datastore.ForEachLog(st, et, "netflow", func(l *datastore.LogEnt) bool {
@@ -82,6 +82,22 @@ func postNetFlow(c echo.Context) error {
 			log.Printf("postNetflow no protocolStr")
 			return true
 		}
+		if prot == "" {
+			if v, ok := sl["protocol"]; ok {
+				pi := uint8(v.(float64))
+				if pi == 1 {
+					prot = "icmp"
+				} else if pi == 2 {
+					prot = "igmp"
+				} else if pi == 6 {
+					prot = "tcp"
+				} else if pi == 17 {
+					prot = "udp"
+				} else {
+					prot = fmt.Sprintf("%d", int(pi))
+				}
+			}
+		}
 		if tf, ok = sl["tcpflagsStr"].(string); !ok {
 			log.Printf("postNetflow no tcpflagsStr")
 			return true
@@ -102,9 +118,15 @@ func postNetFlow(c echo.Context) error {
 			log.Printf("postNetflow no srcPort")
 			return true
 		}
+		spi := int(sp)
+		dpi := int(dp)
+		if prot == "icmp" {
+			spi = dpi / 256
+			dpi = dpi % 256
+		}
 		re.Time = l.Time
-		re.Src = fmt.Sprintf("%s:%d", sa, int(sp))
-		re.Dst = fmt.Sprintf("%s:%d", da, int(dp))
+		re.Src = fmt.Sprintf("%s:%d", sa, spi)
+		re.Dst = fmt.Sprintf("%s:%d", da, dpi)
 		re.Protocol = prot
 		re.TCPFlags = tf
 		re.Bytes = int64(bytes)
@@ -126,6 +148,8 @@ func postNetFlow(c echo.Context) error {
 	return c.JSON(http.StatusOK, r)
 }
 
+const tcpFlags = "NCEUAPRSF"
+
 func postIPFIX(c echo.Context) error {
 	r := []*netflowWebAPI{}
 	filter := new(netflowFilter)
@@ -136,7 +160,7 @@ func postIPFIX(c echo.Context) error {
 	srcFilter := makeStringFilter(filter.Src)
 	dstFilter := makeStringFilter(filter.Dst)
 	protocolFilter := makeStringFilter(filter.Protocol)
-	st := makeTimeFilter(filter.StartDate, filter.StartTime, 3)
+	st := makeTimeFilter(filter.StartDate, filter.StartTime, 1)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
 	datastore.ForEachLog(st, et, "ipfix", func(l *datastore.LogEnt) bool {
@@ -200,15 +224,35 @@ func postIPFIX(c echo.Context) error {
 				return true
 			}
 			if int(pi) == 6 {
-				var tfb float64
-				if tfb, ok = sl["tcpControlBits"].(float64); ok {
-					tf = fmt.Sprintf("%04x", int(tfb))
+				if t, ok := sl["tcpflagsStr"]; !ok {
+					var tfb float64
+					if tfb, ok = sl["tcpControlBits"].(float64); ok {
+						f := uint8(tfb)
+						flags := []byte{}
+						for i := uint8(0); i < 8; i++ {
+							if f&0x01 > 0 {
+								flags = append(flags, tcpFlags[8-i])
+							} else {
+								flags = append(flags, '.')
+							}
+							f >>= 1
+						}
+						tf = "[" + string(flags) + "]"
+					}
+				} else {
+					tf = t.(string)
 				}
 				prot = "tcp"
 			} else if int(pi) == 17 {
 				prot = "udp"
+			} else if int(pi) == 1 {
+				prot = "icmp"
 			} else {
-				prot = fmt.Sprintf("%d", int(pi))
+				if v, ok := sl["protocolStr"]; ok {
+					prot = v.(string)
+				} else {
+					prot = fmt.Sprintf("%d", int(pi))
+				}
 			}
 		} else {
 			log.Println("no data")
