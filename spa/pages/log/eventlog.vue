@@ -4,19 +4,11 @@
       <v-card-title>
         イベントログ
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
       </v-card-title>
       <div id="logCountChart" style="width: 100%; height: 200px"></div>
       <v-data-table
         :headers="headers"
         :items="logs"
-        :search="search"
         sort-by="TimeStr"
         sort-desc
         dense
@@ -29,6 +21,24 @@
             $getStateIconName(item.Level)
           }}</v-icon>
           {{ $getStateName(item.Level) }}
+        </template>
+        <template v-slot:[`body.append`]>
+          <tr>
+            <td>
+              <v-select v-model="level" :items="levelList" label="Level">
+              </v-select>
+            </td>
+            <td></td>
+            <td>
+              <v-text-field v-model="logtype" label="type"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="node" label="node"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="msg" label="event"></v-text-field>
+            </td>
+          </tr>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -236,13 +246,58 @@ export default {
       },
       search: '',
       headers: [
-        { text: '状態', value: 'Level', width: '10%' },
+        {
+          text: '状態',
+          value: 'Level',
+          width: '10%',
+          filter: (value) => {
+            if (!this.level) return true
+            return this.level === value
+          },
+        },
         { text: '発生日時', value: 'TimeStr', width: '15%' },
-        { text: '種別', value: 'Type', width: '10%' },
-        { text: '関連ノード', value: 'NodeName', width: '15%' },
-        { text: 'イベント', value: 'Event', width: '50%' },
+        {
+          text: '種別',
+          value: 'Type',
+          width: '10%',
+          filter: (value) => {
+            if (!this.logtype) return true
+            return value.includes(this.logtype)
+          },
+        },
+        {
+          text: '関連ノード',
+          value: 'NodeName',
+          width: '15%',
+          filter: (value) => {
+            if (!this.node) return true
+            return value.includes(this.node)
+          },
+        },
+        {
+          text: 'イベント',
+          value: 'Event',
+          width: '50%',
+          filter: (value) => {
+            if (!this.msg) return true
+            return value.includes(this.msg)
+          },
+        },
       ],
       logs: [],
+      level: '',
+      logtype: '',
+      node: '',
+      msg: '',
+      levelList: [
+        { text: '', value: '' },
+        { text: '重度', value: 'high' },
+        { text: '軽度', value: 'low' },
+        { text: '注意', value: 'warn' },
+        { text: '情報', value: 'info' },
+        { text: '復帰', value: 'repair' },
+        { text: '不明', value: 'unknown' },
+      ],
     }
   },
   mounted() {
