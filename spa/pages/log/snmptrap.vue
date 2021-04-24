@@ -4,19 +4,11 @@
       <v-card-title>
         SNMP TRAP
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
       </v-card-title>
       <div id="logCountChart" style="width: 100%; height: 200px"></div>
       <v-data-table
         :headers="headers"
         :items="logs"
-        :search="search"
         sort-by="TimeStr"
         sort-desc
         dense
@@ -24,6 +16,20 @@
         loading-text="Loading... Please wait"
         class="log"
       >
+        <template v-slot:[`body.append`]>
+          <tr>
+            <td></td>
+            <td>
+              <v-text-field v-model="src" label="src"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="traptype" label="trap type"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="varbind" label="var bind"></v-text-field>
+            </td>
+          </tr>
+        </template>
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -219,11 +225,38 @@ export default {
       search: '',
       headers: [
         { text: '受信日時', value: 'TimeStr', width: '15%' },
-        { text: '送信元', value: 'FromAddress', width: '15%' },
-        { text: 'TRAP種別', value: 'TrapType', width: '25%' },
-        { text: '付帯MIB値', value: 'Variables', width: '45%' },
+        {
+          text: '送信元',
+          value: 'FromAddress',
+          width: '15%',
+          filter: (value) => {
+            if (!this.src) return true
+            return value.includes(this.src)
+          },
+        },
+        {
+          text: 'TRAP種別',
+          value: 'TrapType',
+          width: '25%',
+          filter: (value) => {
+            if (!this.traptype) return true
+            return value.includes(this.traptype)
+          },
+        },
+        {
+          text: '付帯MIB値',
+          value: 'Variables',
+          width: '45%',
+          filter: (value) => {
+            if (!this.varbind) return true
+            return value.includes(this.varbind)
+          },
+        },
       ],
       logs: [],
+      src: '',
+      traptype: '',
+      varbind: '',
     }
   },
   mounted() {
