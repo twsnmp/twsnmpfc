@@ -123,7 +123,7 @@ func postSyslog(c echo.Context) error {
 	hostFilter := makeStringFilter(filter.Host)
 	tagFilter := makeStringFilter(filter.Tag)
 	levelFilter := getLogLevelFilter(filter.Level)
-	st := makeTimeFilter(filter.StartDate, filter.StartTime, 3)
+	st := makeTimeFilter(filter.StartDate, filter.StartTime, 1)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	grokCap := ""
 	var grokExtractor *grok.Grok

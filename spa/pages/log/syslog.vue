@@ -4,19 +4,11 @@
       <v-card-title>
         Syslog
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
       </v-card-title>
       <div id="logCountChart" style="width: 100%; height: 200px"></div>
       <v-data-table
         :headers="headers"
         :items="logs"
-        :search="search"
         sort-by="TimeStr"
         sort-desc
         dense
@@ -29,6 +21,24 @@
             $getStateIconName(item.Level)
           }}</v-icon>
           {{ $getStateName(item.Level) }}
+        </template>
+        <template v-slot:[`body.append`]>
+          <tr>
+            <td></td>
+            <td></td>
+            <td>
+              <v-text-field v-model="pri" label="pri"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="host" label="host"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="tag" label="tag"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="msg" label="message"></v-text-field>
+            </td>
+          </tr>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -315,14 +325,45 @@ export default {
         Message: '',
         Extractor: '',
       },
-      search: '',
       headers: [
         { text: '状態', value: 'Level', width: '10%' },
         { text: '日時', value: 'TimeStr', width: '15%' },
-        { text: '種別', value: 'Type', width: '10%' },
-        { text: 'ホスト名', value: 'Host', width: '10%' },
-        { text: 'タグ', value: 'Tag', width: '10%' },
-        { text: 'メッセージ', value: 'Message', width: '45%' },
+        {
+          text: '種別',
+          value: 'Type',
+          width: '10%',
+          filter: (value) => {
+            if (!this.pri) return true
+            return value.includes(this.pri)
+          },
+        },
+        {
+          text: 'ホスト名',
+          value: 'Host',
+          width: '10%',
+          filter: (value) => {
+            if (!this.host) return true
+            return value.includes(this.host)
+          },
+        },
+        {
+          text: 'タグ',
+          value: 'Tag',
+          width: '10%',
+          filter: (value) => {
+            if (!this.tag) return true
+            return value.includes(this.tag)
+          },
+        },
+        {
+          text: 'メッセージ',
+          value: 'Message',
+          width: '45%',
+          filter: (value) => {
+            if (!this.msg) return true
+            return value.includes(this.msg)
+          },
+        },
       ],
       logs: [],
       extractDialog: false,
@@ -330,6 +371,10 @@ export default {
       extractDatas: [],
       extractHeader: [],
       filterExtractorList: [],
+      pri: '',
+      host: '',
+      tag: '',
+      msg: '',
     }
   },
   mounted() {
