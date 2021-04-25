@@ -4,13 +4,6 @@
       <v-card-title>
         ポーリングリスト
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
       </v-card-title>
       <v-alert v-model="deleteError" color="error" dense dismissible>
         ポーリングを削除できませんでした
@@ -22,7 +15,6 @@
         v-model="selectedPollings"
         :headers="headers"
         :items="pollings"
-        :search="search"
         item-key="ID"
         show-select
         dense
@@ -56,6 +48,27 @@
           <v-icon small @click="editPollingFunc(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deletePollingFunc(item)"> mdi-delete </v-icon>
           <v-icon small @click="copyPolling(item)"> mdi-content-copy </v-icon>
+        </template>
+        <template v-slot:[`body.append`]>
+          <tr>
+            <td></td>
+            <td>
+              <v-select v-model="state" :items="stateList" label="level">
+              </v-select>
+            </td>
+            <td>
+              <v-text-field v-model="node" label="node"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="name" label="name"></v-text-field>
+            </td>
+            <td></td>
+            <td>
+              <v-select v-model="polltype" :items="typeList" label="type">
+              </v-select>
+            </td>
+            <td></td>
+          </tr>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -410,13 +423,44 @@ export default {
       editPolling: {},
       deletePolling: {},
       extractorList: [],
-      search: '',
       headers: [
-        { text: '状態', value: 'State', width: '12%' },
-        { text: 'ノード', value: 'NodeName', width: '18%' },
-        { text: '名前', value: 'Name', width: '20%' },
+        {
+          text: '状態',
+          value: 'State',
+          width: '12%',
+          filter: (value) => {
+            if (!this.state) return true
+            return this.state === value
+          },
+        },
+        {
+          text: 'ノード',
+          value: 'NodeName',
+          width: '18%',
+          filter: (value) => {
+            if (!this.node) return true
+            return value.includes(this.node)
+          },
+        },
+        {
+          text: '名前',
+          value: 'Name',
+          width: '20%',
+          filter: (value) => {
+            if (!this.name) return true
+            return value.includes(this.name)
+          },
+        },
         { text: 'レベル', value: 'Level', width: '15%' },
-        { text: '種別', value: 'Type', width: '8%' },
+        {
+          text: '種別',
+          value: 'Type',
+          width: '8%',
+          filter: (value) => {
+            if (!this.polltype) return true
+            return this.polltype === value
+          },
+        },
         { text: '最終実施', value: 'TimeStr', width: '15%' },
         { text: '操作', value: 'actions', width: '12%' },
       ],
@@ -439,6 +483,38 @@ export default {
       newLevel: 'off',
       setPollingLogModeDialog: false,
       newLogMode: 0,
+      state: '',
+      node: '',
+      name: '',
+      polltype: '',
+      stateList: [
+        { text: '', value: '' },
+        { text: '重度', value: 'high' },
+        { text: '軽度', value: 'low' },
+        { text: '注意', value: 'warn' },
+        { text: '正常', value: 'normal' },
+        { text: '復帰', value: 'repair' },
+        { text: '不明', value: 'unknown' },
+      ],
+      typeList: [
+        { text: '', value: '' },
+        { text: 'PING', value: 'ping' },
+        { text: 'SNMP', value: 'snmp' },
+        { text: 'TCP', value: 'tcp' },
+        { text: 'HTTP', value: 'http' },
+        { text: 'TLS', value: 'tls' },
+        { text: 'DNS', value: 'dns' },
+        { text: 'NTP', value: 'ntp' },
+        { text: 'SYSLOG', value: 'syslog' },
+        { text: 'SNMP TRAP', value: 'trap' },
+        { text: 'NetFlow', value: 'netflow' },
+        { text: 'IPFIX', value: 'ipfix' },
+        { text: 'Command', value: 'cmd' },
+        { text: 'SSH', value: 'ssh' },
+        { text: 'Report', value: 'report' },
+        { text: 'TWSNMP', value: 'twsnmp' },
+        { text: 'VMware', value: 'vmware' },
+      ],
     }
   },
   computed: {
