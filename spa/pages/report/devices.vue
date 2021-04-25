@@ -4,18 +4,10 @@
       <v-card-title>
         デバイス
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
       </v-card-title>
       <v-data-table
         :headers="headers"
         :items="devices"
-        :search="search"
         :items-per-page="15"
         sort-by="Score"
         sort-asec
@@ -45,6 +37,26 @@
           </v-icon>
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
+        </template>
+        <template v-slot:[`body.append`]>
+          <tr>
+            <td></td>
+            <td>
+              <v-text-field v-model="mac" label="mac"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="name" label="name"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="ip" label="ip"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="vendor" label="vendor"></v-text-field>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -217,13 +229,44 @@ export default {
   },
   data() {
     return {
-      search: '',
       headers: [
         { text: '信用スコア', value: 'Score', width: '10%' },
-        { text: 'MACアドレス', value: 'ID', width: '10%' },
-        { text: '名前', value: 'Name', width: '15%' },
-        { text: 'IPアドレス', value: 'IP', width: '10%' },
-        { text: 'ベンダー', value: 'Vendor', width: '15%' },
+        {
+          text: 'MACアドレス',
+          value: 'ID',
+          width: '10%',
+          filter: (value) => {
+            if (!this.mac) return true
+            return value.includes(this.mac)
+          },
+        },
+        {
+          text: '名前',
+          value: 'Name',
+          width: '15%',
+          filter: (value) => {
+            if (!this.name) return true
+            return value.includes(this.name)
+          },
+        },
+        {
+          text: 'IPアドレス',
+          value: 'IP',
+          width: '10%',
+          filter: (value) => {
+            if (!this.ip) return true
+            return value.includes(this.ip)
+          },
+        },
+        {
+          text: 'ベンダー',
+          value: 'Vendor',
+          width: '15%',
+          filter: (value) => {
+            if (!this.vendor) return true
+            return value.includes(this.vendor)
+          },
+        },
         { text: '初回', value: 'First', width: '15%' },
         { text: '最終', value: 'Last', width: '15%' },
         { text: '操作', value: 'actions', width: '10%' },
@@ -237,6 +280,10 @@ export default {
       vendorDialog: false,
       selected: {},
       infoDialog: false,
+      mac: '',
+      name: '',
+      ip: '',
+      vendor: '',
     }
   },
   methods: {
