@@ -4,13 +4,6 @@
       <v-card-title>
         ノードリスト
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
       </v-card-title>
       <v-alert v-model="deleteError" color="error" dense dismissible>
         ノードを削除できませんでした
@@ -21,7 +14,6 @@
       <v-data-table
         :headers="headers"
         :items="nodes"
-        :search="search"
         dense
         :items-per-page="15"
         sort-by="State"
@@ -45,6 +37,24 @@
           </v-icon>
           <v-icon small @click="editNodeFunc(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deleteNodeFunc(item)"> mdi-delete </v-icon>
+        </template>
+        <template v-slot:[`body.append`]>
+          <tr>
+            <td>
+              <v-select v-model="state" :items="stateList" label="state">
+              </v-select>
+            </td>
+            <td>
+              <v-text-field v-model="name" label="name"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="ip" label="ip"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="descr" label="descr"></v-text-field>
+            </td>
+            <td></td>
+          </tr>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -152,15 +162,59 @@ export default {
       updateError: false,
       editNode: {},
       deleteNode: {},
-      search: '',
       headers: [
-        { text: '状態', value: 'State', width: '12%' },
-        { text: '名前', value: 'Name', width: '23%' },
-        { text: 'IPアドレス', value: 'IP', width: '15%' },
-        { text: '説明', value: 'Descr', width: '35%' },
+        {
+          text: '状態',
+          value: 'State',
+          width: '12%',
+          filter: (value) => {
+            if (!this.state) return true
+            return this.state === value
+          },
+        },
+        {
+          text: '名前',
+          value: 'Name',
+          width: '23%',
+          filter: (value) => {
+            if (!this.name) return true
+            return value.includes(this.name)
+          },
+        },
+        {
+          text: 'IPアドレス',
+          value: 'IP',
+          width: '15%',
+          filter: (value) => {
+            if (!this.ip) return true
+            return value.includes(this.ip)
+          },
+        },
+        {
+          text: '説明',
+          value: 'Descr',
+          width: '35%',
+          filter: (value) => {
+            if (!this.descr) return true
+            return value.includes(this.descr)
+          },
+        },
         { text: '操作', value: 'actions', width: '15%' },
       ],
       nodes: [],
+      state: '',
+      name: '',
+      ip: '',
+      descr: '',
+      stateList: [
+        { text: '', value: '' },
+        { text: '重度', value: 'high' },
+        { text: '軽度', value: 'low' },
+        { text: '注意', value: 'warn' },
+        { text: '正常', value: 'normal' },
+        { text: '復帰', value: 'repair' },
+        { text: '不明', value: 'unknown' },
+      ],
     }
   },
   methods: {
