@@ -170,7 +170,6 @@ const getScoreIconName = (s) => {
 
 // Service Name Map
 const serviceNameArray = [
-  ["submission/tcp", "MAIL"],
   ["http/tcp", "WEB"],
   ["https/tcp", "WEB"],
   ["ldap/tcp", "LDAP"],
@@ -180,6 +179,7 @@ const serviceNameArray = [
   ["snmp/udp", "SNMP"],
   ["ntp/udp", "NTP"],
   ["smtp/tcp", "MAIL"],
+  ["submission/tcp", "MAIL"],
   ["pop3/tcp", "MAIL"],
   ["pop3s/tcp", "MAIL"],
   ["imap/tcp", "MAIL"],
@@ -211,17 +211,19 @@ function getServiceName(s) {
   if (s.indexOf("/icmp") > 0) {
     return "ICMP"
   }
-  return 'Other'
+  return ''
 }
 
-function getServiceNames(services) {
+function getServiceInfo(services) {
   const sns = new Map();
   for (let i = 0; i < services.length; i++) {
     const n = getServiceName(services[i]);
-    sns.set(n, true);
+    if (n) {
+      sns.set(n, true);
+    }
   }
   const ks = Array.from(sns.keys())
-  while (ks.length > 5) {
+  while (ks.length > 10) {
     ks.pop()
   }
   return ks.join() + "(" + services.length + ")"
@@ -269,6 +271,6 @@ export default (context, inject) => {
   inject('filterEventLevelList', filterEventLevelList)
   inject('filterEventTypeList', filterEventTypeList)
   inject('timeFormat', timeFormat)
-  inject('getServiceNames', getServiceNames)
+  inject('getServiceInfo', getServiceInfo)
   inject('getLocInfo', getLocInfo)
 }

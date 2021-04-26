@@ -14,6 +14,7 @@
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
+        class="log"
       >
         <template v-slot:[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
@@ -53,7 +54,10 @@
             <td>
               <v-text-field v-model="country" label="country"></v-text-field>
             </td>
-            <td colspan="6"></td>
+            <td>
+              <v-text-field v-model="service" label="service"></v-text-field>
+            </td>
+            <td colspan="4"></td>
           </tr>
         </template>
       </v-data-table>
@@ -301,7 +305,7 @@ export default {
       )
       const sl = Object.keys(s.Services)
       s.ServiceCount = sl.length
-      s.ServiceInfo = this.$getServiceNames(sl)
+      s.ServiceInfo = this.$getServiceInfo(sl)
       const loc = this.$getLocInfo(s.Loc)
       s.LatLong = loc.LatLong
       s.LocInfo = loc.LocInfo
@@ -315,7 +319,7 @@ export default {
         {
           text: 'サーバー',
           value: 'ServerName',
-          width: '19%',
+          width: '20%',
           filter: (value) => {
             if (!this.name) return true
             return value.includes(this.name)
@@ -324,17 +328,35 @@ export default {
         {
           text: '国',
           value: 'Country',
-          width: '8%',
+          width: '10%',
           filter: (value) => {
             if (!this.country) return true
             return value.includes(this.country)
           },
         },
-        { text: 'サービス数', value: 'ServiceCount', width: '12%' },
-        { text: '回数', value: 'Count', width: '8%' },
-        { text: '通信量', value: 'Bytes', width: '8%' },
-        { text: '初回', value: 'First', width: '12%' },
-        { text: '最終', value: 'Last', width: '12%' },
+        {
+          text: 'サービス',
+          value: 'ServiceInfo',
+          width: '15%',
+          filter: (value) => {
+            if (!this.service) return true
+            return value.includes(this.service)
+          },
+          sort: (a, b) => {
+            const re = /\d+/
+            const aa = a.match(re)
+            const ba = b.match(re)
+            if (!aa || !ba) return 0
+            const an = aa[0] * 1
+            const bn = ba[0] * 1
+            if (an < bn) return -1
+            if (an > bn) return 1
+            return 0
+          },
+        },
+        { text: '回数', value: 'Count', width: '10%' },
+        { text: '通信量', value: 'Bytes', width: '10%' },
+        { text: '最終', value: 'Last', width: '15%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
       servers: [],
@@ -349,6 +371,7 @@ export default {
       countryChartDialog: false,
       name: '',
       country: '',
+      service: '',
     }
   },
   methods: {

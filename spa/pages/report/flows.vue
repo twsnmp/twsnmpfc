@@ -4,24 +4,17 @@
       <v-card-title>
         フロー
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
       </v-card-title>
       <v-data-table
         :headers="headers"
         :items="flows"
-        :search="search"
         :items-per-page="15"
         sort-by="Score"
         sort-asec
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
+        class="log"
       >
         <template v-slot:[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
@@ -58,6 +51,24 @@
           </v-icon>
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
+        </template>
+        <template v-slot:[`body.append`]>
+          <tr>
+            <td></td>
+            <td>
+              <v-text-field v-model="client" label="client"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="server" label="server"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="country" label="country"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="service" label="service"></v-text-field>
+            </td>
+            <td colspan="5"></td>
+          </tr>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -283,8 +294,8 @@
                 <td>{{ formatBytes(selected.Bytes) }}</td>
               </tr>
               <tr>
-                <td>サービス概要</td>
-                <td>{{ selected.ServiceInfo }}</td>
+                <td>サービス数</td>
+                <td>{{ selected.ServiceCount }}</td>
               </tr>
               <tr>
                 <td>サービス詳細</td>
@@ -401,7 +412,7 @@ export default {
       )
       const sl = Object.keys(f.Services)
       f.ServiceCount = sl.length
-      f.ServiceInfo = this.$getServiceNames(sl)
+      f.ServiceInfo = this.$getServiceInfo(sl)
       let loc = this.$getLocInfo(f.ClientLoc)
       f.ClientLatLong = loc.LatLong
       f.ClientLocInfo = loc.LocInfo
@@ -417,10 +428,53 @@ export default {
       search: '',
       headers: [
         { text: '信用スコア', value: 'Score', width: '10%' },
-        { text: 'クライアント', value: 'ClientName', width: '16%' },
-        { text: 'サーバー', value: 'ServerName', width: '16%' },
-        { text: '国', value: 'Country', width: '8%' },
-        { text: 'サービス', value: 'ServiceCount', width: '12%' },
+        {
+          text: 'クライアント',
+          value: 'ClientName',
+          width: '16%',
+          filter: (value) => {
+            if (!this.client) return true
+            return value.includes(this.client)
+          },
+        },
+        {
+          text: 'サーバー',
+          value: 'ServerName',
+          width: '16%',
+          filter: (value) => {
+            if (!this.server) return true
+            return value.includes(this.server)
+          },
+        },
+        {
+          text: '国',
+          value: 'Country',
+          width: '8%',
+          filter: (value) => {
+            if (!this.country) return true
+            return value.includes(this.country)
+          },
+        },
+        {
+          text: 'サービス',
+          value: 'ServiceInfo',
+          width: '12%',
+          filter: (value) => {
+            if (!this.service) return true
+            return value.includes(this.service)
+          },
+          sort: (a, b) => {
+            const re = /\d+/
+            const aa = a.match(re)
+            const ba = b.match(re)
+            if (!aa || !ba) return 0
+            const an = aa[0] * 1
+            const bn = ba[0] * 1
+            if (an < bn) return -1
+            if (an > bn) return 1
+            return 0
+          },
+        },
         { text: '回数', value: 'Count', width: '8%' },
         { text: '通信量', value: 'Bytes', width: '8%' },
         { text: '最終', value: 'Last', width: '12%' },
@@ -440,7 +494,7 @@ export default {
       filterDialog: false,
       over: false,
       filter: {
-        Cervice: '',
+        Service: '',
         ClientName: '',
         ClientIP: '',
         CerverName: '',
@@ -468,6 +522,10 @@ export default {
         { text: 'ICMP非推奨', value: '-1/icmp' },
         { text: 'PING', value: '8/icmp' },
       ],
+      client: '',
+      server: '',
+      country: '',
+      service: '',
     }
   },
   computed: {
