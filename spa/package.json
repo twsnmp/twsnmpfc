@@ -20,6 +20,7 @@
     "numeral": "^2.0.6",
     "nuxt": "^2.14.6",
     "p5": "^1.2.0",
+    "vue-json-excel": "^0.3.0",
     "world-map-geojson": "^1.0.2"
   },
   "devDependencies": {

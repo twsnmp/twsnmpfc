@@ -27,6 +27,7 @@ export default {
   plugins: [
     '@/plugins/common.js',
     '@/plugins/map.js',
+    '@/plugins/json-excel.js',
     '@/plugins/echarts/logcount.js',
     '@/plugins/echarts/loglevel.js',
     '@/plugins/echarts/logstate.js',

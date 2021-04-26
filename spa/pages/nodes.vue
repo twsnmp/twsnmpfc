@@ -63,6 +63,30 @@
           <v-icon>mdi-cached</v-icon>
           すべて再確認
         </v-btn>
+        <download-excel
+          :data="nodes"
+          type="csv"
+          name="TWSNMP_FC_Node_List.csv"
+          header="TSNMP FC Node List"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :data="nodes"
+          type="excel"
+          name="TWSNMP_FC_Node_List.xls"
+          header="TSNMP FC Node List"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-microsoft-excel</v-icon>
+            Excel
+          </v-btn>
+        </download-excel>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           更新
