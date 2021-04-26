@@ -4,18 +4,10 @@
       <v-card-title>
         サーバー
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
       </v-card-title>
       <v-data-table
         :headers="headers"
         :items="servers"
-        :search="search"
         :items-per-page="15"
         sort-by="Score"
         sort-asec
@@ -51,6 +43,18 @@
           </v-icon>
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
+        </template>
+        <template v-slot:[`body.append`]>
+          <tr>
+            <td></td>
+            <td>
+              <v-text-field v-model="name" label="name"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="country" label="country"></v-text-field>
+            </td>
+            <td colspan="6"></td>
+          </tr>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -306,11 +310,26 @@ export default {
   },
   data() {
     return {
-      search: '',
       headers: [
         { text: '信用スコア', value: 'Score', width: '10%' },
-        { text: 'サーバー', value: 'ServerName', width: '19%' },
-        { text: '国', value: 'Country', width: '8%' },
+        {
+          text: 'サーバー',
+          value: 'ServerName',
+          width: '19%',
+          filter: (value) => {
+            if (!this.name) return true
+            return value.includes(this.name)
+          },
+        },
+        {
+          text: '国',
+          value: 'Country',
+          width: '8%',
+          filter: (value) => {
+            if (!this.country) return true
+            return value.includes(this.country)
+          },
+        },
         { text: 'サービス数', value: 'ServiceCount', width: '12%' },
         { text: '回数', value: 'Count', width: '8%' },
         { text: '通信量', value: 'Bytes', width: '8%' },
@@ -328,6 +347,8 @@ export default {
       resetError: false,
       mapChartDialog: false,
       countryChartDialog: false,
+      name: '',
+      country: '',
     }
   },
   methods: {
