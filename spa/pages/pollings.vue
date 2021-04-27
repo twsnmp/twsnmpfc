@@ -103,6 +103,30 @@
           <v-icon>mdi-delete</v-icon>
           一括削除
         </v-btn>
+        <download-excel
+          :data="pollings"
+          type="csv"
+          name="TWSNMP_FC_Polling_List.csv"
+          header="TSNMP FC Polling List"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :data="pollings"
+          type="xls"
+          name="TWSNMP_FC_Polling_List.xls"
+          header="TSNMP FC Polling List"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-microsoft-excel</v-icon>
+            Excel
+          </v-btn>
+        </download-excel>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           更新

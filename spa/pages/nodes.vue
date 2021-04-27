@@ -77,7 +77,7 @@
         </download-excel>
         <download-excel
           :data="nodes"
-          type="excel"
+          type="xls"
           name="TWSNMP_FC_Node_List.xls"
           header="TSNMP FC Node List"
           class="v-btn"
