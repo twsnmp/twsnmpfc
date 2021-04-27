@@ -107,8 +107,16 @@
         自動発見を開始できません
       </v-alert>
       <v-card-text>
-        <v-text-field v-model="discover.Conf.StartIP" label="開始IP" required />
-        <v-text-field v-model="discover.Conf.EndIP" label="終了IP" required />
+        <v-text-field
+          v-model="discover.Conf.StartIP"
+          label="開始IP"
+          :rules="startIPRules"
+        />
+        <v-text-field
+          v-model="discover.Conf.EndIP"
+          label="終了IP"
+          :rules="endIPRules"
+        />
         <v-slider
           v-model="discover.Conf.Timeout"
           label="タイムアウト(Sec)"
@@ -272,6 +280,23 @@ export default {
           width: '40%',
         },
       ],
+      startIPRules: [
+        (v) => !!v || '開始IPは必須です。',
+        (v) =>
+          /^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/.test(
+            v
+          ) || 'IPアドレスを指定してください。',
+      ],
+      endIPRules: [
+        (v) => !!v || '終了IPは必須です。',
+        (v) =>
+          /^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/.test(
+            v
+          ) || 'IPアドレスを指定してください。',
+        (v) => {
+          return this.cmpIP(v) || '開始IP以降のアドレスを指定してください。'
+        },
+      ],
     }
   },
   computed: {
@@ -376,6 +401,19 @@ export default {
     },
     filterAutoAdd(value, search, item) {
       return item.AutoMode !== 'disable'
+    },
+    cmpIP(b) {
+      const aa = this.discover.Conf.StartIP.split('.')
+      const ba = b.split('.')
+      if (aa.length !== 4 || ba.length !== 4) {
+        return false
+      }
+      for (let i = 0; i < 4; i++) {
+        if (aa[i] * 1 > ba[i] * 1) {
+          return false
+        }
+      }
+      return true
     },
   },
 }
