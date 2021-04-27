@@ -31,6 +31,30 @@
           <v-icon>mdi-file-find</v-icon>
           取得
         </v-btn>
+        <download-excel
+          :data="items"
+          type="csv"
+          name="TWSNMP_FC_MIB.csv"
+          header="TWSNMP FC MIB"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :data="items"
+          type="xls"
+          name="TWSNMP_FC_MIB.xls"
+          header="TWSNMP FC MIB"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-microsoft-excel</v-icon>
+            Excel
+          </v-btn>
+        </download-excel>
         <v-btn color="normal" dark @click="$router.go(-1)">
           <v-icon>mdi-arrow-left</v-icon>
           戻る
