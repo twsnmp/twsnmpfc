@@ -51,7 +51,7 @@
           :data="logs"
           type="csv"
           name="TWSNMP_FC_Event_Log.csv"
-          header="TSNMP FC Event Log"
+          header="TWSNMP FC Event Log"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -63,7 +63,7 @@
           :data="logs"
           type="xls"
           name="TWSNMP_FC_Event_Log.xls"
-          header="TSNMP FC Event Log"
+          header="TWSNMP FC Event Log"
           class="v-btn"
         >
           <v-btn color="primary" dark>

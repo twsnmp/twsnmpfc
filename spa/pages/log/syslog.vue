@@ -47,6 +47,30 @@
           <v-icon>mdi-magnify</v-icon>
           検索条件
         </v-btn>
+        <download-excel
+          :data="logs"
+          type="csv"
+          name="TWSNMP_FC_Syslog.csv"
+          header="TWSNMP FC Syslog"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :data="logs"
+          type="xls"
+          name="TWSNMP_FC_Sysog.xls"
+          header="TWSNMP FC Syslog"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-microsoft-excel</v-icon>
+            Excel
+          </v-btn>
+        </download-excel>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           再検索

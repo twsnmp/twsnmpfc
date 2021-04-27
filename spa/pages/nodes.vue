@@ -67,7 +67,7 @@
           :data="nodes"
           type="csv"
           name="TWSNMP_FC_Node_List.csv"
-          header="TSNMP FC Node List"
+          header="TWSNMP FC Node List"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -79,7 +79,7 @@
           :data="nodes"
           type="xls"
           name="TWSNMP_FC_Node_List.xls"
-          header="TSNMP FC Node List"
+          header="TWSNMP FC Node List"
           class="v-btn"
         >
           <v-btn color="primary" dark>

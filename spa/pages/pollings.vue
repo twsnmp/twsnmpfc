@@ -107,7 +107,7 @@
           :data="pollings"
           type="csv"
           name="TWSNMP_FC_Polling_List.csv"
-          header="TSNMP FC Polling List"
+          header="TWSNMP FC Polling List"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -119,7 +119,7 @@
           :data="pollings"
           type="xls"
           name="TWSNMP_FC_Polling_List.xls"
-          header="TSNMP FC Polling List"
+          header="TWSNMP FC Polling List"
           class="v-btn"
         >
           <v-btn color="primary" dark>
