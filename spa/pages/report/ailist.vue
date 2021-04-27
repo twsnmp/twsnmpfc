@@ -50,6 +50,30 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <download-excel
+          :data="ai"
+          type="csv"
+          name="TWSNMP_FC_AI_List.csv"
+          header="TWSNMP FC AI List"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :data="ai"
+          type="xls"
+          name="TWSNMP_FC_AI_List.xls"
+          header="TWSNMP FC AI List"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-microsoft-excel</v-icon>
+            Excel
+          </v-btn>
+        </download-excel>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           更新

@@ -65,6 +65,30 @@
             </v-list-item>
           </v-list>
         </v-menu>
+        <download-excel
+          :data="users"
+          type="csv"
+          name="TWSNMP_FC_User_List.csv"
+          header="TWSNMP FC User List"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :data="users"
+          type="xls"
+          name="TWSNMP_FC_User_List.xls"
+          header="TWSNMP FC User List"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-microsoft-excel</v-icon>
+            Excel
+          </v-btn>
+        </download-excel>
         <v-btn color="error" dark @click="resetDialog = true">
           <v-icon>mdi-calculator</v-icon>
           再計算

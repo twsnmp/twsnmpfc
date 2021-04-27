@@ -38,6 +38,30 @@
           <v-icon>mdi-google-maps</v-icon>
           地図
         </v-btn>
+        <download-excel
+          :data="info"
+          type="csv"
+          name="TWSNMP_FC_Addr_Info.csv"
+          header="TWSNMP FC Address Info"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :data="info"
+          type="xls"
+          name="TWSNMP_FC_Addr_Info.xls"
+          header="TWSNMP FC Address Info"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-microsoft-excel</v-icon>
+            Excel
+          </v-btn>
+        </download-excel>
         <v-btn color="normal" dark @click="$router.go(-1)">
           <v-icon>mdi-arrow-left</v-icon>
           戻る
