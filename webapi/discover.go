@@ -27,6 +27,10 @@ func postDiscoverStart(c echo.Context) error {
 		log.Printf("start discover err=%v", err)
 		return echo.ErrBadRequest
 	}
+	if err := c.Validate(dc); err != nil {
+		log.Printf("start discover err=%v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
 	if discover.Stat.Running {
 		log.Printf("discover already start")
 		return echo.ErrBadRequest

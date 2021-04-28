@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/twsnmp/twsnmpfc/backend"
@@ -55,7 +56,7 @@ func Stop() {
 func setup(p *WebAPI) {
 	e.HideBanner = true
 	e.HidePort = true
-
+	e.Validator = &twsnmpfcValidator{validator: validator.New()}
 	// Middleware
 	logger := middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format:           "${time_custom} ${method} ${status} ${uri} ${remote_ip} ${bytes_in} ${bytes_out} ${latency_human}\n",
@@ -225,4 +226,15 @@ func getServerCert(p *WebAPI) tls.Certificate {
 		log.Printf("getServerCert err=%v", err)
 	}
 	return cert
+}
+
+type twsnmpfcValidator struct {
+	validator *validator.Validate
+}
+
+func (v *twsnmpfcValidator) Validate(i interface{}) error {
+	if err := v.validator.Struct(i); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return nil
 }
