@@ -57,14 +57,16 @@
           <v-text-field
             v-model="report.AllowMail"
             label="安全なメールサーバー"
+            hint="IPアドレスをカンマ区切りで指定"
           />
           <v-text-field
             v-model="report.AllowLDAP"
             label="安全なAD/LDAPサーバー"
+            hint="IPアドレスをカンマ区切りで指定"
           />
           <v-slider
             v-model="report.DropFlowThTCPPacket"
-            label="レポートで利用するフローデータの最初パケット数"
+            label="レポートで利用するフローデータの最小パケット数"
             class="align-center"
             max="100"
             min="0"
@@ -84,7 +86,7 @@
           </v-slider>
           <v-slider
             v-model="report.RetentionTimeForSafe"
-            label="安全なサーバー、フローレポートの保持時間(時間)"
+            label="安全なデバイス、サーバー、フローの保持時間(時間)"
             class="align-center"
             max="240"
             min="3"
@@ -172,6 +174,7 @@ export default {
         { text: 'CIFS', value: 'microsoft-ds/tcp' },
         { text: 'NFS', value: 'nfsd/tcp' },
         { text: 'ICMP到達不能', value: '3/icmp' },
+        { text: 'ICMP非推奨', value: '-1/icmp' },
         { text: 'ICMPリダイレクト', value: '5/icmp' },
       ],
     }

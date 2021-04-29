@@ -60,7 +60,7 @@
                 <v-icon>mdi-chart-bar</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>ユーザー別</v-list-item-title>
+                <v-list-item-title>サーバー別</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -142,7 +142,7 @@
     <v-dialog v-model="usersChartDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
-          <span class="headline">ユーザー別</span>
+          <span class="headline">サーバー別</span>
         </v-card-title>
         <div id="usersChart" style="width: 800px; height: 400px"></div>
         <v-card-actions>

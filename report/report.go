@@ -150,17 +150,19 @@ func reportBackend(ctx context.Context) {
 func checkOldReport() {
 	safeOld := time.Now().Add(time.Hour * time.Duration(-1*datastore.ReportConf.RetentionTimeForSafe)).UnixNano()
 	delOld := time.Now().AddDate(0, 0, -datastore.MapConf.LogDays).UnixNano()
+	log.Println("start delete old report")
 	checkOldServers(safeOld, delOld)
 	checkOldFlows(safeOld, delOld)
-	checkOldDevices(delOld)
+	checkOldDevices(safeOld, delOld)
 	checkOldUsers(delOld)
+	log.Println("end delete old report")
 }
 
 func checkOldServers(safeOld, delOld int64) {
 	count := 0
 	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
 		if s.LastTime < safeOld {
-			if s.LastTime < delOld || s.Score > 55.0 {
+			if s.LastTime < delOld || s.Score > 50.0 || s.Count < 10 {
 				datastore.DeleteReport("servers", s.ID)
 				count++
 			}
@@ -168,7 +170,7 @@ func checkOldServers(safeOld, delOld int64) {
 		return true
 	})
 	if count > 0 {
-		log.Printf("Delete Severs=%d", count)
+		log.Printf("report delete severs=%d", count)
 	}
 }
 
@@ -176,7 +178,7 @@ func checkOldFlows(safeOld, delOld int64) {
 	count := 0
 	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
 		if f.LastTime < safeOld {
-			if f.LastTime < delOld || f.Score > 55.0 {
+			if f.LastTime < delOld || f.Score > 50.0 || f.Count < 10 {
 				datastore.DeleteReport("flows", f.ID)
 				count++
 			}
@@ -184,21 +186,23 @@ func checkOldFlows(safeOld, delOld int64) {
 		return true
 	})
 	if count > 0 {
-		log.Printf("Delete Flows=%d", count)
+		log.Printf("report delete flows=%d", count)
 	}
 }
 
-func checkOldDevices(delOld int64) {
+func checkOldDevices(safeOld, delOld int64) {
 	count := 0
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		if d.LastTime < delOld {
-			datastore.DeleteReport("devices", d.ID)
-			count++
+		if d.LastTime < safeOld {
+			if d.LastTime < delOld || (d.Score > 50.0 && d.LastTime == d.FirstTime) {
+				datastore.DeleteReport("devices", d.ID)
+				count++
+			}
 		}
 		return true
 	})
 	if count > 0 {
-		log.Printf("DeleteDevices=%d", count)
+		log.Printf("report delete devices=%d", count)
 	}
 }
 
@@ -212,7 +216,7 @@ func checkOldUsers(delOld int64) {
 		return true
 	})
 	if count > 0 {
-		log.Printf("Delete Users=%d", count)
+		log.Printf("delete users=%d", count)
 	}
 }
 
