@@ -21,7 +21,11 @@ func getDevices(c echo.Context) error {
 
 func deleteDevice(c echo.Context) error {
 	id := c.Param("id")
-	datastore.DeleteDevice(id)
+	if id == "all" {
+		go datastore.ClearReport("devices")
+	} else {
+		datastore.DeleteDevice(id)
+	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

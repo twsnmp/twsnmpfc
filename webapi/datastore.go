@@ -48,8 +48,3 @@ func deleteArp(c echo.Context) error {
 	datastore.DeleteArp()
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
-
-func deleteReport(c echo.Context) error {
-	go datastore.ClearAllReport()
-	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
-}

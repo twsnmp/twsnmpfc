@@ -1,6 +1,7 @@
 package datastore
 
 import (
+	"encoding/binary"
 	"fmt"
 	"log"
 	"net"
@@ -101,5 +102,14 @@ func IsPrivateIP(ip net.IP) bool {
 
 func IsGlobalUnicast(ips string) bool {
 	ip := net.ParseIP(ips)
-	return ip.IsGlobalUnicast()
+	if !ip.IsGlobalUnicast() {
+		return false
+	}
+	if ip.To4() == nil {
+		return true
+	}
+	last := make(net.IP, len(ip.To4()))
+	mask := ip.DefaultMask()
+	binary.BigEndian.PutUint32(last, binary.BigEndian.Uint32(ip.To4())|^binary.BigEndian.Uint32(net.IP(mask).To4()))
+	return !ip.Equal(last)
 }

@@ -339,42 +339,52 @@ func DeleteServer(id string) {
 	servers.Delete(id)
 }
 
-func ClearAllReport() error {
+func ClearReport(r string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
 	db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		if b != nil {
-			for _, r := range []string{"devices", "flows", "users", "servers"} {
-				_ = b.DeleteBucket([]byte(r))
-				_, _ = b.CreateBucketIfNotExists([]byte(r))
-			}
+			_ = b.DeleteBucket([]byte(r))
+			_, _ = b.CreateBucketIfNotExists([]byte(r))
 		}
 		return nil
 	})
-	devices.Range(func(k, v interface{}) bool {
-		devices.Delete(k)
-		return true
-	})
-	users.Range(func(k, v interface{}) bool {
-		users.Delete(k)
-		return true
-	})
-	flows.Range(func(k, v interface{}) bool {
-		flows.Delete(k)
-		return true
-	})
-	servers.Range(func(k, v interface{}) bool {
-		servers.Delete(k)
-		return true
-	})
+	if r == "devices" {
+		devices.Range(func(k, v interface{}) bool {
+			devices.Delete(k)
+			return true
+		})
+		return nil
+	}
+	if r == "users" {
+		users.Range(func(k, v interface{}) bool {
+			users.Delete(k)
+			return true
+		})
+		return nil
+	}
+	if r == "flows" {
+		flows.Range(func(k, v interface{}) bool {
+			flows.Delete(k)
+			return true
+		})
+		return nil
+	}
+	if r == "servers" {
+		servers.Range(func(k, v interface{}) bool {
+			servers.Delete(k)
+			return true
+		})
+	}
 	return nil
 }
 
 // LaodReportConf :
 func LaodReportConf() error {
 	ReportConf.RetentionTimeForSafe = 24
+	ReportConf.DropFlowThTCPPacket = 3
 	return db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		v := b.Get([]byte("report"))

@@ -131,8 +131,8 @@ func reportBackend(ctx context.Context) {
 		case <-timer.C:
 			{
 				log.Printf("start calc report score")
-				calcScore()
 				checkOldReport()
+				calcScore()
 				datastore.SaveReport(last)
 				last = time.Now().UnixNano()
 				log.Printf("end calc report score")
@@ -150,12 +150,12 @@ func reportBackend(ctx context.Context) {
 func checkOldReport() {
 	safeOld := time.Now().Add(time.Hour * time.Duration(-1*datastore.ReportConf.RetentionTimeForSafe)).UnixNano()
 	delOld := time.Now().AddDate(0, 0, -datastore.MapConf.LogDays).UnixNano()
-	log.Println("start delete old report")
+	log.Println("start check old report")
 	checkOldServers(safeOld, delOld)
 	checkOldFlows(safeOld, delOld)
 	checkOldDevices(safeOld, delOld)
 	checkOldUsers(delOld)
-	log.Println("end delete old report")
+	log.Println("end check old report")
 }
 
 func checkOldServers(safeOld, delOld int64) {

@@ -21,7 +21,11 @@ func getServers(c echo.Context) error {
 
 func deleteServer(c echo.Context) error {
 	id := c.Param("id")
-	datastore.DeleteServer(id)
+	if id == "all" {
+		go datastore.ClearReport("servers")
+	} else {
+		datastore.DeleteServer(id)
+	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

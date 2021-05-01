@@ -3,6 +3,7 @@ package report
 import (
 	"fmt"
 	"log"
+	"net"
 	"strings"
 	"time"
 
@@ -22,7 +23,6 @@ type flowReportEnt struct {
 func ReportFlow(src string, sp int, dst string, dp, prot int, pkts, bytes int64, t int64) {
 	if prot == 6 &&
 		pkts < int64(datastore.ReportConf.DropFlowThTCPPacket) {
-		log.Printf("drop flow pkts=%d", pkts)
 		return
 	}
 	flowReportCh <- &flowReportEnt{
@@ -73,51 +73,73 @@ func getFlowDir(fr *flowReportEnt) (server, client, service string) {
 	s2, ok2 := datastore.GetServiceName(fr.Prot, fr.DstPort)
 	if ok1 {
 		if ok2 {
-			if fr.SrcPort < fr.DstPort || !guc1 {
-				// ポート番号の小さい方を優先、または、マルチキャストはサーバーとする
-				server = fr.SrcIP
-				client = fr.DstIP
-				service = s1
-			} else if fr.SrcPort == fr.DstPort {
-				id := fmt.Sprintf("%s:%s", fr.DstIP, fr.SrcIP)
-				if datastore.GetFlow(id) != nil || !guc2 {
-					// 既に登録済みか、マルチキャストをサーバーとする
-					server = fr.DstIP
-					client = fr.SrcIP
-					service = s2
-				} else {
-					server = fr.SrcIP
-					client = fr.DstIP
-					service = s1
-				}
-			} else {
+			// 両方サービス名がわかる時は
+			if !guc2 || IsDstServer(fr) {
+				// マルチキャスト、アドレスの関係で判断してサーバーを決める
 				server = fr.DstIP
 				client = fr.SrcIP
 				service = s2
+			} else {
+				server = fr.SrcIP
+				client = fr.DstIP
+				service = s1
 			}
 		} else {
 			server = fr.SrcIP
 			client = fr.DstIP
 			service = s1
 		}
-	} else {
-		if ok2 {
-			server = fr.DstIP
-			client = fr.SrcIP
-			service = s2
-		} else {
-			if fr.SrcPort < fr.DstPort || !guc1 {
-				server = fr.SrcIP
-				client = fr.DstIP
-				service = s1
-			} else {
-				server = fr.DstIP
-				client = fr.SrcIP
-				service = s2
+	} else if ok2 {
+		server = fr.DstIP
+		client = fr.SrcIP
+		service = s2
+	}
+	//サービス名が不明は捨てる
+	return
+}
+
+// IsDstServer : Dstがサーバーならばtrueを返す
+func IsDstServer(fr *flowReportEnt) bool {
+	// サブネットマスクがわからないが、ブロードキャストぽいもので判定
+	if strings.HasSuffix(fr.DstIP, ".255") {
+		return true
+	}
+	if strings.HasSuffix(fr.SrcIP, ".255") {
+		return false
+	}
+	srcP := isPrivateAddr(fr.SrcIP)
+	dstP := isPrivateAddr(fr.DstIP)
+	if srcP && !dstP {
+		return true
+	}
+	if !srcP && dstP {
+		return false
+	}
+	// ポート番号の小さいほうをサーバーにする
+	return fr.SrcPort >= fr.DstPort
+}
+
+var privateAddrList = []*net.IPNet{}
+var privateAddrStrList = []string{
+	"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16 ",
+}
+
+func isPrivateAddr(a string) bool {
+	ip := net.ParseIP(a)
+	// Priavate Addressではない方
+	if len(privateAddrList) < 1 {
+		for _, ps := range privateAddrStrList {
+			if _, cidr, err := net.ParseCIDR(ps); err == nil {
+				privateAddrList = append(privateAddrList, cidr)
 			}
 		}
 	}
-	return
+	for _, cidr := range privateAddrList {
+		if cidr.Contains(ip) {
+			return true
+		}
+	}
+	return false
 }
 
 func getFlowDirICMP(fr *flowReportEnt) (server, client, service string) {
@@ -142,11 +164,43 @@ func getFlowDirICMP(fr *flowReportEnt) (server, client, service string) {
 	return
 }
 
+var udpPending = make(map[string]*flowReportEnt)
+
+// 10秒以内に逆方法の通信がないケースはレポート対象外
+func cleanupUDPPending() {
+	count := 0
+	for k, fr := range udpPending {
+		if fr.Time < time.Now().UnixNano()-(1000*1000*1000*10) {
+			count++
+			delete(udpPending, k)
+		}
+	}
+	if count > 0 {
+		log.Printf("delete pending udp flow count=%d", count)
+	}
+}
+
 func checkFlowReport(fr *flowReportEnt) {
 	server, client, service := getFlowDir(fr)
 	if server == "" {
-		log.Printf("Skip flow report %v", fr)
+		log.Printf("skip flow report %v", fr)
 		return
+	}
+	if strings.HasSuffix(service, "/udp") {
+		cleanupUDPPending()
+		id := fmt.Sprintf("%s:%s:%s", client, server, service)
+		if ufr, ok := udpPending[id]; ok {
+			if ufr.DstIP == fr.SrcIP {
+				//逆方向の通信がある場合だけ登録する
+				fr.Bytes += ufr.Bytes
+			} else {
+				ufr.Bytes += fr.Bytes
+				return
+			}
+		} else {
+			udpPending[id] = fr
+			return
+		}
 	}
 	checkServerReport(server, service, fr.Bytes, fr.Time)
 	now := time.Now().UnixNano()

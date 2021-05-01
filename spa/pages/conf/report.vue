@@ -136,7 +136,7 @@ export default {
         AllowMail: '',
         AllowLDAP: '',
         AllowLocalIP: '',
-        DropFlowThTCPPacket: 0,
+        DropFlowThTCPPacket: 3,
         RetentionTimeForSafe: 24,
       },
       denyCountries: '',
