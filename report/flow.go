@@ -186,7 +186,8 @@ func checkFlowReport(fr *flowReportEnt) {
 		log.Printf("skip flow report %v", fr)
 		return
 	}
-	if strings.HasSuffix(service, "/udp") {
+	if fr.Prot == 17 {
+		// UDP
 		cleanupUDPPending()
 		id := fmt.Sprintf("%s:%s:%s", client, server, service)
 		if ufr, ok := udpPending[id]; ok {
