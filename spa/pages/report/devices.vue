@@ -53,9 +53,9 @@
             <td>
               <v-text-field v-model="vendor" label="vendor"></v-text-field>
             </td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td colspan="3">
+              <v-switch v-model="excludeVM" label="仮想マシンを除外"></v-switch>
+            </td>
           </tr>
         </template>
       </v-data-table>
@@ -287,6 +287,7 @@ export default {
           value: 'Vendor',
           width: '15%',
           filter: (value) => {
+            if (this.excludeVM && value.includes('VMware')) return false
             if (!this.vendor) return true
             return value.includes(this.vendor)
           },
@@ -308,6 +309,7 @@ export default {
       name: '',
       ip: '',
       vendor: '',
+      excludeVM: false,
     }
   },
   methods: {
