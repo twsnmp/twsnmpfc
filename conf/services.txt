@@ -13919,3 +13919,14 @@ com-bardac-dw   48556/tcp    # com-bardac-dw
 #                           Nicholas J Howes <nick@ghostwood.org>
 #               48557-49150 Unassigned 
 #               49151       IANA Reserved
+# TWSNMP added
+wudo    7680/tcp
+meraki  7351/udp
+meraki  61111/udp
+logitech 54915/tcp
+logitech 54915/udp
+redis 6379/tcp
+android 5228/tcp
+android 5228/udp
+apple-apn   5223/tcp
+apple-apn   5223/udp

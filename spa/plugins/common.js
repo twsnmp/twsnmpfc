@@ -198,7 +198,12 @@ const serviceNameArray = [
   ["netbios-dgm/udp", "NETBIOS"],
   ["kerberos/tcp", "AD"],
   ["icmp", "ICMP"],
-  ["igmp", "IGMP"]
+  ["igmp", "IGMP"],
+  ["wudo/tcp", "WUDO"],
+  ["redis/tcp", "REDIS"],
+  ["radius/udp", "RADIUS"],
+  ["apple-apn/tcp", "APPLE"],
+  ["android/tcp", "ANDROID"],
 ]
 
 const serviceNameMap = new Map(serviceNameArray);
@@ -211,7 +216,7 @@ function getServiceName(s) {
   if (s.indexOf("/icmp") > 0) {
     return "ICMP"
   }
-  return ''
+  return 'Other'
 }
 
 function getServiceInfo(services) {

@@ -385,6 +385,10 @@
             label="サービス"
           ></v-select>
           <v-text-field
+            v-model="filter.ServiceReg"
+            label="サービス(正規表現)"
+          ></v-text-field>
+          <v-text-field
             v-model="filter.ClientName"
             label="クライアント名(正規表現)"
           ></v-text-field>
@@ -519,6 +523,7 @@ export default {
       over: false,
       filter: {
         Service: '',
+        ServiceReg: '',
         ClientName: '',
         ClientIP: '',
         CerverName: '',
@@ -526,6 +531,7 @@ export default {
       },
       filterServiceList: [
         { text: 'DNS', value: 'domain/udp' },
+        { text: 'DNS(TCP)', value: 'domain/tcp' },
         { text: 'DHCP', value: 'bootps/udp' },
         { text: 'TELNET', value: 'telnet/tcp' },
         { text: 'SSH', value: 'ssh/tcp' },
@@ -541,10 +547,17 @@ export default {
         { text: 'VNC', value: 'rfb/tcp' },
         { text: 'NTP', value: 'ntp/udp' },
         { text: 'SYSLOG', value: 'syslog/udp' },
+        { text: 'RADIUS', value: 'radius/udp' },
         { text: 'SNMP', value: 'snmp/udp' },
         { text: 'ICMP到達不能', value: '3/icmp' },
         { text: 'ICMP非推奨', value: '-1/icmp' },
         { text: 'PING', value: '8/icmp' },
+        { text: 'ICMPリダイレクト', value: '5/icmp' },
+        { text: 'APPLE-APN', value: 'apple-apn/tcp' },
+        { text: 'ADNDOID', value: 'android/tcp' },
+        { text: 'WINDOWS UPDATE', value: 'wudo/tcp' },
+        { text: '不明(TCP)', value: 'other/tcp' },
+        { text: '不明(UDP)', value: 'other/tcp' },
       ],
       client: '',
       server: '',
@@ -556,6 +569,7 @@ export default {
     hasFilter() {
       return (
         this.filter.Service ||
+        this.filter.ServiceReg ||
         this.filter.ClientName ||
         this.filter.ClientIP ||
         this.filter.ServerName ||
@@ -650,7 +664,8 @@ export default {
     },
     clearFilter() {
       this.filter = {
-        Cervice: '',
+        Service: '',
+        ServiceReg: '',
         ClientName: '',
         ClientIP: '',
         CerverName: '',

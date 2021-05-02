@@ -78,6 +78,10 @@ const showFlowsChart = (div, flows, filter) => {
   if (filter.ServerName) {
     filter.ServerNameReg = new RegExp(filter.ServerName)
   }
+  let serviceReg
+  if (filter.ServiceReg) {
+    serviceReg = new RegExp(filter.ServiceReg)
+  }
   let bOver = false
   const nodes = {}
   flows.forEach((f) => {
@@ -89,6 +93,17 @@ const showFlowsChart = (div, flows, filter) => {
       if (!f.Services || !f.Services[filter.Service]) {
         return
       }
+    }
+    if (serviceReg) {
+      let hit = false
+      const svs = Object.keys(f.Services)
+      for (let i = 0; i < svs.length; i++) {
+        if (svs[i].match(serviceReg)) {
+          hit = true
+          break
+        }
+      }
+      if (!hit) return
     }
     if (filter.ClientNameReg) {
       if (!f.ClientName.match(filter.ClinetNameReg)) {

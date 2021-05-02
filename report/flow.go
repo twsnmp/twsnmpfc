@@ -60,14 +60,21 @@ func ResetServersScore() {
 func getFlowDir(fr *flowReportEnt) (server, client, service string) {
 	guc1 := datastore.IsGlobalUnicast(fr.SrcIP)
 	guc2 := datastore.IsGlobalUnicast(fr.DstIP)
-	if !guc1 && !guc2 && !strings.HasPrefix(fr.SrcIP, "fe80::") {
-		// 両方ユニキャストでない場合は含めない。IPv6のリンクローカルは含める
-		log.Println("getFlowDir src and dst address is not unicast")
+	if !guc1 && !guc2 && !strings.HasPrefix(fr.SrcIP, "fe80::") &&
+		!strings.HasPrefix(fr.SrcIP, "169.254.") {
+		// 両方ユニキャストでない場合は含めない。IPv4,IPv6のリンクローカルは含める
+		log.Printf("src and dst address is not unicast %v", fr)
 		return
 	}
 	if fr.Prot == 1 {
 		// ICMP
 		return getFlowDirICMP(fr)
+	}
+	if fr.Prot == 2 {
+		server = fr.SrcIP
+		client = fr.DstIP
+		service = "igmp"
+		return
 	}
 	s1, ok1 := datastore.GetServiceName(fr.Prot, fr.SrcPort)
 	s2, ok2 := datastore.GetServiceName(fr.Prot, fr.DstPort)
@@ -93,9 +100,32 @@ func getFlowDir(fr *flowReportEnt) (server, client, service string) {
 		server = fr.DstIP
 		client = fr.SrcIP
 		service = s2
+	} else {
+		// サービスが不明の場合で他のプロトコルで登録済みの場合
+		if datastore.GetFlow(fmt.Sprintf("%s:%s", fr.SrcIP, fr.DstIP)) != nil {
+			server = fr.DstIP
+			client = fr.SrcIP
+			service = getOtherProtName(fr.Prot)
+		} else if datastore.GetFlow(fmt.Sprintf("%s:%s", fr.DstIP, fr.SrcIP)) != nil {
+			server = fr.SrcIP
+			client = fr.DstIP
+			service = getOtherProtName(fr.Prot)
+		} else {
+			//サービス名が不明で未登録は捨てる
+			log.Printf("skip flow report no service %v", fr)
+		}
 	}
-	//サービス名が不明は捨てる
 	return
+}
+
+func getOtherProtName(prot int) string {
+	if prot == 6 {
+		return "other/tcp"
+	}
+	if prot == 17 {
+		return "other/udp"
+	}
+	return fmt.Sprintf("other/%d", prot)
 }
 
 // IsDstServer : Dstがサーバーならばtrueを返す
@@ -175,7 +205,7 @@ func cleanupUDPPending() {
 			delete(udpPending, k)
 		}
 	}
-	if count > 0 {
+	if count > 10 {
 		log.Printf("delete pending udp flow count=%d", count)
 	}
 }
@@ -183,10 +213,9 @@ func cleanupUDPPending() {
 func checkFlowReport(fr *flowReportEnt) {
 	server, client, service := getFlowDir(fr)
 	if server == "" {
-		log.Printf("skip flow report %v", fr)
 		return
 	}
-	if fr.Prot == 17 {
+	if fr.Prot == 17 && datastore.IsGlobalUnicast(fr.DstIP) {
 		// UDP
 		cleanupUDPPending()
 		id := fmt.Sprintf("%s:%s:%s", client, server, service)
