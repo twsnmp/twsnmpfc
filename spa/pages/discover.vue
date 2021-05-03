@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="discover.Stat.Running" max-width="600" class="mx-auto">
+  <v-card v-if="discover.Stat.Running" min-width="600px" width="600px">
     <v-card-title primary-title> 自動発見 </v-card-title>
     <v-list-item three-line>
       <v-list-item-content>
@@ -100,7 +100,7 @@
       </v-btn>
     </v-card-actions>
   </v-card>
-  <v-card v-else max-width="95%" class="mx-auto">
+  <v-card v-else min-width="600px" width="95%" class="mx-auto">
     <v-form>
       <v-card-title primary-title> 自動発見 </v-card-title>
       <v-alert v-model="error" color="error" dense dismissible>

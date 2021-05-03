@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card style="width: 100%">
+    <v-card min-width="900px">
       <v-card-title> ポーリング情報 </v-card-title>
       <v-simple-table dense>
         <template v-slot:default>

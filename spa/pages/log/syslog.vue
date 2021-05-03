@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card style="width: 100%">
+    <v-card min-width="1000px" width="100%">
       <v-card-title>
         Syslog
         <v-spacer></v-spacer>

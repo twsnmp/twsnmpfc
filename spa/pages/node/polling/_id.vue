@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card style="width: 100%">
+    <v-card min-width="1000px" width="95%">
       <v-card-title>
         ポーリング - {{ node.Name }}
         <v-spacer></v-spacer>

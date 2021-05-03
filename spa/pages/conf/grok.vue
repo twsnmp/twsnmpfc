@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="90%">
+    <v-card min-width="1000px" width="95%">
       <v-card-title primary-title> 抽出パターン(Grok)設定 </v-card-title>
       <v-alert v-if="$fetchState.error" color="error" dense>
         抽出パターン(Grok)を取得できません

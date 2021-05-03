@@ -25,6 +25,7 @@ func ReportDevice(mac, ip string, t int64) {
 
 func ResetDevicesScore() {
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+		d.Name, d.NodeID = findNodeInfoFromIP(d.IP)
 		setDevicePenalty(d)
 		d.UpdateTime = time.Now().UnixNano()
 		return true
