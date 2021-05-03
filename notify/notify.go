@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -446,13 +447,14 @@ func getMapInfo() []string {
 	return []string{
 		fmt.Sprintf("MAP状態=%s", state),
 		fmt.Sprintf("重度=%d,軽度=%d,注意=%d,復帰=%d,正常=%d,不明=%d", high, low, warn, repair, normal, unknown),
-		fmt.Sprintf("データベースサイズ=%d", datastore.DBStats.Size),
+		fmt.Sprintf("データベースサイズ=%s", humanize.Bytes(uint64(datastore.DBStats.Size))),
 	}
 }
 
 func getNewDevice() []string {
 	st := time.Now().Add(time.Duration(-48) * time.Hour).UnixNano()
 	ret := []string{}
+	ret = append(ret, "Name,IP,MAC,Vendor")
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 		if d.FirstTime >= st {
 			ret = append(ret, fmt.Sprintf("%s,%s,%s,%s", d.Name, d.IP, d.ID, d.Vendor))
@@ -465,9 +467,17 @@ func getNewDevice() []string {
 func getNewUser() []string {
 	st := time.Now().Add(time.Duration(-48) * time.Hour).UnixNano()
 	ret := []string{}
+	ret = append(ret, "User,Server,Server IP,Clients")
 	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 		if u.FirstTime >= st {
-			ret = append(ret, fmt.Sprintf("%s,%s,%s", u.UserID, u.ServerName, u.Server))
+			cls := ""
+			for k := range u.ClientMap {
+				if cls != "" {
+					cls += ";"
+				}
+				cls += k
+			}
+			ret = append(ret, fmt.Sprintf("%s,%s,%s,%s", u.UserID, u.ServerName, u.Server, cls))
 		}
 		return true
 	})
