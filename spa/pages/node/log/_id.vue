@@ -16,7 +16,7 @@
       <v-data-table
         :headers="headers"
         :items="logs"
-        :search="sarch"
+        :search="search"
         sort-by="TimeStr"
         sort-desc
         dense

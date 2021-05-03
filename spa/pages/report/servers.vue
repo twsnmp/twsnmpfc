@@ -102,7 +102,7 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="logs"
+          :data="servers"
           type="xls"
           name="TWSNMP_FC_Server_List.xls"
           header="TWSNMP FC Server List"
@@ -281,6 +281,15 @@
             <v-icon>mdi-chart-pie</v-icon>
             サービス割合
           </v-btn>
+          <v-btn
+            v-if="selected && !selected.NodeID"
+            color="primary"
+            dark
+            @click="openAddNodeDialog"
+          >
+            <v-icon>mdi-plus</v-icon>
+            マップに追加
+          </v-btn>
           <v-btn color="error" dark @click="doDelete">
             <v-icon>mdi-delete</v-icon>
             削除
@@ -303,6 +312,63 @@
           <v-btn color="normal" @click="servicePieChartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="addNodeDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ノード追加</span>
+        </v-card-title>
+        <v-alert v-model="addNodeError" color="error" dense dismissible>
+          ノードを追加できません。
+        </v-alert>
+        <v-card-text>
+          <v-text-field v-model="node.Name" label="名前"></v-text-field>
+          <v-text-field v-model="node.IP" label="IPアドレス"></v-text-field>
+          <v-select v-model="node.Icon" :items="$iconList" label="アイコン">
+          </v-select>
+          <v-select
+            v-model="node.AddrMode"
+            :items="$addrModeList"
+            label="アドレスモード"
+          >
+          </v-select>
+          <v-select
+            v-model="node.SnmpMode"
+            :items="$snmpModeList"
+            label="SNMPモード"
+          >
+          </v-select>
+          <v-text-field
+            v-model="node.Community"
+            label="Community"
+          ></v-text-field>
+          <v-text-field
+            v-model="node.User"
+            autocomplete="off"
+            label="ユーザー"
+          ></v-text-field>
+          <v-text-field
+            v-model="node.Password"
+            autocomplete="off"
+            type="password"
+            label="パスワード"
+          ></v-text-field>
+          <v-text-field v-model="node.PublicKey" label="公開鍵"></v-text-field>
+          <v-text-field v-model="node.URL" label="URL"></v-text-field>
+          <v-text-field v-model="node.Descr" label="説明"></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="addNode">
+            <v-icon>mdi-content-save</v-icon>
+            保存
+          </v-btn>
+          <v-btn color="normal" dark @click="addNodeDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -396,6 +462,9 @@ export default {
       name: '',
       country: '',
       service: '',
+      node: {},
+      addNodeDialog: false,
+      addNodeError: false,
     }
   },
   methods: {
@@ -475,6 +544,43 @@ export default {
     showGoogleMap(latLong) {
       const url = `https://www.google.com/maps/search/?api=1&query=${latLong}`
       window.open(url, '_blank')
+    },
+    openAddNodeDialog() {
+      if (!this.selected) {
+        return
+      }
+      this.node = {
+        ID: '',
+        Name: '新規ノード ' + this.selected.ServerName,
+        IP: this.selected.Server,
+        X: 64,
+        Y: 64,
+        Descr: '',
+        Icon: 'desktop',
+        MAC: '',
+        SnmpMode: '',
+        Community: '',
+        User: '',
+        Password: '',
+        PublicKey: '',
+        URL: '',
+        Type: '',
+        AddrMode: '',
+      }
+      this.addNodeDialog = true
+    },
+    addNode() {
+      const url = '/api/node/update'
+      this.$axios
+        .post(url, this.node)
+        .then(() => {
+          this.addNodeDialog = false
+          this.infoDialog = false
+          this.resetDialog = true
+        })
+        .catch((e) => {
+          this.addNodeError = true
+        })
     },
   },
 }

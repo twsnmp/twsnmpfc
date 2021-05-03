@@ -39,6 +39,8 @@ func ReportFlow(src string, sp int, dst string, dp, prot int, pkts, bytes int64,
 func ResetFlowsScore() {
 	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
 		f.Penalty = 0
+		f.ClientName, f.ClientNodeID = findNodeInfoFromIP(f.Client)
+		f.ServerName, f.ServerNodeID = findNodeInfoFromIP(f.Server)
 		setFlowPenalty(f)
 		f.UpdateTime = time.Now().UnixNano()
 		return true
@@ -49,6 +51,7 @@ func ResetFlowsScore() {
 func ResetServersScore() {
 	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
 		s.Penalty = 0
+		s.ServerName, s.ServerNodeID = findNodeInfoFromIP(s.Server)
 		setServerPenalty(s)
 		s.UpdateTime = time.Now().UnixNano()
 		return true

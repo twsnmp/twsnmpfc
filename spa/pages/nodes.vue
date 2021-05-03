@@ -123,9 +123,14 @@
             v-model="editNode.Community"
             label="Community"
           ></v-text-field>
-          <v-text-field v-model="editNode.User" label="ユーザー"></v-text-field>
+          <v-text-field
+            v-model="editNode.User"
+            autocomplete="off"
+            label="ユーザー"
+          ></v-text-field>
           <v-text-field
             v-model="editNode.Password"
+            autocomplete="off"
             type="password"
             label="パスワード"
           ></v-text-field>
