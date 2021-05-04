@@ -77,7 +77,7 @@
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
-              グラフ表示
+              グラフと集計
             </v-btn>
           </template>
           <v-list>
@@ -103,6 +103,14 @@
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title>国別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openUnknownPortDialog">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>不明ポート</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -418,6 +426,33 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="unknownPortDialog" persistent max-width="900px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">不明ポート一覧</span>
+        </v-card-title>
+        <v-alert v-model="unknownPortError" color="error" dense dismissible>
+          不明ポートリストを取得できません。
+        </v-alert>
+        <v-card-text>
+          <v-data-table
+            :headers="unkownPortsHeaders"
+            :items="unknownPorts"
+            sort-by="Count"
+            sort-asec
+            dense
+          >
+          </v-data-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="unknownPortDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -563,6 +598,13 @@ export default {
       server: '',
       country: '',
       service: '',
+      unkownPortsHeaders: [
+        { text: '名前', value: 'Name', width: '60%' },
+        { text: '回数', value: 'Count', width: '40%' },
+      ],
+      unknownPorts: [],
+      unknownPortDialog: false,
+      unknownPortError: true,
     }
   },
   computed: {
@@ -682,6 +724,17 @@ export default {
     showGoogleMap(latLong) {
       const url = `https://www.google.com/maps/search/?api=1&query=${latLong}`
       window.open(url, '_blank')
+    },
+    openUnknownPortDialog() {
+      this.unknownPortDialog = true
+      this.$axios
+        .get('/api/report/unknownport')
+        .then((r) => {
+          this.unknownPorts = r.data
+        })
+        .catch((e) => {
+          this.unknownPortError = true
+        })
     },
   },
 }

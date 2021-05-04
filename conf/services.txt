@@ -13930,3 +13930,12 @@ android 5228/tcp
 android 5228/udp
 apple-apn   5223/tcp
 apple-apn   5223/udp
+azure-sb     9350/tcp
+azure-sb     9351/tcp
+azure-sb     9352/tcp
+azure-sb     9353/tcp
+azure-sb     9354/tcp
+legato      9243/tcp
+wsus        8530/tcp
+wsus        8531/tcp
+azure-rdp    56130/tcp

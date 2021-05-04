@@ -33,3 +33,16 @@ func resetFlows(c echo.Context) error {
 	report.ResetFlowsScore()
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
+
+type unknownPortEnt struct {
+	Name  string
+	Count int64
+}
+
+func getUnknownPortList(c echo.Context) error {
+	r := []unknownPortEnt{}
+	for k, v := range report.UnKnownPortMap {
+		r = append(r, unknownPortEnt{Name: k, Count: v})
+	}
+	return c.JSON(http.StatusOK, r)
+}

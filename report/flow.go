@@ -114,8 +114,10 @@ func getFlowDir(fr *flowReportEnt) (server, client, service string) {
 			client = fr.DstIP
 			service = getOtherProtName(fr.Prot)
 		} else {
-			//サービス名が不明で未登録は捨てる
-			log.Printf("skip flow report no service %v", fr)
+			server = fr.DstIP
+			client = fr.SrcIP
+			service = getOtherProtName(fr.Prot)
+			addToUnknownPortMap(fr)
 		}
 	}
 	return
@@ -129,6 +131,32 @@ func getOtherProtName(prot int) string {
 		return "other/udp"
 	}
 	return fmt.Sprintf("other/%d", prot)
+}
+
+var UnKnownPortMap = make(map[string]int64)
+
+func addToUnknownPortMap(fr *flowReportEnt) {
+	var skey string
+	var dkey string
+	if fr.Prot == 6 {
+		skey = fmt.Sprintf("%d/tcp", fr.SrcPort)
+		dkey = fmt.Sprintf("%d/tcp", fr.DstPort)
+	} else if fr.Prot == 17 {
+		skey = fmt.Sprintf("%d/udp", fr.SrcPort)
+		dkey = fmt.Sprintf("%d/udp", fr.DstPort)
+	} else {
+		return
+	}
+	if _, ok := UnKnownPortMap[skey]; !ok {
+		UnKnownPortMap[skey] = 1
+	} else {
+		UnKnownPortMap[skey]++
+	}
+	if _, ok := UnKnownPortMap[dkey]; !ok {
+		UnKnownPortMap[dkey] = 1
+	} else {
+		UnKnownPortMap[dkey]++
+	}
 }
 
 // IsDstServer : Dstがサーバーならばtrueを返す
