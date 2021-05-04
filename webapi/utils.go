@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -37,6 +38,15 @@ func makeStringFilter(f string) *regexp.Regexp {
 		return nil
 	}
 	return r
+}
+
+func makeNumberFilter(f string) int {
+	if f != "" {
+		if n, err := strconv.Atoi(f); err == nil {
+			return n
+		}
+	}
+	return 0
 }
 
 func splitFilter(p string) []string {

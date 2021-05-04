@@ -273,6 +273,21 @@ function getLocInfo(l) {
   return r
 }
 
+const protocolFilterList = [
+  { text: '指定しない', value: '' },
+  { text: 'icmp', value: '1' },
+  { text: 'igmp', value: '2' },
+  { text: 'tcp', value: '6' },
+  { text: 'udp', value: '17' },
+]
+const tcpFlagFilterList = [
+  { text: '指定しない', value: '' },
+  { text: 'SYNのみ', value: `\\.S\\.{3}` },
+  { text: 'RSTあり', value: 'R' },
+  { text: 'FINなし', value: '[^F]' },
+  { text: '一般的(SYN/ACK/FIN)', value: 'FS\\.P*A+' },
+]
+
 export default (context, inject) => {
   inject('getIconName', getIconName)
   inject('getStateName', getStateName)
@@ -293,4 +308,6 @@ export default (context, inject) => {
   inject('timeFormat', timeFormat)
   inject('getServiceInfo', getServiceInfo)
   inject('getLocInfo', getLocInfo)
+  inject('protocolFilterList', protocolFilterList)
+  inject('tcpFlagFilterList', tcpFlagFilterList)
 }

@@ -107,7 +107,7 @@
             </v-list-item>
             <v-list-item @click="openUnknownPortDialog">
               <v-list-item-icon>
-                <v-icon>mdi-chart-bar</v-icon>
+                <v-icon>mdi-progress-question</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title>不明ポート</v-list-item-title>

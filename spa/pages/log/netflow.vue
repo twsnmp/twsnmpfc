@@ -195,17 +195,22 @@
             </v-menu>
           </v-row>
           <v-text-field
-            v-model="filter.Src"
-            label="送信元（正規表現）"
+            v-model="filter.IP"
+            label="IPアドレス（正規表現）"
           ></v-text-field>
-          <v-text-field
-            v-model="filter.Dst"
-            label="宛先（正規表現）"
-          ></v-text-field>
-          <v-text-field
-            v-model="filter.Protcol"
-            label="Protocol（正規表現）"
-          ></v-text-field>
+          <v-select
+            v-model="filter.Protocol"
+            :items="$protocolFilterList"
+            label="プロトコル"
+          >
+          </v-select>
+          <v-text-field v-model="filter.Port" label="ポート番号"></v-text-field>
+          <v-select
+            v-model="filter.TCPFlag"
+            :items="$tcpFlagFilterList"
+            label="TCPフラグ"
+          >
+          </v-select>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -246,10 +251,10 @@ export default {
         StartTime: '',
         EndDate: '',
         EndTime: '',
-        Src: '',
-        Dst: '',
+        IP: '',
+        Port: '',
         Protocol: '',
-        FlowType: 'netflow',
+        TCPFlag: '',
       },
       headers: [
         { text: '受信日時', value: 'TimeStr', width: '15%' },
