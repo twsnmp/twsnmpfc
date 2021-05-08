@@ -604,7 +604,7 @@ export default {
       ],
       unknownPorts: [],
       unknownPortDialog: false,
-      unknownPortError: true,
+      unknownPortError: false,
     }
   },
   computed: {
