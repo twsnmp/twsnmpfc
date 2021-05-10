@@ -2,100 +2,10 @@ package datastore
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"go.etcd.io/bbolt"
 )
-
-type ReportConfEnt struct {
-	DenyCountries        []string
-	DenyServices         []string
-	AllowDNS             string
-	AllowDHCP            string
-	AllowMail            string
-	AllowLDAP            string
-	AllowLocalIP         string
-	JapanOnly            bool
-	DropFlowThTCPPacket  int
-	RetentionTimeForSafe int
-}
-
-type DeviceEnt struct {
-	ID         string // MAC Addr
-	Name       string
-	IP         string
-	NodeID     string
-	Vendor     string
-	Score      float64
-	ValidScore bool
-	Penalty    int64
-	FirstTime  int64
-	LastTime   int64
-	UpdateTime int64
-}
-
-type UserClientEnt struct {
-	Total int32
-	Ok    int32
-}
-
-type UserEnt struct {
-	ID           string // User ID + Server
-	UserID       string
-	Server       string
-	ServerName   string
-	ServerNodeID string
-	ClientMap    map[string]UserClientEnt
-	Total        int
-	Ok           int
-	Score        float64
-	ValidScore   bool
-	Penalty      int64
-	FirstTime    int64
-	LastTime     int64
-	UpdateTime   int64
-}
-
-type ServerEnt struct {
-	ID           string //  ID Server
-	Server       string
-	Services     map[string]int64
-	Count        int64
-	Bytes        int64
-	ServerName   string
-	ServerNodeID string
-	Loc          string
-	Score        float64
-	ValidScore   bool
-	Penalty      int64
-	FirstTime    int64
-	LastTime     int64
-	UpdateTime   int64
-}
-
-type FlowEnt struct {
-	ID           string // ID Client:Server
-	Client       string
-	Server       string
-	Services     map[string]int64
-	Count        int64
-	Bytes        int64
-	ClientName   string
-	ClientNodeID string
-	ClientLoc    string
-	ServerName   string
-	ServerNodeID string
-	ServerLoc    string
-	Score        float64
-	ValidScore   bool
-	Penalty      int64
-	FirstTime    int64
-	LastTime     int64
-	UpdateTime   int64
-}
-
-var ReportConf ReportConfEnt
 
 func LoadReport() error {
 	if db == nil {
@@ -139,6 +49,16 @@ func LoadReport() error {
 				var f FlowEnt
 				if err := json.Unmarshal(v, &f); err == nil {
 					flows.Store(f.ID, &f)
+				}
+				return nil
+			})
+		}
+		b = r.Bucket([]byte("ips"))
+		if b != nil {
+			_ = b.ForEach(func(k, v []byte) error {
+				var i IPReportEnt
+				if err := json.Unmarshal(v, &i); err == nil {
+					ips.Store(i.IP, &i)
 				}
 				return nil
 			})
@@ -221,6 +141,23 @@ func SaveReport(last int64) error {
 			}
 			return true
 		})
+		r = b.Bucket([]byte("ips"))
+		ips.Range(func(k, v interface{}) bool {
+			i := v.(*IPReportEnt)
+			if i.UpdateTime < last {
+				return true
+			}
+			s, err := json.Marshal(i)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+				return true
+			}
+			err = r.Put([]byte(i.IP), s)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+			}
+			return true
+		})
 		return nil
 	})
 }
@@ -247,96 +184,10 @@ func DeleteReport(report, id string) error {
 		servers.Delete(id)
 	} else if report == "flows" {
 		flows.Delete(id)
+	} else if report == "ips" {
+		ips.Delete(id)
 	}
 	return nil
-}
-
-func GetDevice(id string) *DeviceEnt {
-	if v, ok := devices.Load(id); ok {
-		return v.(*DeviceEnt)
-	}
-	return nil
-}
-
-func AddDevice(d *DeviceEnt) {
-	devices.Store(d.ID, d)
-}
-
-func DeleteDevice(id string) {
-	devices.Delete(id)
-}
-
-func ForEachDevices(f func(*DeviceEnt) bool) {
-	devices.Range(func(k, v interface{}) bool {
-		d := v.(*DeviceEnt)
-		return f(d)
-	})
-}
-
-func GetUser(id string) *UserEnt {
-	if v, ok := users.Load(id); ok {
-		return v.(*UserEnt)
-	}
-	return nil
-}
-
-func AddUser(u *UserEnt) {
-	users.Store(u.ID, u)
-}
-
-func ForEachUsers(f func(*UserEnt) bool) {
-	users.Range(func(k, v interface{}) bool {
-		u := v.(*UserEnt)
-		return f(u)
-	})
-}
-
-func DeleteUser(id string) {
-	users.Delete(id)
-}
-
-func GetFlow(id string) *FlowEnt {
-	if v, ok := flows.Load(id); ok {
-		return v.(*FlowEnt)
-	}
-	return nil
-}
-
-func AddFlow(f *FlowEnt) {
-	flows.Store(f.ID, f)
-}
-
-func ForEachFlows(f func(*FlowEnt) bool) {
-	flows.Range(func(k, v interface{}) bool {
-		fl := v.(*FlowEnt)
-		return f(fl)
-	})
-}
-
-func DeleteFlow(id string) {
-	flows.Delete(id)
-}
-
-func GetServer(id string) *ServerEnt {
-	if v, ok := servers.Load(id); ok {
-		return v.(*ServerEnt)
-	}
-	return nil
-}
-
-func AddServer(s *ServerEnt) {
-	servers.Store(s.ID, s)
-}
-
-func ForEachServers(f func(*ServerEnt) bool) {
-	servers.Range(func(k, v interface{}) bool {
-		s := v.(*ServerEnt)
-		return f(s)
-	})
-}
-
-func DeleteServer(id string) {
-	servers.Delete(id)
 }
 
 func ClearReport(r string) error {
@@ -354,6 +205,13 @@ func ClearReport(r string) error {
 	if r == "devices" {
 		devices.Range(func(k, v interface{}) bool {
 			devices.Delete(k)
+			return true
+		})
+		return nil
+	}
+	if r == "ips" {
+		ips.Range(func(k, v interface{}) bool {
+			ips.Delete(k)
 			return true
 		})
 		return nil
@@ -379,39 +237,4 @@ func ClearReport(r string) error {
 		})
 	}
 	return nil
-}
-
-// LaodReportConf :
-func LaodReportConf() error {
-	ReportConf.RetentionTimeForSafe = 24
-	ReportConf.DropFlowThTCPPacket = 3
-	return db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("config"))
-		v := b.Get([]byte("report"))
-		if v == nil {
-			return nil
-		}
-		if err := json.Unmarshal(v, &ReportConf); err != nil {
-			log.Printf("Unmarshal mapConf from DB error=%v", err)
-			return err
-		}
-		return nil
-	})
-}
-
-func SaveReportConf() error {
-	if db == nil {
-		return ErrDBNotOpen
-	}
-	s, err := json.Marshal(ReportConf)
-	if err != nil {
-		return err
-	}
-	return db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("config"))
-		if b == nil {
-			return fmt.Errorf("bucket config is nil")
-		}
-		return b.Put([]byte("report"), s)
-	})
 }

@@ -36,6 +36,7 @@ func ResetDevicesScore() {
 func checkDeviceReport(dr *deviceReportEnt) {
 	ip := dr.IP
 	mac := dr.MAC
+	checkIPReport(ip, mac, dr.Time)
 	d := datastore.GetDevice(mac)
 	if d != nil {
 		if d.IP != ip {

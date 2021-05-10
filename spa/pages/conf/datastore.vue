@@ -217,6 +217,7 @@ export default {
         { text: 'ユーザーレポート', value: 'report/user/all' },
         { text: 'サーバーレポート', value: 'report/server/all' },
         { text: 'フローレポート', value: 'report/flow/all' },
+        { text: 'IPアドレスレポート', value: 'report/ip/all' },
         { text: 'AI分析結果', value: 'report/ai/all' },
         { text: 'ログ', value: 'log' },
         { text: 'ARP監視', value: 'arp' },

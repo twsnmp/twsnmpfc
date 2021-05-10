@@ -103,6 +103,10 @@
               ></v-text-field>
             </template>
           </v-slider>
+          <v-switch
+            v-model="report.IncludeNoMACIP"
+            label="MACアドレスが不明のIPもレポートに記録する"
+          ></v-switch>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -138,6 +142,7 @@ export default {
         AllowLocalIP: '',
         DropFlowThTCPPacket: 3,
         RetentionTimeForSafe: 24,
+        IncludeNoMACIP: false,
       },
       denyCountries: '',
       denyServices: '',

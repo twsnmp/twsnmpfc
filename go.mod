@@ -17,6 +17,7 @@ require (
 	github.com/labstack/echo/v4 v4.1.17
 	github.com/labstack/gommon v0.3.0
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/mdlayher/netx v0.0.0-20200512211805-669a06fde734 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/montanaflynn/stats v0.6.3
 	github.com/mrichman/godnsbl v1.0.0

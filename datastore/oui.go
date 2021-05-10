@@ -36,6 +36,9 @@ func loadOUIMap(f io.ReadCloser) {
 
 // FindVendor : Find Vendor Name from MAC Address
 func FindVendor(mac string) string {
+	if mac == "" {
+		return ""
+	}
 	mac = strings.TrimSpace(mac)
 	mac = strings.ReplaceAll(mac, ":", "")
 	mac = strings.ReplaceAll(mac, "-", "")

@@ -197,6 +197,11 @@ export default {
           to: '/report/flows',
         },
         {
+          icon: 'mdi-format-list-bulleted-type',
+          title: 'IPアドレス',
+          to: '/report/ipreport',
+        },
+        {
           icon: 'mdi-brain',
           title: 'AI分析',
           to: '/report/ailist',

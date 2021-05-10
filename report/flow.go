@@ -242,6 +242,7 @@ func cleanupUDPPending() {
 }
 
 func checkFlowReport(fr *flowReportEnt) {
+	checkIPReport(fr.SrcIP, "", fr.Time)
 	server, client, service := getFlowDir(fr)
 	if server == "" {
 		return

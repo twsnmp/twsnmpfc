@@ -112,6 +112,14 @@ func UpdateReportConf() {
 			log.Printf("UpdateReportConf err=%v", err)
 		}
 	}
+	if !datastore.ReportConf.IncludeNoMACIP {
+		datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+			if i.MAC == "" {
+				datastore.DeleteReport("ips", i.IP)
+			}
+			return true
+		})
+	}
 }
 
 func reportBackend(ctx context.Context) {
@@ -154,6 +162,7 @@ func checkOldReport() {
 	checkOldServers(safeOld, delOld)
 	checkOldFlows(safeOld, delOld)
 	checkOldDevices(safeOld, delOld)
+	checkOldIPReport(safeOld, delOld)
 	checkOldUsers(delOld)
 	log.Println("end check old report")
 }
@@ -206,6 +215,22 @@ func checkOldDevices(safeOld, delOld int64) {
 	}
 }
 
+func checkOldIPReport(safeOld, delOld int64) {
+	count := 0
+	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+		if i.LastTime < safeOld {
+			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
+				datastore.DeleteReport("ips", i.IP)
+				count++
+			}
+		}
+		return true
+	})
+	if count > 0 {
+		log.Printf("report delete ip=%d", count)
+	}
+}
+
 func checkOldUsers(delOld int64) {
 	count := 0
 	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
@@ -225,6 +250,7 @@ func calcScore() {
 	calcServerScore()
 	calcFlowScore()
 	calcUserScore()
+	calcIPReportScore()
 	badIPs = make(map[string]bool)
 }
 
@@ -248,6 +274,27 @@ func calcDeviceScore() {
 			d.Score = 50.0
 		}
 		d.ValidScore = true
+		return true
+	})
+}
+
+func calcIPReportScore() {
+	var xs []float64
+	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+		if i.Penalty > 100 {
+			i.Penalty = 100
+		}
+		xs = append(xs, float64(100-i.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+		if sd != 0 {
+			i.Score = ((10 * (float64(100-i.Penalty) - m) / sd) + 50)
+		} else {
+			i.Score = 50.0
+		}
+		i.ValidScore = true
 		return true
 	})
 }

@@ -43,6 +43,7 @@ var (
 	users   sync.Map
 	flows   sync.Map
 	servers sync.Map
+	ips     sync.Map
 	// MAP Changed check
 	stateChangedNodes sync.Map
 	lastLogAdded      time.Time
@@ -230,7 +231,7 @@ func openDB(path string) error {
 func initDB() error {
 	buckets := []string{"config", "nodes", "lines", "pollings", "logs", "pollingLogs",
 		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report", "grok"}
-	reports := []string{"devices", "users", "flows", "servers"}
+	reports := []string{"devices", "users", "flows", "servers", "ips"}
 	initConf()
 	return db.Update(func(tx *bbolt.Tx) error {
 		for _, b := range buckets {

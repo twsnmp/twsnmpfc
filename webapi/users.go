@@ -24,7 +24,7 @@ func deleteUser(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("users")
 	} else {
-		datastore.DeleteUser(id)
+		datastore.DeleteReport("users", id)
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

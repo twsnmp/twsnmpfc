@@ -24,7 +24,7 @@ func deleteFlow(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("flows")
 	} else {
-		datastore.DeleteFlow(id)
+		datastore.DeleteReport("flows", id)
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
