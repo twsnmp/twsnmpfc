@@ -16,6 +16,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/twsnmp/twsnmpfc/backend"
+	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/security"
 )
 
@@ -154,6 +155,18 @@ func setup(p *WebAPI) {
 	r.GET("/report/ai/:id", getAIResult)
 	r.DELETE("/report/ai/:id", deleteAIResult)
 	r.GET("/monitor", getMonitor)
+	// Mobile API
+	m := e.Group("/mobile")
+	m.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+		if username == datastore.MapConf.UserID &&
+			security.PasswordVerify(datastore.MapConf.Password, password) {
+			return true, nil
+		}
+		log.Printf("mobile api failed auth username=%s password=%s", username, password)
+		return false, nil
+	}))
+	m.GET("/api/mapstatus", getMobileMapStatus)
+	m.GET("/api/mapdata", getMobileMapData)
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
 }
 
