@@ -167,6 +167,10 @@
               ></v-text-field>
             </template>
           </v-slider>
+          <v-switch
+            v-model="mapconf.EnableMobileAPI"
+            label="モバイルアプリからの接続を許可する"
+          ></v-switch>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>

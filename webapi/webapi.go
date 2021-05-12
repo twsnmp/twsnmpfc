@@ -158,7 +158,7 @@ func setup(p *WebAPI) {
 	// Mobile API
 	m := e.Group("/mobile")
 	m.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-		if username == datastore.MapConf.UserID &&
+		if datastore.MapConf.EnableMobileAPI && username == datastore.MapConf.UserID &&
 			security.PasswordVerify(datastore.MapConf.Password, password) {
 			return true, nil
 		}

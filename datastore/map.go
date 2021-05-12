@@ -35,13 +35,14 @@ type MapConfEnt struct {
 	PublicKey    string
 	PrivateKey   string
 	//	TLSCert        string
-	EnableSyslogd  bool
-	EnableTrapd    bool
-	EnableNetflowd bool
-	EnableArpWatch bool
-	AILevel        string
-	AIThreshold    int
-	GeoIPInfo      string
+	EnableSyslogd   bool
+	EnableTrapd     bool
+	EnableNetflowd  bool
+	EnableArpWatch  bool
+	EnableMobileAPI bool
+	AILevel         string
+	AIThreshold     int
+	GeoIPInfo       string
 }
 
 func initConf() {

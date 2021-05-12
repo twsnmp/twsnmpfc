@@ -64,6 +64,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.EnableTrapd = mc.EnableTrapd
 	datastore.MapConf.EnableNetflowd = mc.EnableNetflowd
 	datastore.MapConf.EnableArpWatch = mc.EnableArpWatch
+	datastore.MapConf.EnableMobileAPI = mc.EnableMobileAPI
 	datastore.MapConf.AILevel = mc.AILevel
 	datastore.MapConf.AIThreshold = mc.AIThreshold
 	if err := datastore.SaveMapConf(); err != nil {
