@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"runtime"
+	"runtime/pprof"
 	"strings"
 	"time"
 
@@ -34,6 +35,8 @@ var host string
 var ip string
 var tls bool
 var local bool
+var cpuprofile string
+var memprofile string
 
 const version = "010000"
 
@@ -45,6 +48,8 @@ func init() {
 	flag.StringVar(&ip, "ip", "", "IP Address for TLS Cert")
 	flag.BoolVar(&tls, "tls", false, "Use TLS")
 	flag.BoolVar(&local, "local", false, "Local only")
+	flag.StringVar(&cpuprofile, "cpuprofile", "", "write cpu profile to `file`")
+	flag.StringVar(&memprofile, "memprofile", "", "write memory profile to `file`")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
 			f.Value.Set(s)
@@ -61,6 +66,28 @@ func (writer logWriter) Write(bytes []byte) (int, error) {
 }
 
 func main() {
+	if cpuprofile != "" {
+		f, err := os.Create(cpuprofile)
+		if err != nil {
+			log.Fatalf("could not create CPU profile: %v", err)
+		}
+		defer f.Close()
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatalf("could not start CPU profile: %v", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+	if memprofile != "" {
+		f, err := os.Create(memprofile)
+		if err != nil {
+			log.Fatalf("could not create memory profile: %v", err)
+		}
+		defer f.Close()
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatalf("could not write memory profile:%v", err)
+		}
+	}
 	log.SetFlags(0)
 	log.SetOutput(new(logWriter))
 	statikFS, err := fs.New()
