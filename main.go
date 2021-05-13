@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/rakyll/statik/fs"
@@ -132,7 +133,7 @@ func main() {
 		DataStorePath: dataStorePath,
 	}
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	go webapi.Start(w)
 	if local {
 		time.Sleep(3 * time.Second)
