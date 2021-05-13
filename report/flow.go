@@ -359,11 +359,6 @@ func setFlowPenalty(f *datastore.FlowEnt) {
 	if f.ServerName == f.Server {
 		f.Penalty++
 	}
-	if f.Penalty > 1 {
-		if _, ok := badIPs[f.Client]; !ok {
-			badIPs[f.Client] = true
-		}
-	}
 }
 
 func setServerPenalty(s *datastore.ServerEnt) {

@@ -21,7 +21,6 @@ var (
 	deviceReportCh chan *deviceReportEnt
 	userReportCh   chan *userReportEnt
 	flowReportCh   chan *flowReportEnt
-	badIPs         map[string]bool
 	allowDNS       map[string]bool
 	allowDHCP      map[string]bool
 	allowMail      map[string]bool
@@ -39,7 +38,6 @@ func Start(ctx context.Context) error {
 	deviceReportCh = make(chan *deviceReportEnt, 100)
 	userReportCh = make(chan *userReportEnt, 100)
 	flowReportCh = make(chan *flowReportEnt, 500)
-	badIPs = make(map[string]bool)
 	go reportBackend(ctx)
 	return nil
 }
@@ -251,13 +249,12 @@ func calcScore() {
 	calcFlowScore()
 	calcUserScore()
 	calcIPReportScore()
-	badIPs = make(map[string]bool)
 }
 
 func calcDeviceScore() {
 	var xs []float64
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		if _, ok := badIPs[d.IP]; ok {
+		if ip := datastore.GetIPReport(d.IP); ip != nil && ip.Penalty > 0 {
 			d.Penalty++
 		}
 		if d.Penalty > 100 {

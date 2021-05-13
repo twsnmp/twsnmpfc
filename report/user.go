@@ -71,8 +71,8 @@ func setBadIPFromClient(c string) {
 		c = d.IP
 	}
 	if ip := net.ParseIP(c); ip != nil {
-		if _, ok := badIPs[c]; !ok {
-			badIPs[c] = true
+		if ipr := datastore.GetIPReport(c); ipr != nil && ipr.Penalty < 5 {
+			ipr.Penalty++
 		}
 	}
 }
