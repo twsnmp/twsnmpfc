@@ -160,9 +160,10 @@ func deleteLine(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
-		Type:  "user",
-		Level: "info",
-		Event: fmt.Sprintf("ラインを削除しました(%s)", l.ID),
+		Type:   "user",
+		Level:  "info",
+		NodeID: l.NodeID1,
+		Event:  fmt.Sprintf("ラインを削除しました(%s)", l.ID),
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -200,8 +201,8 @@ func postLineAdd(c echo.Context) error {
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:   "user",
 		Level:  "info",
-		NodeID: l.NodeID1,
-		Event:  fmt.Sprintf("ラインを追加しました(%s)", l.ID),
+		NodeID: lu.NodeID1,
+		Event:  fmt.Sprintf("ラインを更新しました(%s)", lu.ID),
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

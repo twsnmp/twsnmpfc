@@ -44,6 +44,12 @@ type LogFilterEnt struct {
 
 func AddEventLog(e *EventLogEnt) {
 	e.Time = time.Now().UnixNano()
+	if e.NodeID != "" && e.NodeName == "" {
+		// Node IDのみの場合は、名前をここで解決する
+		if n := GetNode(e.NodeID); n != nil {
+			e.NodeName = n.Name
+		}
+	}
 	eventLogCh <- e
 }
 
