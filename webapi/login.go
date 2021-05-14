@@ -2,6 +2,7 @@
 package webapi
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -39,6 +40,11 @@ func login(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("%sからログインしました", c.RealIP()),
+	})
 	return c.JSON(http.StatusOK, map[string]string{
 		"token": t,
 	})

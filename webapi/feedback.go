@@ -32,6 +32,11 @@ func postFeedback(c echo.Context) error {
 		log.Printf("postFeedback  err=%v", err)
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "フィードバックを送信しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

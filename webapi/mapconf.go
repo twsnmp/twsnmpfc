@@ -70,6 +70,11 @@ func postMapConf(c echo.Context) error {
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "マップの設定を更新しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -116,6 +121,11 @@ func postBackImage(c echo.Context) error {
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "マップの背景画像を更新しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -138,6 +148,11 @@ func deleteBackImage(c echo.Context) error {
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "マップの背景画像を削除しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -174,10 +189,20 @@ func postGeoIP(c echo.Context) error {
 		log.Printf("postGeoIP err=%v", err)
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "IP位置情報DBを更新しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
 func deleteGeoIP(c echo.Context) error {
 	datastore.DeleteGeoIP()
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "IP位置情報DBを削除しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

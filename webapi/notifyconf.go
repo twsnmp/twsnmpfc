@@ -47,6 +47,11 @@ func postNotifyConf(c echo.Context) error {
 	if err := datastore.SaveNotifyConf(); err != nil {
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "通知設定を更新しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -58,5 +63,10 @@ func postNotifyTest(c echo.Context) error {
 	if err := notify.SendTestMail(nc); err != nil {
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "試験メールを送信しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

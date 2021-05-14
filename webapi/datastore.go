@@ -40,11 +40,21 @@ func postBackup(c echo.Context) error {
 
 func deleteLogs(c echo.Context) error {
 	go datastore.DeleteAllLogs()
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "全てのログを削除しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
 func deleteArp(c echo.Context) error {
 	logger.ResetArpTable()
 	datastore.DeleteArp()
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "ARP監視のログを削除しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

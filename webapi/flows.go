@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -26,11 +27,21 @@ func deleteFlow(c echo.Context) error {
 	} else {
 		datastore.DeleteReport("flows", id)
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("フローを削除しました(%s)", id),
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
 func resetFlows(c echo.Context) error {
 	report.ResetFlowsScore()
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "フローレポートの信用スコアを再計算しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

@@ -116,8 +116,17 @@ func DeleteNode(nodeID string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	if _, ok := nodes.Load(nodeID); !ok {
+	if n, ok := nodes.Load(nodeID); !ok {
 		return ErrInvalidID
+	} else {
+		nn := n.(*NodeEnt)
+		AddEventLog(&EventLogEnt{
+			Type:     "user",
+			Level:    "info",
+			NodeName: nn.Name,
+			NodeID:   nn.ID,
+			Event:    "ノードを削除しました",
+		})
 	}
 	db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))

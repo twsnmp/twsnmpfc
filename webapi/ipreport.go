@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -26,10 +27,20 @@ func deleteIPReport(c echo.Context) error {
 	} else {
 		datastore.DeleteReport("ips", ip)
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("IPレポートを削除しました(%s)", ip),
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
 func resetIPReport(c echo.Context) error {
 	report.ResetIPReportScore()
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "IPレポートの信用スコアを再計算しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

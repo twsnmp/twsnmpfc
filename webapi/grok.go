@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -31,6 +32,11 @@ func postGrok(c echo.Context) error {
 		log.Printf("postGrok err=%v", err)
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("抽出設定を更新しました(%s)", g.ID),
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -40,6 +46,11 @@ func deleteGrok(c echo.Context) error {
 		log.Printf("deleteGrok err=%v", err)
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("抽出設定を削除しました(%s)", id),
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -54,6 +65,11 @@ func getExportGrok(c echo.Context) error {
 		log.Printf("getExportGrok err=%v", err)
 		return echo.ErrInternalServerError
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "抽出設定をエクスポートしました",
+	})
 	return c.Blob(http.StatusOK, "text/yaml", y)
 }
 
@@ -90,8 +106,12 @@ func postImportGrok(c echo.Context) error {
 			return echo.ErrBadRequest
 		}
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "抽出設定をインポートしました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
-
 }
 
 type grockTestEnt struct {
@@ -138,6 +158,5 @@ func postTestGrok(c echo.Context) error {
 			r.ExtractDatas = append(r.ExtractDatas, e)
 		}
 	}
-	log.Printf("%v", r)
 	return c.JSON(http.StatusOK, r)
 }

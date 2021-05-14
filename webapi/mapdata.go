@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -138,6 +139,13 @@ func postNodeUpdate(c echo.Context) error {
 		log.Printf("postNodeUpdate err=%v", err)
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:     "user",
+		Level:    "info",
+		NodeName: n.Name,
+		NodeID:   n.ID,
+		Event:    "ノードを更新しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -151,6 +159,11 @@ func deleteLine(c echo.Context) error {
 		log.Printf("deleteLine err=%v", err)
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("ラインを削除しました(%s)", l.ID),
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -184,6 +197,12 @@ func postLineAdd(c echo.Context) error {
 			return echo.ErrBadRequest
 		}
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:   "user",
+		Level:  "info",
+		NodeID: l.NodeID1,
+		Event:  fmt.Sprintf("ラインを追加しました(%s)", l.ID),
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

@@ -22,5 +22,10 @@ func postReportConf(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	report.UpdateReportConf()
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "レポート設定を更新しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

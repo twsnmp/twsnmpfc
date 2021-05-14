@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -98,5 +99,10 @@ func deleteAIResult(c echo.Context) error {
 			log.Printf("deleteAIResult err=%v", err)
 		}
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("AI分析結果を削除しました(%s)", id),
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

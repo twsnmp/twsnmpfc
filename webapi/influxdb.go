@@ -36,6 +36,11 @@ func postInfluxdb(c echo.Context) error {
 	if err := datastore.SaveInfluxdbConf(); err != nil {
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "Influxdbの設定を更新しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -44,5 +49,10 @@ func deleteInfluxdb(c echo.Context) error {
 		log.Printf("deleteInfluxdb err=%v", err)
 		return echo.ErrBadRequest
 	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "Influxdbのデータを削除しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
