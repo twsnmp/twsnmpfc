@@ -14,10 +14,16 @@
         </v-alert>
         <v-card-text>
           <v-text-field v-model="influxdb.URL" label="URL" required />
-          <v-text-field v-model="influxdb.User" label="ユーザーID" required />
+          <v-text-field
+            v-model="influxdb.User"
+            autocomplete="off"
+            label="ユーザーID"
+            required
+          />
           <v-text-field
             v-model="influxdb.Password"
             type="password"
+            autocomplete="off"
             label="パスワード"
             required
           />

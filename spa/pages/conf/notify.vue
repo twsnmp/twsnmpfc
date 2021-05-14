@@ -24,10 +24,16 @@
             label="メールサーバー"
             required
           />
-          <v-text-field v-model="notify.User" label="ユーザーID" required />
+          <v-text-field
+            v-model="notify.User"
+            autocomplete="off"
+            label="ユーザーID"
+            required
+          />
           <v-text-field
             v-model="notify.Password"
             type="password"
+            autocomplete="off"
             label="パスワード"
             required
           />
