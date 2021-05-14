@@ -4,16 +4,11 @@ package notify
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"net/smtp"
-	"net/url"
-	"runtime"
 	"strings"
 	"time"
 
@@ -33,7 +28,7 @@ func Start(ctx context.Context) error {
 
 func notifyBackend(ctx context.Context) {
 	lastSendReport := time.Now().Add(time.Hour * time.Duration(-24))
-	lastLog := ""
+	lastLog := fmt.Sprintf("%016x", time.Now().Add(time.Hour*time.Duration(-1)).UnixNano())
 	lastLog = checkNotify(lastLog)
 	timer := time.NewTicker(time.Second * 60)
 	i := 0
@@ -74,6 +69,7 @@ func checkNotify(lastLog string) string {
 		list = append(list, l)
 		return true
 	})
+	log.Printf("checkNotify lastLog=%s len=%d", lastLog, len(list))
 	if len(list) > 0 {
 		nl := getLevelNum(datastore.NotifyConf.Level)
 		if nl == 3 {
@@ -88,11 +84,11 @@ func checkNotify(lastLog string) string {
 			}
 			if datastore.NotifyConf.NotifyRepair && l.Level == "repair" {
 				a := strings.Split(l.Event, ":")
-				if len(a) < 5 {
+				if len(a) < 2 {
 					continue
 				}
 				// 復帰前の状態を確認する
-				np := getLevelNum(a[2])
+				np := getLevelNum(a[len(a)-1])
 				if np > nl {
 					continue
 				}
@@ -302,52 +298,6 @@ func encodeSubject(subject string) string {
 		buffer.WriteString("?=\r\n")
 	}
 	return buffer.String()
-}
-
-func SendFeedback(msg string) error {
-	msg += fmt.Sprintf("\n-----\n%s:%s\n", runtime.GOOS, runtime.GOARCH)
-	values := url.Values{}
-	values.Set("msg", msg)
-	values.Add("hash", calcHash(msg))
-
-	req, err := http.NewRequest(
-		"POST",
-		"https://lhx98.linkclub.jp/twise.co.jp/cgi-bin/twsnmpfb.cgi",
-		strings.NewReader(values.Encode()),
-	)
-	if err != nil {
-		log.Printf("sendFeedback  err=%v", err)
-		return err
-	}
-
-	// Content-Type 設定
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("sendFeedback  err=%v", err)
-		return err
-	}
-	defer resp.Body.Close()
-	r, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("sendFeedback  err=%v", err)
-		return err
-	}
-	if string(r) != "OK" {
-		return fmt.Errorf("resp is '%s'", r)
-	}
-	return nil
-}
-
-func calcHash(msg string) string {
-	h := sha256.New()
-	if _, err := h.Write([]byte(msg + time.Now().Format("2006/01/02T15"))); err != nil {
-		log.Printf("calcHash  err=%v", err)
-		return ""
-	}
-	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 func sendReport() {
