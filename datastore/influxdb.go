@@ -29,13 +29,17 @@ func SaveInfluxdbConf() error {
 	if err != nil {
 		return err
 	}
-	return db.Update(func(tx *bbolt.Tx) error {
+	err = db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
 		}
 		return b.Put([]byte("influxdbConf"), s)
 	})
+	if err != nil {
+		return err
+	}
+	return setupInfluxdb()
 }
 
 func InitInfluxdb() error {
@@ -122,6 +126,7 @@ func SendPollingLogToInfluxdb(pe *PollingEnt) error {
 	}
 	n := GetNode(pe.NodeID)
 	if n == nil {
+		log.Printf("SendPollingLogToInfluxdb node not found")
 		return ErrInvalidID
 	}
 	// Create a new point batch
@@ -130,6 +135,7 @@ func SendPollingLogToInfluxdb(pe *PollingEnt) error {
 		Precision: "s",
 	})
 	if err != nil {
+		log.Printf("SendPollingLogToInfluxdb err=%v", err)
 		return err
 	}
 
@@ -149,12 +155,14 @@ func SendPollingLogToInfluxdb(pe *PollingEnt) error {
 	}
 	pt, err := client.NewPoint(pe.Name, tags, fields, time.Unix(0, pe.LastTime))
 	if err != nil {
+		log.Printf("SendPollingLogToInfluxdb err=%v", err)
 		return err
 	}
 	bp.AddPoint(pt)
 
 	// Write the batch
 	if err := influxc.Write(bp); err != nil {
+		log.Printf("SendPollingLogToInfluxdb err=%v", err)
 		return err
 	}
 	return nil
@@ -168,18 +176,19 @@ func SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error {
 	}
 	n := GetNode(pe.NodeID)
 	if n == nil {
+		log.Printf("SendAIScoreToInfluxdb node not found")
 		return ErrInvalidID
 	}
 	qs := fmt.Sprintf(`DROP SERIES FROM "AIScore" WHERE "pollingID" = "%s" `, pe.ID)
 	q := client.NewQuery(qs, InfluxdbConf.DB, "")
 	if response, err := influxc.Query(q); err != nil {
-		log.Printf("sendAIScoreToInfluxdb err=%v", err)
+		log.Printf("SendAIScoreToInfluxdb err=%v", err)
 		return err
 	} else if response == nil {
-		log.Printf("sendAIScoreToInfluxdb err=%v resp=nil", err)
+		log.Printf("SendAIScoreToInfluxdb err=%v resp=nil", err)
 		return err
 	} else if response.Error() != nil {
-		log.Printf("sendAIScoreToInfluxdb err=%v respError=%v", err, response.Error())
+		log.Printf("SendAIScoreToInfluxdb err=%v respError=%v", err, response.Error())
 		return err
 	}
 	// Create a new point batch
@@ -188,6 +197,7 @@ func SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error {
 		Precision: "s",
 	})
 	if err != nil {
+		log.Printf("SendAIScoreToInfluxdb err=%v", err)
 		return err
 	}
 
@@ -213,6 +223,7 @@ func SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error {
 	}
 	// Write the batch
 	if err := influxc.Write(bp); err != nil {
+		log.Printf("SendAIScoreToInfluxdb err=%v", err)
 		return err
 	}
 	return nil

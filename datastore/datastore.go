@@ -225,6 +225,10 @@ func openDB(path string) error {
 		db.Close()
 		return err
 	}
+	err = setupInfluxdb()
+	if err != nil {
+		log.Printf("setupInfluxdb err=%v", err)
+	}
 	return nil
 }
 
