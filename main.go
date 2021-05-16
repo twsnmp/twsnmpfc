@@ -39,7 +39,8 @@ var local bool
 var cpuprofile string
 var memprofile string
 
-const version = "010000"
+var version = "v1.0.0"
+var commit = ""
 
 func init() {
 	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
@@ -130,8 +131,10 @@ func main() {
 		IP:            ip,
 		Host:          host,
 		Password:      password,
+		Version:       fmt.Sprintf("%s(%s)", version, commit),
 		DataStorePath: dataStorePath,
 	}
+	log.Printf("version=%s", w.Version)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	go webapi.Start(w)

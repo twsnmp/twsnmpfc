@@ -4,21 +4,23 @@
       <div class="text-center">
         <logo />
       </div>
-      <v-card>
+      <v-card min-width="426px">
         <v-card-title class="headline">ようこそ TWSNMP FC</v-card-title>
+        <hr class="my-3" />
+        <v-card-subtitle> バージョン : {{ version }}</v-card-subtitle>
         <v-alert v-model="feedbackDone" color="primary" dense dismissible>
           フィードバックを送信しました
         </v-alert>
         <v-card-text>
           <p>
-            TWSNMP FCはコンテナ環境で動作するネットワーク管理ソフトです。<br />
+            TWSNMP FCはコンテナ環境用のネットワーク管理ソフトです。<br />
             使い方は
             <a
-              href="https://note.com/twsnmp"
+              href="https://note.com/twsnmp/m/meed0d0ddab5e"
               target="_blank"
               rel="noopener noreferrer"
-              >マニュアル</a
-            >にあります。<br />
+              >Noteのマガジン</a
+            >に書いています。<br />
             ソースコードは
             <a
               href="https://github.com/twsnmp/twsnmpfc"
@@ -28,7 +30,7 @@
             >
               GitHUB </a
             >にあります。<br />
-            バグ発見したり要望がある方は＜フィードバック＞ボタンか
+            バグや要望は＜フィードバック＞か
             <a
               href="https://github.com/twsnmp/twsnmpfc/issues"
               target="_blank"
@@ -36,7 +38,7 @@
               title="contribute"
             >
               GitHubのissue </a
-            >でお知らせください。
+            >からお知らせください。
           </p>
           <p>TWSNMP FCを利用いただきありがとうございます。</p>
           <div class="text-xs-right">
@@ -114,8 +116,15 @@ export default {
   components: {
     Logo,
   },
+  async fetch() {
+    const r = await this.$axios.$get('/version')
+    if (r && r.Version) {
+      this.version = r.Version
+    }
+  },
   data() {
     return {
+      version: '',
       feedbackDialog: false,
       feedbackError: false,
       feedbackDone: false,

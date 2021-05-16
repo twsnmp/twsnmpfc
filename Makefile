@@ -1,10 +1,14 @@
 .PHONY: all test clean zip mac clean_spa docker
 
+### バージョンの定義
+VERSION     := "v1.1.0"
+COMMIT      := $(shell git rev-parse --short HEAD)
+
 ### コマンドの定義
 GO          = go
 GO_BUILD    = $(GO) build
 GO_TEST     = $(GO) test -v
-GO_LDFLAGS  = -ldflags="-s -w"
+GO_LDFLAGS  = -ldflags="-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT)"
 ZIP          = zip
 
 ### ターゲットパラメータ

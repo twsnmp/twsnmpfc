@@ -29,6 +29,7 @@ type WebAPI struct {
 	Local         bool
 	Password      string
 	DataStorePath string
+	Version       string
 }
 
 type selectEntWebAPI struct {
@@ -71,6 +72,7 @@ func setup(p *WebAPI) {
 	// Route
 	e.POST("/login", login)
 	e.GET("/backimage", getBackImage)
+	e.GET("/version", getVersion)
 	// JWT保護されたRoute
 	r := e.Group("/api")
 	r.Use(middleware.JWT([]byte(p.Password)))

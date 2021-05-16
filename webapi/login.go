@@ -63,3 +63,8 @@ func getMe(c echo.Context) error {
 	r.UserID = claims["userid"].(string)
 	return c.JSON(http.StatusOK, r)
 }
+
+func getVersion(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	return c.JSON(http.StatusOK, map[string]string{"Version": api.Version})
+}

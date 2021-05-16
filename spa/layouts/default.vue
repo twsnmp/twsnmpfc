@@ -137,7 +137,8 @@
     </v-navigation-drawer>
     <v-footer absolute app>
       <span>
-        TWSNMP FC v1.0.0 &copy; {{ new Date().getFullYear() }} Masayuki Yamai
+        TWSNMP FC {{ version }} &copy; {{ new Date().getFullYear() }}
+        Masayuki Yamai
       </span>
     </v-footer>
   </v-app>
@@ -148,6 +149,7 @@ export default {
   data() {
     return {
       menu: false,
+      version: false,
       mainMenus: [
         {
           icon: 'mdi-apps',
@@ -324,7 +326,16 @@ export default {
           this.checkNewLog()
         }
       }
+      if (!this.version) {
+        this.getVersion()
+      }
       this.timer = setTimeout(() => this.cron(), 30 * 1000)
+    },
+    async getVersion() {
+      const r = await this.$axios.$get('/version')
+      if (r && r.Version) {
+        this.version = r.Version
+      }
     },
     async checkNewLog() {
       const r = await this.$axios.$get(
