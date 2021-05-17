@@ -347,6 +347,9 @@ export default {
             if (!this.ip) return true
             return value.includes(this.ip)
           },
+          sort: (a, b) => {
+            return this.$cmpIP(a, b)
+          },
         },
         {
           text: 'ベンダー',

@@ -406,6 +406,9 @@ export default {
               ? !value.includes(this.ip)
               : value.includes(this.ip)
           },
+          sort: (a, b) => {
+            return this.$cmpIP(a, b)
+          },
         },
         {
           text: '名前',

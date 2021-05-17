@@ -288,6 +288,31 @@ const tcpFlagFilterList = [
   { text: '一般的(SYN/ACK/FIN)', value: 'FS\\.P*A+' },
 ]
 
+const cmpIP = (a,b) => {
+  if (!a.includes(".") || !b.includes(".") ){
+    return a < b  ? -1 : a > b ? 1 : 0 
+  }
+  const pa = a.split('.').map(function(s) {
+    return parseInt(s); 
+  });
+  const pb = b.split('.').map(function(s) {
+    return parseInt(s); 
+  });
+  for(let i =0;i < pa.length;i++){
+    if (i >= pb.length){
+      return -1;
+    }
+    if (pa[i] === pb[i]){
+      continue;
+    }
+    if (pa[i] < pb[i]){
+      return -1;
+    }
+    return 1;
+  }
+  return 0;
+}
+
 export default (context, inject) => {
   inject('getIconName', getIconName)
   inject('getStateName', getStateName)
@@ -310,4 +335,5 @@ export default (context, inject) => {
   inject('getLocInfo', getLocInfo)
   inject('protocolFilterList', protocolFilterList)
   inject('tcpFlagFilterList', tcpFlagFilterList)
+  inject('cmpIP', cmpIP)
 }
