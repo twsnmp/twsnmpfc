@@ -133,10 +133,12 @@
           >
           </v-select>
           <v-switch
+            v-if="backup.Mode"
             v-model="backup.ConfigOnly"
-            label="SNMP TRAP受信"
+            label="設定のみバックアップ（ログなどは含まない）"
           ></v-switch>
           <v-select
+            v-if="backup.Mode == 'daily'"
             v-model="backup.Generation"
             :items="backupGenerationList"
             label="世代数"
@@ -196,7 +198,7 @@ export default {
       dbStatsLog: [],
       backup: {
         Mode: '',
-        ConfigOnly: false,
+        ConfigOnly: true,
         Generation: 0,
       },
       backupDialog: false,
@@ -210,6 +212,7 @@ export default {
         { text: '1日分', value: 0 },
         { text: '2日分', value: 1 },
         { text: '1週間分', value: 6 },
+        { text: '2週間分', value: 13 },
       ],
       cleanupTarget: '',
       cleanupTargetList: [

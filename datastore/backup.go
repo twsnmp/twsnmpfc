@@ -49,11 +49,12 @@ func CheckDBBackup() {
 		}
 		nextBackup = time.Date(now.Year(), now.Month(), now.Day()+d, 3, 0, 0, 0, time.Local).UnixNano()
 	}
-	if err := os.MkdirAll(filepath.Join(dspath, "backup"), 0666); err != nil {
+	if err := os.MkdirAll(filepath.Join(dspath, "backup"), 0777); err != nil {
+		log.Printf("backup err=%v", err)
 		return
 	}
-	file := filepath.Join(dspath, "backup", "twsnmpfs.db."+time.Now().Format("20060102150405"))
-	if nextBackup != 0 && nextBackup < time.Now().UnixNano() {
+	file := filepath.Join(dspath, "backup", "twsnmpfc.db."+time.Now().Format("20060102150405"))
+	if nextBackup < time.Now().UnixNano() {
 		if Backup.Mode == "daily" {
 			nextBackup += (24 * 3600 * 1000 * 1000 * 1000)
 		} else {
@@ -62,14 +63,14 @@ func CheckDBBackup() {
 			SaveBackup()
 		}
 		go func() {
-			log.Printf("Backup start = %s", file)
+			log.Printf("backup start = %s", file)
 			AddEventLog(&EventLogEnt{
 				Type:  "system",
 				Level: "info",
 				Event: "バックアップ開始:" + file,
 			})
 			if err := backupDB(file); err != nil {
-				log.Printf("BackupDB err=%v", err)
+				log.Printf("backup err=%v", err)
 				AddEventLog(&EventLogEnt{
 					Type:  "system",
 					Level: "error",
@@ -77,7 +78,7 @@ func CheckDBBackup() {
 				})
 				return
 			}
-			log.Printf("Backup end = %s", file)
+			log.Printf("backup end = %s", file)
 			AddEventLog(&EventLogEnt{
 				Type:  "system",
 				Level: "info",
