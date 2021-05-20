@@ -64,6 +64,7 @@ func initConf() {
 	NotifyConf.Subject = "TWSNMPからの通知"
 	NotifyConf.Level = "none"
 	InfluxdbConf.DB = "twsnmp"
+	Backup.ConfigOnly = true
 }
 
 func loadConf() error {

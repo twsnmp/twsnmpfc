@@ -127,14 +127,17 @@ func backupDB(file string) error {
 		mapConfTmp.LogDays = 0
 		if s, err := json.Marshal(mapConfTmp); err == nil {
 			if b := dstTx.Bucket([]byte("config")); b != nil {
-				return b.Put([]byte("mapConf"), s)
+				if err := b.Put([]byte("mapConf"), s); err != nil {
+					_ = dstTx.Rollback()
+					return err
+				}
 			}
 		}
 	}
 	return dstTx.Commit()
 }
 
-var configBuckets = []string{"config", "nodes", "lines", "pollings", "mibdb"}
+var configBuckets = []string{"config", "nodes", "lines", "pollings", "grok"}
 
 func walkBucket(b *bbolt.Bucket, keypath [][]byte, k, v []byte, seq uint64) error {
 	if stopBackup {
@@ -171,7 +174,7 @@ func walkBucket(b *bbolt.Bucket, keypath [][]byte, k, v []byte, seq uint64) erro
 	if v != nil {
 		return nil
 	}
-
+	log.Printf("backup bucket key=%s", string(k))
 	// Iterate over each child key/value.
 	keypath = append(keypath, k)
 	return b.ForEach(func(k, v []byte) error {
@@ -218,4 +221,21 @@ func walkFunc(keys [][]byte, k, v []byte, seq uint64) error {
 	}
 	// Otherwise treat it as a key/value pair.
 	return b.Put(k, v)
+}
+
+func RestoreDB(ds, backup string) error {
+	srcBackup := filepath.Join(ds, "backup", backup)
+	if _, err := os.Stat(srcBackup); err != nil {
+		return err
+	}
+	dbPath := filepath.Join(ds, "twsnmpfc.db")
+	newBackup := filepath.Join(ds, "backup", "twsnmpfc.db."+time.Now().Format("20060102150405"))
+	if err := os.Rename(dbPath, newBackup); err != nil {
+		return err
+	}
+	os.RemoveAll(dbPath)
+	if err := os.Rename(srcBackup, dbPath); err != nil {
+		return err
+	}
+	return nil
 }

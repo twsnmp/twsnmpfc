@@ -38,8 +38,9 @@ var tls bool
 var local bool
 var cpuprofile string
 var memprofile string
+var restore string
 
-var version = "v1.0.0"
+var version = "v1.1.0"
 var commit = ""
 
 func init() {
@@ -47,6 +48,7 @@ func init() {
 	flag.StringVar(&password, "password", "twsnmpfc!", "Master Password")
 	flag.StringVar(&port, "port", "8080", "port")
 	flag.StringVar(&host, "host", "", "Host Name for TLS Cert")
+	flag.StringVar(&restore, "restore", "", "Restore DB file name")
 	flag.StringVar(&ip, "ip", "", "IP Address for TLS Cert")
 	flag.BoolVar(&tls, "tls", false, "Use TLS")
 	flag.BoolVar(&local, "local", false, "Local only")
@@ -89,6 +91,14 @@ func main() {
 		if err := pprof.WriteHeapProfile(f); err != nil {
 			log.Fatalf("could not write memory profile:%v", err)
 		}
+	}
+	if restore != "" {
+		if err := datastore.RestoreDB(dataStorePath, restore); err != nil {
+			log.Fatalf("restore err=%v", err)
+		} else {
+			log.Println("restore done")
+		}
+		os.Exit(0)
 	}
 	log.SetFlags(0)
 	log.SetOutput(new(logWriter))
