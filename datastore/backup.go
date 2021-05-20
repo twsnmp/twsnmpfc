@@ -4,9 +4,13 @@ package datastore
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"time"
 
 	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
@@ -85,6 +89,7 @@ func CheckDBBackup() {
 				Event: "バックアップ終了:" + file,
 			})
 			DBStats.BackupTime = time.Now().UnixNano()
+			rotateBackup()
 		}()
 	}
 }
@@ -221,6 +226,38 @@ func walkFunc(keys [][]byte, k, v []byte, seq uint64) error {
 	}
 	// Otherwise treat it as a key/value pair.
 	return b.Put(k, v)
+}
+
+func rotateBackup() {
+	if Backup.Mode != "daily" {
+		return
+	}
+	dirList, err := ioutil.ReadDir(filepath.Join(dspath, "backup"))
+	if err != nil {
+		log.Printf("rotate backup err=%v", err)
+		return
+	}
+	backupList := []fs.FileInfo{}
+	for _, f := range dirList {
+		if f.IsDir() || !strings.HasPrefix(f.Name(), "twsnmpfc.db.") {
+			continue
+		}
+		backupList = append(backupList, f)
+	}
+	if Backup.Generation+1 >= len(backupList) {
+		return
+	}
+	sort.Slice(backupList, func(i, j int) bool {
+		return backupList[i].ModTime().Before(backupList[j].ModTime())
+	})
+	for i := 0; i < len(backupList)-(Backup.Generation+1); i++ {
+		backup := filepath.Join(dspath, "backup", backupList[i].Name())
+		if err := os.Remove(backup); err != nil {
+			log.Printf("delete backup %s err=%v", backup, err)
+		} else {
+			log.Printf("delete backup %s", backup)
+		}
+	}
 }
 
 func RestoreDB(ds, backup string) error {
