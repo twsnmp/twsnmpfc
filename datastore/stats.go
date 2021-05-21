@@ -10,16 +10,17 @@ import (
 )
 
 type DBStatsEnt struct {
-	Time       int64
-	Duration   float64
-	Size       int64
-	TotalWrite int64
-	Write      int64
-	PeakWrite  int64
-	Speed      float64
-	AvgSpeed   float64
-	PeakSpeed  float64
-	BackupTime int64
+	Time        int64
+	Duration    float64
+	Size        int64
+	TotalWrite  int64
+	Write       int64
+	PeakWrite   int64
+	Speed       float64
+	AvgSpeed    float64
+	PeakSpeed   float64
+	BackupTime  int64
+	BackupStart int64
 }
 
 type DBStatsLogEnt struct {

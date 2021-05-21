@@ -51,13 +51,15 @@ func CheckDBBackup() {
 		if now.Hour() > 2 {
 			d = 1
 		}
+		if DBStats.BackupTime == 0 {
+			setLastBackupTime()
+		}
 		nextBackup = time.Date(now.Year(), now.Month(), now.Day()+d, 3, 0, 0, 0, time.Local).UnixNano()
 	}
 	if err := os.MkdirAll(filepath.Join(dspath, "backup"), 0777); err != nil {
 		log.Printf("backup err=%v", err)
 		return
 	}
-	file := filepath.Join(dspath, "backup", "twsnmpfc.db."+time.Now().Format("20060102150405"))
 	if nextBackup < time.Now().UnixNano() {
 		if Backup.Mode == "daily" {
 			nextBackup += (24 * 3600 * 1000 * 1000 * 1000)
@@ -66,8 +68,14 @@ func CheckDBBackup() {
 			nextBackup = 0
 			SaveBackup()
 		}
+		DBStats.BackupStart = time.Now().UnixNano()
 		go func() {
+			file := filepath.Join(dspath, "backup", "twsnmpfc.db."+time.Now().Format("20060102150405"))
 			log.Printf("backup start = %s", file)
+			stopBackup = false
+			defer func() {
+				DBStats.BackupStart = 0
+			}()
 			AddEventLog(&EventLogEnt{
 				Type:  "system",
 				Level: "info",
@@ -75,9 +83,10 @@ func CheckDBBackup() {
 			})
 			if err := backupDB(file); err != nil {
 				log.Printf("backup err=%v", err)
+				os.RemoveAll(file)
 				AddEventLog(&EventLogEnt{
 					Type:  "system",
-					Level: "error",
+					Level: "warn",
 					Event: "バックアップ失敗:" + file,
 				})
 				return
@@ -92,6 +101,10 @@ func CheckDBBackup() {
 			rotateBackup()
 		}()
 	}
+}
+
+func StopBackup() {
+	stopBackup = true
 }
 
 func backupDB(file string) error {
@@ -275,4 +288,21 @@ func RestoreDB(ds, backup string) error {
 		return err
 	}
 	return nil
+}
+
+// 再起動後にも最終バックアップ時刻を表示するため
+func setLastBackupTime() {
+	dirList, err := ioutil.ReadDir(filepath.Join(dspath, "backup"))
+	if err != nil {
+		log.Printf("set last backup time err=%v", err)
+		return
+	}
+	for _, f := range dirList {
+		if f.IsDir() || !strings.HasPrefix(f.Name(), "twsnmpfc.db.") {
+			continue
+		}
+		if DBStats.BackupTime < f.ModTime().UnixNano() {
+			DBStats.BackupTime = f.ModTime().UnixNano()
+		}
+	}
 }

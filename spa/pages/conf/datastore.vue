@@ -48,6 +48,10 @@
                   <td>最終バックアップ日時</td>
                   <td>{{ dbStats.BackupTime }}</td>
                 </tr>
+                <tr>
+                  <td>バックアップ開始日時</td>
+                  <td>{{ dbStats.BackupStart }}</td>
+                </tr>
               </tbody>
             </template>
           </v-simple-table>
@@ -62,9 +66,27 @@
             <v-icon>mdi-chart-line</v-icon>
             統計グラフ
           </v-btn>
-          <v-btn color="primary" dark @click="backupDialog = true">
+          <v-btn
+            v-if="!inBackup"
+            color="primary"
+            dark
+            @click="backupDialog = true"
+          >
             <v-icon>mdi-image</v-icon>
             バックアップ
+          </v-btn>
+          <v-btn
+            v-if="inBackup"
+            color="error"
+            dark
+            @click="stopBackupDialog = true"
+          >
+            <v-icon>mdi-stop</v-icon>
+            バックアップ停止
+          </v-btn>
+          <v-btn color="normal" dark @click="$fetch()">
+            <v-icon>mdi-cached</v-icon>
+            更新
           </v-btn>
           <v-btn color="normal" dark to="/map">
             <v-icon>mdi-lan</v-icon>
@@ -111,6 +133,28 @@
             クリーンアップ
           </v-btn>
           <v-btn color="normal" @click="cleanupDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="stopBackupDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">バックアップ停止</span>
+        </v-card-title>
+        <v-alert v-model="stopBackupError" color="error" dense dismissible>
+          バックアップを停止できません
+        </v-alert>
+        <v-card-text> バックアップを停止しますか？ </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="doStopBackup">
+            <v-icon>mdi-stop</v-icon>
+            停止
+          </v-btn>
+          <v-btn color="normal" @click="stopBackupDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -182,6 +226,10 @@ export default {
       numeral(r.DBStats.AvgSpeed).format('0.000a') + ' Write/Sec'
     this.dbStatsLog = r.DBStatsLog
     this.backup = r.Backup
+    if (r.DBStats.BackupStart) {
+      this.dbStats.BackupStart = this.strTime(r.DBStats.BackupStart)
+    }
+    this.inBackup = r.DBStats.BackupStart > 0
   },
   data() {
     return {
@@ -194,13 +242,17 @@ export default {
         AvgSpeed: '',
         PeakSpeed: '',
         BackupTime: '',
+        BackupStart: '',
       },
+      inBackup: false,
       dbStatsLog: [],
       backup: {
         Mode: '',
         ConfigOnly: true,
         Generation: 0,
       },
+      stopBackupDialog: false,
+      stopBackupError: false,
       backupDialog: false,
       backupError: false,
       backupModeList: [
@@ -251,6 +303,7 @@ export default {
         .post('/api/conf/backup', this.backup)
         .then((r) => {
           this.backupDialog = false
+          this.$fetch()
         })
         .catch((e) => {
           this.backupError = true
@@ -267,6 +320,17 @@ export default {
         return ''
       }
       return this.$timeFormat(new Date(t / (1000 * 1000)))
+    },
+    doStopBackup() {
+      this.$axios
+        .post('/api/stop/backup')
+        .then((r) => {
+          this.stopBackupDialog = false
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.stopBackupError = true
+        })
     },
   },
 }

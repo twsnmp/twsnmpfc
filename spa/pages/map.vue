@@ -611,7 +611,7 @@ export default {
       }
       this.$axios.get('/api/polling/check/' + id).then(() => {
         this.showNodeDialog = false
-        this.$ftech()
+        this.$fetch()
       })
     },
   },

@@ -35,6 +35,12 @@ func postBackup(c echo.Context) error {
 		log.Printf("postBackup err=%v", err)
 		return echo.ErrInternalServerError
 	}
+	datastore.CheckDBBackup()
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postStopBackup(c echo.Context) error {
+	datastore.StopBackup()
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

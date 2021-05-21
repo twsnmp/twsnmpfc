@@ -98,6 +98,7 @@ func setup(p *WebAPI) {
 	r.DELETE("/conf/grok/:id", deleteGrok)
 	r.GET("/conf/datastore", getDataStore)
 	r.POST("/conf/backup", postBackup)
+	r.POST("/stop/backup", postStopBackup)
 	r.GET("/conf/report", getReportConf)
 	r.POST("/conf/report", postReportConf)
 	r.DELETE("/logs", deleteLogs)
