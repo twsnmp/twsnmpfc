@@ -54,6 +54,7 @@ func loadMapData() error {
 				return nil
 			})
 		}
+		now := time.Now().UnixNano()
 		b = tx.Bucket([]byte("pollings"))
 		if b != nil {
 			_ = b.ForEach(func(k, v []byte) error {
@@ -61,6 +62,10 @@ func loadMapData() error {
 				if err := json.Unmarshal(v, &p); err == nil {
 					if p.Result == nil {
 						p.Result = make(map[string]interface{})
+					}
+					if p.NextTime < now {
+						p.NextTime = now
+						now += 1000 * 1000 * 500
 					}
 					pollings.Store(p.ID, &p)
 				}
