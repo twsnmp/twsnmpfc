@@ -338,14 +338,26 @@ func sendReport() {
 			logs = append(logs, fmt.Sprintf("%s,%s,%s,%s,%s", l.Level, ts, l.Type, l.NodeName, l.Event))
 		}
 	}
+	n, b := getDeviceReport()
+	body = append(body, "【信用スコアが下位10%のデバイス】")
+	body = append(body, b...)
+	body = append(body, "")
 	body = append(body, "【48時間以内に新しく発見したデバイス】")
-	body = append(body, getNewDevice()...)
+	body = append(body, n...)
+	body = append(body, "")
+	n, b = getUserReport()
+	body = append(body, "【信用スコアが下位10%のユーザーID】")
+	body = append(body, b...)
 	body = append(body, "")
 	body = append(body, "【48時間以内に新しく発見したユーザーID】")
-	body = append(body, getNewUser()...)
+	body = append(body, n...)
+	body = append(body, "")
+	n, b = getIPReport()
+	body = append(body, "【信用スコアが下位10%のIPアドレス】")
+	body = append(body, b...)
 	body = append(body, "")
 	body = append(body, "【24時間以内に新しく発見したIPアドレス】")
-	body = append(body, getNewIP()...)
+	body = append(body, n...)
 	body = append(body, "")
 	body = append(body, "【24時間以内の状態別ログ件数】")
 	body = append(body, fmt.Sprintf("重度=%d,軽度=%d,注意=%d,正常=%d,その他=%d", high, low, warn, normal, other))
@@ -404,24 +416,32 @@ func getMapInfo() []string {
 	}
 }
 
-func getNewDevice() []string {
+func getDeviceReport() ([]string, []string) {
 	st := time.Now().Add(time.Duration(-48) * time.Hour).UnixNano()
-	ret := []string{}
-	ret = append(ret, "Name,IP,MAC,Vendor,Time")
+	retNew := []string{}
+	retBad := []string{}
+	retNew = append(retNew, "Name,Score,IP,MAC,Vendor,Time")
+	retBad = append(retBad, "Name,Score,IP,MAC,Vendor,Time")
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 		if d.FirstTime >= st {
 			t := time.Unix(0, d.FirstTime)
-			ret = append(ret, fmt.Sprintf("%s,%s,%s,%s,%s", d.Name, d.IP, d.ID, d.Vendor, t.Format(time.RFC3339)))
+			retNew = append(retNew, fmt.Sprintf("%s,%.2f,%s,%s,%s,%s", d.Name, d.Score, d.IP, d.ID, d.Vendor, t.Format(time.RFC3339)))
+		}
+		if d.ValidScore && d.Score < 37.5 {
+			t := time.Unix(0, d.FirstTime)
+			retBad = append(retBad, fmt.Sprintf("%s,%.2f,%s,%s,%s,%s", d.Name, d.Score, d.IP, d.ID, d.Vendor, t.Format(time.RFC3339)))
 		}
 		return true
 	})
-	return (ret)
+	return retNew, retBad
 }
 
-func getNewUser() []string {
+func getUserReport() ([]string, []string) {
 	st := time.Now().Add(time.Duration(-48) * time.Hour).UnixNano()
-	ret := []string{}
-	ret = append(ret, "User,Server,Server IP,Clients,Time")
+	retNew := []string{}
+	retBad := []string{}
+	retNew = append(retNew, "User,Server,Score,Server IP,Clients,Time")
+	retBad = append(retBad, "User,Server,Score,Server IP,Clients,Time")
 	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 		if u.FirstTime >= st {
 			cls := ""
@@ -432,23 +452,39 @@ func getNewUser() []string {
 				cls += k
 			}
 			t := time.Unix(0, u.FirstTime)
-			ret = append(ret, fmt.Sprintf("%s,%s,%s,%s,%s", u.UserID, u.ServerName, u.Server, cls, t.Format(time.RFC3339)))
+			retNew = append(retNew, fmt.Sprintf("%s,%s,%.2f,%s,%s,%s", u.UserID, u.ServerName, u.Score, u.Server, cls, t.Format(time.RFC3339)))
+		}
+		if u.ValidScore && u.Score < 37.5 {
+			cls := ""
+			for k := range u.ClientMap {
+				if cls != "" {
+					cls += ";"
+				}
+				cls += k
+			}
+			t := time.Unix(0, u.FirstTime)
+			retBad = append(retNew, fmt.Sprintf("%s,%s,%.2f,%s,%s,%s", u.UserID, u.ServerName, u.Score, u.Server, cls, t.Format(time.RFC3339)))
 		}
 		return true
 	})
-	return (ret)
+	return retNew, retBad
 }
 
-func getNewIP() []string {
+func getIPReport() ([]string, []string) {
 	st := time.Now().Add(time.Duration(-24) * time.Hour).UnixNano()
-	ret := []string{}
-	ret = append(ret, "IP,Name,MAC,Loc,Time")
+	retNew := []string{}
+	retBad := []string{}
+	retNew = append(retNew, "IP,Name,Score,MAC,Loc,Time")
 	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
 		if i.FirstTime >= st {
 			t := time.Unix(0, i.FirstTime)
-			ret = append(ret, fmt.Sprintf("%s,%s,%s,%s,%s", i.IP, i.Name, i.MAC, i.Loc, t.Format(time.RFC3339)))
+			retNew = append(retNew, fmt.Sprintf("%s,%s,%.2f%s,%s,%s", i.IP, i.Name, i.Score, i.MAC, i.Loc, t.Format(time.RFC3339)))
+		}
+		if i.ValidScore && i.Score < 37.5 {
+			t := time.Unix(0, i.FirstTime)
+			retBad = append(retBad, fmt.Sprintf("%s,%s,%.2f%s,%s,%s", i.IP, i.Name, i.Score, i.MAC, i.Loc, t.Format(time.RFC3339)))
 		}
 		return true
 	})
-	return (ret)
+	return retNew, retBad
 }
