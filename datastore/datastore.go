@@ -105,6 +105,7 @@ func Init(ctx context.Context, path string, fs http.FileSystem) error {
 	tlsCSMap = make(map[string]string)
 	loadDataFromFS(fs)
 	go eventLogger(ctx)
+	setLastBackupTime()
 	return nil
 }
 

@@ -72,7 +72,7 @@
             dark
             @click="backupDialog = true"
           >
-            <v-icon>mdi-image</v-icon>
+            <v-icon>mdi-backup-restore</v-icon>
             バックアップ
           </v-btn>
           <v-btn

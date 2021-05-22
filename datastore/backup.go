@@ -51,9 +51,6 @@ func CheckDBBackup() {
 		if now.Hour() > 2 {
 			d = 1
 		}
-		if DBStats.BackupTime == 0 {
-			setLastBackupTime()
-		}
 		nextBackup = time.Date(now.Year(), now.Month(), now.Day()+d, 3, 0, 0, 0, time.Local).UnixNano()
 	}
 	if err := os.MkdirAll(filepath.Join(dspath, "backup"), 0777); err != nil {
