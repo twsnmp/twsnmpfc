@@ -344,6 +344,9 @@ func sendReport() {
 	body = append(body, "【48時間以内に新しく発見したユーザーID】")
 	body = append(body, getNewUser()...)
 	body = append(body, "")
+	body = append(body, "【24時間以内に新しく発見したIPアドレス】")
+	body = append(body, getNewIP()...)
+	body = append(body, "")
 	body = append(body, "【24時間以内の状態別ログ件数】")
 	body = append(body, fmt.Sprintf("重度=%d,軽度=%d,注意=%d,正常=%d,その他=%d", high, low, warn, normal, other))
 	body = append(body, "")
@@ -404,10 +407,11 @@ func getMapInfo() []string {
 func getNewDevice() []string {
 	st := time.Now().Add(time.Duration(-48) * time.Hour).UnixNano()
 	ret := []string{}
-	ret = append(ret, "Name,IP,MAC,Vendor")
+	ret = append(ret, "Name,IP,MAC,Vendor,Time")
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 		if d.FirstTime >= st {
-			ret = append(ret, fmt.Sprintf("%s,%s,%s,%s", d.Name, d.IP, d.ID, d.Vendor))
+			t := time.Unix(0, d.FirstTime)
+			ret = append(ret, fmt.Sprintf("%s,%s,%s,%s,%s", d.Name, d.IP, d.ID, d.Vendor, t.Format(time.RFC3339)))
 		}
 		return true
 	})
@@ -417,7 +421,7 @@ func getNewDevice() []string {
 func getNewUser() []string {
 	st := time.Now().Add(time.Duration(-48) * time.Hour).UnixNano()
 	ret := []string{}
-	ret = append(ret, "User,Server,Server IP,Clients")
+	ret = append(ret, "User,Server,Server IP,Clients,Time")
 	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 		if u.FirstTime >= st {
 			cls := ""
@@ -427,7 +431,22 @@ func getNewUser() []string {
 				}
 				cls += k
 			}
-			ret = append(ret, fmt.Sprintf("%s,%s,%s,%s", u.UserID, u.ServerName, u.Server, cls))
+			t := time.Unix(0, u.FirstTime)
+			ret = append(ret, fmt.Sprintf("%s,%s,%s,%s,%s", u.UserID, u.ServerName, u.Server, cls, t.Format(time.RFC3339)))
+		}
+		return true
+	})
+	return (ret)
+}
+
+func getNewIP() []string {
+	st := time.Now().Add(time.Duration(-24) * time.Hour).UnixNano()
+	ret := []string{}
+	ret = append(ret, "IP,Name,MAC,Loc,Time")
+	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+		if i.FirstTime >= st {
+			t := time.Unix(0, i.FirstTime)
+			ret = append(ret, fmt.Sprintf("%s,%s,%s,%s,%s", i.IP, i.Name, i.MAC, i.Loc, t.Format(time.RFC3339)))
 		}
 		return true
 	})
