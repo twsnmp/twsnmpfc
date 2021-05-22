@@ -463,7 +463,7 @@ func getUserReport() ([]string, []string) {
 				cls += k
 			}
 			t := time.Unix(0, u.FirstTime)
-			retBad = append(retNew, fmt.Sprintf("%s,%s,%.2f,%s,%s,%s", u.UserID, u.ServerName, u.Score, u.Server, cls, t.Format(time.RFC3339)))
+			retBad = append(retBad, fmt.Sprintf("%s,%s,%.2f,%s,%s,%s", u.UserID, u.ServerName, u.Score, u.Server, cls, t.Format(time.RFC3339)))
 		}
 		return true
 	})
