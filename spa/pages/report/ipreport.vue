@@ -243,7 +243,12 @@
             <tbody>
               <tr>
                 <td>IPアドレス</td>
-                <td>{{ selected.IP }}</td>
+                <td>
+                  {{ selected.IP }}
+                  <v-icon small @click="doCopy(selected.IP)">
+                    mdi-content-copy
+                  </v-icon>
+                </td>
               </tr>
               <tr>
                 <td>名前</td>
@@ -255,7 +260,12 @@
               </tr>
               <tr>
                 <td>MACアドレス</td>
-                <td>{{ selected.MAC }}</td>
+                <td>
+                  {{ selected.MAC }}
+                  <v-icon small @click="doCopy(selected.MAC)">
+                    mdi-content-copy
+                  </v-icon>
+                </td>
               </tr>
               <tr>
                 <td>ベンダー</td>
@@ -308,6 +318,12 @@
             閉じる
           </v-btn>
         </v-card-actions>
+        <v-snackbar v-model="copyError" absolute centered color="error">
+          コピーできません
+        </v-snackbar>
+        <v-snackbar v-model="copyDone" absolute centered color="primary">
+          コピーしました
+        </v-snackbar>
       </v-card>
     </v-dialog>
     <v-dialog v-model="addNodeDialog" persistent max-width="500px">
@@ -479,6 +495,8 @@ export default {
       node: {},
       addNodeDialog: false,
       addNodeError: false,
+      copyDone: false,
+      copyError: false,
     }
   },
   methods: {
@@ -568,6 +586,16 @@ export default {
         .catch((e) => {
           this.addNodeError = true
         })
+    },
+    doCopy(ip) {
+      this.$copyText(ip).then(
+        (e) => {
+          this.copyDone = true
+        },
+        (e) => {
+          this.copyError = true
+        }
+      )
     },
   },
 }
