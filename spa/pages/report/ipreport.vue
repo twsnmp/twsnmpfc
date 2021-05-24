@@ -587,12 +587,16 @@ export default {
           this.addNodeError = true
         })
     },
-    doCopy(ip) {
-      this.$copyText(ip).then(
-        (e) => {
+    doCopy(s) {
+      if (!navigator.clipboard) {
+        this.copyError = true
+        return
+      }
+      navigator.clipboard.writeText(s).then(
+        () => {
           this.copyDone = true
         },
-        (e) => {
+        () => {
           this.copyError = true
         }
       )
