@@ -91,20 +91,32 @@
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
-              詳細
+              グラフと集計
             </v-btn>
           </template>
           <v-list>
             <v-list-item @click="showPollingLog">
-              <v-list-item-icon><v-icon>mdi-eye</v-icon></v-list-item-icon>
+              <v-list-item-icon>
+                <v-icon>mdi-clipboard-list</v-icon>
+              </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title>ポーリングログ</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="showPollingResult">
-              <v-list-item-icon><v-icon>mdi-eye</v-icon></v-list-item-icon>
+              <v-list-item-icon>
+                <v-icon>mdi-chart-line</v-icon>
+              </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>ポーリング結果</v-list-item-title>
+                <v-list-item-title>時系列グラフ</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showPollingHistogram">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-histogram</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>ヒストグラム</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -182,6 +194,34 @@
             時間範囲
           </v-btn>
           <v-btn color="normal" dark @click="pollingResultDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="pollingHistogramDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          ヒストグラム - {{ node.Name }} - {{ polling.Name }}
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="selectedValEnt"
+            :items="numValEntList"
+            label="項目"
+            single-line
+            hide-details
+            @change="selectValEnt"
+          ></v-select>
+        </v-card-title>
+        <div id="pollingHistogram" style="width: 900px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="filterDialog = true">
+            <v-icon>mdi-calendar-clock</v-icon>
+            時間範囲
+          </v-btn>
+          <v-btn color="normal" dark @click="pollingHistogramDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -389,11 +429,17 @@ export default {
       timeStr: [],
       pollingLogDialog: false,
       pollingResultDialog: false,
+      pollingHistogramDialog: false,
     }
   },
   methods: {
     selectValEnt() {
-      this.$showPollingChart(this.polling, this.logs, this.selectedValEnt)
+      if (this.pollingResultDialog) {
+        this.$showPollingChart(this.polling, this.logs, this.selectedValEnt)
+      }
+      if (this.pollingHistogramDialog) {
+        this.$showPollingHistogram(this.polling, this.logs, this.selectedValEnt)
+      }
     },
     doFilter() {
       if (this.filter.StartDate !== '' && this.filter.StartTime === '') {
@@ -417,6 +463,13 @@ export default {
       this.$nextTick(() => {
         this.$makePollingChart('pollingChart')
         this.$showPollingChart(this.polling, this.logs, this.selectedValEnt)
+      })
+    },
+    showPollingHistogram() {
+      this.pollingHistogramDialog = true
+      this.$nextTick(() => {
+        this.$makePollingHistogram('pollingHistogram')
+        this.$showPollingHistogram(this.polling, this.logs, this.selectedValEnt)
       })
     },
   },

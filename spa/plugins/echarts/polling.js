@@ -1,4 +1,5 @@
 import * as echarts from 'echarts'
+import * as ecStat from 'echarts-stat'
 
 let chart
 
@@ -114,6 +115,86 @@ const showPollingChart = (polling, logs, ent) => {
     series: [
       {
         data,
+      },
+    ],
+  })
+  chart.resize()
+}
+
+const makePollingHistogram = (div) => {
+  chart = echarts.init(document.getElementById(div))
+  const option = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    tooltip: {
+      trigger: 'axis',
+      formatter(params) {
+        const p = params[0]
+        return p.value[0] + 'の回数:' + p.value[1]
+      },
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    grid: {
+      left: '10%',
+      right: '10%',
+      top: 30,
+      buttom: 0,
+    },
+    xAxis: {
+      scale: true,
+    },
+    yAxis: {
+      name: '回数',
+    },
+    series: [
+      {
+        color: '#1f78b4',
+        type: 'bar',
+        showSymbol: false,
+        hoverAnimation: false,
+        barWidth: '99.3%',
+        data: [],
+      },
+    ],
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
+const showPollingHistogram = (polling, logs, ent) => {
+  if (ent === '') {
+    return
+  }
+  const data = []
+  const dp = getDispParams(polling, ent)
+  logs.forEach((l) => {
+    if (!l.Result.error) {
+      let numVal = getNumVal(ent, l.Result)
+      numVal *= dp.mul
+      data.push(numVal)
+    }
+  })
+  const bins = ecStat.histogram(data)
+  chart.setOption({
+    xAxis: {
+      name: dp.axis,
+    },
+    series: [
+      {
+        data: bins.data,
       },
     ],
   })
@@ -288,5 +369,7 @@ const getDispParams = (p, ent) => {
 export default (context, inject) => {
   inject('makePollingChart', makePollingChart)
   inject('showPollingChart', showPollingChart)
+  inject('makePollingHistogram', makePollingHistogram)
+  inject('showPollingHistogram', showPollingHistogram)
   inject('setDataList', setDataList)
 }

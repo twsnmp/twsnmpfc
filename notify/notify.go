@@ -478,11 +478,11 @@ func getIPReport() ([]string, []string) {
 	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
 		if i.FirstTime >= st {
 			t := time.Unix(0, i.FirstTime)
-			retNew = append(retNew, fmt.Sprintf("%s,%s,%.2f%s,%s,%s", i.IP, i.Name, i.Score, i.MAC, i.Loc, t.Format(time.RFC3339)))
+			retNew = append(retNew, fmt.Sprintf("%s,%s,%.2f,%s,%s,%s", i.IP, i.Name, i.Score, i.MAC, i.Loc, t.Format(time.RFC3339)))
 		}
 		if i.ValidScore && i.Score < 37.5 {
 			t := time.Unix(0, i.FirstTime)
-			retBad = append(retBad, fmt.Sprintf("%s,%s,%.2f%s,%s,%s", i.IP, i.Name, i.Score, i.MAC, i.Loc, t.Format(time.RFC3339)))
+			retBad = append(retBad, fmt.Sprintf("%s,%s,%.2f,%s,%s,%s", i.IP, i.Name, i.Score, i.MAC, i.Loc, t.Format(time.RFC3339)))
 		}
 		return true
 	})
