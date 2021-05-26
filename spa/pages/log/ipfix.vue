@@ -75,7 +75,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="filterDialog" persistent max-width="500px">
+    <v-dialog v-model="filterDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
           <span class="headline">検索条件</span>
@@ -194,17 +194,54 @@
               ></v-time-picker>
             </v-menu>
           </v-row>
-          <v-text-field
-            v-model="filter.IP"
-            label="IPアドレス（正規表現）"
-          ></v-text-field>
+          <v-switch v-model="filter.SrcDst" label="双方向"></v-switch>
+          <v-row v-if="!filter.SrcDst" justify="space-around">
+            <v-col cols="8">
+              <v-text-field
+                v-model="filter.IP"
+                label="IPアドレス（正規表現）"
+                cols="8"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="4">
+              <v-text-field
+                v-model="filter.Port"
+                label="ポート番号"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row v-if="filter.SrcDst" justify="space-around">
+            <v-col cols="8">
+              <v-text-field
+                v-model="filter.SrcIP"
+                label="送信元IPアドレス（正規表現）"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="4">
+              <v-text-field
+                v-model="filter.SrcPort"
+                label="ポート番号"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="8">
+              <v-text-field
+                v-model="filter.DstIP"
+                label="宛先IPアドレス（正規表現）"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="4">
+              <v-text-field
+                v-model="filter.DstPort"
+                label="ポート番号"
+              ></v-text-field>
+            </v-col>
+          </v-row>
           <v-select
             v-model="filter.Protocol"
             :items="$protocolFilterList"
             label="プロトコル"
           >
           </v-select>
-          <v-text-field v-model="filter.Port" label="ポート番号"></v-text-field>
           <v-select
             v-model="filter.TCPFlag"
             :items="$tcpFlagFilterList"
@@ -251,8 +288,13 @@ export default {
         StartTime: '',
         EndDate: '',
         EndTime: '',
+        SrcDst: false,
         IP: '',
         Port: '',
+        SrcIP: '',
+        SrcPort: '',
+        DstIP: '',
+        DstPort: '',
         Protocol: '',
         TCPFlag: '',
       },

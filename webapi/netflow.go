@@ -15,15 +15,24 @@ type netflowFilter struct {
 	StartTime string
 	EndDate   string
 	EndTime   string
+	SrcDst    bool
 	IP        string
-	Protocol  string
 	Port      string
+	SrcIP     string
+	SrcPort   string
+	DstIP     string
+	DstPort   string
+	Protocol  string
 	TCPFlag   string
 }
 
 type netflowWebAPI struct {
 	Time     int64
 	Src      string
+	SrcIP    string
+	SrcPort  int
+	DstIP    string
+	DstPort  int
 	Dst      string
 	Protocol string
 	TCPFlags string
@@ -39,10 +48,23 @@ func postNetFlow(c echo.Context) error {
 		log.Printf("postNetflow err=%v", err)
 		return echo.ErrBadRequest
 	}
+	if filter.SrcDst {
+		filter.IP = ""
+		filter.Port = ""
+	} else {
+		filter.SrcIP = ""
+		filter.SrcPort = ""
+		filter.DstIP = ""
+		filter.DstPort = ""
+	}
 	ipFilter := makeStringFilter(filter.IP)
+	srcIPFilter := makeStringFilter(filter.SrcIP)
+	dstIPFilter := makeStringFilter(filter.DstIP)
 	tcpFlagFilter := makeStringFilter(filter.TCPFlag)
 	protocolFilter := makeNumberFilter(filter.Protocol)
 	portFilter := makeNumberFilter(filter.Port)
+	srcPortFilter := makeNumberFilter(filter.SrcPort)
+	dstPortFilter := makeNumberFilter(filter.DstPort)
 	st := makeTimeFilter(filter.StartDate, filter.StartTime, 1)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
@@ -130,18 +152,37 @@ func postNetFlow(c echo.Context) error {
 		re.Time = l.Time
 		re.Src = fmt.Sprintf("%s:%d", sa, spi)
 		re.Dst = fmt.Sprintf("%s:%d", da, dpi)
+		re.SrcIP = sa
+		re.DstIP = da
+		re.SrcPort = spi
+		re.DstPort = dpi
 		re.Protocol = prot
 		re.TCPFlags = tf
 		re.Bytes = int64(bytes)
 		re.Packets = int64(packets)
 		re.Duration = (lt - ft) / 100.0
-		if ipFilter != nil && !ipFilter.Match([]byte(re.Src)) && !ipFilter.Match([]byte(re.Dst)) {
-			return true
+		if filter.SrcDst {
+			if srcIPFilter != nil && !srcIPFilter.Match([]byte(re.SrcIP)) {
+				return true
+			}
+			if dstIPFilter != nil && !dstIPFilter.Match([]byte(re.DstIP)) {
+				return true
+			}
+			if srcPortFilter > 0 && spi != srcPortFilter {
+				return true
+			}
+			if dstPortFilter > 0 && dpi != dstPortFilter {
+				return true
+			}
+		} else {
+			if ipFilter != nil && !ipFilter.Match([]byte(re.SrcIP)) && !ipFilter.Match([]byte(re.DstIP)) {
+				return true
+			}
+			if portFilter > 0 && spi != portFilter && dpi != portFilter {
+				return true
+			}
 		}
 		if tcpFlagFilter != nil && (pi != 6 || !tcpFlagFilter.Match([]byte(tf))) {
-			return true
-		}
-		if portFilter > 0 && spi != portFilter && dpi != portFilter {
 			return true
 		}
 		if protocolFilter > 0 && pi != protocolFilter {
@@ -163,10 +204,23 @@ func postIPFIX(c echo.Context) error {
 		log.Printf("postIPFIX err=%v", err)
 		return echo.ErrBadRequest
 	}
+	if filter.SrcDst {
+		filter.IP = ""
+		filter.Port = ""
+	} else {
+		filter.SrcIP = ""
+		filter.SrcPort = ""
+		filter.DstIP = ""
+		filter.DstPort = ""
+	}
 	ipFilter := makeStringFilter(filter.IP)
+	srcIPFilter := makeStringFilter(filter.SrcIP)
+	dstIPFilter := makeStringFilter(filter.DstIP)
 	tcpFlagFilter := makeStringFilter(filter.TCPFlag)
 	protocolFilter := makeNumberFilter(filter.Protocol)
 	portFilter := makeNumberFilter(filter.Port)
+	srcPortFilter := makeNumberFilter(filter.SrcPort)
+	dstPortFilter := makeNumberFilter(filter.DstPort)
 	st := makeTimeFilter(filter.StartDate, filter.StartTime, 1)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
@@ -272,21 +326,42 @@ func postIPFIX(c echo.Context) error {
 			log.Printf("postIPFIX no octetDeltaCount")
 			return true
 		}
+		spi := int(sp)
+		dpi := int(dp)
 		re.Time = l.Time
-		re.Src = fmt.Sprintf("%s:%d", sa, int(sp))
-		re.Dst = fmt.Sprintf("%s:%d", da, int(dp))
+		re.Src = fmt.Sprintf("%s:%d", sa, spi)
+		re.Dst = fmt.Sprintf("%s:%d", da, dpi)
+		re.SrcIP = sa
+		re.DstIP = da
+		re.SrcPort = spi
+		re.DstPort = dpi
 		re.Protocol = prot
 		re.TCPFlags = tf
 		re.Bytes = int64(bytes)
 		re.Packets = int64(packets)
 		re.Duration = (lt - ft) / 100.0
-		if ipFilter != nil && !ipFilter.Match([]byte(re.Src)) && !ipFilter.Match([]byte(re.Dst)) {
-			return true
+		if filter.SrcDst {
+			if srcIPFilter != nil && !srcIPFilter.Match([]byte(re.SrcIP)) {
+				return true
+			}
+			if dstIPFilter != nil && !dstIPFilter.Match([]byte(re.DstIP)) {
+				return true
+			}
+			if srcPortFilter > 0 && spi != srcPortFilter {
+				return true
+			}
+			if dstPortFilter > 0 && dpi != dstPortFilter {
+				return true
+			}
+		} else {
+			if ipFilter != nil && !ipFilter.Match([]byte(re.SrcIP)) && !ipFilter.Match([]byte(re.DstIP)) {
+				return true
+			}
+			if portFilter > 0 && spi != portFilter && dpi != portFilter {
+				return true
+			}
 		}
 		if tcpFlagFilter != nil && (pi != 6 || !tcpFlagFilter.Match([]byte(tf))) {
-			return true
-		}
-		if portFilter > 0 && int(sp) != portFilter && int(dp) != portFilter {
 			return true
 		}
 		if protocolFilter > 0 && int(pi) != protocolFilter {
