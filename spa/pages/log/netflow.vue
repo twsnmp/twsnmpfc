@@ -65,13 +65,27 @@
             Excel
           </v-btn>
         </download-excel>
+        <v-menu v-if="logs" offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="showHistogram">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-histogram</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> ヒストグラム </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           再検索
-        </v-btn>
-        <v-btn color="normal" dark to="/map">
-          <v-icon>mdi-lan</v-icon>
-          マップ
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -262,6 +276,30 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="histogramDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          ヒストグラム
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="histogramType"
+            :items="histogramTypeList"
+            label="集計項目"
+            single-line
+            hide-details
+            @change="selectHistogramType"
+          ></v-select>
+        </v-card-title>
+        <div id="histogram" style="width: 900px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="histogramDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -345,6 +383,13 @@ export default {
       dst: '',
       prot: '',
       tcpflag: '',
+      histogramDialog: false,
+      histogramType: 'size',
+      histogramTypeList: [
+        { text: '平均パケットサイズ', value: 'size' },
+        { text: '期間(sec)', value: 'dur' },
+        { text: '速度(bytes/sec)', value: 'speed' },
+      ],
     }
   },
   mounted() {
@@ -365,6 +410,16 @@ export default {
       }
       this.filterDialog = false
       this.$fetch()
+    },
+    showHistogram() {
+      this.histogramDialog = true
+      this.$nextTick(() => {
+        this.$makeNetFlowHistogram('histogram')
+        this.$showNetFlowHistogram(this.logs, this.histogramType)
+      })
+    },
+    selectHistogramType() {
+      this.$showNetFlowHistogram(this.logs, this.histogramType)
     },
   },
 }

@@ -41,6 +41,7 @@ export default {
     '@/plugins/echarts/servicepie.js',
     '@/plugins/echarts/ai.js',
     '@/plugins/echarts/monitor.js',
+    '@/plugins/echarts/netflow.js',
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)
