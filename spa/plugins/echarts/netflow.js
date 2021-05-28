@@ -208,7 +208,181 @@ const showNetFlowCluster = (div, logs, type, cluster) => {
   chart.resize()
 }
 
+const makeNetFlowTraffic = (div, type) => {
+  let yAxis = ''
+  switch (type) {
+    case 'bytes':
+      yAxis = 'バイト数'
+      break
+    case 'packets':
+      yAxis = 'パケット数'
+      break
+    case 'bps':
+      yAxis = 'バイト/Sec'
+      break
+    case 'pps':
+      yAxis = 'パケット/Sec'
+      break
+  }
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    tooltip: {
+      trigger: 'axis',
+      formatter: (params) => {
+        const p = params[0]
+        return p.name + ' : ' + p.value[1]
+      },
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    grid: {
+      left: '10%',
+      right: '10%',
+      top: 40,
+      buttom: 0,
+    },
+    xAxis: {
+      type: 'time',
+      name: '日時',
+      axisLabel: {
+        color: '#ccc',
+        fontSize: '8px',
+        formatter: (value, index) => {
+          const date = new Date(value)
+          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+        },
+      },
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      splitLine: {
+        show: false,
+      },
+    },
+    yAxis: {
+      type: 'value',
+      name: yAxis,
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+    },
+    series: [
+      {
+        type: 'bar',
+        color: '#1f78b4',
+        large: true,
+        data: [],
+      },
+    ],
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
+const showNetFlowTraffic = (div, logs, type) => {
+  makeNetFlowTraffic(div, type)
+  const data = []
+  let bytes = 0
+  let packets = 0
+  let dur = 0
+  let ctm
+  logs.forEach((l) => {
+    if (!ctm) {
+      ctm = Math.floor(l.Time / (1000 * 1000 * 1000 * 60))
+      bytes += l.Bytes
+      dur += l.Duration
+      packets += l.Packets
+      return
+    }
+    const newCtm = Math.floor(l.Time / (1000 * 1000 * 1000 * 60))
+    if (ctm !== newCtm) {
+      let t = new Date(ctm * 60 * 1000)
+      let d = 0
+      switch (type) {
+        case 'bytes':
+          d = bytes
+          break
+        case 'packets':
+          d = packets
+          break
+        case 'bps':
+          if (dur > 0) {
+            d = bytes / dur
+          }
+          break
+        case 'pps':
+          if (dur > 0) {
+            d = packets / dur
+          }
+          break
+      }
+      data.push({
+        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
+        value: [t, d],
+      })
+      for (; ctm < newCtm; ctm++) {
+        t = new Date(ctm * 60 * 1000)
+        data.push({
+          name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
+          value: [t, 0],
+        })
+      }
+      bytes = 0
+      dur = 0
+      packets = 0
+    }
+    bytes += l.Bytes
+    dur += l.Duration
+    packets += l.Packets
+  })
+  chart.setOption({
+    series: [
+      {
+        data,
+      },
+    ],
+  })
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showNetFlowHistogram', showNetFlowHistogram)
   inject('showNetFlowCluster', showNetFlowCluster)
+  inject('showNetFlowTraffic', showNetFlowTraffic)
 }

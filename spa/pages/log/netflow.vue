@@ -73,6 +73,14 @@
             </v-btn>
           </template>
           <v-list>
+            <v-list-item @click="showTraffic">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> 通信量 </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item @click="showHistogram">
               <v-list-item-icon
                 ><v-icon>mdi-chart-histogram</v-icon>
@@ -337,6 +345,30 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="trafficDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          通信量
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="trafficType"
+            :items="trafficTypeList"
+            label="表示項目"
+            single-line
+            hide-details
+            @change="updateTraffic"
+          ></v-select>
+        </v-card-title>
+        <div id="traffic" style="width: 900px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="trafficDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -436,6 +468,14 @@ export default {
         { text: 'バイト/秒とパケット/秒', value: 'pps-bps' },
         { text: '送信元ポートと宛先ポート', value: 'sport-dport' },
       ],
+      trafficDialog: false,
+      trafficType: 'bytes',
+      trafficTypeList: [
+        { text: 'バイト数', value: 'bytes' },
+        { text: 'パケット数', value: 'packets' },
+        { text: 'バイト/秒', value: 'bps' },
+        { text: 'パケット/秒', value: 'pps' },
+      ],
     }
   },
   mounted() {
@@ -484,6 +524,15 @@ export default {
         this.clusterType,
         this.cluster * 1
       )
+    },
+    showTraffic() {
+      this.trafficDialog = true
+      this.$nextTick(() => {
+        this.$showNetFlowTraffic('traffic', this.logs, this.trafficType)
+      })
+    },
+    updateTraffic() {
+      this.$showNetFlowTraffic('traffic', this.logs, this.trafficType)
     },
   },
 }
