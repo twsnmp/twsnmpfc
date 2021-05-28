@@ -81,6 +81,14 @@
                 <v-list-item-title> ヒストグラム </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="showCluster">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> クラスター </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <v-btn color="normal" dark @click="$fetch()">
@@ -300,6 +308,35 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="clusterDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          クラスター
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="clusterType"
+            :items="clusterTypeList"
+            label="分類方法"
+            single-line
+            hide-details
+            @change="updateCluster"
+          ></v-select>
+          <v-text-field
+            v-model="cluster"
+            label="クラスター数"
+            @change="updateCluster"
+          ></v-text-field>
+        </v-card-title>
+        <div id="cluster" style="width: 900px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="clusterDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -390,6 +427,15 @@ export default {
         { text: '期間(sec)', value: 'dur' },
         { text: '速度(bytes/sec)', value: 'speed' },
       ],
+      clusterDialog: false,
+      clusterType: 'size-bps',
+      cluster: 2,
+      clusterTypeList: [
+        { text: '平均パケットサイズとバイト/秒', value: 'size-bps' },
+        { text: '平均パケットサイズとパケット/秒', value: 'size-pps' },
+        { text: 'バイト/秒とパケット/秒', value: 'pps-bps' },
+        { text: '送信元ポートと宛先ポート', value: 'sport-dport' },
+      ],
     }
   },
   mounted() {
@@ -414,12 +460,30 @@ export default {
     showHistogram() {
       this.histogramDialog = true
       this.$nextTick(() => {
-        this.$makeNetFlowHistogram('histogram')
-        this.$showNetFlowHistogram(this.logs, this.histogramType)
+        this.$showNetFlowHistogram('histogram', this.logs, this.histogramType)
       })
     },
     selectHistogramType() {
-      this.$showNetFlowHistogram(this.logs, this.histogramType)
+      this.$showNetFlowHistogram('histogram', this.logs, this.histogramType)
+    },
+    showCluster() {
+      this.clusterDialog = true
+      this.$nextTick(() => {
+        this.$showNetFlowCluster(
+          'cluster',
+          this.logs,
+          this.clusterType,
+          this.cluster * 1
+        )
+      })
+    },
+    updateCluster() {
+      this.$showNetFlowCluster(
+        'cluster',
+        this.logs,
+        this.clusterType,
+        this.cluster * 1
+      )
     },
   },
 }
