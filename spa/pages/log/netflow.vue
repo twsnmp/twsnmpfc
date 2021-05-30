@@ -97,6 +97,30 @@
                 <v-list-item-title> クラスター </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="showSender">
+              <v-list-item-icon
+                ><v-icon>mdi-format-list-numbered</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> 送信元リスト </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showIPFlow">
+              <v-list-item-icon
+                ><v-icon>mdi-format-list-numbered</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> IPフローリスト </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showService">
+              <v-list-item-icon
+                ><v-icon>mdi-format-list-numbered</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> サービスリスト </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <v-btn color="normal" dark @click="$fetch()">
@@ -369,10 +393,84 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="topListDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          {{ topListTitle }}
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="topListType"
+            :items="topListTypeList"
+            label="表示項目"
+            single-line
+            hide-details
+            @change="updateTopList"
+          ></v-select>
+        </v-card-title>
+        <v-card-text>
+          <div id="topList" style="width: 900px; height: 500px"></div>
+          <v-data-table
+            :headers="topListHeader"
+            :items="topList"
+            sort-by="Bytes"
+            sort-desc
+            dense
+          >
+            <template v-slot:[`item.Bytes`]="{ item }">
+              {{ formatBytes(item.Bytes) }}
+            </template>
+            <template v-slot:[`item.Packets`]="{ item }">
+              {{ formatCount(item.Packets) }}
+            </template>
+            <template v-slot:[`body.append`]>
+              <tr>
+                <td>
+                  <v-text-field v-model="topListName" label="name">
+                  </v-text-field>
+                </td>
+                <td colspan="5"></td>
+              </tr>
+            </template>
+          </v-data-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <download-excel
+            :data="topList"
+            type="csv"
+            name="TWSNMP_FC_NetFlow_TopList.csv"
+            header="TWSNMP FC NetFlow Top List"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :data="topList"
+            type="xls"
+            name="TWSNMP_FC_NetFlow_ToList.xls"
+            header="TWSNMP FC NetFlow To List"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-microsoft-excel</v-icon>
+              Excel
+            </v-btn>
+          </download-excel>
+          <v-btn color="normal" dark @click="topListDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
 <script>
+import * as numeral from 'numeral'
 export default {
   async fetch() {
     this.logs = await this.$axios.$post('/api/log/netflow', this.filter)
@@ -476,6 +574,34 @@ export default {
         { text: 'バイト/秒', value: 'bps' },
         { text: 'パケット/秒', value: 'pps' },
       ],
+      topListHeader: [
+        {
+          text: '名前',
+          value: 'Name',
+          width: '50%',
+          filter: (value) => {
+            if (!this.topListName) return true
+            return value.includes(this.topListName)
+          },
+        },
+        { text: 'パケット', value: 'Packets', width: '10%' },
+        { text: 'バイト', value: 'Bytes', width: '10%' },
+        { text: '期間', value: 'Duration', width: '10%' },
+        { text: 'BPS', value: 'bps', width: '10%' },
+        { text: 'PPS', value: 'pps', width: '10%' },
+      ],
+      topList: [],
+      topListDialog: false,
+      topListType: 'bytes',
+      topListTitle: '',
+      topListName: '',
+      topListTypeList: [
+        { text: 'バイト数', value: 'bytes' },
+        { text: 'パケット数', value: 'packets' },
+        { text: 'バイト/秒', value: 'bps' },
+        { text: 'パケット/秒', value: 'pps' },
+        { text: '通信期間', value: 'dur' },
+      ],
     }
   },
   mounted() {
@@ -533,6 +659,39 @@ export default {
     },
     updateTraffic() {
       this.$showNetFlowTraffic('traffic', this.logs, this.trafficType)
+    },
+    showSender() {
+      this.topList = this.$getNetFlowSenderList(this.logs)
+      this.topListDialog = true
+      this.topListTitle = '送信元別の通信量'
+      this.$nextTick(() => {
+        this.$showNetFlowTop('topList', this.topList, this.topListType)
+      })
+    },
+    showService() {
+      this.topList = this.$getNetFlowServiceList(this.logs)
+      this.topListDialog = true
+      this.topListTitle = 'サービス別通信量'
+      this.$nextTick(() => {
+        this.$showNetFlowTop('topList', this.topList, this.topListType)
+      })
+    },
+    showIPFlow() {
+      this.topList = this.$getNetFlowIPFlowList(this.logs)
+      this.topListDialog = true
+      this.topListTitle = 'IPフロー別通信量'
+      this.$nextTick(() => {
+        this.$showNetFlowTop('topList', this.topList, this.topListType)
+      })
+    },
+    updateTopList() {
+      this.$showNetFlowTop('topList', this.topList, this.topListType)
+    },
+    formatCount(n) {
+      return numeral(n).format('0,0')
+    },
+    formatBytes(n) {
+      return numeral(n).format('0.000b')
     },
   },
 }

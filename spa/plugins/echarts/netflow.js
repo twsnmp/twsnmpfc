@@ -381,8 +381,287 @@ const showNetFlowTraffic = (div, logs, type) => {
   chart.resize()
 }
 
+const showNetFlowTop = (div, list, type) => {
+  const data = []
+  const category = []
+
+  let xAxis = ''
+  switch (type) {
+    case 'bytes':
+      xAxis = 'バイト数'
+      list.sort((a, b) => b.Bytes - a.Bytes)
+      for (let i = list.length > 20 ? 19 : list.length - 1; i >= 0; i--) {
+        data.push(list[i].Bytes)
+        category.push(list[i].Name)
+      }
+      break
+    case 'packets':
+      xAxis = 'パケット数'
+      list.sort((a, b) => b.Packets - a.Packets)
+      for (let i = list.length > 20 ? 19 : list.length - 1; i >= 0; i--) {
+        data.push(list[i].Packets)
+        category.push(list[i].Name)
+      }
+      break
+    case 'dur':
+      xAxis = '通信期間(Sec)'
+      list.sort((a, b) => b.Duration - a.Duration)
+      for (let i = list.length > 20 ? 19 : list.length - 1; i >= 0; i--) {
+        data.push(list[i].Duration)
+        category.push(list[i].Name)
+      }
+      break
+    case 'bps':
+      xAxis = 'バイト/Sec'
+      list.sort((a, b) => b.bps - a.bps)
+      for (let i = list.length > 20 ? 19 : list.length - 1; i >= 0; i--) {
+        data.push(list[i].bps)
+        category.push(list[i].Name)
+      }
+      break
+    case 'pps':
+      xAxis = 'パケット/Sec'
+      list.sort((a, b) => b.pps - a.pps)
+      for (let i = list.length > 20 ? 19 : list.length - 1; i >= 0; i--) {
+        data.push(list[i].pps)
+        category.push(list[i].Name)
+      }
+      break
+  }
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  chart.setOption({
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    grid: {
+      left: '20%',
+      right: '10%',
+      top: 10,
+      buttom: 10,
+    },
+    xAxis: {
+      type: 'value',
+      name: xAxis,
+      boundaryGap: [0, 0.01],
+    },
+    yAxis: {
+      type: 'category',
+      data: category,
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+    },
+    series: [
+      {
+        name: xAxis,
+        type: 'bar',
+        data,
+      },
+    ],
+  })
+  chart.resize()
+}
+
+const getNetFlowSenderList = (logs) => {
+  const m = new Map()
+  logs.forEach((l) => {
+    const e = m.get(l.SrcIP)
+    if (!e) {
+      m.set(l.SrcIP, {
+        Name: l.SrcIP,
+        Bytes: l.Bytes,
+        Packets: l.Packets,
+        Duration: l.Duration,
+      })
+    } else {
+      e.Bytes += l.Bytes
+      e.Packets += l.Packets
+      e.Duration += l.Duration
+    }
+  })
+  const r = Array.from(m.values())
+  r.forEach((e) => {
+    if (e.Duration > 0) {
+      e.bps = (e.Bytes / e.Duration).toFixed(3)
+      e.pps = (e.Packets / e.Duration).toFixed(3)
+      e.Duration = e.Duration.toFixed(3)
+    } else {
+      e.bps = 0
+      e.pps = 0
+    }
+  })
+  return r
+}
+
+const getNetFlowServiceList = (logs) => {
+  const m = new Map()
+  logs.forEach((l) => {
+    let k = getServiceName(l.SrcPort + '/' + l.Protocol)
+    if (k === 'Other') {
+      k = getServiceName(l.DstPort + '/' + l.Protocol)
+    }
+    const e = m.get(k)
+    if (!e) {
+      m.set(k, {
+        Name: k,
+        Bytes: l.Bytes,
+        Packets: l.Packets,
+        Duration: l.Duration,
+      })
+    } else {
+      e.Bytes += l.Bytes
+      e.Packets += l.Packets
+      e.Duration += l.Duration
+    }
+  })
+  const r = Array.from(m.values())
+  r.forEach((e) => {
+    if (e.Duration > 0) {
+      e.bps = (e.Bytes / e.Duration).toFixed(3)
+      e.pps = (e.Packets / e.Duration).toFixed(3)
+      e.Duration = e.Duration.toFixed(3)
+    } else {
+      e.bps = 0
+      e.pps = 0
+    }
+  })
+  return r
+}
+
+// Service Name Map
+const serviceNameArray = [
+  ['80/tcp', 'HTTP'],
+  ['443/tcp', 'HTTPS'],
+  ['389/tcp', 'LDAP'],
+  ['636/tcp', 'LDAPS'],
+  ['53/tcp', 'DNS'],
+  ['53/udp', 'DNS'],
+  ['161/udp', 'SNMP'],
+  ['162/udp', 'SNMP'],
+  ['123/udp', 'NTP'],
+  ['25/tcp', 'SMTP'],
+  ['587/tcp', 'SMTP'],
+  ['110/tcp', 'POP3'],
+  ['995/tcp', 'POP3'],
+  ['143/tcp', 'IMAP'],
+  ['943/tcp', 'MAIL'],
+  ['22/tcp', 'SSH'],
+  ['21/tcp', 'TELNET'],
+  ['23/tcp', 'FTP'],
+  ['67/udp', 'DHCP'],
+  ['68/udp', 'DHCP'],
+  ['514/udp', 'SYSLOG'],
+  ['2049/tcp', 'NFS'],
+  ['2049/udp', 'NFS'],
+  ['445/tcp', 'CIFS'],
+  ['3389/tcp', 'RDP'],
+  ['5900/tcp', 'VNC'],
+  ['137/udp', 'NETBIOS'],
+  ['137/tcp', 'NETBIOS'],
+  ['138/udp', 'NETBIOS'],
+  ['138/tcp', 'NETBIOS'],
+  ['139/udp', 'NETBIOS'],
+  ['139/tcp', 'NETBIOS'],
+  ['88/tcp', 'AD'],
+  ['7680/tcp', 'WUDO'],
+  ['1812/udp', 'RADIUS'],
+  ['5223/tcp', 'APPLE'],
+  ['5228/tcp', 'ANDROID'],
+]
+
+const serviceNameMap = new Map(serviceNameArray)
+
+const getServiceName = (s) => {
+  const ret = serviceNameMap.get(s)
+  if (ret) {
+    return ret
+  }
+  if (s.indexOf('/icmp') > 0) {
+    return 'ICMP'
+  }
+  return 'Other'
+}
+
+const getNetFlowIPFlowList = (logs) => {
+  const m = new Map()
+  logs.forEach((l) => {
+    let k = l.SrcIP + '<->' + l.DstIP
+    let e = m.get(k)
+    if (!e) {
+      k = l.DstIP + '<->' + l.SrcIP
+      e = m.get(k)
+    }
+    if (!e) {
+      m.set(k, {
+        Name: k,
+        Bytes: l.Bytes,
+        Packets: l.Packets,
+        Duration: l.Duration,
+      })
+    } else {
+      if (k !== l.SrcIP + '<->' + l.DstIP) {
+        // 逆報告もある場合
+        e.bidir = true
+      }
+      e.Bytes += l.Bytes
+      e.Packets += l.Packets
+      e.Duration += l.Duration
+    }
+  })
+  const r = Array.from(m.values())
+  r.forEach((e) => {
+    if (e.Duration > 0) {
+      if (e.bidir) {
+        e.Duration /= 2.0
+      }
+      e.bps = (e.Bytes / e.Duration).toFixed(3)
+      e.pps = (e.Packets / e.Duration).toFixed(3)
+      e.Duration = e.Duration.toFixed(3)
+    } else {
+      e.bps = 0
+      e.pps = 0
+    }
+  })
+  return r
+}
+
 export default (context, inject) => {
   inject('showNetFlowHistogram', showNetFlowHistogram)
   inject('showNetFlowCluster', showNetFlowCluster)
   inject('showNetFlowTraffic', showNetFlowTraffic)
+  inject('showNetFlowTop', showNetFlowTop)
+  inject('getNetFlowSenderList', getNetFlowSenderList)
+  inject('getNetFlowServiceList', getNetFlowServiceList)
+  inject('getNetFlowIPFlowList', getNetFlowIPFlowList)
 }
