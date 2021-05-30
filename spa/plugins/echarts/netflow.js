@@ -1,5 +1,6 @@
 import * as echarts from 'echarts'
 import * as ecStat from 'echarts-stat'
+import { isPrivateIP, isV4Format } from '~/plugins/echarts/utils.js'
 
 let chart
 
@@ -656,6 +657,237 @@ const getNetFlowIPFlowList = (logs) => {
   return r
 }
 
+const showNetFlowGraph = (div, logs, type) => {
+  const nodeMap = new Map()
+  const edgeMap = new Map()
+  logs.forEach((l) => {
+    let ek = l.SrcIP + '|' + l.DstIP
+    let e = edgeMap.get(ek)
+    if (!e) {
+      ek = l.DstIP + '|' + l.SrcIP
+      e = edgeMap.get(ek)
+    }
+    if (!e) {
+      edgeMap.set(ek, {
+        source: l.SrcIP,
+        target: l.DstIP,
+        value: l.Bytes,
+      })
+    } else {
+      e.value += l.Bytes
+    }
+    let n = nodeMap.get(l.Src)
+    if (!n) {
+      nodeMap.set(l.SrcIP, {
+        name: l.SrcIP,
+        value: l.Bytes,
+        draggable: true,
+        category: getNodeCategory(l.SrcIP),
+      })
+    } else {
+      n.value += l.Bytes
+    }
+    n = nodeMap.get(l.DstIP)
+    if (!n) {
+      nodeMap.set(l.DstIP, {
+        name: l.DstIP,
+        value: 0,
+        draggable: true,
+        category: getNodeCategory(l.DstIP),
+      })
+    }
+  })
+  const nodes = Array.from(nodeMap.values())
+  const edges = Array.from(edgeMap.values())
+  const nvs = []
+  const evs = []
+  nodes.forEach((e) => {
+    nvs.push(e.value)
+  })
+  edges.forEach((e) => {
+    evs.push(e.value)
+  })
+  const n95 = ecStat.statistics.quantile(nvs, 0.95)
+  const n50 = ecStat.statistics.quantile(nvs, 0.5)
+  const e95 = ecStat.statistics.quantile(evs, 0.95)
+  const categories = [
+    { name: 'IPv4 Private' },
+    { name: 'IPv6 Private' },
+    { name: 'IPv4 Global' },
+    { name: 'IPV6 Global' },
+  ]
+  let mul = 1.0
+  if (type === 'gl') {
+    mul = 1.5
+  }
+  nodes.forEach((e) => {
+    e.label = { show: e.value > n95 }
+    e.symbolSize = e.value > n95 ? 5 : e.value > n50 ? 4 : 2
+    e.symbolSize *= mul
+  })
+  edges.forEach((e) => {
+    e.lineStyle = {
+      width: e.value > e95 ? 2 : 1,
+    }
+  })
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    grid: {
+      left: '7%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true,
+    },
+    tooltip: {},
+    legend: [
+      {
+        orient: 'vertical',
+        top: 50,
+        right: 20,
+        textStyle: {
+          fontSize: 10,
+          color: '#ccc',
+        },
+        data: categories.map(function (a) {
+          return a.name
+        }),
+      },
+    ],
+    color: ['#1f78b4', '#a6cee3', '#e31a1c', '#fb9a99'],
+    animationDurationUpdate: 1500,
+    animationEasingUpdate: 'quinticInOut',
+    series: [],
+  }
+  if (type === 'circular') {
+    options.series = [
+      {
+        name: 'IP Flows',
+        type: 'graph',
+        layout: 'circular',
+        circular: {
+          rotateLabel: true,
+        },
+        data: nodes,
+        links: edges,
+        categories,
+        roam: true,
+        label: {
+          position: 'right',
+          formatter: '{b}',
+          fontSize: 8,
+          fontStyle: 'normal',
+          color: '#ccc',
+        },
+        lineStyle: {
+          color: 'source',
+          curveness: 0.3,
+        },
+      },
+    ]
+  } else if (type === 'gl') {
+    options.series = [
+      {
+        name: 'IP Flows',
+        type: 'graphGL',
+        nodes,
+        edges,
+        modularity: {
+          resolution: 2,
+          sort: true,
+        },
+        lineStyle: {
+          color: 'source',
+          opacity: 0.5,
+        },
+        itemStyle: {
+          opacity: 1,
+        },
+        focusNodeAdjacency: false,
+        focusNodeAdjacencyOn: 'click',
+        emphasis: {
+          label: {
+            show: false,
+          },
+          lineStyle: {
+            opacity: 0.5,
+            width: 4,
+          },
+        },
+        forceAtlas2: {
+          steps: 5,
+          stopThreshold: 20,
+          jitterTolerence: 10,
+          edgeWeight: [0.2, 1],
+          gravity: 5,
+          edgeWeightInfluence: 0,
+        },
+        categories,
+        label: {
+          position: 'right',
+          formatter: '{b}',
+          fontSize: 8,
+          fontStyle: 'normal',
+          color: '#ccc',
+        },
+      },
+    ]
+  } else {
+    options.series = [
+      {
+        name: 'IP Flows',
+        type: 'graph',
+        layout: 'force',
+        data: nodes,
+        links: edges,
+        categories,
+        roam: true,
+        label: {
+          position: 'right',
+          formatter: '{b}',
+          fontSize: 8,
+          fontStyle: 'normal',
+          color: '#ccc',
+        },
+        lineStyle: {
+          color: 'source',
+          curveness: 0,
+        },
+      },
+    ]
+  }
+  chart.setOption(options)
+  chart.resize()
+}
+
+const getNodeCategory = (ip) => {
+  if (isPrivateIP(ip)) {
+    if (isV4Format(ip)) {
+      return 0
+    }
+    return 1
+  }
+  if (isV4Format(ip)) {
+    return 2
+  }
+  return 3
+}
+
 export default (context, inject) => {
   inject('showNetFlowHistogram', showNetFlowHistogram)
   inject('showNetFlowCluster', showNetFlowCluster)
@@ -664,4 +896,5 @@ export default (context, inject) => {
   inject('getNetFlowSenderList', getNetFlowSenderList)
   inject('getNetFlowServiceList', getNetFlowServiceList)
   inject('getNetFlowIPFlowList', getNetFlowIPFlowList)
+  inject('showNetFlowGraph', showNetFlowGraph)
 }

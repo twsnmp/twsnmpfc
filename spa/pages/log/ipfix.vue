@@ -113,6 +113,14 @@
                 <v-list-item-title> IPフローリスト </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="showGraph">
+              <v-list-item-icon>
+                <v-icon>mdi-graphql</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> IPフローグラフ </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item @click="showService">
               <v-list-item-icon
                 ><v-icon>mdi-format-list-numbered</v-icon>
@@ -393,6 +401,30 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="graphDialog" persistent max-width="1000px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          IPフローグラフ
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="graphType"
+            :items="graphTypeList"
+            label="表示タイプ"
+            single-line
+            hide-details
+            @change="updateGraph"
+          ></v-select>
+        </v-card-title>
+        <div id="graph" style="width: 1000px; height: 750px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="graphDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="topListDialog" persistent max-width="900px">
       <v-card style="width: 100%">
         <v-card-title>
@@ -602,6 +634,13 @@ export default {
         { text: 'パケット/秒', value: 'pps' },
         { text: '通信期間', value: 'dur' },
       ],
+      graphDialog: false,
+      graphType: 'force',
+      graphTypeList: [
+        { text: '力学モデル', value: 'force' },
+        { text: '円形', value: 'circular' },
+        { text: '３D', value: 'gl' },
+      ],
     }
   },
   mounted() {
@@ -659,6 +698,15 @@ export default {
     },
     updateTraffic() {
       this.$showNetFlowTraffic('traffic', this.logs, this.trafficType)
+    },
+    showGraph() {
+      this.graphDialog = true
+      this.$nextTick(() => {
+        this.$showNetFlowGraph('graph', this.logs, this.graphType)
+      })
+    },
+    updateGraph() {
+      this.$showNetFlowGraph('graph', this.logs, this.graphType)
     },
     showSender() {
       this.topList = this.$getNetFlowSenderList(this.logs)
