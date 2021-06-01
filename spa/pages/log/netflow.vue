@@ -94,7 +94,7 @@
                 ><v-icon>mdi-chart-scatter-plot</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title> クラスター </v-list-item-title>
+                <v-list-item-title> クラスター分析 </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="showSender">
@@ -102,7 +102,7 @@
                 ><v-icon>mdi-format-list-numbered</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title> 送信元リスト </v-list-item-title>
+                <v-list-item-title> 送信元別通信量 </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="showIPFlow">
@@ -110,7 +110,7 @@
                 ><v-icon>mdi-format-list-numbered</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title> IPフローリスト </v-list-item-title>
+                <v-list-item-title> IPペアー別通信量 </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="showGraph">
@@ -118,7 +118,7 @@
                 <v-icon>mdi-graphql</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title> IPフローグラフ </v-list-item-title>
+                <v-list-item-title> IPペアーグラフ分析 </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="showService">
@@ -126,7 +126,7 @@
                 ><v-icon>mdi-format-list-numbered</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title> サービスリスト </v-list-item-title>
+                <v-list-item-title> サービス別通信量 </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="showService3D">
@@ -134,7 +134,23 @@
                 ><v-icon>mdi-chart-scatter-plot</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title> サービス別3Dチャート </v-list-item-title>
+                <v-list-item-title> サービス別通信量(3D) </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showSender3D">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> 送信元別通信量(3D) </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showIPFlow3D">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> IPペアー別通信量(3D) </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -359,7 +375,7 @@
     <v-dialog v-model="clusterDialog" persistent max-width="900px">
       <v-card style="width: 100%">
         <v-card-title>
-          クラスター
+          クラスター分析
           <v-spacer></v-spacer>
           <v-select
             v-model="clusterType"
@@ -412,7 +428,7 @@
     <v-dialog v-model="graphDialog" persistent max-width="1000px">
       <v-card style="width: 100%">
         <v-card-title>
-          IPフローグラフ
+          IPペアーのグラフ分析
           <v-spacer></v-spacer>
           <v-select
             v-model="graphType"
@@ -436,7 +452,7 @@
     <v-dialog v-model="service3DDialog" persistent max-width="1000px">
       <v-card style="width: 100%">
         <v-card-title>
-          サービス別3Dチャート
+          サービス別の通信量(3D)
           <v-spacer></v-spacer>
           <v-select
             v-model="service3DType"
@@ -451,6 +467,54 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="service3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="sender3DDialog" persistent max-width="1000px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          送信元別の通信量(3D)
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="sender3DType"
+            :items="service3DTypeList"
+            label="表示タイプ"
+            single-line
+            hide-details
+            @change="updateSender3D"
+          ></v-select>
+        </v-card-title>
+        <div id="sender3d" style="width: 1000px; height: 750px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="sender3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="ipFlow3DDialog" persistent max-width="1000px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          IPペアー別の通信量(3D)
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="ipFlow3DType"
+            :items="service3DTypeList"
+            label="表示タイプ"
+            single-line
+            hide-details
+            @change="updateIPFolw3D"
+          ></v-select>
+        </v-card-title>
+        <div id="ipflow3d" style="width: 1000px; height: 750px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="ipFlow3DDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -680,6 +744,10 @@ export default {
         { text: 'パケット数', value: 'Packets' },
         { text: '通信期間', value: 'Duration' },
       ],
+      sender3DDialog: false,
+      sender3DType: 'Bytes',
+      ipFlow3DDialog: false,
+      ipFlow3DType: 'Bytes',
     }
   },
   mounted() {
@@ -755,6 +823,24 @@ export default {
     },
     updateService3D() {
       this.$showNetFlowService3D('service3d', this.logs, this.service3DType)
+    },
+    showSender3D() {
+      this.sender3DDialog = true
+      this.$nextTick(() => {
+        this.$showNetFlowSender3D('sender3d', this.logs, this.sender3DType)
+      })
+    },
+    updateSender3D() {
+      this.$showNetFlowSender3D('sender3d', this.logs, this.sender3DType)
+    },
+    showIPFlow3D() {
+      this.ipFlow3DDialog = true
+      this.$nextTick(() => {
+        this.$showNetFlowIPFlow3D('ipflow3d', this.logs, this.ipFlow3DType)
+      })
+    },
+    updateIPFlow3D() {
+      this.$showNetFlowIPFlow3D('ipflow3d', this.logs, this.ipFlow3DType)
     },
     showSender() {
       this.topList = this.$getNetFlowSenderList(this.logs)
