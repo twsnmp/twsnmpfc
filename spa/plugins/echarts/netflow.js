@@ -565,7 +565,7 @@ const serviceNameArray = [
   ['80/tcp', 'HTTP'],
   ['443/tcp', 'HTTPS'],
   ['389/tcp', 'LDAP'],
-  ['636/tcp', 'LDAPS'],
+  ['636/tcp', 'LDAP'],
   ['53/tcp', 'DNS'],
   ['53/udp', 'DNS'],
   ['161/udp', 'SNMP'],
@@ -576,7 +576,7 @@ const serviceNameArray = [
   ['110/tcp', 'POP3'],
   ['995/tcp', 'POP3'],
   ['143/tcp', 'IMAP'],
-  ['943/tcp', 'MAIL'],
+  ['943/tcp', 'IMAP'],
   ['22/tcp', 'SSH'],
   ['21/tcp', 'TELNET'],
   ['23/tcp', 'FTP'],
@@ -888,6 +888,201 @@ const getNodeCategory = (ip) => {
   return 3
 }
 
+const showNetFlowService3D = (div, logs, type) => {
+  const m = new Map()
+  logs.forEach((l) => {
+    let k = getServiceName(l.SrcPort + '/' + l.Protocol)
+    if (k === 'Other') {
+      k = getServiceName(l.DstPort + '/' + l.Protocol)
+    }
+    const ipt = getNodeCategory(l.SrcIP)
+    const t = new Date(l.Time / (1000 * 1000))
+    const e = m.get(k)
+    if (!e) {
+      m.set(k, {
+        Name: k,
+        TotalBytes: l.Bytes,
+        Time: [t],
+        Bytes: [l.Bytes],
+        Packets: [l.Packets],
+        Duration: [l.Duration],
+        IPType: [ipt],
+      })
+    } else {
+      e.TotalBytes += l.Bytes
+      e.Time.push(t)
+      e.Bytes.push(l.Bytes)
+      e.Packets.push(l.Packets)
+      e.Duration.push(l.Duration)
+      e.IPType.push(ipt)
+    }
+  })
+  const cat = Array.from(m.keys())
+  const l = Array.from(m.values())
+  const data = []
+  let dim = []
+  switch (type) {
+    case 'Bytes':
+      dim = ['Protocl', 'Time', 'Bytes', 'Packtes', 'Duration', 'IPType']
+      l.forEach((e) => {
+        for (let i = 0; i < e.Time.length && i < 15000; i++) {
+          data.push([
+            e.Name,
+            e.Time[i],
+            e.Bytes[i],
+            e.Packets[i],
+            e.Duration[i],
+            e.IPType[i],
+          ])
+        }
+      })
+      break
+    case 'Packets':
+      dim = ['Protocl', 'Time', 'Packtes', 'Bytes', 'Duration', 'IPType']
+      l.forEach((e) => {
+        for (let i = 0; i < e.Time.length && i < 15000; i++) {
+          data.push([
+            e.Name,
+            e.Time[i],
+            e.Packets[i],
+            e.Bytes[i],
+            e.Duration[i],
+            e.IPType[i],
+          ])
+        }
+      })
+      break
+    case 'Duration':
+      dim = ['Protocl', 'Time', 'Duration', 'Bytes', 'Packtes', 'IPType']
+      l.forEach((e) => {
+        for (let i = 0; i < e.Time.length && i < 15000; i++) {
+          data.push([
+            e.Name,
+            e.Time[i],
+            e.Duration[i],
+            e.Bytes[i],
+            e.Packets[i],
+            e.IPType[i],
+          ])
+        }
+      })
+      break
+  }
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    tooltip: {},
+    animationDurationUpdate: 1500,
+    animationEasingUpdate: 'quinticInOut',
+    visualMap: {
+      show: false,
+      min: 0,
+      max: 3,
+      dimension: 5,
+      inRange: {
+        color: ['#1f78b4', '#a6cee3', '#e31a1c', '#fb9a99'],
+      },
+    },
+    xAxis3D: {
+      type: 'category',
+      name: 'Protocol',
+      data: cat,
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#eee',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    yAxis3D: {
+      type: 'time',
+      name: 'Time',
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#eee',
+        fontSize: 8,
+        formatter(value, index) {
+          const date = new Date(value)
+          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+        },
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    zAxis3D: {
+      type: 'value',
+      name: type,
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    grid3D: {
+      axisLine: {
+        lineStyle: { color: '#eee' },
+      },
+      axisPointer: {
+        lineStyle: { color: '#eee' },
+      },
+      viewControl: {
+        projection: 'orthographic',
+      },
+    },
+    series: [
+      {
+        name: 'サービス別通信量',
+        type: 'scatter3D',
+        dimensions: dim,
+        data,
+      },
+    ],
+  }
+  chart.setOption(options)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showNetFlowHistogram', showNetFlowHistogram)
   inject('showNetFlowCluster', showNetFlowCluster)
@@ -897,4 +1092,5 @@ export default (context, inject) => {
   inject('getNetFlowServiceList', getNetFlowServiceList)
   inject('getNetFlowIPFlowList', getNetFlowIPFlowList)
   inject('showNetFlowGraph', showNetFlowGraph)
+  inject('showNetFlowService3D', showNetFlowService3D)
 }

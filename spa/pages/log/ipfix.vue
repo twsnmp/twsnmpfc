@@ -129,6 +129,14 @@
                 <v-list-item-title> サービスリスト </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="showService3D">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> サービス別3Dチャート </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <v-btn color="normal" dark @click="$fetch()">
@@ -425,6 +433,30 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="service3DDialog" persistent max-width="1000px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          サービス別3Dチャート
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="service3DType"
+            :items="service3DTypeList"
+            label="表示タイプ"
+            single-line
+            hide-details
+            @change="updateService3D"
+          ></v-select>
+        </v-card-title>
+        <div id="service3d" style="width: 1000px; height: 750px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="service3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="topListDialog" persistent max-width="900px">
       <v-card style="width: 100%">
         <v-card-title>
@@ -641,6 +673,13 @@ export default {
         { text: '円形', value: 'circular' },
         { text: '３D', value: 'gl' },
       ],
+      service3DDialog: false,
+      service3DType: 'Bytes',
+      service3DTypeList: [
+        { text: 'バイト数', value: 'Bytes' },
+        { text: 'パケット数', value: 'Packets' },
+        { text: '通信期間', value: 'Duration' },
+      ],
     }
   },
   mounted() {
@@ -707,6 +746,15 @@ export default {
     },
     updateGraph() {
       this.$showNetFlowGraph('graph', this.logs, this.graphType)
+    },
+    showService3D() {
+      this.service3DDialog = true
+      this.$nextTick(() => {
+        this.$showNetFlowService3D('service3d', this.logs, this.service3DType)
+      })
+    },
+    updateService3D() {
+      this.$showNetFlowService3D('service3d', this.logs, this.service3DType)
     },
     showSender() {
       this.topList = this.$getNetFlowSenderList(this.logs)
