@@ -33,12 +33,14 @@ type syslogWebAPI struct {
 }
 
 type syslogWebAPILogEnt struct {
-	Time    int64
-	Level   string
-	Host    string
-	Type    string
-	Tag     string
-	Message string
+	Time     int64
+	Level    string
+	Host     string
+	Type     string
+	Tag      string
+	Message  string
+	Severity int
+	Facility int
 }
 
 func getLevelFromSeverity(sv int) string {
@@ -177,6 +179,8 @@ func postSyslog(c echo.Context) error {
 		re.Time = l.Time
 		re.Level = getLevelFromSeverity(int(sv))
 		re.Type = getSyslogType(int(sv), int(fac))
+		re.Facility = int(fac)
+		re.Severity = int(sv)
 		for _, mf := range messageFilter {
 			if mf.reg.Match([]byte(re.Message)) {
 				if mf.not {

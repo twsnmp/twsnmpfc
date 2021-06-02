@@ -42,6 +42,7 @@ export default {
     '@/plugins/echarts/ai.js',
     '@/plugins/echarts/monitor.js',
     '@/plugins/echarts/netflow.js',
+    '@/plugins/echarts/syslog.js',
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)

@@ -71,6 +71,48 @@
             Excel
           </v-btn>
         </download-excel>
+        <v-menu v-if="logs" offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="showHistogram">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-histogram</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> ヒストグラム </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showCluster">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> クラスター分析 </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showHost">
+              <v-list-item-icon
+                ><v-icon>mdi-format-list-numbered</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> ホスト別ログ </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showHost3D">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> ホスト別ログ(3D) </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           再検索
@@ -82,10 +124,6 @@
         >
           <v-icon>mdi-view-list</v-icon>
           抽出情報
-        </v-btn>
-        <v-btn color="normal" dark to="/map">
-          <v-icon>mdi-lan</v-icon>
-          マップ
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -279,10 +317,133 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="histogramDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          ヒストグラム
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="histogramType"
+            :items="histogramTypeList"
+            label="集計項目"
+            single-line
+            hide-details
+            @change="selectHistogramType"
+          ></v-select>
+        </v-card-title>
+        <div id="histogram" style="width: 900px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="histogramDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="clusterDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          クラスター分析
+          <v-spacer></v-spacer>
+          <v-text-field
+            v-model="cluster"
+            label="クラスター数"
+            @change="updateCluster"
+          ></v-text-field>
+        </v-card-title>
+        <div id="cluster" style="width: 900px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="clusterDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="host3DDialog" persistent max-width="1000px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          ホスト別ログ(3D)
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <div id="host3d" style="width: 1000px; height: 750px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="host3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="hostListDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          ホスト別ログ
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <v-card-text>
+          <div id="hostList" style="width: 900px; height: 500px"></div>
+          <v-data-table
+            :headers="hostListHeader"
+            :items="hostList"
+            sort-by="Total"
+            sort-desc
+            dense
+          >
+            <template v-slot:[`item.Total`]="{ item }">
+              {{ formatCount(item.Total) }}
+            </template>
+            <template v-slot:[`body.append`]>
+              <tr>
+                <td>
+                  <v-text-field v-model="hostName" label="name"></v-text-field>
+                </td>
+                <td colspan="5"></td>
+              </tr>
+            </template>
+          </v-data-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <download-excel
+            :data="hostList"
+            type="csv"
+            name="TWSNMP_FC_Syslog_Host_List.csv"
+            header="TWSNMP FC Syslog Host List"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :data="hostList"
+            type="xls"
+            name="TWSNMP_FC_Syslog_Host_List.xls"
+            header="TWSNMP FC Syslog Host List"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-microsoft-excel</v-icon>
+              Excel
+            </v-btn>
+          </download-excel>
+          <v-btn color="normal" dark @click="hostListDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
 <script>
+import * as numeral from 'numeral'
 export default {
   async fetch() {
     const r = await this.$axios.$post('/api/log/syslog', this.filter)
@@ -399,6 +560,36 @@ export default {
       host: '',
       tag: '',
       msg: '',
+      histogramDialog: false,
+      histogramType: 'Severity',
+      histogramTypeList: [
+        { text: 'Severity', value: 'Severity' },
+        { text: 'Facility', value: 'Facility' },
+        { text: 'Priority', value: 'Priority' },
+      ],
+      clusterDialog: false,
+      cluster: 2,
+      hostListHeader: [
+        {
+          text: 'ホスト名',
+          value: 'Name',
+          width: '40%',
+          filter: (value) => {
+            if (!this.hostName) return true
+            return value.includes(this.hostName)
+          },
+        },
+        { text: '総数', value: 'Total', width: '10%' },
+        { text: '重度', value: 'High', width: '10%' },
+        { text: '軽度', value: 'Low', width: '10%' },
+        { text: '注意', value: 'Warn', width: '10%' },
+        { text: '情報', value: 'Info', width: '10%' },
+        { text: 'デバッグ', value: 'Debug', width: '10%' },
+      ],
+      hostList: [],
+      hostListDialog: false,
+      hostName: '',
+      host3DDialog: false,
     }
   },
   mounted() {
@@ -419,6 +610,40 @@ export default {
       }
       this.filterDialog = false
       this.$fetch()
+    },
+    showHistogram() {
+      this.histogramDialog = true
+      this.$nextTick(() => {
+        this.$showSyslogHistogram('histogram', this.logs, this.histogramType)
+      })
+    },
+    selectHistogramType() {
+      this.$showSyslogHistogram('histogram', this.logs, this.histogramType)
+    },
+    showCluster() {
+      this.clusterDialog = true
+      this.$nextTick(() => {
+        this.$showSyslogCluster('cluster', this.logs, this.cluster * 1)
+      })
+    },
+    updateCluster() {
+      this.$showSyslogCluster('cluster', this.logs, this.cluster * 1)
+    },
+    showHost3D() {
+      this.host3DDialog = true
+      this.$nextTick(() => {
+        this.$showSyslogHost3D('host3d', this.logs)
+      })
+    },
+    showHost() {
+      this.hostList = this.$getSyslogHostList(this.logs)
+      this.hostListDialog = true
+      this.$nextTick(() => {
+        this.$showSyslogHost('hostList', this.hostList)
+      })
+    },
+    formatCount(n) {
+      return numeral(n).format('0,0')
     },
   },
 }
