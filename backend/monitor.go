@@ -78,11 +78,11 @@ func updateMonData() {
 // monitor :
 func monitor(ctx context.Context) {
 	log.Println("start monitor")
-	// 15秒に同期する
-	for (time.Now().Second() % 15) != 0 {
+	// 60秒に同期する
+	for (time.Now().Second() % 60) != 0 {
 		time.Sleep(time.Millisecond * 100)
 	}
-	timer := time.NewTicker(time.Second * 15)
+	timer := time.NewTicker(time.Second * 60)
 	updateMonData()
 	defer timer.Stop()
 	for {

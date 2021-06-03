@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/montanaflynn/stats"
+	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -43,7 +45,10 @@ func notifyBackend(ctx context.Context) {
 				i = 0
 				lastLog = checkNotify(lastLog)
 			}
-			if datastore.NotifyConf.Report && lastSendReport.Day() != time.Now().Day() {
+			if datastore.NotifyConf.Report &&
+				lastSendReport.Day() != time.Now().Day() &&
+				len(datastore.DBStatsLog) > 1 &&
+				len(backend.MonitorDataes) > 1 {
 				lastSendReport = time.Now()
 				sendReport()
 			}
@@ -306,6 +311,12 @@ func sendReport() {
 	body = append(body, "【現在のマップ情報】")
 	body = append(body, getMapInfo()...)
 	body = append(body, "")
+	body = append(body, "【データベース情報】")
+	body = append(body, getDBInfo()...)
+	body = append(body, "")
+	body = append(body, "【システムリソース情報】(Min/Mean/Max)")
+	body = append(body, getResInfo()...)
+	body = append(body, "")
 	list := []*datastore.EventLogEnt{}
 	datastore.ForEachLastEventLog("", func(l *datastore.EventLogEnt) bool {
 		list = append(list, l)
@@ -359,6 +370,9 @@ func sendReport() {
 	body = append(body, "【24時間以内に新しく発見したIPアドレス】")
 	body = append(body, n...)
 	body = append(body, "")
+	body = append(body, "【AI分析情報】")
+	body = append(body, getAIInfo()...)
+	body = append(body, "")
 	body = append(body, "【24時間以内の状態別ログ件数】")
 	body = append(body, fmt.Sprintf("重度=%d,軽度=%d,注意=%d,正常=%d,その他=%d", high, low, warn, normal, other))
 	body = append(body, "")
@@ -399,20 +413,19 @@ func getMapInfo() []string {
 		}
 		return true
 	})
-	state := "unknown"
+	state := "不明"
 	if high > 0 {
-		state = "high"
+		state = "重度"
 	} else if low > 0 {
-		state = "low"
+		state = "軽度"
 	} else if warn > 0 {
-		state = "warn"
+		state = "注意"
 	} else if normal+repair > 0 {
-		state = "normal"
+		state = "正常"
 	}
 	return []string{
 		fmt.Sprintf("MAP状態=%s", state),
 		fmt.Sprintf("重度=%d,軽度=%d,注意=%d,復帰=%d,正常=%d,不明=%d", high, low, warn, repair, normal, unknown),
-		fmt.Sprintf("データベースサイズ=%s", humanize.Bytes(uint64(datastore.DBStats.Size))),
 	}
 }
 
@@ -487,4 +500,98 @@ func getIPReport() ([]string, []string) {
 		return true
 	})
 	return retNew, retBad
+}
+
+func getDBInfo() []string {
+	size := humanize.Bytes(uint64(datastore.DBStats.Size))
+	dt := datastore.DBStats.Time - datastore.DBStatsLog[0].Time
+	ds := datastore.DBStats.Size - datastore.DBStatsLog[0].Size
+	speed := "不明"
+	if dt > 0 {
+		s := ds / (dt / 1000 * 1000 * 1000)
+		s *= 3600 * 24
+		speed = humanize.Bytes(uint64(s))
+	}
+	delta := humanize.Bytes(uint64(ds))
+	return []string{
+		fmt.Sprintf("現在のサイズ=%s", size),
+		fmt.Sprintf("増加サイズ=%s", delta),
+		fmt.Sprintf("増加速度=%s/日", speed),
+	}
+}
+
+func getResInfo() []string {
+	if len(backend.MonitorDataes) < 1 {
+		return []string{}
+	}
+	cpu := []float64{}
+	mem := []float64{}
+	disk := []float64{}
+	load := []float64{}
+	for _, m := range backend.MonitorDataes {
+		cpu = append(cpu, m.CPU)
+		mem = append(mem, m.Mem)
+		disk = append(disk, m.Disk)
+		load = append(load, m.Load)
+	}
+	cpuMin, _ := stats.Min(cpu)
+	cpuMean, _ := stats.Mean(cpu)
+	cpuMax, _ := stats.Max(cpu)
+	memMin, _ := stats.Min(mem)
+	memMean, _ := stats.Mean(mem)
+	memMax, _ := stats.Max(mem)
+	diskMin, _ := stats.Min(disk)
+	diskMean, _ := stats.Mean(disk)
+	diskMax, _ := stats.Max(disk)
+	loadMin, _ := stats.Min(load)
+	loadMean, _ := stats.Mean(load)
+	loadMax, _ := stats.Max(load)
+	return []string{
+		fmt.Sprintf("CPU=%s/%s/%s %%",
+			humanize.FormatFloat("###.##", cpuMin),
+			humanize.FormatFloat("###.##", cpuMean),
+			humanize.FormatFloat("###.##", cpuMax),
+		),
+		fmt.Sprintf("Mem=%s/%s/%s %%",
+			humanize.FormatFloat("###.##", memMin),
+			humanize.FormatFloat("###.##", memMean),
+			humanize.FormatFloat("###.##", memMax),
+		),
+		fmt.Sprintf("Disk=%s/%s/%s %%",
+			humanize.FormatFloat("###.##", diskMin),
+			humanize.FormatFloat("###.##", diskMean),
+			humanize.FormatFloat("###.##", diskMax),
+		),
+		fmt.Sprintf("Load=%s/%s/%s",
+			humanize.FormatFloat("###.##", loadMin),
+			humanize.FormatFloat("###.##", loadMean),
+			humanize.FormatFloat("###.##", loadMax),
+		),
+	}
+}
+
+func getAIInfo() []string {
+	ret := []string{"Score,Node,Polling,Count"}
+	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
+		if p.LogMode != datastore.LogModeAI {
+			return true
+		}
+		n := datastore.GetNode(p.NodeID)
+		if n == nil {
+			return true
+		}
+		air, err := datastore.GetAIReesult(p.ID)
+		if err != nil || len(air.ScoreData) < 1 {
+			return true
+		}
+		ret = append(ret,
+			fmt.Sprintf("%.2f,%s,%s,%d",
+				air.ScoreData[len(air.ScoreData)-1][1],
+				n.Name,
+				p.Name,
+				len(air.ScoreData),
+			))
+		return true
+	})
+	return ret
 }
