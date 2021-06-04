@@ -507,15 +507,16 @@ func getDBInfo() []string {
 	dt := datastore.DBStats.Time - datastore.DBStatsLog[0].Time
 	ds := datastore.DBStats.Size - datastore.DBStatsLog[0].Size
 	speed := "不明"
+	dt /= (1000 * 1000 * 1000)
 	if dt > 0 {
-		s := ds / (dt / 1000 * 1000 * 1000)
+		s := ds / dt
 		s *= 3600 * 24
 		speed = humanize.Bytes(uint64(s))
 	}
 	delta := humanize.Bytes(uint64(ds))
 	return []string{
 		fmt.Sprintf("現在のサイズ=%s", size),
-		fmt.Sprintf("増加サイズ=%s", delta),
+		fmt.Sprintf("増加サイズ=%s (from %s)", delta, humanize.Time(time.Unix(0, datastore.DBStatsLog[0].Time))),
 		fmt.Sprintf("増加速度=%s/日", speed),
 	}
 }
