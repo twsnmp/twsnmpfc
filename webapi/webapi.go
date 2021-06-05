@@ -123,6 +123,7 @@ func setup(p *WebAPI) {
 	r.POST("/polling/add", postPollingAdd)
 	r.POST("/polling/auto", postPollingAutoAdd)
 	r.POST("/polling/:id", postPolling)
+	r.GET("/aidata/:id", getPollingAIData)
 	r.POST("/polling/update", postPollingUpdate)
 	r.POST("/pollings/delete", deletePollings)
 	r.POST("/pollings/setlevel", setPollingLevel)

@@ -22,20 +22,20 @@
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
       >
-        <template v-slot:[`item.Score`]="{ item }">
+        <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.IconScore)">
             {{ $getScoreIconName(item.IconScore) }}
           </v-icon>
           {{ item.Score.toFixed(1) }}
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-icon small @click="openPollingChart(item)"> mdi-eye </v-icon>
         </template>
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-menu offset-y>
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
               グラフ表示
@@ -157,21 +157,6 @@
 
 <script>
 export default {
-  async fetch() {
-    this.scores = []
-    this.ai = await this.$axios.$get('/api/report/ai/' + this.$route.params.id)
-    if (!this.ai || !this.ai.AIResult) {
-      return
-    }
-    this.ai.AIResult.ScoreData.forEach((s) => {
-      this.scores.push({
-        Score: s[1],
-        IconScore: s[1] >= 100.0 ? 1.0 : 100.0 - s[1],
-        Time: this.$timeFormat(new Date(s[0] * 1000)),
-        UnixTime: s[0],
-      })
-    })
-  },
   data() {
     return {
       search: '',
@@ -196,6 +181,21 @@ export default {
       numValEntList: [],
     }
   },
+  async fetch() {
+    this.scores = []
+    this.ai = await this.$axios.$get('/api/report/ai/' + this.$route.params.id)
+    if (!this.ai || !this.ai.AIResult) {
+      return
+    }
+    this.ai.AIResult.ScoreData.forEach((s) => {
+      this.scores.push({
+        Score: s[1],
+        IconScore: s[1] >= 100.0 ? 1.0 : 100.0 - s[1],
+        Time: this.$timeFormat(new Date(s[0] * 1000)),
+        UnixTime: s[0],
+      })
+    })
+  },
   methods: {
     openHeatMap() {
       this.heatMapDialog = true
@@ -210,11 +210,7 @@ export default {
     openPieChart() {
       this.pieChartDialog = true
       this.$nextTick(() => {
-        this.$showAIPieChart(
-          'pieChart',
-          this.ai.AIResult.ScoreData,
-          this.openPollingChart
-        )
+        this.$showAIPieChart('pieChart', this.ai.AIResult.ScoreData)
       })
     },
     openTimeChart() {

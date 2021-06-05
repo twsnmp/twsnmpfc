@@ -313,6 +313,20 @@ const cmpIP = (a,b) => {
   return 0;
 }
 
+const getLogModeName = (m) => {
+  switch(m){
+    case 0:
+      return 'off'
+    case 1:
+      return 'all'
+    case 2:
+      return 'diff'
+    case 3:
+      return 'ai'
+  }
+  return ''
+} 
+
 export default (context, inject) => {
   inject('getIconName', getIconName)
   inject('getStateName', getStateName)
@@ -336,4 +350,5 @@ export default (context, inject) => {
   inject('protocolFilterList', protocolFilterList)
   inject('tcpFlagFilterList', tcpFlagFilterList)
   inject('cmpIP', cmpIP)
+  inject('getLogModeName', getLogModeName)
 }

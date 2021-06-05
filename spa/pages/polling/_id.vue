@@ -3,7 +3,7 @@
     <v-card min-width="900px">
       <v-card-title> ポーリング情報 </v-card-title>
       <v-simple-table dense>
-        <template v-slot:default>
+        <template #default>
           <thead>
             <tr>
               <th class="text-left">項目</th>
@@ -73,7 +73,7 @@
                   item-height="20"
                   :items="results"
                 >
-                  <template v-slot:default="{ item }">
+                  <template #default="{ item }">
                     <v-list-item>
                       <v-list-item-title>{{ item.title }}</v-list-item-title>
                       {{ item.value }}
@@ -88,7 +88,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-menu v-if="logs" offset-y>
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
               グラフと集計
@@ -117,6 +117,38 @@
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title>ヒストグラム</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item v-if="aiScores.length < 1" @click="doAI">
+              <v-list-item-icon>
+                <v-icon>mdi-brain</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>AI分析</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item v-if="aiScores.length > 0" @click="showAIHeatMap">
+              <v-list-item-icon>
+                <v-icon>mdi-calendar-check</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>AI分析ヒートマップ</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item v-if="aiScores.length" @click="showAIPieChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-pie</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>AI分析異常割合</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item v-if="aiScores.length" @click="showAITimeChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-timeline-variant</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>AI分析時系列</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -152,7 +184,7 @@
           loading-text="Loading... Please wait"
           class="log"
         >
-          <template v-slot:[`item.State`]="{ item }">
+          <template #[`item.State`]="{ item }">
             <v-icon :color="$getStateColor(item.State)">{{
               $getStateIconName(item.State)
             }}</v-icon>
@@ -242,7 +274,7 @@
               offset-y
               min-width="auto"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.StartDate"
                   label="開始日"
@@ -272,7 +304,7 @@
               max-width="290px"
               min-width="290px"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.StartTime"
                   label="開始時刻"
@@ -298,7 +330,7 @@
               offset-y
               min-width="auto"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.EndDate"
                   label="終了日"
@@ -328,7 +360,7 @@
               max-width="290px"
               min-width="290px"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.EndTime"
                   label="終了時刻"
@@ -361,46 +393,82 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="aiTrainDialog" persistent max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">AI学習状況</span>
+        </v-card-title>
+        <v-alert v-model="aiError" color="error" dense dismissible>
+          AI分析に失敗しました
+        </v-alert>
+        <v-spacer></v-spacer>
+        <v-card-subtitle> 学習状況 </v-card-subtitle>
+        <v-card-text>
+          <div id="error" style="width: 800px; height: 200px"></div>
+        </v-card-text>
+        <v-card-subtitle> モデル </v-card-subtitle>
+        <v-card-text>
+          <div id="model" style="background-color: #ccc"></div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="aiTrainDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="aiHeatMapDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> AI分析ヒートマップ </span>
+        </v-card-title>
+        <div id="heatMap" style="width: 1000px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="aiHeatMapDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="aiPieChartDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> AI分析異常割合 </span>
+        </v-card-title>
+        <div id="pieChart" style="width: 1000px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="aiPieChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="aiTimeChartDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> AI分析時系列 </span>
+        </v-card-title>
+        <div id="timeChart" style="width: 1000px; height: 300px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="aiTimeChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
 <script>
 export default {
-  async fetch() {
-    const r = await this.$axios.$post(
-      '/api/polling/' + this.$route.params.id,
-      this.filter
-    )
-    this.node = r.Node
-    this.polling = r.Polling
-    this.timeStr = this.$timeFormat(
-      new Date(r.Polling.LastTime / (1000 * 1000))
-    )
-    Object.keys(r.Polling.Result).forEach((k) => {
-      this.results.push({
-        title: k,
-        value: r.Polling.Result[k],
-      })
-    })
-    if (!r.Logs) {
-      this.logs = null
-    }
-    this.logs = r.Logs
-    this.logs.forEach((e) => {
-      const t = new Date(e.Time / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t)
-      e.ResultStr = ''
-      Object.keys(e.Result).forEach((k) => {
-        e.ResultStr += k + '=' + e.Result[k] + ' '
-      })
-      this.$setDataList(e.Result, this.numValEntList)
-    })
-    if (!this.selectedValEnt) {
-      if (this.numValEntList) {
-        this.selectedValEnt = this.numValEntList[0].value
-      }
-    }
-  },
   data() {
     return {
       node: {},
@@ -430,6 +498,49 @@ export default {
       pollingLogDialog: false,
       pollingResultDialog: false,
       pollingHistogramDialog: false,
+      aiTrainDialog: false,
+      aiHeatMapDialog: false,
+      aiPieChartDialog: false,
+      aiTimeChartDialog: false,
+      aiError: false,
+      aiScores: [],
+    }
+  },
+  async fetch() {
+    const r = await this.$axios.$post(
+      '/api/polling/' + this.$route.params.id,
+      this.filter
+    )
+    this.node = r.Node
+    this.polling = r.Polling
+    this.timeStr = this.$timeFormat(
+      new Date(r.Polling.LastTime / (1000 * 1000))
+    )
+    Object.keys(r.Polling.Result).forEach((k) => {
+      this.results.push({
+        title: k,
+        value: r.Polling.Result[k],
+      })
+    })
+    this.aiScores = []
+    if (!r.Logs) {
+      this.logs = null
+      return
+    }
+    this.logs = r.Logs
+    this.logs.forEach((e) => {
+      const t = new Date(e.Time / (1000 * 1000))
+      e.TimeStr = this.$timeFormat(t)
+      e.ResultStr = ''
+      Object.keys(e.Result).forEach((k) => {
+        e.ResultStr += k + '=' + e.Result[k] + ' '
+      })
+      this.$setDataList(e.Result, this.numValEntList)
+    })
+    if (!this.selectedValEnt) {
+      if (this.numValEntList) {
+        this.selectedValEnt = this.numValEntList[0].value
+      }
     }
   },
   methods: {
@@ -458,11 +569,12 @@ export default {
         this.$showLogStateChart(this.logs)
       })
     },
-    showPollingResult() {
+    showPollingResult(at) {
+      this.heatMapDialog = false
       this.pollingResultDialog = true
       this.$nextTick(() => {
         this.$makePollingChart('pollingChart')
-        this.$showPollingChart(this.polling, this.logs, this.selectedValEnt)
+        this.$showPollingChart(this.polling, this.logs, this.selectedValEnt, at)
       })
     },
     showPollingHistogram() {
@@ -470,6 +582,48 @@ export default {
       this.$nextTick(() => {
         this.$makePollingHistogram('pollingHistogram')
         this.$showPollingHistogram(this.polling, this.logs, this.selectedValEnt)
+      })
+    },
+    doAI() {
+      if (this.aiScores.length > 0) {
+        this.showAIHeatMap()
+        return
+      }
+      this.aiTrainDialog = true
+      this.$axios.$get('/api/aidata/' + this.$route.params.id).then((r) => {
+        this.$nextTick(() => {
+          this.$autoEncoder('error', 'model', r, (done) => {
+            if (done) {
+              this.aiScores = r.AIScores
+              this.aiTrainDialog = false
+              this.showAIHeatMap()
+            } else {
+              this.aiError = true
+            }
+          })
+        })
+      })
+    },
+    showAIHeatMap() {
+      this.aiHeatMapDialog = true
+      this.$nextTick(() => {
+        this.$showAIHeatMap('heatMap', this.aiScores, this.showPollingResult)
+      })
+    },
+    showAIPieChart() {
+      this.aiPieChartDialog = true
+      this.$nextTick(() => {
+        this.$showAIPieChart('pieChart', this.aiScores)
+      })
+    },
+    showAITimeChart() {
+      this.aiTimeChartDialog = true
+      this.$nextTick(() => {
+        this.$showAITimeChart(
+          'timeChart',
+          this.aiScores,
+          this.showPollingResult
+        )
       })
     },
   },

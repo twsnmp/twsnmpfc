@@ -92,7 +92,7 @@ const makePollingChart = (div) => {
   chart.resize()
 }
 
-const showPollingChart = (polling, logs, ent) => {
+const showPollingChart = (polling, logs, ent, at) => {
   if (ent === '') {
     return
   }
@@ -108,7 +108,7 @@ const showPollingChart = (polling, logs, ent) => {
       value: [new Date(l.Time / (1000 * 1000)), numVal],
     })
   })
-  chart.setOption({
+  const opt = {
     yAxis: {
       name: dp.axis,
     },
@@ -117,7 +117,27 @@ const showPollingChart = (polling, logs, ent) => {
         data,
       },
     ],
-  })
+  }
+  if (at && at.UnixTime) {
+    const st = new Date(at.UnixTime * 1000)
+    const et = new Date((at.UnixTime + 3600) * 1000)
+    opt.series[0].markArea = {
+      itemStyle: {
+        color: 'rgba(245,173, 172, 0.4)',
+      },
+      data: [
+        [
+          {
+            xAxis: st,
+          },
+          {
+            xAxis: et,
+          },
+        ],
+      ],
+    }
+  }
+  chart.setOption(opt)
   chart.resize()
 }
 

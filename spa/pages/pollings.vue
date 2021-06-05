@@ -22,19 +22,22 @@
         sort-by="State"
         sort-asec
       >
-        <template v-slot:[`item.State`]="{ item }">
+        <template #[`item.State`]="{ item }">
           <v-icon :color="$getStateColor(item.State)">{{
             $getStateIconName(item.State)
           }}</v-icon>
           {{ $getStateName(item.State) }}
         </template>
-        <template v-slot:[`item.Level`]="{ item }">
+        <template #[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{
             $getStateIconName(item.Level)
           }}</v-icon>
           {{ $getStateName(item.Level) }}
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.LogMode`]="{ item }">
+          {{ $getLogModeName(item.LogMode) }}
+        </template>
+        <template #[`item.actions`]="{ item }">
           <v-icon small @click="$router.push({ path: '/polling/' + item.ID })">
             mdi-eye
           </v-icon>
@@ -49,7 +52,7 @@
           <v-icon small @click="deletePollingFunc(item)"> mdi-delete </v-icon>
           <v-icon small @click="copyPolling(item)"> mdi-content-copy </v-icon>
         </template>
-        <template v-slot:[`body.append`]>
+        <template #[`body.append`]>
           <tr>
             <td></td>
             <td>
@@ -67,6 +70,7 @@
               <v-select v-model="polltype" :items="typeList" label="type">
               </v-select>
             </td>
+            <td></td>
             <td></td>
           </tr>
         </template>
@@ -190,7 +194,7 @@
             min="60"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="editPolling.PollInt"
                 class="mt-0 pt-0"
@@ -209,7 +213,7 @@
             min="1"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="editPolling.Timeout"
                 class="mt-0 pt-0"
@@ -228,7 +232,7 @@
             min="0"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="editPolling.Retry"
                 class="mt-0 pt-0"
@@ -385,7 +389,7 @@
           sort-by="Type"
           dense
         >
-          <template v-slot:[`item.Level`]="{ item }">
+          <template #[`item.Level`]="{ item }">
             <v-icon :color="$getStateColor(item.Level)">{{
               $getStateIconName(item.Level)
             }}</v-icon>
@@ -410,32 +414,6 @@
 
 <script>
 export default {
-  async fetch() {
-    const r = await this.$axios.$get('/api/pollings')
-    this.nodeList = r.NodeList
-    const nodeMap = {}
-    r.NodeList.forEach((e) => {
-      nodeMap[e.value] = e.text
-    })
-    this.pollings = r.Pollings
-    this.pollings.forEach((e) => {
-      e.NodeName = nodeMap[e.NodeID]
-      const t = new Date(e.LastTime / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t, '{MM}/{dd} {HH}:{mm}:{ss}')
-    })
-    if (this.extractorList.length < 1) {
-      const groks = await this.$axios.$get('/api/conf/grok')
-      if (groks) {
-        this.extractorList = []
-        groks.forEach((g) => {
-          this.extractorList.push({
-            text: g.Name,
-            value: g.ID,
-          })
-        })
-      }
-    }
-  },
   data() {
     return {
       editDialog: false,
@@ -451,7 +429,7 @@ export default {
         {
           text: '状態',
           value: 'State',
-          width: '12%',
+          width: '10%',
           filter: (value) => {
             if (!this.state) return true
             return this.state === value
@@ -469,13 +447,13 @@ export default {
         {
           text: '名前',
           value: 'Name',
-          width: '20%',
+          width: '18%',
           filter: (value) => {
             if (!this.name) return true
             return value.includes(this.name)
           },
         },
-        { text: 'レベル', value: 'Level', width: '15%' },
+        { text: 'レベル', value: 'Level', width: '13%' },
         {
           text: '種別',
           value: 'Type',
@@ -485,6 +463,7 @@ export default {
             return this.polltype === value
           },
         },
+        { text: 'ログ', value: 'LogMode', width: '6%' },
         { text: '最終実施', value: 'TimeStr', width: '15%' },
         { text: '操作', value: 'actions', width: '12%' },
       ],
@@ -539,6 +518,32 @@ export default {
         { text: 'TWSNMP', value: 'twsnmp' },
         { text: 'VMware', value: 'vmware' },
       ],
+    }
+  },
+  async fetch() {
+    const r = await this.$axios.$get('/api/pollings')
+    this.nodeList = r.NodeList
+    const nodeMap = {}
+    r.NodeList.forEach((e) => {
+      nodeMap[e.value] = e.text
+    })
+    this.pollings = r.Pollings
+    this.pollings.forEach((e) => {
+      e.NodeName = nodeMap[e.NodeID]
+      const t = new Date(e.LastTime / (1000 * 1000))
+      e.TimeStr = this.$timeFormat(t, '{MM}/{dd} {HH}:{mm}:{ss}')
+    })
+    if (this.extractorList.length < 1) {
+      const groks = await this.$axios.$get('/api/conf/grok')
+      if (groks) {
+        this.extractorList = []
+        groks.forEach((g) => {
+          this.extractorList.push({
+            text: g.Name,
+            value: g.ID,
+          })
+        })
+      }
     }
   },
   computed: {

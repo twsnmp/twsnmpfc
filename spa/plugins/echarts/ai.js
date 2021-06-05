@@ -166,7 +166,7 @@ const showAIHeatMap = (div, scores, cb) => {
     if (cb) {
       const ut =
         Date.parse(params.name + ' ' + params.data[1] + ':00:00') / 1000
-      // eslint-disable-next-line standard/no-callback-literal
+      // eslint-disable-next-line node/no-callback-literal
       cb({ UnixTime: ut })
     }
   })
@@ -336,7 +336,7 @@ const showAITimeChart = (div, scores, cb) => {
   chart.on('dblclick', function (params) {
     if (cb) {
       const ut = Date.parse(params.name) / 1000
-      // eslint-disable-next-line standard/no-callback-literal
+      // eslint-disable-next-line node/no-callback-literal
       cb({ UnixTime: ut })
     }
   })

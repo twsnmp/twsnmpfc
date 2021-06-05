@@ -43,6 +43,7 @@ export default {
     '@/plugins/echarts/monitor.js',
     '@/plugins/echarts/netflow.js',
     '@/plugins/echarts/syslog.js',
+    '@/plugins/brain.js',
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)

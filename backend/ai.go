@@ -27,7 +27,7 @@ func aiBackend(ctx context.Context) {
 	}
 }
 
-type aiReq struct {
+type AIReq struct {
 	PollingID string
 	TimeStamp []int64
 	Data      [][]float64
@@ -79,12 +79,12 @@ func doAI(pe *datastore.PollingEnt) {
 	if !checkLastAIResultTime(pe.ID) {
 		return
 	}
-	req := &aiReq{
+	req := &AIReq{
 		PollingID: pe.ID,
 	}
-	err := makeAIData(req)
+	err := MakeAIData(req)
 	if err != nil {
-		log.Printf("doAI skip makeAIData error %s %s err=%v", pe.ID, pe.Name, err)
+		log.Printf("doAI skip MakeAIData error %s %s err=%v", pe.ID, pe.Name, err)
 		return
 	}
 	if err != nil || len(req.Data) < 10 {
@@ -118,7 +118,7 @@ func getAIDataKeys(p *datastore.PollingEnt) []string {
 	return keys
 }
 
-func makeAIData(req *aiReq) error {
+func MakeAIData(req *AIReq) error {
 	p := datastore.GetPolling(req.PollingID)
 	if p == nil {
 		return fmt.Errorf("no polling")
@@ -195,7 +195,7 @@ func getStateNum(s string) float64 {
 	return 0.0
 }
 
-func calcAIScore(req *aiReq) {
+func calcAIScore(req *AIReq) {
 	res := calcLOF(req)
 	if len(res.ScoreData) < 1 {
 		return
@@ -231,7 +231,7 @@ func calcAIScore(req *aiReq) {
 	}
 }
 
-func calcLOF(req *aiReq) *datastore.AIResult {
+func calcLOF(req *AIReq) *datastore.AIResult {
 	res := datastore.AIResult{}
 	samples := lof.GetSamplesFromFloat64s(req.Data)
 	lofGetter := lof.NewLOF(5)

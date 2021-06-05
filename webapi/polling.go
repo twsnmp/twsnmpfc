@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/polling"
 )
@@ -220,7 +221,7 @@ func postPolling(c echo.Context) error {
 		log.Printf("postEventLogs err=%v", err)
 		return echo.ErrBadRequest
 	}
-	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24)
+	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24*7)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	log.Printf("%d %d %v", st, et, filter)
 	i := 0
@@ -293,4 +294,16 @@ func postPollingAutoAdd(c echo.Context) error {
 		}
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func getPollingAIData(c echo.Context) error {
+	id := c.Param("id")
+	r := backend.AIReq{
+		PollingID: id,
+	}
+	if err := backend.MakeAIData(&r); err != nil {
+		log.Printf("getPollingAIData err=%v", err)
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, r)
 }

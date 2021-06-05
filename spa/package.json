@@ -14,6 +14,7 @@
   "dependencies": {
     "@nuxtjs/auth-next": "^5.0.0-1622718665.cc99959",
     "@nuxtjs/axios": "^5.13.6",
+    "brain.js": "^2.0.0-beta.2",
     "core-js": "^3.13.1",
     "echarts": "^5.1.1",
     "echarts-gl": "^2.0.4",
