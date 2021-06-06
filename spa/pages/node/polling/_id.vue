@@ -30,19 +30,22 @@
         sort-by="State"
         sort-asec
       >
-        <template v-slot:[`item.State`]="{ item }">
+        <template #[`item.State`]="{ item }">
           <v-icon :color="$getStateColor(item.State)">{{
             $getStateIconName(item.State)
           }}</v-icon>
           {{ $getStateName(item.State) }}
         </template>
-        <template v-slot:[`item.Level`]="{ item }">
+        <template #[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{
             $getStateIconName(item.Level)
           }}</v-icon>
           {{ $getStateName(item.Level) }}
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.LogMode`]="{ item }">
+          {{ $getLogModeName(item.LogMode) }}
+        </template>
+        <template #[`item.actions`]="{ item }">
           <v-icon small @click="$router.push({ path: '/polling/' + item.ID })">
             mdi-eye
           </v-icon>
@@ -151,7 +154,7 @@
             min="60"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="editPolling.PollInt"
                 class="mt-0 pt-0"
@@ -170,7 +173,7 @@
             min="1"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="editPolling.Timeout"
                 class="mt-0 pt-0"
@@ -189,7 +192,7 @@
             min="0"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="editPolling.Retry"
                 class="mt-0 pt-0"
@@ -347,7 +350,7 @@
           sort-by="Type"
           dense
         >
-          <template v-slot:[`item.Level`]="{ item }">
+          <template #[`item.Level`]="{ item }">
             <v-icon :color="$getStateColor(item.Level)">{{
               $getStateIconName(item.Level)
             }}</v-icon>
@@ -376,31 +379,6 @@
 
 <script>
 export default {
-  async fetch() {
-    const r = await this.$axios.$get(
-      '/api/node/polling/' + this.$route.params.id
-    )
-    this.node = r.Node
-    if (r.Pollings) {
-      this.pollings = r.Pollings
-      this.pollings.forEach((e) => {
-        const t = new Date(e.LastTime / (1000 * 1000))
-        e.TimeStr = this.$timeFormat(t)
-      })
-    }
-    if (this.extractorList.length < 1) {
-      const groks = await this.$axios.$get('/api/conf/grok')
-      if (groks) {
-        this.extractorList = []
-        groks.forEach((g) => {
-          this.extractorList.push({
-            text: g.Name,
-            value: g.ID,
-          })
-        })
-      }
-    }
-  },
   data() {
     return {
       node: {},
@@ -415,10 +393,11 @@ export default {
       extractorList: [],
       search: '',
       headers: [
-        { text: '状態', value: 'State', width: '15%' },
-        { text: '名前', value: 'Name', width: '30%' },
+        { text: '状態', value: 'State', width: '12%' },
+        { text: '名前', value: 'Name', width: '26%' },
         { text: 'レベル', value: 'Level', width: '14%' },
         { text: '種別', value: 'Type', width: '14%' },
+        { text: 'ログ', value: 'LogMode', width: '6%' },
         { text: '最終実施', value: 'TimeStr', width: '15%' },
         { text: '操作', value: 'actions', width: '12%' },
       ],
@@ -458,6 +437,31 @@ export default {
       newLevel: 'off',
       setPollingLogModeDialog: false,
       newLogMode: 0,
+    }
+  },
+  async fetch() {
+    const r = await this.$axios.$get(
+      '/api/node/polling/' + this.$route.params.id
+    )
+    this.node = r.Node
+    if (r.Pollings) {
+      this.pollings = r.Pollings
+      this.pollings.forEach((e) => {
+        const t = new Date(e.LastTime / (1000 * 1000))
+        e.TimeStr = this.$timeFormat(t)
+      })
+    }
+    if (this.extractorList.length < 1) {
+      const groks = await this.$axios.$get('/api/conf/grok')
+      if (groks) {
+        this.extractorList = []
+        groks.forEach((g) => {
+          this.extractorList.push({
+            text: g.Name,
+            value: g.ID,
+          })
+        })
+      }
     }
   },
   computed: {
