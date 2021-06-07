@@ -16,13 +16,13 @@
         loading-text="Loading... Please wait"
         class="log"
       >
-        <template v-slot:[`item.Level`]="{ item }">
+        <template #[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{
             $getStateIconName(item.Level)
           }}</v-icon>
           {{ $getStateName(item.Level) }}
         </template>
-        <template v-slot:[`body.append`]>
+        <template #[`body.append`]>
           <tr>
             <td></td>
             <td></td>
@@ -72,7 +72,7 @@
           </v-btn>
         </download-excel>
         <v-menu v-if="logs" offset-y>
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
               グラフと集計
@@ -146,7 +146,7 @@
               offset-y
               min-width="auto"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.StartDate"
                   label="開始日"
@@ -176,7 +176,7 @@
               max-width="290px"
               min-width="290px"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.StartTime"
                   label="開始時刻"
@@ -202,7 +202,7 @@
               offset-y
               min-width="auto"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.EndDate"
                   label="終了日"
@@ -232,7 +232,7 @@
               max-width="290px"
               min-width="290px"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.EndTime"
                   label="終了時刻"
@@ -310,6 +310,86 @@
         </v-data-table>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <download-excel
+            :data="extractDatas"
+            type="csv"
+            name="TWSNMP_FC_Syslog_Extract.csv"
+            header="TWSNMP FC Syslog Extract"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :data="extractDatas"
+            type="xls"
+            name="TWSNMP_FC_Sysog_Extract.xls"
+            header="TWSNMP FC Syslog Extract"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-microsoft-excel</v-icon>
+              Excel
+            </v-btn>
+          </download-excel>
+          <v-menu offset-y>
+            <template #activator="{ on, attrs }">
+              <v-btn color="primary" dark v-bind="attrs" v-on="on">
+                <v-icon>mdi-chart-line</v-icon>
+                グラフと集計
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item
+                v-if="numExtractTypeList.length > 0"
+                @click="showExtractHistogram"
+              >
+                <v-list-item-icon
+                  ><v-icon>mdi-chart-histogram</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title> ヒストグラム </v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item
+                v-if="numExtractTypeList.length > 0"
+                @click="showExtractCluster"
+              >
+                <v-list-item-icon
+                  ><v-icon>mdi-chart-scatter-plot</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title> クラスター分析 </v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item
+                v-if="strExtractTypeList.length > 0"
+                @click="showExtractTopList"
+              >
+                <v-list-item-icon
+                  ><v-icon>mdi-format-list-numbered</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title> 項目別集計リスト </v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item
+                v-if="
+                  numExtractTypeList.length > 0 && strExtractTypeList.length > 0
+                "
+                @click="showExtract3D"
+              >
+                <v-list-item-icon
+                  ><v-icon>mdi-chart-scatter-plot</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title> 項目別集計3Dグラフ </v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list>
+          </v-menu>
           <v-btn color="normal" @click="extractDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
@@ -328,7 +408,7 @@
             label="集計項目"
             single-line
             hide-details
-            @change="selectHistogramType"
+            @change="updateHistogram"
           ></v-select>
         </v-card-title>
         <div id="histogram" style="width: 900px; height: 400px"></div>
@@ -393,10 +473,10 @@
             sort-desc
             dense
           >
-            <template v-slot:[`item.Total`]="{ item }">
+            <template #[`item.Total`]="{ item }">
               {{ formatCount(item.Total) }}
             </template>
-            <template v-slot:[`body.append`]>
+            <template #[`body.append`]>
               <tr>
                 <td>
                   <v-text-field v-model="hostName" label="name"></v-text-field>
@@ -439,57 +519,176 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="extractHistogramDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          抽出情報のヒストグラム分析
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="extractHistogramType"
+            :items="numExtractTypeList"
+            label="集計項目"
+            single-line
+            hide-details
+            @change="updateExtractHistogram"
+          ></v-select>
+        </v-card-title>
+        <div id="histogram" style="width: 900px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="extractHistogramDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="extractClusterDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          抽出情報のクラスター分析
+          <v-spacer></v-spacer>
+          <v-text-field
+            v-model="cluster"
+            label="クラスター数"
+            @change="updateExtractCluster"
+          ></v-text-field>
+        </v-card-title>
+        <div id="cluster" style="width: 900px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="extractClusterDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="extract3DDialog" persistent max-width="1000px">
+      <v-card style="width: 100%">
+        <v-card-title> 抽出情報の項目別3Dグラフ </v-card-title>
+        <v-text>
+          <v-row>
+            <v-col>
+              <v-select
+                v-model="extract3DTypeX"
+                :items="strExtractTypeList"
+                label="X軸項目"
+                single-line
+                hide-details
+                @change="updateExtract3D"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="extract3DTypeZ"
+                :items="numExtractTypeList"
+                label="Z軸項目"
+                single-line
+                hide-details
+                @change="updateExtract3D"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="extract3DTypeColor"
+                :items="numExtractTypeList"
+                label="色項目"
+                single-line
+                hide-details
+                @change="updateExtract3D"
+              ></v-select>
+            </v-col>
+          </v-row>
+          <div id="extract3d" style="width: 1000px; height: 750px"></div>
+        </v-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="extract3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="extractTopListDialog" persistent max-width="900px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          抽出情報の項目別集計
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="extractTopListType"
+            :items="strExtractTypeList"
+            label="X軸項目"
+            single-line
+            hide-details
+            @change="updateExtractTopList"
+          ></v-select>
+        </v-card-title>
+        <v-card-text>
+          <div id="extractTopList" style="width: 900px; height: 500px"></div>
+          <v-data-table
+            :headers="extractTopListHeader"
+            :items="extractTopList"
+            sort-by="Total"
+            sort-desc
+            dense
+          >
+            <template #[`item.Total`]="{ item }">
+              {{ formatCount(item.Total) }}
+            </template>
+            <template #[`body.append`]>
+              <tr>
+                <td>
+                  <v-text-field
+                    v-model="extractTopName"
+                    label="name"
+                  ></v-text-field>
+                </td>
+                <td colspan="5"></td>
+              </tr>
+            </template>
+          </v-data-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <download-excel
+            :data="extractTopList"
+            type="csv"
+            name="TWSNMP_FC_Syslog_Extract_Top_List.csv"
+            header="TWSNMP FC Syslog ExtractTop List"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :data="extractTopList"
+            type="xls"
+            name="TWSNMP_FC_Syslog_Extract_Top.xls"
+            header="TWSNMP FC Syslog Extract Top List"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-microsoft-excel</v-icon>
+              Excel
+            </v-btn>
+          </download-excel>
+          <v-btn color="normal" dark @click="extractTopListDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
 <script>
 import * as numeral from 'numeral'
 export default {
-  async fetch() {
-    const r = await this.$axios.$post('/api/log/syslog', this.filter)
-    if (!r) {
-      return
-    }
-    this.logs = r.Logs ? r.Logs : []
-    this.logs.forEach((e) => {
-      const t = new Date(e.Time / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t)
-    })
-    this.$showLogLevelChart(this.logs)
-    if (this.filterExtractorList.length < 1) {
-      const groks = await this.$axios.$get('/api/conf/grok')
-      if (groks) {
-        this.filterExtractorList = []
-        groks.forEach((g) => {
-          this.filterExtractorList.push({
-            text: g.Name,
-            value: g.ID,
-          })
-        })
-      }
-    }
-    this.extractDatas = []
-    this.extractHeader = []
-    if (r.ExtractHeader.length < 1 || r.ExtractDatas.length < 1) {
-      return
-    }
-    r.ExtractHeader.forEach((col) => {
-      this.extractHeader.push({
-        text: col,
-        value: col,
-      })
-    })
-    r.ExtractDatas.forEach((row) => {
-      if (row.length !== r.ExtractHeader.length) {
-        return
-      }
-      const e = {}
-      for (let i = 0; i < r.ExtractHeader.length; i++) {
-        e[r.ExtractHeader[i]] = row[i]
-      }
-      this.extractDatas.push(e)
-    })
-  },
   data() {
     return {
       filterDialog: false,
@@ -590,7 +789,95 @@ export default {
       hostListDialog: false,
       hostName: '',
       host3DDialog: false,
+      extractHistogramDialog: false,
+      extractHistogramType: '',
+      extractClusterDialog: false,
+      extract3DDialog: false,
+      extractTopListDialog: false,
+      extractTopList: [],
+      extractHisgramType: '',
+      extract3DTypeX: '',
+      extract3DTypeZ: '',
+      extract3DTypeColor: '',
+      extractTopListType: '',
+      numExtractTypeList: [],
+      strExtractTypeList: [],
+      extractTopName: '',
+      extractTopListHeader: [
+        {
+          text: '項目名',
+          value: 'Name',
+          width: '70%',
+          filter: (value) => {
+            if (!this.extractTopName) return true
+            return value.includes(this.extractTopName)
+          },
+        },
+        { text: '総数', value: 'Total', width: '30%' },
+      ],
     }
+  },
+  async fetch() {
+    const r = await this.$axios.$post('/api/log/syslog', this.filter)
+    if (!r) {
+      return
+    }
+    this.logs = r.Logs ? r.Logs : []
+    this.logs.forEach((e) => {
+      const t = new Date(e.Time / (1000 * 1000))
+      e.TimeStr = this.$timeFormat(t)
+    })
+    this.$showLogLevelChart(this.logs)
+    if (this.filterExtractorList.length < 1) {
+      const groks = await this.$axios.$get('/api/conf/grok')
+      if (groks) {
+        this.filterExtractorList = []
+        groks.forEach((g) => {
+          this.filterExtractorList.push({
+            text: g.Name,
+            value: g.ID,
+          })
+        })
+      }
+    }
+    this.extractDatas = []
+    this.extractHeader = []
+    this.numExtractTypeList = []
+    this.strExtractTypeList = []
+    if (r.ExtractHeader.length < 1 || r.ExtractDatas.length < 1) {
+      return
+    }
+    r.ExtractHeader.forEach((col) => {
+      this.extractHeader.push({
+        text: col,
+        value: col,
+      })
+    })
+    let firstData = true
+    r.ExtractDatas.forEach((row) => {
+      if (row.length !== r.ExtractHeader.length) {
+        return
+      }
+      const e = {}
+      for (let i = 0; i < r.ExtractHeader.length; i++) {
+        e[r.ExtractHeader[i]] = row[i]
+        if (firstData && r.ExtractHeader[i] !== 'TimeStr') {
+          if (isNaN(Number(row[i]))) {
+            this.strExtractTypeList.push({
+              text: r.ExtractHeader[i],
+              value: r.ExtractHeader[i],
+            })
+          } else {
+            this.numExtractTypeList.push({
+              text: r.ExtractHeader[i],
+              value: r.ExtractHeader[i],
+            })
+          }
+        }
+      }
+      firstData = false
+      this.extractDatas.push(e)
+    })
   },
   mounted() {
     this.$makeLogLevelChart('logCountChart')
@@ -617,7 +904,7 @@ export default {
         this.$showSyslogHistogram('histogram', this.logs, this.histogramType)
       })
     },
-    selectHistogramType() {
+    updateHistogram() {
       this.$showSyslogHistogram('histogram', this.logs, this.histogramType)
     },
     showCluster() {
@@ -641,6 +928,101 @@ export default {
       this.$nextTick(() => {
         this.$showSyslogHost('hostList', this.hostList)
       })
+    },
+    showExtractHistogram() {
+      if (
+        this.extractHistogramType === '' &&
+        this.numExtractTypeList.length > 1
+      ) {
+        this.extractHistogramType = this.numExtractTypeList[0].value
+      }
+      this.extractHistogramDialog = true
+      this.$nextTick(() => {
+        this.$showSyslogExtractHistogram(
+          'histogram',
+          this.extractDatas,
+          this.extractHistogramType
+        )
+      })
+    },
+    updateExtractHistogram() {
+      this.$showSyslogExtractHistogram(
+        'histogram',
+        this.extractDatas,
+        this.extractHistogramType
+      )
+    },
+    showExtractCluster() {
+      this.extractClusterDialog = true
+      this.$nextTick(() => {
+        this.$showSyslogExtractCluster(
+          'cluster',
+          this.extractDatas,
+          this.numExtractTypeList,
+          this.cluster * 1
+        )
+      })
+    },
+    updateExtractCluster() {
+      this.$showSyslogExtractCluster(
+        'cluster',
+        this.extractDatas,
+        this.numExtractTypeList,
+        this.cluster * 1
+      )
+    },
+    showExtract3D() {
+      if (this.extract3DTypeX === '' && this.strExtractTypeList.length > 0) {
+        this.extract3DTypeX = 'Host'
+      }
+      if (this.extract3DTypeZ === '' && this.numExtractTypeList.length > 0) {
+        this.extract3DTypeZ = this.numExtractTypeList[0].value
+      }
+      if (
+        this.extract3DTypeColor === '' &&
+        this.numExtractTypeList.length > 0
+      ) {
+        this.extract3DTypeColor = this.numExtractTypeList[0].value
+      }
+      this.extract3DDialog = true
+      this.$nextTick(() => {
+        this.$showSyslogExtract3D(
+          'extract3d',
+          this.extractDatas,
+          this.extract3DTypeX,
+          this.extract3DTypeZ,
+          this.extract3DTypeColor
+        )
+      })
+    },
+    updateExtract3D() {
+      this.$showSyslogExtract3D(
+        'extract3d',
+        this.extractDatas,
+        this.extract3DTypeX,
+        this.extract3DTypeZ,
+        this.extract3DTypeColor
+      )
+    },
+    showExtractTopList() {
+      if (this.extractTopListType === '') {
+        this.extractTopListType = this.strExtractTypeList[0].value
+      }
+      this.extractTopList = this.$getSyslogExtractTopList(
+        this.extractDatas,
+        this.extractTopListType
+      )
+      this.extractTopListDialog = true
+      this.$nextTick(() => {
+        this.$showSyslogExtractTopList('extractTopList', this.extractTopList)
+      })
+    },
+    updateExtractTopList() {
+      this.extractTopList = this.$getSyslogExtractTopList(
+        this.extractDatas,
+        this.extractTopListType
+      )
+      this.$showSyslogExtractTopList('extractTopList', this.extractTopList)
     },
     formatCount(n) {
       return numeral(n).format('0,0')

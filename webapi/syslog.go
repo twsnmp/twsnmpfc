@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sort"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -211,16 +210,28 @@ func postSyslog(c echo.Context) error {
 			} else if len(values) > 0 {
 				if len(r.ExtractHeader) < 1 {
 					r.ExtractHeader = append(r.ExtractHeader, "TimeStr")
+					r.ExtractHeader = append(r.ExtractHeader, "Level")
+					r.ExtractHeader = append(r.ExtractHeader, "Type")
+					r.ExtractHeader = append(r.ExtractHeader, "Host")
+					r.ExtractHeader = append(r.ExtractHeader, "Tag")
 					for k := range values {
 						r.ExtractHeader = append(r.ExtractHeader, k)
-						sort.Strings(r.ExtractHeader)
 					}
 				}
 				e := []string{}
 				for _, k := range r.ExtractHeader {
-					if k == "TimeStr" {
-						e = append(e, time.Unix(0, l.Time).Format("2006/01/02T15:04:05"))
-					} else {
+					switch k {
+					case "TimeStr":
+						e = append(e, time.Unix(0, l.Time).Format("2006-01-02 15:04:05"))
+					case "Host":
+						e = append(e, re.Host)
+					case "Tag":
+						e = append(e, re.Tag)
+					case "Level":
+						e = append(e, re.Level)
+					case "Type":
+						e = append(e, re.Type)
+					default:
 						e = append(e, values[k])
 					}
 				}

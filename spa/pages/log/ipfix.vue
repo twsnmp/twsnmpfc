@@ -508,7 +508,7 @@
             label="表示タイプ"
             single-line
             hide-details
-            @change="updateIPFolw3D"
+            @change="updateIPFlow3D"
           ></v-select>
         </v-card-title>
         <div id="ipflow3d" style="width: 1000px; height: 750px"></div>
