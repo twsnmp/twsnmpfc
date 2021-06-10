@@ -109,41 +109,6 @@ const makeErrorChart = (div) => {
   chart.resize()
 }
 
-const testBrain = (divError, divModel) => {
-  makeErrorChart(divError)
-  const net = new brain.NeuralNetwork()
-  const xorTrainingData = [
-    { input: [0, 0], output: [0] },
-    { input: [0, 1], output: [1] },
-    { input: [1, 0], output: [1] },
-    { input: [1, 1], output: [0] },
-  ]
-  const data = []
-  net.trainAsync(xorTrainingData, {
-    iterations: 20000,
-    errorThresh: 0.005,
-    callbackPeriod: 100,
-    callback: (p) => {
-      const t = new Date()
-      data.push({
-        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
-        value: [t, p.error],
-      })
-      chart.setOption({
-        series: [
-          {
-            data,
-          },
-        ],
-      })
-    },
-  })
-  const model = document.getElementById(divModel)
-  if (model) {
-    model.innerHTML = brain.utilities.toSVG(net)
-  }
-}
-
 const autoEncoder = (divError, divModel, req, callback) => {
   makeErrorChart(divError)
   if (req.Data.length < 5) {
@@ -229,7 +194,62 @@ const setAIScore = (net, req) => {
   return true
 }
 
+const errors = []
+
+const showSyslogAIAssistChart = (divError) => {
+  makeErrorChart(divError)
+  chart.setOption({
+    series: [
+      {
+        data: errors,
+      },
+    ],
+  })
+  chart.resize()
+}
+
+const syslogAIAssist = (logs) => {
+  errors.length = 0
+  const trainingData = []
+  const keys = new Map()
+  logs.forEach((l) => {
+    if (l.AIClass && l.AIClass !== '') {
+      trainingData.push({
+        input: l.Tag + ' ' + l.Message,
+        output: l.AIClass,
+      })
+      keys.set(l.AIClass, true)
+    }
+    l.AIResult = ''
+  })
+  const net = new brain.recurrent.LSTM()
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      net.train(trainingData, {
+        iterations: 1000,
+        errorThresh: 0.011,
+        callbackPeriod: 20,
+        callback: (p) => {
+          const t = new Date()
+          errors.push({
+            name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
+            value: [t, p.error],
+          })
+        },
+      })
+      logs.forEach((l) => {
+        const air = net.run(l.Tag + ' ' + l.Message)
+        if (keys.get(air)) {
+          l.AIResult = air
+        }
+      })
+      resolve('done')
+    }, 500)
+  })
+}
+
 export default (context, inject) => {
-  inject('testBrain', testBrain)
   inject('autoEncoder', autoEncoder)
+  inject('syslogAIAssist', syslogAIAssist)
+  inject('showSyslogAIAssistChart', showSyslogAIAssistChart)
 }

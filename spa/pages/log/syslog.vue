@@ -113,6 +113,10 @@
             </v-list-item>
           </v-list>
         </v-menu>
+        <v-btn color="info" @click="aiAssistDialog = true">
+          <v-icon>mdi-brain</v-icon>
+          AIアシスト
+        </v-btn>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           再検索
@@ -619,7 +623,7 @@
           <v-select
             v-model="extractTopListType"
             :items="strExtractTypeList"
-            label="X軸項目"
+            label="集計項目"
             single-line
             hide-details
             @change="updateExtractTopList"
@@ -679,6 +683,100 @@
           <v-btn color="normal" dark @click="extractTopListDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="aiAssistDialog" persistent max-width="1000px">
+      <v-card style="width: 100%">
+        <v-card-title> AIアシスト分析 </v-card-title>
+        <v-card-text>
+          <div
+            v-if="hasAIErrorChart"
+            id="aiAssist"
+            style="width: 1000px; height: 200px"
+          ></div>
+          <v-data-table
+            v-model="selectedAILogs"
+            :headers="aiAssistHeaders"
+            :items="logs"
+            sort-by="TimeStr"
+            sort-desc
+            dense
+            item-key="ID"
+            show-select
+            :loading="aiProcessing"
+            loading-text="AI Thinking... Please wait"
+            class="log"
+          >
+            <template #[`item.Level`]="{ item }">
+              <v-icon :color="$getStateColor(item.Level)">{{
+                $getStateIconName(item.Level)
+              }}</v-icon>
+              {{ $getStateName(item.Level) }}
+            </template>
+            <template #[`body.append`]>
+              <tr>
+                <td></td>
+                <td colspan="3">
+                  <v-switch
+                    v-model="hasAIResult"
+                    label="結果があるもの"
+                  ></v-switch>
+                </td>
+                <td></td>
+                <td>
+                  <v-text-field v-model="host" label="host"></v-text-field>
+                </td>
+                <td>
+                  <v-text-field v-model="tag" label="tag"></v-text-field>
+                </td>
+                <td>
+                  <v-text-field v-model="msg" label="message"></v-text-field>
+                </td>
+              </tr>
+            </template>
+          </v-data-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            v-if="hasSelectedAILogs"
+            color="info"
+            dark
+            @click="setAIClassDialog = true"
+          >
+            <v-icon>mdi-teach</v-icon>
+            教育
+          </v-btn>
+          <v-btn color="primary" dark @click="doAIAssist">
+            <v-icon>mdi-brain</v-icon>
+            分析
+          </v-btn>
+          <v-btn color="normal" dark @click="aiAssistDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="setAIClassDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">分類を教える</span>
+        </v-card-title>
+        <v-card-text>
+          <v-text-field v-model="AIClass" dense></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="setAIClass">
+            <v-icon>mdi-content-save</v-icon>
+            設定
+          </v-btn>
+          <v-btn color="normal" @click="setAIClassDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -815,6 +913,54 @@ export default {
         },
         { text: '総数', value: 'Total', width: '30%' },
       ],
+      aiAssistDialog: false,
+      hasAIResult: false,
+      hasAIErrorChart: false,
+      aiProcessing: false,
+      setAIClassDialog: false,
+      selectedAILogs: [],
+      AIClass: '',
+      aiAssistHeaders: [
+        { text: '状態', value: 'Level', width: '15%' },
+        { text: '教育', value: 'AIClass', width: '10%' },
+        {
+          text: 'AI回答',
+          value: 'AIResult',
+          width: '10%',
+          filter: (value) => {
+            if (!this.hasAIResult) return true
+            return value && value !== ''
+          },
+        },
+        { text: '日時', value: 'TimeStr', width: '15%' },
+        {
+          text: 'ホスト名',
+          value: 'Host',
+          width: '10%',
+          filter: (value) => {
+            if (!this.host) return true
+            return value.includes(this.host)
+          },
+        },
+        {
+          text: 'タグ',
+          value: 'Tag',
+          width: '10%',
+          filter: (value) => {
+            if (!this.tag) return true
+            return value.includes(this.tag)
+          },
+        },
+        {
+          text: 'メッセージ',
+          value: 'Message',
+          width: '30%',
+          filter: (value) => {
+            if (!this.msg) return true
+            return value.includes(this.msg)
+          },
+        },
+      ],
     }
   },
   async fetch() {
@@ -823,9 +969,13 @@ export default {
       return
     }
     this.logs = r.Logs ? r.Logs : []
+    let id = 0
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
+      e.AIClass = ''
+      e.AIResult = ''
+      e.ID = id++
     })
     this.$showLogLevelChart(this.logs)
     if (this.filterExtractorList.length < 1) {
@@ -878,6 +1028,11 @@ export default {
       firstData = false
       this.extractDatas.push(e)
     })
+  },
+  computed: {
+    hasSelectedAILogs() {
+      return this.selectedAILogs.length > 0
+    },
   },
   mounted() {
     this.$makeLogLevelChart('logCountChart')
@@ -1023,6 +1178,24 @@ export default {
         this.extractTopListType
       )
       this.$showSyslogExtractTopList('extractTopList', this.extractTopList)
+    },
+    doAIAssist() {
+      this.hasAIErrorChart = false
+      this.aiProcessing = true
+      this.$syslogAIAssist(this.logs).then(() => {
+        this.hasAIResult = true
+        this.aiProcessing = false
+        this.hasAIErrorChart = true
+        this.$nextTick(() => {
+          this.$showSyslogAIAssistChart('aiAssist')
+        })
+      })
+    },
+    setAIClass() {
+      this.selectedAILogs.forEach((l) => {
+        l.AIClass = this.AIClass
+      })
+      this.setAIClassDialog = false
     },
     formatCount(n) {
       return numeral(n).format('0,0')
