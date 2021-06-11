@@ -174,6 +174,10 @@ func postLineAdd(c echo.Context) error {
 		log.Printf("postLineAdd err=%v", err)
 		return echo.ErrBadRequest
 	}
+	if lu.PollingID1 == "" || lu.PollingID2 == "" {
+		log.Printf("add line polling 1 or 2 is empty")
+		return echo.ErrBadRequest
+	}
 	if p := datastore.GetPolling(lu.PollingID1); p != nil {
 		lu.State1 = p.State
 	}
@@ -193,6 +197,9 @@ func postLineAdd(c echo.Context) error {
 		l.PollingID2 = lu.PollingID2
 		l.State1 = lu.State1
 		l.State2 = lu.State2
+		l.Info = lu.Info
+		l.PollingID = lu.PollingID
+		l.Width = lu.Width
 		if err := datastore.UpdateLine(l); err != nil {
 			log.Printf("postLineAdd err=%v", err)
 			return echo.ErrBadRequest

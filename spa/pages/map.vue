@@ -23,7 +23,7 @@
         loading-text="Loading... Please wait"
         class="log"
       >
-        <template v-slot:[`item.Level`]="{ item }">
+        <template #[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{
             $getStateIconName(item.Level)
           }}</v-icon>
@@ -156,6 +156,19 @@
             label="ポーリング"
           >
           </v-select>
+          <v-select
+            v-model="editLine.PollingID"
+            :items="linePollingList"
+            label="情報のためのポーリング"
+          >
+          </v-select>
+          <v-text-field v-model="editLine.Info" label="情報"></v-text-field>
+          <v-select
+            v-model="editLine.Width"
+            :items="lineWidthList"
+            label="ラインの太さ"
+          >
+          </v-select>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -180,7 +193,7 @@
           <span class="headline">ノード情報</span>
         </v-card-title>
         <v-simple-table dense>
-          <template v-slot:default>
+          <template #default>
             <thead>
               <tr>
                 <th class="text-left">項目</th>
@@ -344,19 +357,6 @@
 
 <script>
 export default {
-  async fetch() {
-    this.map = await this.$axios.$get('/api/map')
-    this.$setMAP(this.map, this.$axios.defaults.baseURL)
-    this.$store.commit('map/setMAP', this.map)
-    this.map.Logs.forEach((e) => {
-      const t = new Date(e.Time / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t)
-    })
-    const nodeID = this.$route.query.node
-    if (nodeID && this.map.Nodes[nodeID]) {
-      this.$selectNode(nodeID)
-    }
-  },
   data() {
     return {
       showNodeDialog: false,
@@ -373,6 +373,8 @@ export default {
         NodeID2: '',
         PollingID1: '',
         PollingID2: '',
+        PollingID: '',
+        Info: '',
       },
       editNode: {},
       nodeList: [],
@@ -398,14 +400,40 @@ export default {
       y: 0,
       copyFrom: '',
       copyPolling: false,
+      lineWidthList: [
+        { text: '1', value: 1 },
+        { text: '2', value: 2 },
+        { text: '3', value: 3 },
+        { text: '4', value: 4 },
+        { text: '5', value: 5 },
+      ],
+    }
+  },
+  async fetch() {
+    this.map = await this.$axios.$get('/api/map')
+    this.$setMAP(this.map, this.$axios.defaults.baseURL)
+    this.$store.commit('map/setMAP', this.map)
+    this.map.Logs.forEach((e) => {
+      const t = new Date(e.Time / (1000 * 1000))
+      e.TimeStr = this.$timeFormat(t)
+    })
+    const nodeID = this.$route.query.node
+    if (nodeID && this.map.Nodes[nodeID]) {
+      this.$selectNode(nodeID)
     }
   },
   computed: {
     pollingList1() {
-      return this.pollingList(this.editLine.NodeID1)
+      return this.pollingList(this.editLine.NodeID1, false)
     },
     pollingList2() {
-      return this.pollingList(this.editLine.NodeID2)
+      return this.pollingList(this.editLine.NodeID2, false)
+    },
+    linePollingList() {
+      const l1 = [{ text: '設定しない', value: '' }]
+      const l2 = this.pollingList(this.editLine.NodeID1, true)
+      const l3 = this.pollingList(this.editLine.NodeID2, true)
+      return l1.concat(l2, l3)
     },
     discoverURL() {
       return `/discover?x=${this.x}&y=${this.y}`
@@ -424,14 +452,18 @@ export default {
     nodeName(id) {
       return this.map.Nodes[id] ? this.map.Nodes[id].Name : ''
     },
-    pollingList(id) {
+    pollingList(id, addNodeName) {
       const l = []
       if (!this.map.Nodes[id]) {
         return l
       }
+      let nodeName = ''
+      if (addNodeName) {
+        nodeName = this.map.Nodes[id].Name + ':'
+      }
       this.map.Pollings[id].forEach((p) => {
         l.push({
-          text: p.Name,
+          text: nodeName + p.Name,
           value: p.ID,
         })
       })
@@ -493,13 +525,15 @@ export default {
       const l = this.map.Lines.find(
         (e) =>
           (e.NodeID1 === p[0] && e.NodeID2 === p[1]) ||
-          (e.NodeID1 === p[0] && e.NodeID2 === p[1])
+          (e.NodeID1 === p[1] && e.NodeID2 === p[0])
       )
       this.editLine = l || {
         NodeID1: p[0],
         PollingID2: '',
         NodeID2: p[1],
         PollingID1: '',
+        PollingID: '',
+        Info: '',
       }
       this.editLine.NodeName1 = this.nodeName(this.editLine.NodeID1)
       this.editLine.NodeName2 = this.nodeName(this.editLine.NodeID2)

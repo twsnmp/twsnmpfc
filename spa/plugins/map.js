@@ -104,11 +104,19 @@ const mapMain = (p5) => {
       const xm = (x1 + x2) / 2
       const ym = (y1 + y2) / 2
       p5.push()
-      p5.strokeWeight(1)
+      p5.strokeWeight(lines[k].Width || 1 )
       p5.stroke(getStateColor(lines[k].State1))
       p5.line(x1, y1, xm, ym)
       p5.stroke(getStateColor(lines[k].State2))
       p5.line(xm, ym, x2, y2)
+      if (lines[k].Info) {
+        p5.textFont('Arial')
+        p5.textSize(10)
+        p5.fill(250)
+        p5.stroke(250)
+        p5.strokeWeight(1)
+        p5.text(lines[k].Info, xm + 10, ym)  
+      }
       p5.pop()
     }
     for (const k in nodes) {

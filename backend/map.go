@@ -112,6 +112,20 @@ func updateLineState() {
 		} else {
 			l.State2 = "unknown"
 		}
+		if l.PollingID != "" {
+			if p := datastore.GetPolling(l.PollingID); p != nil {
+				if v, ok := p.Result["lineWith"]; ok {
+					if vf, ok := v.(float64); ok {
+						l.Width = int(vf)
+					}
+				}
+				if v, ok := p.Result["lineWith"]; ok {
+					if vs, ok := v.(string); ok {
+						l.Info = vs
+					}
+				}
+			}
+		}
 		return true
 	})
 }

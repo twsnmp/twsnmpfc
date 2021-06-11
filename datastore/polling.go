@@ -113,8 +113,10 @@ func DeletePolling(pollingID string) error {
 
 // GetPolling : ポーリングを取得する
 func GetPolling(id string) *PollingEnt {
-	p, _ := pollings.Load(id)
-	return p.(*PollingEnt)
+	if p, ok := pollings.Load(id); ok {
+		return p.(*PollingEnt)
+	}
+	return nil
 }
 
 // ForEachPollings : ポーリング毎の処理

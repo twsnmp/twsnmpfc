@@ -14,6 +14,9 @@ type LineEnt struct {
 	NodeID2    string
 	PollingID2 string
 	State2     string
+	PollingID  string
+	Width      int
+	Info       string
 }
 
 func AddLine(l *LineEnt) error {
