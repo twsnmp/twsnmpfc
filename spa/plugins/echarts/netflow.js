@@ -41,6 +41,7 @@ const makeNetFlowHistogram = (div) => {
     },
     xAxis: {
       scale: true,
+      min: 0,
     },
     yAxis: {
       name: '回数',
@@ -50,7 +51,6 @@ const makeNetFlowHistogram = (div) => {
         color: '#1f78b4',
         type: 'bar',
         showSymbol: false,
-        hoverAnimation: false,
         barWidth: '99.3%',
         data: [],
       },

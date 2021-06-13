@@ -316,7 +316,6 @@ const showAITimeChart = (div, scores, cb) => {
         color: '#1f78b4',
         type: 'line',
         showSymbol: false,
-        hoverAnimation: false,
         data: [],
       },
     ],

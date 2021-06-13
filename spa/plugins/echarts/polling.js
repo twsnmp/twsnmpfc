@@ -83,7 +83,6 @@ const makePollingChart = (div) => {
         color: '#1f78b4',
         type: 'line',
         showSymbol: false,
-        hoverAnimation: false,
         data: [],
       },
     ],
@@ -142,6 +141,9 @@ const showPollingChart = (polling, logs, ent, at) => {
 }
 
 const makePollingHistogram = (div) => {
+  if (chart) {
+    chart.dispose()
+  }
   chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
@@ -175,6 +177,7 @@ const makePollingHistogram = (div) => {
     },
     xAxis: {
       scale: true,
+      min: 0,
     },
     yAxis: {
       name: '回数',
@@ -184,7 +187,6 @@ const makePollingHistogram = (div) => {
         color: '#1f78b4',
         type: 'bar',
         showSymbol: false,
-        hoverAnimation: false,
         barWidth: '99.3%',
         data: [],
       },

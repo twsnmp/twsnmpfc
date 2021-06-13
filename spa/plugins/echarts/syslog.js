@@ -40,6 +40,7 @@ const makeSyslogHistogram = (div) => {
     },
     xAxis: {
       scale: true,
+      min: 0,
     },
     yAxis: {
       name: '回数',
