@@ -41,6 +41,15 @@
     "AutoMode": "index:ifIndex"
   },
   {
+    "Name": "SNMP通信量測定",
+    "Type": "snmp",
+    "Mode": "traffic",
+    "Params": "$i",
+    "Level": "off",
+    "Descr": "インターフェイスの通信量を測定",
+    "AutoMode": "index:ifIndex"
+  },
+  {
     "Name": "プロセス起動数監視",
     "Type": "snmp",
     "Mode": "count",
@@ -476,6 +485,24 @@
     "Type": "twsnmp",
     "Level": "low",
     "Descr": "TWSNMP連携",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "NetFlow通信量測定",
+    "Type": "netflow",
+    "Mode": "traffic",
+    "Params": "",
+    "Level": "off",
+    "Descr": "NetFlowの情報から通信量を集計",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "IPFIX通信量測定",
+    "Type": "ipfix",
+    "Mode": "traffic",
+    "Params": "",
+    "Level": "off",
+    "Descr": "IPFIXの情報から通信量を集計",
     "AutoMode": "disable"
   }
 ]

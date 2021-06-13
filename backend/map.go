@@ -118,17 +118,22 @@ func updateLineState() {
 				l.State = p.State
 				if v, ok := p.Result["bps"]; ok {
 					if vf, ok := v.(float64); ok {
-						l.Width = int(vf / (1024 * 1024 * 100))
+						l.Width = int(vf / (1024 * 1024 * 10))
 						if l.Width > 5 {
 							l.Width = 5
 						}
-						l.Info = humanize.Bytes(uint64(vf)) + "/Sec"
+						l.Info = humanize.Bytes(uint64(vf)) + "PS"
 					}
 				} else {
 					if v, ok := p.Result["pps"]; ok {
 						if vf, ok := v.(float64); ok {
-							l.Info = humanize.Commaf(vf) + "Packet/Sec"
+							l.Info = humanize.Commaf(vf) + "PPS"
 						}
+					}
+				}
+				if v, ok := p.Result["obps"]; ok {
+					if vf, ok := v.(float64); ok {
+						l.Info += "/" + humanize.Bytes(uint64(vf)) + "PS"
 					}
 				}
 			}

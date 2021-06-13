@@ -118,8 +118,8 @@ const mapMain = (p5) => {
       p5.line(xm, ym, x2, y2)
       if (lines[k].Info) {
         const color = getLineColor(lines[k].State)
-        p5.textFont('Arial')
-        p5.textSize(10)
+        p5.textFont('monospace')
+        p5.textSize(8)
         p5.fill(color)
         p5.stroke(color)
         p5.strokeWeight(1)

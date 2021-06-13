@@ -534,6 +534,9 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	oids = append(oids, datastore.MIBDB.NameToOID("ifInDiscards."+pe.Params))
 	oids = append(oids, datastore.MIBDB.NameToOID("ifInErrors."+pe.Params))
 	oids = append(oids, datastore.MIBDB.NameToOID("ifInUnknownProtos."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifOutOctets."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifOutUcastPkts."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifOutNUcastPkts."+pe.Params))
 	oids = append(oids, datastore.MIBDB.NameToOID("sysUpTime.0"))
 	result, err := agent.Get(oids)
 	if err != nil {
@@ -599,16 +602,24 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	}
 	var bytes float64
 	var packets float64
+	var outBytes float64
+	var outPackets float64
 	var errors float64
 	var bps float64
 	var pps float64
+	var obps float64
+	var opps float64
 	var eps float64
 	for k, v := range lr {
 		if strings.HasSuffix(k, "_Delta") {
 			if vf, ok := v.(float64); ok {
 				if strings.HasPrefix(k, "ifInOctets") {
 					bytes += vf
-				} else {
+				} else if strings.HasPrefix(k, "ifOutOctets") {
+					outBytes += vf
+				} else if strings.HasPrefix(k, "ifOut") {
+					outPackets += vf
+				} else if strings.HasPrefix(k, "ifIn") {
 					packets += vf
 					if strings.HasPrefix(k, "ifInErrors") {
 						errors += vf
@@ -621,7 +632,11 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			if vf, ok := v.(float64); ok {
 				if strings.HasPrefix(k, "ifInOctets") {
 					bps += vf
-				} else if !strings.HasPrefix(k, "sysUpTime") {
+				} else if strings.HasPrefix(k, "ifOutOctets") {
+					obps += vf
+				} else if strings.HasPrefix(k, "ifOut") {
+					opps += vf
+				} else if strings.HasPrefix(k, "ifIn") {
 					pps += vf
 					if strings.HasPrefix(k, "ifInErrors") {
 						eps += vf
@@ -634,9 +649,13 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	pe.Result = lr
 	pe.Result["bytes"] = bytes
 	pe.Result["packets"] = packets
+	pe.Result["outBytes"] = outBytes
+	pe.Result["outPackets"] = outPackets
 	pe.Result["erros"] = errors
 	pe.Result["bps"] = bps
 	pe.Result["pps"] = pps
+	pe.Result["obps"] = obps
+	pe.Result["opps"] = opps
 	pe.Result["eps"] = eps
 	if pe.Script == "" {
 		setPollingState(pe, "normal")
@@ -645,9 +664,13 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	vm := otto.New()
 	vm.Set("bps", bps)
 	vm.Set("pps", pps)
-	vm.Set("pps", eps)
+	vm.Set("obps", obps)
+	vm.Set("opps", opps)
+	vm.Set("eps", eps)
 	vm.Set("bytes", bytes)
 	vm.Set("packets", packets)
+	vm.Set("outBytes", outBytes)
+	vm.Set("outPackets", outPackets)
 	value, err := vm.Run(pe.Script)
 	if err != nil {
 		log.Printf("err=%v", err)
