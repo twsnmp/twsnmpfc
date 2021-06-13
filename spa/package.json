@@ -39,6 +39,7 @@
     "eslint-plugin-prettier": "^3.4.0",
     "jest": "^27.0.4",
     "prettier": "^2.3.0",
+    "sass": "^1.32.13",
     "vue-jest": "^3.0.7"
   }
 }
