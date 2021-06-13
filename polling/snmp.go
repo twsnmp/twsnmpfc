@@ -214,6 +214,7 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			setPollingState(pe, "unknown")
 			return
 		}
+		lr["lastTime"] = float64(time.Now().UnixNano())
 		for k, v := range lr {
 			if vf, ok := v.(float64); ok {
 				if vo, ok := pe.Result[k]; ok {
@@ -250,6 +251,7 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 				}
 			}
 		}
+		pe.Result = lr
 		value, err := vm.Run(script)
 		if err == nil {
 			if ok, _ := value.ToBoolean(); !ok {
@@ -568,6 +570,7 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		setPollingState(pe, "unknown")
 		return
 	}
+	lr["lastTime"] = float64(time.Now().UnixNano())
 	for k, v := range lr {
 		if vf, ok := v.(float64); ok {
 			if vo, ok := pe.Result[k]; ok {
