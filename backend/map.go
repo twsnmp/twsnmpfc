@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -114,14 +115,20 @@ func updateLineState() {
 		}
 		if l.PollingID != "" {
 			if p := datastore.GetPolling(l.PollingID); p != nil {
-				if v, ok := p.Result["lineWith"]; ok {
+				l.State = p.State
+				if v, ok := p.Result["bps"]; ok {
 					if vf, ok := v.(float64); ok {
-						l.Width = int(vf)
+						l.Width = int(vf / (1024 * 1024 * 100))
+						if l.Width > 5 {
+							l.Width = 5
+						}
+						l.Info = humanize.Bytes(uint64(vf)) + "/Sec"
 					}
-				}
-				if v, ok := p.Result["lineWith"]; ok {
-					if vs, ok := v.(string); ok {
-						l.Info = vs
+				} else {
+					if v, ok := p.Result["pps"]; ok {
+						if vf, ok := v.(float64); ok {
+							l.Info = humanize.Commaf(vf) + "Packet/Sec"
+						}
 					}
 				}
 			}

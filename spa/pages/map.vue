@@ -452,20 +452,22 @@ export default {
     nodeName(id) {
       return this.map.Nodes[id] ? this.map.Nodes[id].Name : ''
     },
-    pollingList(id, addNodeName) {
+    pollingList(id, lineMode) {
       const l = []
       if (!this.map.Nodes[id]) {
         return l
       }
       let nodeName = ''
-      if (addNodeName) {
+      if (lineMode) {
         nodeName = this.map.Nodes[id].Name + ':'
       }
       this.map.Pollings[id].forEach((p) => {
-        l.push({
-          text: nodeName + p.Name,
-          value: p.ID,
-        })
+        if (!lineMode || p.Mode === 'traffic') {
+          l.push({
+            text: nodeName + p.Name,
+            value: p.ID,
+          })
+        }
       })
       return l
     },

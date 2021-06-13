@@ -111,7 +111,7 @@ const makeErrorChart = (div) => {
 
 const autoEncoder = (divError, divModel, req, callback) => {
   makeErrorChart(divError)
-  if (req.Data.length < 5) {
+  if (!req || !req.Data || req.Data.length < 5) {
     if (callback) {
       // eslint-disable-next-line node/no-callback-literal
       callback(false)

@@ -16,6 +16,7 @@ type LineEnt struct {
 	State2     string
 	PollingID  string
 	Width      int
+	State      string
 	Info       string
 }
 

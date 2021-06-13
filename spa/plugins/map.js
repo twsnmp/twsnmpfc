@@ -67,6 +67,13 @@ const getStateColor = (state) => {
   return stateColorMap[state] ? stateColorMap[state] : 'gray'
 }
 
+const getLineColor = (state) => {
+  if (state === 'high' || state === 'low' || state === 'warn') {
+    return getStateColor(state)
+  }
+  return 250
+}
+
 const mapMain = (p5) => {
   let startMouseX
   let startMouseY
@@ -110,10 +117,11 @@ const mapMain = (p5) => {
       p5.stroke(getStateColor(lines[k].State2))
       p5.line(xm, ym, x2, y2)
       if (lines[k].Info) {
+        const color = getLineColor(lines[k].State)
         p5.textFont('Arial')
         p5.textSize(10)
-        p5.fill(250)
-        p5.stroke(250)
+        p5.fill(color)
+        p5.stroke(color)
         p5.strokeWeight(1)
         p5.text(lines[k].Info, xm + 10, ym)  
       }
