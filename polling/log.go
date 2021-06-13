@@ -32,10 +32,6 @@ func getLogContent(l string) string {
 }
 
 func doPollingLog(pe *datastore.PollingEnt) {
-	if pe.Type == "syslog" && pe.Mode == "pri" {
-		doPollingSyslogPri(pe)
-		return
-	}
 	var err error
 	var regexFilter *regexp.Regexp
 	var grokExtractor *grok.Grok
@@ -88,9 +84,9 @@ func doPollingLog(pe *datastore.PollingEnt) {
 	count := 0
 	okCount := 0
 	failed := false
+	keys := []string{}
 	datastore.ForEachLog(st, et, pe.Type, func(l *datastore.LogEnt) bool {
 		msg := ""
-		keys := []string{}
 		if pe.Type == "arp" {
 			msg = l.Log
 		} else {
@@ -239,8 +235,8 @@ func doPollingLog(pe *datastore.PollingEnt) {
 	vm.Set("count", count)
 	vm.Set("interval", pe.PollInt)
 	value, err := vm.Run(script)
-	if err == nil {
-		setPollingError("log", pe, fmt.Errorf("invalid script"))
+	if err != nil {
+		setPollingError("log", pe, fmt.Errorf("invalid script err=%v", err))
 		return
 	}
 	if ok, _ := value.ToBoolean(); ok {
