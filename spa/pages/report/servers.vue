@@ -16,19 +16,19 @@
         loading-text="Loading... Please wait"
         class="log"
       >
-        <template v-slot:[`item.Score`]="{ item }">
+        <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
             $getScoreIconName(item.Score)
           }}</v-icon>
           {{ item.Score.toFixed(1) }}
         </template>
-        <template v-slot:[`item.Count`]="{ item }">
+        <template #[`item.Count`]="{ item }">
           {{ formatCount(item.Count) }}
         </template>
-        <template v-slot:[`item.Bytes`]="{ item }">
+        <template #[`item.Bytes`]="{ item }">
           {{ formatBytes(item.Bytes) }}
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-icon
             v-if="item.ServerNodeID"
             small
@@ -45,7 +45,7 @@
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
-        <template v-slot:[`body.append`]>
+        <template #[`body.append`]>
           <tr>
             <td></td>
             <td>
@@ -64,7 +64,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-menu offset-y>
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
               グラフ表示
@@ -197,7 +197,7 @@
           <span class="headline">サーバー情報</span>
         </v-card-title>
         <v-simple-table dense>
-          <template v-slot:default>
+          <template #default>
             <thead>
               <tr>
                 <th class="text-left">項目</th>
@@ -263,7 +263,7 @@
                     item-height="20"
                     :items="selected.ServiceList"
                   >
-                    <template v-slot:default="{ item }">
+                    <template #default="{ item }">
                       <v-list-item>
                         <v-list-item-title>{{ item.title }}</v-list-item-title>
                         {{ formatCount(item.value) }}
@@ -379,29 +379,6 @@
 <script>
 import * as numeral from 'numeral'
 export default {
-  async fetch() {
-    this.servers = await this.$axios.$get('/api/report/servers')
-    if (!this.servers) {
-      return
-    }
-    this.servers.forEach((s) => {
-      s.First = this.$timeFormat(
-        new Date(s.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
-      )
-      s.Last = this.$timeFormat(
-        new Date(s.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
-      )
-      const sl = Object.keys(s.Services)
-      s.ServiceCount = sl.length
-      s.ServiceInfo = this.$getServiceInfo(sl)
-      const loc = this.$getLocInfo(s.Loc)
-      s.LatLong = loc.LatLong
-      s.LocInfo = loc.LocInfo
-      s.Country = loc.Country
-    })
-  },
   data() {
     return {
       headers: [
@@ -466,6 +443,29 @@ export default {
       addNodeDialog: false,
       addNodeError: false,
     }
+  },
+  async fetch() {
+    this.servers = await this.$axios.$get('/api/report/servers')
+    if (!this.servers) {
+      return
+    }
+    this.servers.forEach((s) => {
+      s.First = this.$timeFormat(
+        new Date(s.FirstTime / (1000 * 1000)),
+        '{MM}/{dd} {HH}:{mm}:{ss}'
+      )
+      s.Last = this.$timeFormat(
+        new Date(s.LastTime / (1000 * 1000)),
+        '{MM}/{dd} {HH}:{mm}:{ss}'
+      )
+      const sl = Object.keys(s.Services)
+      s.ServiceCount = sl.length
+      s.ServiceInfo = this.$getServiceInfo(sl)
+      const loc = this.$getLocInfo(s.Loc)
+      s.LatLong = loc.LatLong
+      s.LocInfo = loc.LocInfo
+      s.Country = loc.Country
+    })
   },
   methods: {
     doDelete() {

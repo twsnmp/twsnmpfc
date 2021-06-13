@@ -73,7 +73,7 @@
             hide-details
             hint="0は制限なし"
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="report.DropFlowThTCPPacket"
                 class="mt-0 pt-0"
@@ -92,7 +92,7 @@
             min="3"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="report.RetentionTimeForSafe"
                 class="mt-0 pt-0"
@@ -126,9 +126,6 @@
 
 <script>
 export default {
-  async fetch() {
-    this.report = await this.$axios.$get('/api/conf/report')
-  },
   data() {
     return {
       report: {
@@ -183,6 +180,9 @@ export default {
         { text: 'ICMPリダイレクト', value: '5/icmp' },
       ],
     }
+  },
+  async fetch() {
+    this.report = await this.$axios.$get('/api/conf/report')
   },
   methods: {
     submit() {

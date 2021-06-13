@@ -21,7 +21,7 @@
         loading-text="Loading... Please wait"
         class="log"
       >
-        <template v-slot:[`item.Level`]="{ item }">
+        <template #[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{
             $getStateIconName(item.Level)
           }}</v-icon>
@@ -73,6 +73,18 @@
 
 <script>
 export default {
+  data() {
+    return {
+      addr: '',
+      headers: [
+        { text: '状態', value: 'Level', width: '10%' },
+        { text: '項目', value: 'Title', width: '40%' },
+        { text: '値', value: 'Value', width: '50%' },
+      ],
+      info: [],
+      latLong: '',
+    }
+  },
   async fetch() {
     this.latLong = ''
     if (!this.addr) {
@@ -91,18 +103,6 @@ export default {
           }
         }
       })
-    }
-  },
-  data() {
-    return {
-      addr: '',
-      headers: [
-        { text: '状態', value: 'Level', width: '10%' },
-        { text: '項目', value: 'Title', width: '40%' },
-        { text: '値', value: 'Value', width: '50%' },
-      ],
-      info: [],
-      latLong: '',
     }
   },
   methods: {

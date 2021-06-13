@@ -16,13 +16,13 @@
         loading-text="Loading... Please wait"
         class="log"
       >
-        <template v-slot:[`item.Level`]="{ item }">
+        <template #[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{
             $getStateIconName(item.Level)
           }}</v-icon>
           {{ $getStateName(item.Level) }}
         </template>
-        <template v-slot:[`body.append`]>
+        <template #[`body.append`]>
           <tr>
             <td>
               <v-select v-model="level" :items="levelList" label="Level">
@@ -100,7 +100,7 @@
               offset-y
               min-width="auto"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.StartDate"
                   label="開始日"
@@ -130,7 +130,7 @@
               max-width="290px"
               min-width="290px"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.StartTime"
                   label="開始時刻"
@@ -156,7 +156,7 @@
               offset-y
               min-width="auto"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.EndDate"
                   label="終了日"
@@ -186,7 +186,7 @@
               max-width="290px"
               min-width="290px"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.EndTime"
                   label="終了時刻"
@@ -239,17 +239,6 @@
 
 <script>
 export default {
-  async fetch() {
-    const r = await this.$axios.$post('/api/log/eventlogs', this.filter)
-    this.nodeList = r.NodeList
-    this.nodeList.unshift({ text: '指定しない', value: '' })
-    this.logs = r.EventLogs
-    this.logs.forEach((e) => {
-      const t = new Date(e.Time / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t)
-    })
-    this.$showLogLevelChart(this.logs)
-  },
   data() {
     return {
       filterDialog: false,
@@ -323,6 +312,17 @@ export default {
         { text: '不明', value: 'unknown' },
       ],
     }
+  },
+  async fetch() {
+    const r = await this.$axios.$post('/api/log/eventlogs', this.filter)
+    this.nodeList = r.NodeList
+    this.nodeList.unshift({ text: '指定しない', value: '' })
+    this.logs = r.EventLogs
+    this.logs.forEach((e) => {
+      const t = new Date(e.Time / (1000 * 1000))
+      e.TimeStr = this.$timeFormat(t)
+    })
+    this.$showLogLevelChart(this.logs)
   },
   mounted() {
     this.$makeLogLevelChart('logCountChart')

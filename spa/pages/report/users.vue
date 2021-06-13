@@ -15,13 +15,13 @@
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
       >
-        <template v-slot:[`item.Score`]="{ item }">
+        <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
             $getScoreIconName(item.Score)
           }}</v-icon>
           {{ item.Score.toFixed(1) }}
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-icon
             v-if="item.ServerNodeID"
             small
@@ -32,7 +32,7 @@
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
-        <template v-slot:[`body.append`]>
+        <template #[`body.append`]>
           <tr>
             <td></td>
             <td>
@@ -48,7 +48,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-menu offset-y>
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
               グラフ表示
@@ -160,7 +160,7 @@
           <span class="headline">ユーザー情報</span>
         </v-card-title>
         <v-simple-table dense>
-          <template v-slot:default>
+          <template #default>
             <thead>
               <tr>
                 <th class="text-left">項目</th>
@@ -188,7 +188,7 @@
                     item-height="20"
                     :items="selected.ClientList"
                   >
-                    <template v-slot:default="{ item }">
+                    <template #default="{ item }">
                       <v-list-item>
                         <v-list-item-title>
                           {{ item.title }}
@@ -266,27 +266,6 @@
 <script>
 import * as numeral from 'numeral'
 export default {
-  async fetch() {
-    this.users = await this.$axios.$get('/api/report/users')
-    if (!this.users) {
-      return
-    }
-    this.users.forEach((u) => {
-      u.First = this.$timeFormat(
-        new Date(u.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
-      )
-      u.Last = this.$timeFormat(
-        new Date(u.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
-      )
-      if (u.Total > 0) {
-        u.Rate = ((100 * u.Ok) / u.Total).toFixed(2)
-      }
-      const cl = u.ClientMap ? Object.keys(u.ClientMap) : 0
-      u.Client = cl.length
-    })
-  },
   data() {
     return {
       headers: [
@@ -327,6 +306,27 @@ export default {
       user: '',
       server: '',
     }
+  },
+  async fetch() {
+    this.users = await this.$axios.$get('/api/report/users')
+    if (!this.users) {
+      return
+    }
+    this.users.forEach((u) => {
+      u.First = this.$timeFormat(
+        new Date(u.FirstTime / (1000 * 1000)),
+        '{MM}/{dd} {HH}:{mm}:{ss}'
+      )
+      u.Last = this.$timeFormat(
+        new Date(u.LastTime / (1000 * 1000)),
+        '{MM}/{dd} {HH}:{mm}:{ss}'
+      )
+      if (u.Total > 0) {
+        u.Rate = ((100 * u.Ok) / u.Total).toFixed(2)
+      }
+      const cl = u.ClientMap ? Object.keys(u.ClientMap) : 0
+      u.Client = cl.length
+    })
   },
   methods: {
     doDelete() {

@@ -8,7 +8,7 @@
         </v-alert>
         <v-card-text>
           <v-simple-table dense>
-            <template v-slot:default>
+            <template #default>
               <thead>
                 <tr>
                   <th class="text-left">項目</th>
@@ -208,29 +208,6 @@
 <script>
 import * as numeral from 'numeral'
 export default {
-  async fetch() {
-    const r = await this.$axios.$get('/api/conf/datastore')
-    if (!r) {
-      return
-    }
-    this.dbStats.Time = this.strTime(r.DBStats.Time)
-    this.dbStats.BackupTime = this.strTime(r.DBStats.BackupTime)
-    this.dbStats.Duration = numeral(r.DBStats.Duration).format('00:00:00')
-    this.dbStats.Size = numeral(r.DBStats.Size).format('0.000b')
-    this.dbStats.TotalWrite = numeral(r.DBStats.TotalWrite).format('0,0')
-    this.dbStats.Speed =
-      numeral(r.DBStats.Speed).format('0.000a') + ' Write/Sec'
-    this.dbStats.PeakSpeed =
-      numeral(r.DBStats.PeakSpeed).format('0.000a') + ' Write/Sec'
-    this.dbStats.AvgSpeed =
-      numeral(r.DBStats.AvgSpeed).format('0.000a') + ' Write/Sec'
-    this.dbStatsLog = r.DBStatsLog
-    this.backup = r.Backup
-    if (r.DBStats.BackupStart) {
-      this.dbStats.BackupStart = this.strTime(r.DBStats.BackupStart)
-    }
-    this.inBackup = r.DBStats.BackupStart > 0
-  },
   data() {
     return {
       dbStats: {
@@ -281,6 +258,29 @@ export default {
       cleanupError: false,
       dbStatsChartDialog: false,
     }
+  },
+  async fetch() {
+    const r = await this.$axios.$get('/api/conf/datastore')
+    if (!r) {
+      return
+    }
+    this.dbStats.Time = this.strTime(r.DBStats.Time)
+    this.dbStats.BackupTime = this.strTime(r.DBStats.BackupTime)
+    this.dbStats.Duration = numeral(r.DBStats.Duration).format('00:00:00')
+    this.dbStats.Size = numeral(r.DBStats.Size).format('0.000b')
+    this.dbStats.TotalWrite = numeral(r.DBStats.TotalWrite).format('0,0')
+    this.dbStats.Speed =
+      numeral(r.DBStats.Speed).format('0.000a') + ' Write/Sec'
+    this.dbStats.PeakSpeed =
+      numeral(r.DBStats.PeakSpeed).format('0.000a') + ' Write/Sec'
+    this.dbStats.AvgSpeed =
+      numeral(r.DBStats.AvgSpeed).format('0.000a') + ' Write/Sec'
+    this.dbStatsLog = r.DBStatsLog
+    this.backup = r.Backup
+    if (r.DBStats.BackupStart) {
+      this.dbStats.BackupStart = this.strTime(r.DBStats.BackupStart)
+    }
+    this.inBackup = r.DBStats.BackupStart > 0
   },
   methods: {
     doCleanup() {

@@ -17,7 +17,7 @@
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
       >
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-icon small @click="editGrok(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deleteGrok(item)"> mdi-delete </v-icon>
           <v-icon small @click="copyGrok(item)"> mdi-content-copy </v-icon>
@@ -179,13 +179,6 @@
 
 <script>
 export default {
-  async fetch() {
-    const r = await this.$axios.$get('/api/conf/grok')
-    if (!r) {
-      return
-    }
-    this.grok = r
-  },
   data() {
     return {
       headers: [
@@ -217,6 +210,13 @@ export default {
       extractHeader: [],
       extractDatas: [],
     }
+  },
+  async fetch() {
+    const r = await this.$axios.$get('/api/conf/grok')
+    if (!r) {
+      return
+    }
+    this.grok = r
   },
   methods: {
     copyGrok(item) {

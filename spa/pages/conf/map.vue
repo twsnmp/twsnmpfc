@@ -35,7 +35,7 @@
             min="60"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="mapconf.PollInt"
                 class="mt-0 pt-0"
@@ -54,7 +54,7 @@
             min="1"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="mapconf.Timeout"
                 class="mt-0 pt-0"
@@ -73,7 +73,7 @@
             min="0"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="mapconf.Retry"
                 class="mt-0 pt-0"
@@ -146,7 +146,7 @@
             min="1000"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="mapconf.LogDispSize"
                 hide-details
@@ -164,7 +164,7 @@
             min="7"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="mapconf.LogDays"
                 class="mt-0 pt-0"
@@ -311,10 +311,6 @@
 
 <script>
 export default {
-  async fetch() {
-    this.mapconf = await this.$axios.$get('/api/conf/map')
-    this.backImage = this.mapconf.BackImage
-  },
   data() {
     return {
       mapconf: {
@@ -356,6 +352,10 @@ export default {
       geoipDialog: false,
       geoipFile: null,
     }
+  },
+  async fetch() {
+    this.mapconf = await this.$axios.$get('/api/conf/map')
+    this.backImage = this.mapconf.BackImage
   },
   methods: {
     submit() {

@@ -24,7 +24,7 @@
         loading-text="Loading... Please wait"
         class="log"
       >
-        <template v-slot:[`item.Level`]="{ item }">
+        <template #[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{
             $getStateIconName(item.Level)
           }}</v-icon>
@@ -48,18 +48,6 @@
 
 <script>
 export default {
-  async fetch() {
-    const r = await this.$axios.$get('/api/node/log/' + this.$route.params.id)
-    this.node = r.Node
-    if (r.Logs) {
-      this.logs = r.Logs
-      this.logs.forEach((e) => {
-        const t = new Date(e.Time / (1000 * 1000))
-        e.TimeStr = this.$timeFormat(t)
-      })
-    }
-    this.$showLogLevelChart(this.logs)
-  },
   data() {
     return {
       node: {},
@@ -72,6 +60,18 @@ export default {
       ],
       logs: [],
     }
+  },
+  async fetch() {
+    const r = await this.$axios.$get('/api/node/log/' + this.$route.params.id)
+    this.node = r.Node
+    if (r.Logs) {
+      this.logs = r.Logs
+      this.logs.forEach((e) => {
+        const t = new Date(e.Time / (1000 * 1000))
+        e.TimeStr = this.$timeFormat(t)
+      })
+    }
+    this.$showLogLevelChart(this.logs)
   },
   mounted() {
     this.$makeLogLevelChart('logCountChart')

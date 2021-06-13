@@ -23,13 +23,13 @@
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
       >
-        <template v-slot:[`item.Score`]="{ item }">
+        <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.IconScore)">{{
             $getScoreIconName(item.IconScore)
           }}</v-icon>
           {{ item.Score.toFixed(1) }}
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-icon
             small
             @click="$router.push({ path: '/report/ai/' + item.ID })"
@@ -108,19 +108,6 @@
 <script>
 import * as numeral from 'numeral'
 export default {
-  async fetch() {
-    this.ai = await this.$axios.$get('/api/report/ailist')
-    if (!this.ai) {
-      return
-    }
-    this.ai.forEach((a) => {
-      a.Last = this.$timeFormat(
-        new Date(a.LastTime * 1000),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
-      )
-      a.IconScore = a.Score >= 100.0 ? 1.0 : 100.0 - a.Score
-    })
-  },
   data() {
     return {
       search: '',
@@ -137,6 +124,19 @@ export default {
       deleteDialog: false,
       deleteError: false,
     }
+  },
+  async fetch() {
+    this.ai = await this.$axios.$get('/api/report/ailist')
+    if (!this.ai) {
+      return
+    }
+    this.ai.forEach((a) => {
+      a.Last = this.$timeFormat(
+        new Date(a.LastTime * 1000),
+        '{MM}/{dd} {HH}:{mm}:{ss}'
+      )
+      a.IconScore = a.Score >= 100.0 ? 1.0 : 100.0 - a.Score
+    })
   },
   methods: {
     doDelete() {

@@ -18,7 +18,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-menu offset-y>
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
               グラフ表示
@@ -108,21 +108,6 @@
 <script>
 import * as numeral from 'numeral'
 export default {
-  async fetch() {
-    const r = await this.$axios.$get('/api/monitor')
-    if (!r) {
-      return
-    }
-    this.monitor = r
-    this.monitor.forEach((e) => {
-      e.Time = this.strTime(e.At)
-      e.CPUStr = numeral(e.CPU).format('0.00') + '%'
-      e.MemStr = numeral(e.Mem).format('0.00') + '%'
-      e.DiskStr = numeral(e.Disk).format('0.00') + '%'
-      e.LoadStr = numeral(e.Load).format('0.00')
-      e.NetStr = numeral(e.Net).format('0.00a') + 'bps'
-    })
-  },
   data() {
     return {
       headers: [
@@ -140,6 +125,21 @@ export default {
       sysNetChartDialog: false,
       sysProcChartDialog: false,
     }
+  },
+  async fetch() {
+    const r = await this.$axios.$get('/api/monitor')
+    if (!r) {
+      return
+    }
+    this.monitor = r
+    this.monitor.forEach((e) => {
+      e.Time = this.strTime(e.At)
+      e.CPUStr = numeral(e.CPU).format('0.00') + '%'
+      e.MemStr = numeral(e.Mem).format('0.00') + '%'
+      e.DiskStr = numeral(e.Disk).format('0.00') + '%'
+      e.LoadStr = numeral(e.Load).format('0.00')
+      e.NetStr = numeral(e.Net).format('0.00a') + 'bps'
+    })
   },
   methods: {
     openSysResChart() {

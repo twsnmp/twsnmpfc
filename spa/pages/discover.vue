@@ -125,7 +125,7 @@
           min="1"
           hide-details
         >
-          <template v-slot:append>
+          <template #append>
             <v-text-field
               v-model="discover.Conf.Timeout"
               hide-details
@@ -143,7 +143,7 @@
           min="0"
           hide-details
         >
-          <template v-slot:append>
+          <template #append>
             <v-text-field
               v-model="discover.Conf.Retry"
               hide-details
@@ -182,7 +182,7 @@
         sort-by="Type"
         dense
       >
-        <template v-slot:[`item.Level`]="{ item }">
+        <template #[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{
             $getStateIconName(item.Level)
           }}</v-icon>
@@ -206,25 +206,6 @@
 
 <script>
 export default {
-  async fetch() {
-    this.discover = await this.$axios.$get('/api/discover')
-    if (!this.discover.Conf.AutoAddPollings) {
-      this.discover.Conf.AutoAddPollings = []
-    }
-    if (!this.discover.Stat.Running) {
-      this.selectedTemplate = []
-      const r = await this.$axios.$get('/api/polling/template')
-      if (r) {
-        this.templates = r
-        r.forEach((t) => {
-          if (this.discover.Conf.AutoAddPollings.includes(t.ID)) {
-            this.selectedTemplate.push(t)
-          }
-        })
-        this.basicPolling = this.selectedTemplate.length === 0
-      }
-    }
-  },
   data() {
     return {
       discover: {
@@ -297,6 +278,25 @@ export default {
           return this.cmpIP(v) || '開始IP以降のアドレスを指定してください。'
         },
       ],
+    }
+  },
+  async fetch() {
+    this.discover = await this.$axios.$get('/api/discover')
+    if (!this.discover.Conf.AutoAddPollings) {
+      this.discover.Conf.AutoAddPollings = []
+    }
+    if (!this.discover.Stat.Running) {
+      this.selectedTemplate = []
+      const r = await this.$axios.$get('/api/polling/template')
+      if (r) {
+        this.templates = r
+        r.forEach((t) => {
+          if (this.discover.Conf.AutoAddPollings.includes(t.ID)) {
+            this.selectedTemplate.push(t)
+          }
+        })
+        this.basicPolling = this.selectedTemplate.length === 0
+      }
     }
   },
   computed: {

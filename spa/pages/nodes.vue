@@ -19,13 +19,13 @@
         sort-by="State"
         sort-asec
       >
-        <template v-slot:[`item.State`]="{ item }">
+        <template #[`item.State`]="{ item }">
           <v-icon :color="$getStateColor(item.State)">{{
             $getIconName(item.Icon)
           }}</v-icon>
           {{ $getStateName(item.State) }}
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-icon
             small
             @click="$router.push({ path: '/node/polling/' + item.ID })"
@@ -38,7 +38,7 @@
           <v-icon small @click="editNodeFunc(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deleteNodeFunc(item)"> mdi-delete </v-icon>
         </template>
-        <template v-slot:[`body.append`]>
+        <template #[`body.append`]>
           <tr>
             <td>
               <v-select v-model="state" :items="stateList" label="state">
@@ -178,9 +178,6 @@
 
 <script>
 export default {
-  async fetch() {
-    this.nodes = await this.$axios.$get('/api/nodes')
-  },
   data() {
     return {
       editDialog: false,
@@ -248,6 +245,9 @@ export default {
         { text: '不明', value: 'unknown' },
       ],
     }
+  },
+  async fetch() {
+    this.nodes = await this.$axios.$get('/api/nodes')
   },
   methods: {
     editNodeFunc(item) {

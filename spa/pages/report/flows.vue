@@ -16,19 +16,19 @@
         loading-text="Loading... Please wait"
         class="log"
       >
-        <template v-slot:[`item.Score`]="{ item }">
+        <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
             $getScoreIconName(item.Score)
           }}</v-icon>
           {{ item.Score.toFixed(1) }}
         </template>
-        <template v-slot:[`item.Count`]="{ item }">
+        <template #[`item.Count`]="{ item }">
           {{ formatCount(item.Count) }}
         </template>
-        <template v-slot:[`item.Bytes`]="{ item }">
+        <template #[`item.Bytes`]="{ item }">
           {{ formatBytes(item.Bytes) }}
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-icon
             v-if="item.ClientNodeID"
             small
@@ -52,7 +52,7 @@
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
-        <template v-slot:[`body.append`]>
+        <template #[`body.append`]>
           <tr>
             <td></td>
             <td>
@@ -74,7 +74,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-menu offset-y>
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
               グラフと集計
@@ -249,7 +249,7 @@
           <span class="headline">フロー情報</span>
         </v-card-title>
         <v-simple-table dense>
-          <template v-slot:default>
+          <template #default>
             <thead>
               <tr>
                 <th class="text-left">項目</th>
@@ -337,7 +337,7 @@
                     item-height="20"
                     :items="selected.ServiceList"
                   >
-                    <template v-slot:default="{ item }">
+                    <template #default="{ item }">
                       <v-list-item>
                         <v-list-item-title>{{ item.title }}</v-list-item-title>
                         {{ formatCount(item.value) }}
@@ -459,33 +459,6 @@
 <script>
 import * as numeral from 'numeral'
 export default {
-  async fetch() {
-    this.flows = await this.$axios.$get('/api/report/flows')
-    if (!this.flows) {
-      return
-    }
-    this.flows.forEach((f) => {
-      f.First = this.$timeFormat(
-        new Date(f.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
-      )
-      f.Last = this.$timeFormat(
-        new Date(f.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
-      )
-      const sl = Object.keys(f.Services)
-      f.ServiceCount = sl.length
-      f.ServiceInfo = this.$getServiceInfo(sl)
-      let loc = this.$getLocInfo(f.ClientLoc)
-      f.ClientLatLong = loc.LatLong
-      f.ClientLocInfo = loc.LocInfo
-      loc = this.$getLocInfo(f.ServerLoc)
-      f.ServerLatLong = loc.LatLong
-      f.ServerLocInfo = loc.LocInfo
-      f.Country = loc.Country
-      f.Loc = f.ServerLoc
-    })
-  },
   data() {
     return {
       search: '',
@@ -606,6 +579,33 @@ export default {
       unknownPortDialog: false,
       unknownPortError: false,
     }
+  },
+  async fetch() {
+    this.flows = await this.$axios.$get('/api/report/flows')
+    if (!this.flows) {
+      return
+    }
+    this.flows.forEach((f) => {
+      f.First = this.$timeFormat(
+        new Date(f.FirstTime / (1000 * 1000)),
+        '{MM}/{dd} {HH}:{mm}:{ss}'
+      )
+      f.Last = this.$timeFormat(
+        new Date(f.LastTime / (1000 * 1000)),
+        '{MM}/{dd} {HH}:{mm}:{ss}'
+      )
+      const sl = Object.keys(f.Services)
+      f.ServiceCount = sl.length
+      f.ServiceInfo = this.$getServiceInfo(sl)
+      let loc = this.$getLocInfo(f.ClientLoc)
+      f.ClientLatLong = loc.LatLong
+      f.ClientLocInfo = loc.LocInfo
+      loc = this.$getLocInfo(f.ServerLoc)
+      f.ServerLatLong = loc.LatLong
+      f.ServerLocInfo = loc.LocInfo
+      f.Country = loc.Country
+      f.Loc = f.ServerLoc
+    })
   },
   computed: {
     hasFilter() {

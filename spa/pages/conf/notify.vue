@@ -61,7 +61,7 @@
             min="5"
             hide-details
           >
-            <template v-slot:append>
+            <template #append>
               <v-text-field
                 v-model="notify.Interval"
                 class="mt-0 pt-0"
@@ -112,9 +112,6 @@
 
 <script>
 export default {
-  async fetch() {
-    this.notify = await this.$axios.$get('/api/conf/notify')
-  },
   data() {
     return {
       notify: {
@@ -136,6 +133,9 @@ export default {
       sent: false,
       failed: false,
     }
+  },
+  async fetch() {
+    this.notify = await this.$axios.$get('/api/conf/notify')
   },
   activated() {
     if (this.$fetchState.timestamp <= Date.now() - 30000) {

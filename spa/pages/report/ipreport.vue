@@ -16,13 +16,13 @@
         loading-text="Loading... Please wait"
         class="log"
       >
-        <template v-slot:[`item.Score`]="{ item }">
+        <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
             $getScoreIconName(item.Score)
           }}</v-icon>
           {{ item.Score.toFixed(1) }}
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-icon
             v-if="item.NodeID"
             small
@@ -46,7 +46,7 @@
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
-        <template v-slot:[`body.append`]>
+        <template #[`body.append`]>
           <tr>
             <td></td>
             <td>
@@ -73,7 +73,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-menu offset-y>
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
               グラフと集計
@@ -233,7 +233,7 @@
           <span class="headline">IPアドレス情報</span>
         </v-card-title>
         <v-simple-table dense>
-          <template v-slot:default>
+          <template #default>
             <thead>
               <tr>
                 <th class="text-left">項目</th>
@@ -388,26 +388,6 @@
 
 <script>
 export default {
-  async fetch() {
-    this.ips = await this.$axios.$get('/api/report/ips')
-    if (!this.ips) {
-      return
-    }
-    this.ips.forEach((ip) => {
-      ip.First = this.$timeFormat(
-        new Date(ip.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
-      )
-      ip.Last = this.$timeFormat(
-        new Date(ip.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
-      )
-      const loc = this.$getLocInfo(ip.Loc)
-      ip.LatLong = loc.LatLong
-      ip.LocInfo = loc.LocInfo
-      ip.Country = loc.Country
-    })
-  },
   data() {
     return {
       headers: [
@@ -498,6 +478,26 @@ export default {
       copyDone: false,
       copyError: false,
     }
+  },
+  async fetch() {
+    this.ips = await this.$axios.$get('/api/report/ips')
+    if (!this.ips) {
+      return
+    }
+    this.ips.forEach((ip) => {
+      ip.First = this.$timeFormat(
+        new Date(ip.FirstTime / (1000 * 1000)),
+        '{MM}/{dd} {HH}:{mm}:{ss}'
+      )
+      ip.Last = this.$timeFormat(
+        new Date(ip.LastTime / (1000 * 1000)),
+        '{MM}/{dd} {HH}:{mm}:{ss}'
+      )
+      const loc = this.$getLocInfo(ip.Loc)
+      ip.LatLong = loc.LatLong
+      ip.LocInfo = loc.LocInfo
+      ip.Country = loc.Country
+    })
   },
   methods: {
     doDelete() {

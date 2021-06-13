@@ -17,7 +17,7 @@
           </v-list-item-content>
         </v-list-item>
         <v-list-group no-action prepend-icon="mdi-chart-box" :value="false">
-          <template v-slot:activator>
+          <template #activator>
             <v-list-item-title>レポート</v-list-item-title>
           </template>
           <v-list-item
@@ -36,7 +36,7 @@
           </v-list-item>
         </v-list-group>
         <v-list-group no-action prepend-icon="mdi-view-list" :value="false">
-          <template v-slot:activator>
+          <template #activator>
             <v-list-item-title>ログ</v-list-item-title>
           </template>
           <v-list-item
@@ -55,7 +55,7 @@
           </v-list-item>
         </v-list-group>
         <v-list-group no-action prepend-icon="mdi-cogs" :value="false">
-          <template v-slot:activator>
+          <template #activator>
             <v-list-item-title>システム設定</v-list-item-title>
           </template>
           <v-list-item

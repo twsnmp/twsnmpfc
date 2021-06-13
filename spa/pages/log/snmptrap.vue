@@ -16,7 +16,7 @@
         loading-text="Loading... Please wait"
         class="log"
       >
-        <template v-slot:[`body.append`]>
+        <template #[`body.append`]>
           <tr>
             <td></td>
             <td>
@@ -85,7 +85,7 @@
               offset-y
               min-width="auto"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.StartDate"
                   label="開始日"
@@ -115,7 +115,7 @@
               max-width="290px"
               min-width="290px"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.StartTime"
                   label="開始時刻"
@@ -141,7 +141,7 @@
               offset-y
               min-width="auto"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.EndDate"
                   label="終了日"
@@ -171,7 +171,7 @@
               max-width="290px"
               min-width="290px"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="filter.EndTime"
                   label="終了時刻"
@@ -221,14 +221,6 @@
 
 <script>
 export default {
-  async fetch() {
-    this.logs = await this.$axios.$post('/api/log/snmptrap', this.filter)
-    this.logs.forEach((e) => {
-      const t = new Date(e.Time / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t)
-    })
-    this.$showLogCountChart(this.logs)
-  },
   data() {
     return {
       filterDialog: false,
@@ -282,6 +274,14 @@ export default {
       traptype: '',
       varbind: '',
     }
+  },
+  async fetch() {
+    this.logs = await this.$axios.$post('/api/log/snmptrap', this.filter)
+    this.logs.forEach((e) => {
+      const t = new Date(e.Time / (1000 * 1000))
+      e.TimeStr = this.$timeFormat(t)
+    })
+    this.$showLogCountChart(this.logs)
   },
   mounted() {
     this.$makeLogCountChart('logCountChart')
