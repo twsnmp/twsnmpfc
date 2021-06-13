@@ -74,6 +74,8 @@ func doPollingSnmp(pe *datastore.PollingEnt) {
 		doPollingSnmpProcess(pe, agent)
 	} else if mode == "stats" {
 		doPollingSnmpStats(pe, agent)
+	} else if mode == "traffic" {
+		doPollingSnmpTraffic(pe, agent)
 	} else {
 		doPollingSnmpGet(pe, agent)
 	}
@@ -522,4 +524,138 @@ func getSnmpIndex(n *datastore.NodeEnt, name string) []string {
 		return ret
 	}
 	return ret
+}
+
+func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
+	oids := []string{}
+	oids = append(oids, datastore.MIBDB.NameToOID("ifInOctets."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifInUcastPkts."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifInNUcastPkts."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifInDiscards."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifInErrors."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifInUnknownProtos."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("sysUpTime.0"))
+	result, err := agent.Get(oids)
+	if err != nil {
+		setPollingError("snmp", pe, err)
+		return
+	}
+	lr := make(map[string]interface{})
+	for _, variable := range result.Variables {
+		if variable.Name == datastore.MIBDB.NameToOID("sysUpTime.0") {
+			sut := gosnmp.ToBigInt(variable.Value).Uint64()
+			lr["sysUpTime"] = float64(sut)
+			continue
+		}
+		n := datastore.MIBDB.OIDToName(variable.Name)
+		if variable.Type == gosnmp.OctetString {
+			v := variable.Value.(string)
+			lr[n] = v
+		} else if variable.Type == gosnmp.ObjectIdentifier {
+			v := datastore.MIBDB.OIDToName(variable.Value.(string))
+			lr[n] = v
+		} else {
+			v := gosnmp.ToBigInt(variable.Value).Uint64()
+			lr[n] = float64(v)
+		}
+	}
+	if _, ok := pe.Result["lastTime"]; !ok {
+		lr["lastTime"] = float64(time.Now().UnixNano())
+		pe.Result = lr
+		setPollingState(pe, "unknown")
+		return
+	}
+	for k, v := range lr {
+		if vf, ok := v.(float64); ok {
+			if vo, ok := pe.Result[k]; ok {
+				if vof, ok := vo.(float64); ok {
+					d := vf - vof
+					lr[k+"_Delta"] = d
+				}
+			}
+		}
+	}
+	var diff float64
+	if v, ok := lr["sysUpTime_Delta"]; ok {
+		if vf, ok := v.(float64); ok {
+			diff = vf
+		}
+		if diff < 1.0 {
+			setPollingError("snmp", pe, fmt.Errorf("no sysUptime"))
+			return
+		}
+		for k, v := range lr {
+			if strings.HasPrefix(k, "_Delta") {
+				continue
+			}
+			if _, ok := v.(float64); ok {
+				if vd, ok := lr[k+"_Delta"]; ok {
+					if vdf, ok := vd.(float64); ok {
+						lr[k+"_PS"] = float64((vdf * 100.0) / diff)
+					}
+				}
+			}
+		}
+	}
+	var bytes float64
+	var packets float64
+	var errors float64
+	var bps float64
+	var pps float64
+	var eps float64
+	for k, v := range lr {
+		if strings.HasSuffix(k, "_Delta") {
+			if vf, ok := v.(float64); ok {
+				if strings.HasPrefix(k, "ifInOctets") {
+					bytes += vf
+				} else {
+					packets += vf
+					if strings.HasPrefix(k, "ifInErrors") {
+						errors += vf
+					}
+				}
+			}
+			continue
+		}
+		if strings.HasSuffix(k, "_PS") {
+			if vf, ok := v.(float64); ok {
+				if strings.HasPrefix(k, "ifInOctets") {
+					bps += vf
+				} else if !strings.HasPrefix(k, "sysUpTime") {
+					pps += vf
+					if strings.HasPrefix(k, "ifInErrors") {
+						eps += vf
+					}
+				}
+			}
+			continue
+		}
+	}
+	pe.Result = lr
+	pe.Result["bytes"] = bytes
+	pe.Result["packets"] = packets
+	pe.Result["erros"] = errors
+	pe.Result["bps"] = bps
+	pe.Result["pps"] = pps
+	pe.Result["eps"] = eps
+	if pe.Script == "" {
+		setPollingState(pe, "normal")
+		return
+	}
+	vm := otto.New()
+	vm.Set("bps", bps)
+	vm.Set("pps", pps)
+	vm.Set("pps", eps)
+	vm.Set("bytes", bytes)
+	vm.Set("packets", packets)
+	value, err := vm.Run(pe.Script)
+	if err != nil {
+		log.Printf("err=%v", err)
+		setPollingError("snmp", pe, err)
+	}
+	if ok, _ := value.ToBoolean(); !ok {
+		setPollingState(pe, pe.Level)
+		return
+	}
+	setPollingState(pe, "normal")
 }
