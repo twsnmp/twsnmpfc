@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -26,8 +27,9 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 		setPollingError("cmd", pe, fmt.Errorf("no cmd"))
 		return
 	}
+	exe := filepath.Join(datastore.GetDataStorePath(), "cmd", filepath.Base(cl[0]))
 	tio := &timeout.Timeout{
-		Cmd:       exec.Command(cl[0], cl[1:]...),
+		Cmd:       exec.Command(exe, cl[1:]...),
 		Duration:  time.Duration(pe.Timeout) * time.Second,
 		KillAfter: 5 * time.Second,
 	}
@@ -68,6 +70,10 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 			}
 			pe.Result[k] = v
 		}
+	}
+	if script == "" {
+		setPollingState(pe, "normal")
+		return
 	}
 	value, err := vm.Run(script)
 	if err != nil {

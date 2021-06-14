@@ -269,3 +269,8 @@ func CloseDataStore() {
 func makeKey() string {
 	return fmt.Sprintf("%016x", time.Now().UnixNano())
 }
+
+// Data Storeのパスを返す、何かと必要なので
+func GetDataStorePath() string {
+	return dspath
+}
