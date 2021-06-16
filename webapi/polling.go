@@ -307,3 +307,13 @@ func getPollingAIData(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, r)
 }
+
+func getPollingLogTimeAnalyze(c echo.Context) error {
+	id := c.Param("id")
+	r, err := backend.TimeAnalyzePollingLog(id)
+	if err != nil {
+		log.Printf("analyzePollingLog err=%v", err)
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, r)
+}

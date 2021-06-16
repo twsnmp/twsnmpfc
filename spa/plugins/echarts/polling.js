@@ -4,6 +4,9 @@ import * as ecStat from 'echarts-stat'
 let chart
 
 const makePollingChart = (div) => {
+  if (chart) {
+    chart.dispose()
+  }
   chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
@@ -388,10 +391,308 @@ const getDispParams = (p, ent) => {
   }
 }
 
+const makeSTLChart = (div) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'cross',
+        label: {
+          backgroundColor: '#6a7985',
+        },
+      },
+    },
+    legend: {
+      data: ['Seasonal', 'Trend', 'Resid'],
+      textStyle: {
+        fontSize: 10,
+        color: '#ccc',
+      },
+    },
+    toolbox: {
+      feature: {
+        saveAsImage: {},
+      },
+    },
+    grid: {
+      left: '5%',
+      right: '5%',
+      top: '10%',
+      buttom: '1%',
+    },
+    xAxis: {
+      type: 'time',
+      name: '日時',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: '8px',
+        formatter(value, index) {
+          const date = new Date(value)
+          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+        },
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      splitLine: {
+        show: false,
+      },
+    },
+    yAxis: {
+      type: 'value',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    series: [
+      {
+        name: 'Resid',
+        type: 'line',
+        stack: 'stl',
+        color: '#fac858',
+        areaStyle: {},
+        emphasis: {
+          focus: 'series',
+        },
+        showSymbol: false,
+        data: [],
+      },
+      {
+        name: 'Trend',
+        type: 'line',
+        stack: 'stl',
+        color: '#91cc75',
+        areaStyle: {},
+        emphasis: {
+          focus: 'series',
+        },
+        showSymbol: false,
+        data: [],
+      },
+      {
+        name: 'Seasonal',
+        type: 'line',
+        color: '#5470c6',
+        stack: 'stl',
+        areaStyle: {},
+        emphasis: {
+          focus: 'series',
+        },
+        showSymbol: false,
+        data: [],
+      },
+    ],
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
+const showPollingLogSTL = (div, polling, data, ent) => {
+  makeSTLChart(div)
+  if (ent === '' || !data || !data.StlMap || !data.StlMap[ent]) {
+    return
+  }
+  const seasonal = []
+  const trend = []
+  const resid = []
+  const dp = getDispParams(polling, ent)
+  for (let i = 0; i < data.Time.length; i++) {
+    const t = new Date(data.Time[i] * 1000)
+    const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
+    seasonal.push({
+      name: ts,
+      value: [t, (data.StlMap[ent].Seasonal[i] || 0.0) * dp.mul],
+    })
+    trend.push({
+      name: ts,
+      value: [t, (data.StlMap[ent].Trend[i] || 0.0) * dp.mul],
+    })
+    resid.push({
+      name: ts,
+      value: [t, (data.StlMap[ent].Resid[i] || 0.0) * dp.mul],
+    })
+  }
+  const opt = {
+    yAxis: {
+      name: dp.axis,
+    },
+    series: [
+      {
+        name: 'Resid',
+        type: 'line',
+        stack: 'stl',
+        color: '#fac858',
+        areaStyle: {},
+        emphasis: {
+          focus: 'series',
+        },
+        showSymbol: false,
+        data: resid,
+      },
+      {
+        name: 'Trend',
+        type: 'line',
+        stack: 'stl',
+        color: '#91cc75',
+        areaStyle: {},
+        emphasis: {
+          focus: 'series',
+        },
+        showSymbol: false,
+        data: trend,
+      },
+      {
+        name: 'Seasonal',
+        type: 'line',
+        color: '#5470c6',
+        stack: 'stl',
+        areaStyle: {},
+        emphasis: {
+          focus: 'series',
+        },
+        showSymbol: false,
+        data: seasonal,
+      },
+    ],
+  }
+  chart.setOption(opt)
+  chart.resize()
+}
+
+const makeFFTChart = (div) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    tooltip: {
+      trigger: 'axis',
+      formatter(params) {
+        const p = params[0]
+        return p.name + ' : ' + p.value[1]
+      },
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    grid: {
+      left: '10%',
+      right: '5%',
+      top: 30,
+      buttom: 0,
+    },
+    xAxis: {
+      type: 'time',
+      name: '日時',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: '8px',
+        formatter(value, index) {
+          const date = new Date(value)
+          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+        },
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      splitLine: {
+        show: false,
+      },
+    },
+    yAxis: {
+      type: 'value',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    series: [],
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
+const showPollingLogFFT = (div, polling, data, ent) => {
+  makeFFTChart(div)
+  if (ent === '') {
+    return
+  }
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('makePollingChart', makePollingChart)
   inject('showPollingChart', showPollingChart)
   inject('makePollingHistogram', makePollingHistogram)
   inject('showPollingHistogram', showPollingHistogram)
   inject('setDataList', setDataList)
+  inject('showPollingLogSTL', showPollingLogSTL)
+  inject('showPollingLogFFT', showPollingLogFFT)
 }

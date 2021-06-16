@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chewxy/stl"
 	"github.com/montanaflynn/stats"
 	"github.com/twsnmp/golof/lof"
 
@@ -139,15 +140,17 @@ func MakeAIData(req *AIReq) error {
 	for _, l := range logs {
 		ct := 3600 * (time.Unix(0, l.Time).Unix() / 3600)
 		if st != ct {
+			if count == 0.0 {
+				// Dataがない場合はスキップする
+				st = ct
+				continue
+			}
 			ts := time.Unix(ct, 0)
 			ent[0] = float64(ts.Hour())
 			if _, ok := yasumiMap[ts.Format("2006-01-02")]; ok {
 				ent[1] = 0.0
 			} else {
 				ent[1] = float64(ts.Weekday())
-			}
-			if count == 0.0 {
-				continue
 			}
 			for i := 0; i < len(ent); i++ {
 				if i >= 3 {
@@ -276,4 +279,74 @@ func calcLOF(req *AIReq) *datastore.AIResult {
 	res.PollingID = req.PollingID
 	res.LastTime = req.TimeStamp[len(req.TimeStamp)-1]
 	return &res
+}
+
+type TimeAnalyzedPollingLog struct {
+	Time    []int64
+	DataMap map[string][]float64
+	StlMap  map[string]stl.Result
+}
+
+func TimeAnalyzePollingLog(id string) (TimeAnalyzedPollingLog, error) {
+	r := TimeAnalyzedPollingLog{
+		DataMap: make(map[string][]float64),
+		StlMap:  make(map[string]stl.Result),
+	}
+	p := datastore.GetPolling(id)
+	if p == nil {
+		return r, fmt.Errorf("no polling")
+	}
+	keys := getAIDataKeys(p)
+	if len(keys) < 1 {
+		return r, fmt.Errorf("no keys")
+	}
+	logs := datastore.GetAllPollingLog(id)
+	if len(logs) < 1 {
+		return r, fmt.Errorf("no logs")
+	}
+	np := int64(3600)
+	for _, k := range keys {
+		r.DataMap[k] = []float64{}
+	}
+	entLen := len(keys)
+	st := np * (time.Unix(0, logs[0].Time).Unix() / np)
+	ent := make([]float64, entLen)
+	var count float64
+	for _, l := range logs {
+		ct := np * (time.Unix(0, l.Time).Unix() / np)
+		if st != ct {
+			if count > 0.0 {
+				for i := 0; i < len(ent); i++ {
+					ent[i] /= count
+				}
+			}
+			for ; st < ct-np; st += np {
+				r.Time = append(r.Time, time.Unix(st, 0).Unix())
+				for i, k := range keys {
+					// r.DataMap[k] = append(r.DataMap[k], 0.0)
+					r.DataMap[k] = append(r.DataMap[k], ent[i])
+				}
+				log.Printf("st=%d,ct=%d", st, ct)
+			}
+			r.Time = append(r.Time, time.Unix(ct, 0).Unix())
+			for i, k := range keys {
+				r.DataMap[k] = append(r.DataMap[k], ent[i])
+			}
+			ent = make([]float64, entLen)
+			st = ct
+			count = 0.0
+		}
+		count += 1.0
+		for i, k := range keys {
+			if v, ok := l.Result[k]; ok {
+				if fv, ok := v.(float64); ok {
+					ent[i] += fv
+				}
+			}
+		}
+	}
+	for _, k := range keys {
+		r.StlMap[k] = stl.Decompose(r.DataMap[k], 24, 24*3-1, stl.Additive(), stl.WithRobustIter(2), stl.WithIter(2))
+	}
+	return r, nil
 }

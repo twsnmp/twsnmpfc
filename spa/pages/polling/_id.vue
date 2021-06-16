@@ -151,6 +151,22 @@
                 <v-list-item-title>AI分析時系列</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="pollingLogSTL">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-timeline-variant</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>STL分析</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="pollingLogFFT">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-timeline-variant</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>FFT分析</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <v-btn color="normal" dark @click="$router.go(-1)">
@@ -464,6 +480,52 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="stlDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">
+            STL分析 - {{ node.Name }} - {{ polling.Name }}
+          </span>
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="selectedValEnt"
+            :items="numValEntList"
+            label="項目"
+            single-line
+            hide-details
+            @change="updatePollingLogSTL"
+          ></v-select>
+          <v-progress-linear
+            v-if="!timeAnalyzeData"
+            indeterminate
+            color="primary"
+          ></v-progress-linear>
+        </v-card-title>
+        <div id="STLChart" style="width: 1000px; height: 500px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="stlDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="fftDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> FFT分析 </span>
+        </v-card-title>
+        <div id="FFTChart" style="width: 1000px; height: 500px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="fftDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -504,6 +566,9 @@ export default {
       aiTimeChartDialog: false,
       aiError: false,
       aiScores: [],
+      stlDialog: false,
+      fftDialog: false,
+      timeAnalyzeData: null,
     }
   },
   async fetch() {
@@ -603,6 +668,52 @@ export default {
           })
         })
       })
+    },
+    pollingLogSTL() {
+      this.stlDialog = true
+      if (this.timeAnalyzeData) {
+        this.$nextTick(() => {
+          this.updatePollingLogSTL()
+        })
+        return
+      }
+      this.$axios
+        .$get('/api/polling/TimeAnalyze/' + this.$route.params.id)
+        .then((r) => {
+          this.timeAnalyzeData = r
+          this.updatePollingLogSTL()
+        })
+    },
+    updatePollingLogSTL() {
+      this.$showPollingLogSTL(
+        'STLChart',
+        this.polling,
+        this.timeAnalyzeData,
+        this.selectedValEnt
+      )
+    },
+    pollingLogFFT() {
+      this.fftDialog = true
+      if (this.timeAnalyzeData) {
+        this.$nextTick(() => {
+          this.updatePollingLogFFT()
+        })
+        return
+      }
+      this.$axios
+        .$get('/api/polling/TimeAnalyze/' + this.$route.params.id)
+        .then((r) => {
+          this.timeAnalyzeData = r
+          this.updatePollingLogFFT()
+        })
+    },
+    updatePollingLogFFT() {
+      this.$showPollingLogFFT(
+        'FFTChart',
+        this.polling,
+        this.timeAnalyzeData,
+        this.selectedValEnt
+      )
     },
     showAIHeatMap() {
       this.aiHeatMapDialog = true
