@@ -282,15 +282,21 @@ func calcLOF(req *AIReq) *datastore.AIResult {
 }
 
 type TimeAnalyzedPollingLog struct {
-	Time    []int64
-	DataMap map[string][]float64
-	StlMap  map[string]stl.Result
+	PX2        int64
+	TimeH      []int64
+	TimePX2    []int64
+	DataMapH   map[string][]float64
+	StlMapH    map[string]stl.Result
+	DataMapPX2 map[string][]float64
+	StlMapPX2  map[string]stl.Result
 }
 
 func TimeAnalyzePollingLog(id string) (TimeAnalyzedPollingLog, error) {
 	r := TimeAnalyzedPollingLog{
-		DataMap: make(map[string][]float64),
-		StlMap:  make(map[string]stl.Result),
+		DataMapH:   make(map[string][]float64),
+		StlMapH:    make(map[string]stl.Result),
+		DataMapPX2: make(map[string][]float64),
+		StlMapPX2:  make(map[string]stl.Result),
 	}
 	p := datastore.GetPolling(id)
 	if p == nil {
@@ -304,49 +310,81 @@ func TimeAnalyzePollingLog(id string) (TimeAnalyzedPollingLog, error) {
 	if len(logs) < 1 {
 		return r, fmt.Errorf("no logs")
 	}
-	np := int64(3600)
+	r.PX2 = int64(p.PollInt * 2)
+	entH := make(map[string]float64)
+	entPX2 := make(map[string]float64)
+	var countH float64
+	var countPX2 float64
+	sth := 3600 * (time.Unix(0, logs[0].Time).Unix() / 3600)
+	stpx2 := r.PX2 * (time.Unix(0, logs[0].Time).Unix() / r.PX2)
 	for _, k := range keys {
-		r.DataMap[k] = []float64{}
+		r.DataMapH[k] = []float64{}
+		r.DataMapPX2[k] = []float64{}
+		entH[k] = 0.0
+		entPX2[k] = 0.0
 	}
-	entLen := len(keys)
-	st := np * (time.Unix(0, logs[0].Time).Unix() / np)
-	ent := make([]float64, entLen)
-	var count float64
 	for _, l := range logs {
-		ct := np * (time.Unix(0, l.Time).Unix() / np)
-		if st != ct {
-			if count > 0.0 {
-				for i := 0; i < len(ent); i++ {
-					ent[i] /= count
+		cth := 3600 * (time.Unix(0, l.Time).Unix() / 3600)
+		if sth != cth {
+			if countH > 0.0 {
+				for _, k := range keys {
+					entH[k] /= countH
 				}
 			}
-			for ; st < ct-np; st += np {
-				r.Time = append(r.Time, time.Unix(st, 0).Unix())
-				for i, k := range keys {
-					// r.DataMap[k] = append(r.DataMap[k], 0.0)
-					r.DataMap[k] = append(r.DataMap[k], ent[i])
+			for ; sth < cth-3600; sth += 3600 {
+				r.TimeH = append(r.TimeH, time.Unix(sth, 0).Unix())
+				for _, k := range keys {
+					r.DataMapH[k] = append(r.DataMapH[k], entH[k])
 				}
-				log.Printf("st=%d,ct=%d", st, ct)
 			}
-			r.Time = append(r.Time, time.Unix(ct, 0).Unix())
-			for i, k := range keys {
-				r.DataMap[k] = append(r.DataMap[k], ent[i])
+			r.TimeH = append(r.TimeH, time.Unix(cth, 0).Unix())
+			for _, k := range keys {
+				r.DataMapH[k] = append(r.DataMapH[k], entH[k])
 			}
-			ent = make([]float64, entLen)
-			st = ct
-			count = 0.0
+			for _, k := range keys {
+				entH[k] = 0.0
+			}
+			sth = cth
+			countH = 0.0
 		}
-		count += 1.0
-		for i, k := range keys {
+		ctpx2 := r.PX2 * (time.Unix(0, l.Time).Unix() / r.PX2)
+		if stpx2 != ctpx2 {
+			if countPX2 > 0.0 {
+				for _, k := range keys {
+					entPX2[k] /= countPX2
+				}
+			}
+			for ; stpx2 < ctpx2-r.PX2; stpx2 += r.PX2 {
+				r.TimePX2 = append(r.TimePX2, time.Unix(stpx2, 0).Unix())
+				for _, k := range keys {
+					r.DataMapPX2[k] = append(r.DataMapPX2[k], 0.0)
+				}
+			}
+			r.TimePX2 = append(r.TimePX2, time.Unix(ctpx2, 0).Unix())
+			for _, k := range keys {
+				r.DataMapPX2[k] = append(r.DataMapPX2[k], entPX2[k])
+			}
+			for _, k := range keys {
+				entPX2[k] = 0.0
+			}
+			stpx2 = ctpx2
+			countPX2 = 0.0
+		}
+		countH += 1.0
+		countPX2 += 1.0
+		for _, k := range keys {
 			if v, ok := l.Result[k]; ok {
 				if fv, ok := v.(float64); ok {
-					ent[i] += fv
+					entH[k] += fv
+					entPX2[k] += fv
 				}
 			}
 		}
 	}
+	dpx2 := int((24 * 3600) / r.PX2)
 	for _, k := range keys {
-		r.StlMap[k] = stl.Decompose(r.DataMap[k], 24, 24*3-1, stl.Additive(), stl.WithRobustIter(2), stl.WithIter(2))
+		r.StlMapH[k] = stl.Decompose(r.DataMapH[k], 24, 24*3-1, stl.Additive(), stl.WithRobustIter(2), stl.WithIter(2))
+		r.StlMapPX2[k] = stl.Decompose(r.DataMapPX2[k], dpx2, dpx2*3-1, stl.Additive(), stl.WithRobustIter(2), stl.WithIter(2))
 	}
 	return r, nil
 }

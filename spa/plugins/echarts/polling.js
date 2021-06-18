@@ -523,29 +523,31 @@ const makeSTLChart = (div) => {
   chart.resize()
 }
 
-const showPollingLogSTL = (div, polling, data, ent) => {
+const showPollingLogSTL = (div, polling, data, ent, unit) => {
   makeSTLChart(div)
-  if (ent === '' || !data || !data.StlMap || !data.StlMap[ent]) {
+  if (ent === '' || !data || !data.StlMapH || !data.StlMapH[ent]) {
     return
   }
+  const timeList = unit !== 'h' ? data.TimePX2 : data.TimeH
+  const stlMap = unit !== 'h' ? data.StlMapPX2 : data.StlMapH
   const seasonal = []
   const trend = []
   const resid = []
   const dp = getDispParams(polling, ent)
-  for (let i = 0; i < data.Time.length; i++) {
-    const t = new Date(data.Time[i] * 1000)
+  for (let i = 0; i < timeList.length; i++) {
+    const t = new Date(timeList[i] * 1000)
     const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
     seasonal.push({
       name: ts,
-      value: [t, (data.StlMap[ent].Seasonal[i] || 0.0) * dp.mul],
+      value: [t, (stlMap[ent].Seasonal[i] || 0.0) * dp.mul],
     })
     trend.push({
       name: ts,
-      value: [t, (data.StlMap[ent].Trend[i] || 0.0) * dp.mul],
+      value: [t, (stlMap[ent].Trend[i] || 0.0) * dp.mul],
     })
     resid.push({
       name: ts,
-      value: [t, (data.StlMap[ent].Resid[i] || 0.0) * dp.mul],
+      value: [t, (stlMap[ent].Resid[i] || 0.0) * dp.mul],
     })
   }
   const opt = {

@@ -488,6 +488,14 @@
           </span>
           <v-spacer></v-spacer>
           <v-select
+            v-model="calcUnit"
+            :items="calcUnitList"
+            label="集計単位"
+            single-line
+            hide-details
+            @change="updatePollingLogSTL"
+          ></v-select>
+          <v-select
             v-model="selectedValEnt"
             :items="numValEntList"
             label="項目"
@@ -569,6 +577,11 @@ export default {
       stlDialog: false,
       fftDialog: false,
       timeAnalyzeData: null,
+      calcUnit: 'h',
+      calcUnitList: [
+        { text: '時間単位', value: 'h' },
+        { text: 'x秒', value: 'px2' },
+      ],
     }
   },
   async fetch() {
@@ -680,6 +693,7 @@ export default {
       this.$axios
         .$get('/api/polling/TimeAnalyze/' + this.$route.params.id)
         .then((r) => {
+          this.calcUnitList[1].text = r.PX2 + '秒単位'
           this.timeAnalyzeData = r
           this.updatePollingLogSTL()
         })
@@ -689,7 +703,8 @@ export default {
         'STLChart',
         this.polling,
         this.timeAnalyzeData,
-        this.selectedValEnt
+        this.selectedValEnt,
+        this.calcUnit
       )
     },
     pollingLogFFT() {
