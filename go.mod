@@ -20,6 +20,7 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mdlayher/netx v0.0.0-20200512211805-669a06fde734 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12 // indirect
 	github.com/montanaflynn/stats v0.6.3
 	github.com/mrichman/godnsbl v1.0.0
 	github.com/openrdap/rdap v0.9.0

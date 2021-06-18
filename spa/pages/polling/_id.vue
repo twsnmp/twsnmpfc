@@ -522,7 +522,31 @@
     <v-dialog v-model="fftDialog" persistent max-width="1000px">
       <v-card>
         <v-card-title>
-          <span class="headline"> FFT分析 </span>
+          <span class="headline">
+            FFT分析 - {{ node.Name }} - {{ polling.Name }}
+          </span>
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="calcUnit"
+            :items="calcUnitList"
+            label="集計単位"
+            single-line
+            hide-details
+            @change="updatePollingLogFFT"
+          ></v-select>
+          <v-select
+            v-model="selectedValEnt"
+            :items="numValEntList"
+            label="項目"
+            single-line
+            hide-details
+            @change="updatePollingLogFFT"
+          ></v-select>
+          <v-progress-linear
+            v-if="!timeAnalyzeData"
+            indeterminate
+            color="primary"
+          ></v-progress-linear>
         </v-card-title>
         <div id="FFTChart" style="width: 1000px; height: 500px"></div>
         <v-card-actions>
@@ -718,6 +742,7 @@ export default {
       this.$axios
         .$get('/api/polling/TimeAnalyze/' + this.$route.params.id)
         .then((r) => {
+          this.calcUnitList[1].text = r.PX2 + '秒単位'
           this.timeAnalyzeData = r
           this.updatePollingLogFFT()
         })
@@ -727,7 +752,8 @@ export default {
         'FFTChart',
         this.polling,
         this.timeAnalyzeData,
-        this.selectedValEnt
+        this.selectedValEnt,
+        this.calcUnit
       )
     },
     showAIHeatMap() {

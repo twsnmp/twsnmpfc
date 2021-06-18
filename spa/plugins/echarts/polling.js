@@ -618,10 +618,6 @@ const makeFFTChart = (div) => {
     ]),
     tooltip: {
       trigger: 'axis',
-      formatter(params) {
-        const p = params[0]
-        return p.name + ' : ' + p.value[1]
-      },
       axisPointer: {
         type: 'shadow',
       },
@@ -632,9 +628,15 @@ const makeFFTChart = (div) => {
       top: 30,
       buttom: 0,
     },
+    dataZoom: [
+      {
+        type: 'inside',
+      },
+      {},
+    ],
     xAxis: {
-      type: 'time',
-      name: '日時',
+      type: 'value',
+      name: 'Hz',
       nameTextStyle: {
         color: '#ccc',
         fontSize: 10,
@@ -643,10 +645,6 @@ const makeFFTChart = (div) => {
       axisLabel: {
         color: '#ccc',
         fontSize: '8px',
-        formatter(value, index) {
-          const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
-        },
       },
       axisLine: {
         lineStyle: {
@@ -681,11 +679,38 @@ const makeFFTChart = (div) => {
   chart.resize()
 }
 
-const showPollingLogFFT = (div, polling, data, ent) => {
+const showPollingLogFFT = (div, polling, data, ent, unit) => {
   makeFFTChart(div)
-  if (ent === '') {
+  if (ent === '' || !data.FFTH || !data.FFTH[ent]) {
     return
   }
+  const fftin = unit !== 'h' ? data.FFTPX2[ent] : data.FFTH[ent]
+  if (!fftin) {
+    return
+  }
+  const dp = getDispParams(polling, ent)
+  const fft = []
+  for (let i = 0; i < fftin.length; i++) {
+    fft.push([fftin[i][0], fftin[i][1] * dp.mul])
+  }
+  const opt = {
+    yAxis: {
+      name: dp.axis,
+    },
+    series: [
+      {
+        name: dp.axis,
+        type: 'bar',
+        color: '#5470c6',
+        emphasis: {
+          focus: 'series',
+        },
+        showSymbol: false,
+        data: fft,
+      },
+    ],
+  }
+  chart.setOption(opt)
   chart.resize()
 }
 
