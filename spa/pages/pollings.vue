@@ -190,8 +190,8 @@
             v-model="editPolling.PollInt"
             label="ポーリング間隔(Sec)"
             class="align-center"
-            max="600"
-            min="60"
+            max="3600"
+            min="30"
             hide-details
           >
             <template #append>
