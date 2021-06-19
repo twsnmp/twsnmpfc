@@ -239,6 +239,7 @@ const setDataList = (r, numValEntList) => {
     const v = r[k]
     if (
       !isNaN(parseFloat(v)) &&
+      k !== 'lastTime' &&
       numValEntList.findIndex((e) => e.value === k) === -1
     ) {
       numValEntList.push({
@@ -378,6 +379,10 @@ const chartDispInfo = {
     mul: 1.0,
     axis: '失敗回数',
   },
+  count: {
+    mul: 1.0,
+    axis: '回数',
+  },
 }
 
 const getDispParams = (p, ent) => {
@@ -432,10 +437,10 @@ const makeSTLChart = (div) => {
       },
     },
     grid: {
-      left: '5%',
-      right: '5%',
+      left: '10%',
+      right: '10%',
       top: '10%',
-      buttom: '1%',
+      buttom: '10%',
     },
     xAxis: {
       type: 'time',
@@ -624,9 +629,9 @@ const makeFFTChart = (div) => {
     },
     grid: {
       left: '10%',
-      right: '5%',
-      top: 30,
-      buttom: 0,
+      right: '10%',
+      top: '10%',
+      buttom: '10%',
     },
     dataZoom: [
       {
@@ -679,7 +684,7 @@ const makeFFTChart = (div) => {
   chart.resize()
 }
 
-const showPollingLogFFT = (div, polling, data, ent, unit) => {
+const showPollingLogFFT = (div, polling, data, ent, unit, fftType) => {
   makeFFTChart(div)
   if (ent === '' || !data.FFTH || !data.FFTH[ent]) {
     return
@@ -688,14 +693,25 @@ const showPollingLogFFT = (div, polling, data, ent, unit) => {
   if (!fftin) {
     return
   }
+  const freq = fftType === 'hz'
   const dp = getDispParams(polling, ent)
   const fft = []
   for (let i = 0; i < fftin.length; i++) {
-    fft.push([fftin[i][0], fftin[i][1] * dp.mul])
+    if (freq) {
+      fft.push([fftin[i][0], fftin[i][1] * dp.mul])
+    } else {
+      fft.push([
+        fftin[i][0] > 0.0 ? 1.0 / fftin[i][0] : 0.0,
+        fftin[i][1] * dp.mul,
+      ])
+    }
   }
   const opt = {
     yAxis: {
       name: dp.axis,
+    },
+    xAxis: {
+      name: freq ? '周波数(Hz)' : '周期(Sec)',
     },
     series: [
       {

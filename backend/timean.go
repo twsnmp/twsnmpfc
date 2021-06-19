@@ -41,8 +41,8 @@ func TimeAnalyzePollingLog(id string) (TimeAnalyzedPollingLog, error) {
 		return r, fmt.Errorf("no keys")
 	}
 	logs := datastore.GetAllPollingLog(id)
-	if len(logs) < 1 {
-		return r, fmt.Errorf("no logs")
+	if len(logs) < 10 {
+		return r, fmt.Errorf("not enough logs %d", len(logs))
 	}
 	r.PX2 = int64(p.PollInt * 2)
 	entH := make(map[string]float64)
@@ -115,10 +115,14 @@ func TimeAnalyzePollingLog(id string) (TimeAnalyzedPollingLog, error) {
 			}
 		}
 	}
-	dpx2 := int((24 * 3600) / r.PX2)
+	dpx2 := int(3600 / r.PX2)
 	for _, k := range keys {
-		r.StlMapH[k] = stl.Decompose(r.DataMapH[k], 24, 24*3-1, stl.Additive(), stl.WithRobustIter(2), stl.WithIter(2))
-		r.StlMapPX2[k] = stl.Decompose(r.DataMapPX2[k], dpx2, dpx2*3-1, stl.Additive(), stl.WithRobustIter(2), stl.WithIter(2))
+		if len(r.DataMapH[k]) >= 24 {
+			r.StlMapH[k] = stl.Decompose(r.DataMapH[k], 24, 24*3-1, stl.Additive(), stl.WithRobustIter(2), stl.WithIter(2))
+		}
+		if len(r.DataMapPX2[k]) >= dpx2 {
+			r.StlMapPX2[k] = stl.Decompose(r.DataMapPX2[k], dpx2, dpx2*3-1, stl.Additive(), stl.WithRobustIter(2), stl.WithIter(2))
+		}
 		r.FFTH[k] = getFFTData(float64(1/3600.0), r.DataMapH[k])
 		r.FFTPX2[k] = getFFTData(1.0/float64(r.PX2), r.DataMapPX2[k])
 	}

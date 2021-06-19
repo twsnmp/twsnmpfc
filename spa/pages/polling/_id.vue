@@ -2,6 +2,9 @@
   <v-row justify="center">
     <v-card min-width="900px">
       <v-card-title> ポーリング情報 </v-card-title>
+      <v-alert v-model="timeAnalyzeDataError" color="error" dense dismissible>
+        時系列分析時にエラーが発生しました
+      </v-alert>
       <v-simple-table dense>
         <template #default>
           <thead>
@@ -486,30 +489,40 @@
           <span class="headline">
             STL分析 - {{ node.Name }} - {{ polling.Name }}
           </span>
-          <v-spacer></v-spacer>
-          <v-select
-            v-model="calcUnit"
-            :items="calcUnitList"
-            label="集計単位"
-            single-line
-            hide-details
-            @change="updatePollingLogSTL"
-          ></v-select>
-          <v-select
-            v-model="selectedValEnt"
-            :items="numValEntList"
-            label="項目"
-            single-line
-            hide-details
-            @change="updatePollingLogSTL"
-          ></v-select>
           <v-progress-linear
             v-if="!timeAnalyzeData"
             indeterminate
             color="primary"
           ></v-progress-linear>
         </v-card-title>
-        <div id="STLChart" style="width: 1000px; height: 500px"></div>
+        <v-alert v-model="noStlData" color="error" dense dismissible>
+          データ不足のためSTL分析できません
+        </v-alert>
+        <v-card-text>
+          <v-row>
+            <v-col>
+              <v-select
+                v-model="calcUnit"
+                :items="calcUnitList"
+                label="集計単位"
+                single-line
+                hide-details
+                @change="updatePollingLogSTL"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="selectedValEnt"
+                :items="numValEntList"
+                label="項目"
+                single-line
+                hide-details
+                @change="updatePollingLogSTL"
+              ></v-select>
+            </v-col>
+          </v-row>
+          <div id="STLChart" style="width: 1000px; height: 500px"></div>
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="stlDialog = false">
@@ -525,30 +538,47 @@
           <span class="headline">
             FFT分析 - {{ node.Name }} - {{ polling.Name }}
           </span>
-          <v-spacer></v-spacer>
-          <v-select
-            v-model="calcUnit"
-            :items="calcUnitList"
-            label="集計単位"
-            single-line
-            hide-details
-            @change="updatePollingLogFFT"
-          ></v-select>
-          <v-select
-            v-model="selectedValEnt"
-            :items="numValEntList"
-            label="項目"
-            single-line
-            hide-details
-            @change="updatePollingLogFFT"
-          ></v-select>
           <v-progress-linear
             v-if="!timeAnalyzeData"
             indeterminate
             color="primary"
           ></v-progress-linear>
         </v-card-title>
-        <div id="FFTChart" style="width: 1000px; height: 500px"></div>
+        <v-card-text>
+          <v-row>
+            <v-col>
+              <v-select
+                v-model="fftType"
+                :items="fftTypeList"
+                label="周波数/周期"
+                single-line
+                hide-details
+                @change="updatePollingLogFFT"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="calcUnit"
+                :items="calcUnitList"
+                label="集計単位"
+                single-line
+                hide-details
+                @change="updatePollingLogFFT"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="selectedValEnt"
+                :items="numValEntList"
+                label="項目"
+                single-line
+                hide-details
+                @change="updatePollingLogFFT"
+              ></v-select>
+            </v-col>
+          </v-row>
+          <div id="FFTChart" style="width: 1000px; height: 500px"></div>
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="fftDialog = false">
@@ -601,10 +631,17 @@ export default {
       stlDialog: false,
       fftDialog: false,
       timeAnalyzeData: null,
+      timeAnalyzeDataError: false,
+      noStlData: false,
       calcUnit: 'h',
       calcUnitList: [
         { text: '時間単位', value: 'h' },
         { text: 'x秒', value: 'px2' },
+      ],
+      fftType: 't',
+      fftTypeList: [
+        { text: '周期(Sec)', value: 't' },
+        { text: '周波数(Hz)', value: 'hz' },
       ],
     }
   },
@@ -721,8 +758,21 @@ export default {
           this.timeAnalyzeData = r
           this.updatePollingLogSTL()
         })
+        .catch(() => {
+          this.stlDialog = false
+          this.timeAnalyzeDataError = true
+        })
     },
     updatePollingLogSTL() {
+      if (this.calcUnit === 'h') {
+        this.noStlData =
+          !this.timeAnalyzeData.StlMapH ||
+          !this.timeAnalyzeData.StlMapH[this.selectedValEnt]
+      } else {
+        this.noStlData =
+          !this.timeAnalyzeData.StlMapPX2 ||
+          !this.timeAnalyzeData.StlMapPX2[this.selectedValEnt]
+      }
       this.$showPollingLogSTL(
         'STLChart',
         this.polling,
@@ -746,6 +796,10 @@ export default {
           this.timeAnalyzeData = r
           this.updatePollingLogFFT()
         })
+        .catch(() => {
+          this.fftDialog = false
+          this.timeAnalyzeDataError = true
+        })
     },
     updatePollingLogFFT() {
       this.$showPollingLogFFT(
@@ -753,7 +807,8 @@ export default {
         this.polling,
         this.timeAnalyzeData,
         this.selectedValEnt,
-        this.calcUnit
+        this.calcUnit,
+        this.fftType
       )
     },
     showAIHeatMap() {

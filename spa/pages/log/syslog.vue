@@ -571,7 +571,7 @@
     <v-dialog v-model="extract3DDialog" persistent max-width="1000px">
       <v-card style="width: 100%">
         <v-card-title> 抽出情報の項目別3Dグラフ </v-card-title>
-        <v-text>
+        <v-card-text>
           <v-row>
             <v-col>
               <v-select
@@ -605,7 +605,7 @@
             </v-col>
           </v-row>
           <div id="extract3d" style="width: 1000px; height: 750px"></div>
-        </v-text>
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="extract3DDialog = false">
