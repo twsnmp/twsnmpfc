@@ -976,6 +976,162 @@ const showSyslogFFT = (div, fftMap, host, type) => {
   chart.resize()
 }
 
+const showSyslogFFT3D = (div, fftMap, fftType) => {
+  const data = []
+  const freq = fftType === 'hz'
+  const colors = []
+  const cat = []
+  fftMap.forEach((e) => {
+    if (e.Name === 'Total') {
+      return
+    }
+    cat.push(e.Name)
+    if (freq) {
+      e.FFT.forEach((f) => {
+        if (f.frequency === 0.0) {
+          return
+        }
+        data.push([e.Name, f.frequency, f.magnitude, f.period])
+        colors.push(f.magnitude)
+      })
+    } else {
+      e.FFT.forEach((f) => {
+        if (f.period === 0.0) {
+          return
+        }
+        data.push([e.Name, f.period, f.magnitude, f.frequency])
+        colors.push(f.magnitude)
+      })
+    }
+  })
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    tooltip: {},
+    animationDurationUpdate: 1500,
+    animationEasingUpdate: 'quinticInOut',
+    visualMap: {
+      show: true,
+      min: ecStat.statistics.min(colors),
+      max: ecStat.statistics.max(colors),
+      dimension: 2,
+      inRange: {
+        color: [
+          '#313695',
+          '#4575b4',
+          '#74add1',
+          '#abd9e9',
+          '#e0f3f8',
+          '#ffffbf',
+          '#fee090',
+          '#fdae61',
+          '#f46d43',
+          '#d73027',
+          '#a50026',
+        ],
+      },
+    },
+    xAxis3D: {
+      type: 'category',
+      name: 'Host',
+      data: cat,
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#eee',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    yAxis3D: {
+      type: freq ? 'value' : 'log',
+      name: freq ? '周波数(Hz)' : '周期(Sec)',
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#eee',
+        fontSize: 8,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    zAxis3D: {
+      type: 'value',
+      name: '回数',
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    grid3D: {
+      axisLine: {
+        lineStyle: { color: '#eee' },
+      },
+      axisPointer: {
+        lineStyle: { color: '#eee' },
+      },
+      viewControl: {
+        projection: 'orthographic',
+      },
+    },
+    series: [
+      {
+        name: 'Syslog FFT分析',
+        type: 'scatter3D',
+        dimensions: [
+          'Host',
+          freq ? '周波数' : '周期',
+          '回数',
+          freq ? '周期' : '周波数',
+        ],
+        data,
+      },
+    ],
+  }
+  chart.setOption(options)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showSyslogHistogram', showSyslogHistogram)
   inject('showSyslogCluster', showSyslogCluster)
@@ -989,4 +1145,5 @@ export default (context, inject) => {
   inject('showSyslogExtract3D', showSyslogExtract3D)
   inject('showSyslogFFT', showSyslogFFT)
   inject('getSyslogFFTMap', getSyslogFFTMap)
+  inject('showSyslogFFT3D', showSyslogFFT3D)
 }

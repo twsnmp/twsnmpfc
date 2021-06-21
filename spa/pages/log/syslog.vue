@@ -119,6 +119,14 @@
                 <v-list-item-title>FFT分析</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="updateFFT3D">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-timeline-variant</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>FFT分析(3D)</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <v-btn color="info" @click="aiAssistDialog = true">
@@ -828,6 +836,32 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="fft3DDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> Syslog - FFT分析(3D) </span>
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="fftType"
+            :items="fftTypeList"
+            label="周波数/周期"
+            single-line
+            hide-details
+            @change="updateFFT3D"
+          ></v-select>
+        </v-card-title>
+        <v-card-text>
+          <div id="FFTChart3D" style="width: 1000px; height: 600px"></div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="fft3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -1017,6 +1051,7 @@ export default {
         { text: '周期(Sec)', value: 't' },
         { text: '周波数(Hz)', value: 'hz' },
       ],
+      fft3DDialog: false,
     }
   },
   async fetch() {
@@ -1269,6 +1304,20 @@ export default {
       }
       this.$nextTick(() => {
         this.$showSyslogFFT('FFTChart', this.fftMap, this.fftHost, this.fftType)
+      })
+    },
+    updateFFT3D() {
+      this.fft3DDialog = true
+      if (!this.fftMap) {
+        this.fftMap = this.$getSyslogFFTMap(this.logs)
+        this.fftHostList = []
+        this.fftMap.forEach((e) => {
+          this.fftHostList.push({ text: e.Name, value: e.Name })
+        })
+        this.fftHost = 'Total'
+      }
+      this.$nextTick(() => {
+        this.$showSyslogFFT3D('FFTChart3D', this.fftMap, this.fftType)
       })
     },
   },
