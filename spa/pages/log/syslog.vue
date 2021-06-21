@@ -1038,7 +1038,7 @@ export default {
     if (this.filterExtractorList.length < 1) {
       const groks = await this.$axios.$get('/api/conf/grok')
       if (groks) {
-        this.filterExtractorList = []
+        this.filterExtractorList = [{ text: '指定しない', value: '' }]
         groks.forEach((g) => {
           this.filterExtractorList.push({
             text: g.Name,
