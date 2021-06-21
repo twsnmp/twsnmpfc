@@ -111,6 +111,14 @@
                 <v-list-item-title> ホスト別ログ(3D) </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="updateFFT">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-timeline-variant</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>FFT分析</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <v-btn color="info" @click="aiAssistDialog = true">
@@ -781,6 +789,45 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="fftDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> Syslog - FFT分析 </span>
+        </v-card-title>
+        <v-card-text>
+          <v-row>
+            <v-col>
+              <v-select
+                v-model="fftType"
+                :items="fftTypeList"
+                label="周波数/周期"
+                single-line
+                hide-details
+                @change="updateFFT"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="fftHost"
+                :items="fftHostList"
+                label="ホスト"
+                single-line
+                hide-details
+                @change="updateFFT"
+              ></v-select>
+            </v-col>
+          </v-row>
+          <div id="FFTChart" style="width: 1000px; height: 500px"></div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="fftDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -961,9 +1008,19 @@ export default {
           },
         },
       ],
+      fftDialog: false,
+      fftMap: null,
+      fftType: 't',
+      fftHost: '',
+      fftHostList: [],
+      fftTypeList: [
+        { text: '周期(Sec)', value: 't' },
+        { text: '周波数(Hz)', value: 'hz' },
+      ],
     }
   },
   async fetch() {
+    this.fftMap = null
     const r = await this.$axios.$post('/api/log/syslog', this.filter)
     if (!r) {
       return
@@ -1199,6 +1256,20 @@ export default {
     },
     formatCount(n) {
       return numeral(n).format('0,0')
+    },
+    updateFFT() {
+      this.fftDialog = true
+      if (!this.fftMap) {
+        this.fftMap = this.$getSyslogFFTMap(this.logs)
+        this.fftHostList = []
+        this.fftMap.forEach((e) => {
+          this.fftHostList.push({ text: e.Name, value: e.Name })
+        })
+        this.fftHost = 'Total'
+      }
+      this.$nextTick(() => {
+        this.$showSyslogFFT('FFTChart', this.fftMap, this.fftHost, this.fftType)
+      })
     },
   },
 }

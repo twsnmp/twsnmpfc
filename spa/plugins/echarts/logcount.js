@@ -108,6 +108,7 @@ const showLogCountChart = (logs) => {
         name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
         value: [t, count],
       })
+      ctm++
       for (; ctm < newCtm; ctm++) {
         t = new Date(ctm * 60 * 1000)
         data.push({

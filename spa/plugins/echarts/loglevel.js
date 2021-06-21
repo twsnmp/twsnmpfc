@@ -154,6 +154,7 @@ const showLogLevelChart = (logs) => {
           value: [t, count[k]],
         })
       }
+      ctm++
       for (; ctm < newCtm; ctm++) {
         t = new Date(ctm * 60 * 1000)
         for (const k in count) {

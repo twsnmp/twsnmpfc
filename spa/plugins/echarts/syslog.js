@@ -1,5 +1,6 @@
 import * as echarts from 'echarts'
 import * as ecStat from 'echarts-stat'
+import { doFFT } from '~/plugins/echarts/fft.js'
 
 let chart
 
@@ -827,6 +828,154 @@ const showSyslogExtract3D = (div, extractDatas, xType, zType, colorType) => {
   chart.resize()
 }
 
+const getSyslogFFTMap = (logs) => {
+  const m = new Map()
+  m.set('Total', { Name: 'Total', Count: 0, Data: [] })
+  logs.forEach((l) => {
+    const e = m.get(l.Host)
+    if (!e) {
+      m.set(l.Host, { Name: l.Host, Count: 0, Data: [] })
+    }
+  })
+  let cts
+  logs.forEach((l) => {
+    if (!cts) {
+      cts = Math.floor(l.Time / (1000 * 1000 * 1000))
+      m.get('Total').Count++
+      m.get(l.Host).Count++
+      return
+    }
+    const newCts = Math.floor(l.Time / (1000 * 1000 * 1000))
+    if (cts !== newCts) {
+      m.forEach((e) => {
+        e.Data.push(e.Count)
+        e.Count = 0
+      })
+      cts++
+      for (; cts < newCts; cts++) {
+        m.forEach((e) => {
+          e.Data.push(0)
+        })
+      }
+    }
+    m.get('Total').Count++
+    m.get(l.Host).Count++
+  })
+  m.forEach((e) => {
+    e.FFT = doFFT(e.Data, 1)
+  })
+  return m
+}
+
+const showSyslogFFT = (div, fftMap, host, type) => {
+  if (chart) {
+    chart.dispose()
+  }
+  if (!fftMap || !fftMap.get(host)) {
+    return
+  }
+  const fftData = fftMap.get(host).FFT
+  const freq = type === 'hz'
+  const fft = []
+  if (freq) {
+    fftData.forEach((e) => {
+      fft.push([e.frequency, e.magnitude])
+    })
+  } else {
+    fftData.forEach((e) => {
+      fft.push([e.period, e.magnitude])
+    })
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    grid: {
+      left: '10%',
+      right: '10%',
+      top: '10%',
+      buttom: '10%',
+    },
+    dataZoom: [
+      {
+        type: 'inside',
+      },
+      {},
+    ],
+    xAxis: {
+      type: 'value',
+      name: freq ? '周波数(Hz)' : '周期(Sec)',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: '8px',
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      splitLine: {
+        show: false,
+      },
+    },
+    yAxis: {
+      type: 'value',
+      name: '回数',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    series: [
+      {
+        name: '回数',
+        type: 'bar',
+        color: '#5470c6',
+        emphasis: {
+          focus: 'series',
+        },
+        showSymbol: false,
+        data: fft,
+      },
+    ],
+  }
+  chart.setOption(options)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showSyslogHistogram', showSyslogHistogram)
   inject('showSyslogCluster', showSyslogCluster)
@@ -838,4 +987,6 @@ export default (context, inject) => {
   inject('showSyslogExtractTopList', showSyslogExtractTopList)
   inject('getSyslogExtractTopList', getSyslogExtractTopList)
   inject('showSyslogExtract3D', showSyslogExtract3D)
+  inject('showSyslogFFT', showSyslogFFT)
+  inject('getSyslogFFTMap', getSyslogFFTMap)
 }

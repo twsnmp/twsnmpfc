@@ -164,6 +164,7 @@ const showLogStateChart = (logs) => {
           value: [t, count[k]],
         })
       }
+      cth++
       for (; cth < newCth; cth++) {
         t = new Date(cth * 3600 * 1000)
         for (const k in count) {
