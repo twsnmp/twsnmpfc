@@ -113,7 +113,7 @@
             </v-list-item>
             <v-list-item @click="updateFFT">
               <v-list-item-icon>
-                <v-icon>mdi-chart-timeline-variant</v-icon>
+                <v-icon>mdi-chart-bell-curve</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title>FFT分析</v-list-item-title>
@@ -121,7 +121,7 @@
             </v-list-item>
             <v-list-item @click="updateFFT3D">
               <v-list-item-icon>
-                <v-icon>mdi-chart-timeline-variant</v-icon>
+                <v-icon>mdi-rotate-3d</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title>FFT分析(3D)</v-list-item-title>

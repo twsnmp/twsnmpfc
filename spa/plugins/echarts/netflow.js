@@ -1,6 +1,7 @@
 import * as echarts from 'echarts'
 import * as ecStat from 'echarts-stat'
 import { isPrivateIP, isV4Format } from '~/plugins/echarts/utils.js'
+import { doFFT } from '~/plugins/echarts/fft.js'
 
 let chart
 
@@ -1495,6 +1496,329 @@ const showNetFlowIPFlow3D = (div, logs, type) => {
   chart.resize()
 }
 
+const getNetFlowFFTMap = (logs) => {
+  const m = new Map()
+  m.set('Total', { Name: 'Total', Count: 0, Data: [], Total: 0 })
+  let packets = 0
+  logs.forEach((l) => {
+    const e = m.get(l.SrcIP)
+    if (!e) {
+      m.set(l.SrcIP, { Name: l.SrcIP, Count: 0, Data: [], Total: l.Packets })
+    } else {
+      e.Total += l.Packets
+    }
+    packets += l.Packets
+  })
+  m.get('Total').Total = packets
+  let cts
+  logs.forEach((l) => {
+    if (!cts) {
+      cts = Math.floor(l.Time / (1000 * 1000 * 1000))
+      m.get('Total').Count++
+      m.get(l.SrcIP).Count++
+      return
+    }
+    const newCts = Math.floor(l.Time / (1000 * 1000 * 1000))
+    if (cts !== newCts) {
+      m.forEach((e) => {
+        e.Data.push(e.Count)
+        e.Count = 0
+      })
+      cts++
+      for (; cts < newCts; cts++) {
+        m.forEach((e) => {
+          e.Data.push(0)
+        })
+      }
+    }
+    m.get('Total').Count++
+    m.get(l.SrcIP).Count++
+  })
+  const ks = Array.from(m.keys())
+  if (ks.length > 50) {
+    ks.sort((a, b) => {
+      const ea = m.get(a)
+      const eb = m.get(b)
+      return eb.Total - ea.Total
+    })
+    for (let i = 0; i < ks.length; i++) {
+      const e = m.get(ks[i])
+      if (i > 50 || e.Total < 10) {
+        m.delete(ks[i])
+      }
+    }
+  }
+  m.forEach((e) => {
+    e.FFT = doFFT(e.Data, 1)
+  })
+  return m
+}
+
+const showNetFlowFFT = (div, fftMap, src, type) => {
+  if (chart) {
+    chart.dispose()
+  }
+  if (!fftMap || !fftMap.get(src)) {
+    return
+  }
+  const fftData = fftMap.get(src).FFT
+  const freq = type === 'hz'
+  const fft = []
+  if (freq) {
+    fftData.forEach((e) => {
+      fft.push([e.frequency, e.magnitude])
+    })
+  } else {
+    fftData.forEach((e) => {
+      fft.push([e.period, e.magnitude])
+    })
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    grid: {
+      left: '10%',
+      right: '10%',
+      top: '10%',
+      buttom: '10%',
+    },
+    dataZoom: [
+      {
+        type: 'inside',
+      },
+      {},
+    ],
+    xAxis: {
+      type: 'value',
+      name: freq ? '周波数(Hz)' : '周期(Sec)',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: '8px',
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      splitLine: {
+        show: false,
+      },
+    },
+    yAxis: {
+      type: 'value',
+      name: '回数',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    series: [
+      {
+        name: '回数',
+        type: 'bar',
+        color: '#5470c6',
+        emphasis: {
+          focus: 'series',
+        },
+        showSymbol: false,
+        data: fft,
+      },
+    ],
+  }
+  chart.setOption(options)
+  chart.resize()
+}
+
+const showNetFlowFFT3D = (div, fftMap, fftType) => {
+  const data = []
+  const freq = fftType === 'hz'
+  const colors = []
+  const cat = []
+  fftMap.forEach((e) => {
+    if (e.Name === 'Total') {
+      return
+    }
+    cat.push(e.Name)
+    if (freq) {
+      e.FFT.forEach((f) => {
+        if (f.frequency === 0.0) {
+          return
+        }
+        data.push([e.Name, f.frequency, f.magnitude, f.period])
+        colors.push(f.magnitude)
+      })
+    } else {
+      e.FFT.forEach((f) => {
+        if (f.period === 0.0) {
+          return
+        }
+        data.push([e.Name, f.period, f.magnitude, f.frequency])
+        colors.push(f.magnitude)
+      })
+    }
+  })
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    tooltip: {},
+    animationDurationUpdate: 1500,
+    animationEasingUpdate: 'quinticInOut',
+    visualMap: {
+      show: true,
+      min: ecStat.statistics.min(colors),
+      max: ecStat.statistics.max(colors),
+      dimension: 2,
+      inRange: {
+        color: [
+          '#313695',
+          '#4575b4',
+          '#74add1',
+          '#abd9e9',
+          '#e0f3f8',
+          '#ffffbf',
+          '#fee090',
+          '#fdae61',
+          '#f46d43',
+          '#d73027',
+          '#a50026',
+        ],
+      },
+    },
+    xAxis3D: {
+      type: 'category',
+      name: 'Src IP',
+      data: cat,
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#eee',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    yAxis3D: {
+      type: freq ? 'value' : 'log',
+      name: freq ? '周波数(Hz)' : '周期(Sec)',
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#eee',
+        fontSize: 8,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    zAxis3D: {
+      type: 'value',
+      name: '回数',
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    grid3D: {
+      axisLine: {
+        lineStyle: { color: '#eee' },
+      },
+      axisPointer: {
+        lineStyle: { color: '#eee' },
+      },
+      viewControl: {
+        projection: 'orthographic',
+      },
+    },
+    series: [
+      {
+        name: 'NetFlow FFT分析',
+        type: 'scatter3D',
+        dimensions: [
+          'Host',
+          freq ? '周波数' : '周期',
+          '回数',
+          freq ? '周期' : '周波数',
+        ],
+        data,
+      },
+    ],
+  }
+  chart.setOption(options)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showNetFlowHistogram', showNetFlowHistogram)
   inject('showNetFlowCluster', showNetFlowCluster)
@@ -1507,4 +1831,7 @@ export default (context, inject) => {
   inject('showNetFlowService3D', showNetFlowService3D)
   inject('showNetFlowSender3D', showNetFlowSender3D)
   inject('showNetFlowIPFlow3D', showNetFlowIPFlow3D)
+  inject('getNetFlowFFTMap', getNetFlowFFTMap)
+  inject('showNetFlowFFT', showNetFlowFFT)
+  inject('showNetFlowFFT3D', showNetFlowFFT3D)
 }
