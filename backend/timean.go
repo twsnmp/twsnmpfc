@@ -65,15 +65,16 @@ func TimeAnalyzePollingLog(id string) (TimeAnalyzedPollingLog, error) {
 					entH[k] /= countH
 				}
 			}
-			for ; sth < cth-3600; sth += 3600 {
+			r.TimeH = append(r.TimeH, time.Unix(sth, 0).Unix())
+			for _, k := range keys {
+				r.DataMapH[k] = append(r.DataMapH[k], entH[k])
+			}
+			sth += 3600
+			for ; sth < cth; sth += 3600 {
 				r.TimeH = append(r.TimeH, time.Unix(sth, 0).Unix())
 				for _, k := range keys {
 					r.DataMapH[k] = append(r.DataMapH[k], entH[k])
 				}
-			}
-			r.TimeH = append(r.TimeH, time.Unix(cth, 0).Unix())
-			for _, k := range keys {
-				r.DataMapH[k] = append(r.DataMapH[k], entH[k])
 			}
 			for _, k := range keys {
 				entH[k] = 0.0
@@ -88,15 +89,16 @@ func TimeAnalyzePollingLog(id string) (TimeAnalyzedPollingLog, error) {
 					entPX2[k] /= countPX2
 				}
 			}
-			for ; stpx2 < ctpx2-r.PX2; stpx2 += r.PX2 {
+			r.TimePX2 = append(r.TimePX2, time.Unix(stpx2, 0).Unix())
+			for _, k := range keys {
+				r.DataMapPX2[k] = append(r.DataMapPX2[k], entPX2[k])
+			}
+			stpx2 += r.PX2
+			for ; stpx2 < ctpx2; stpx2 += r.PX2 {
 				r.TimePX2 = append(r.TimePX2, time.Unix(stpx2, 0).Unix())
 				for _, k := range keys {
 					r.DataMapPX2[k] = append(r.DataMapPX2[k], 0.0)
 				}
-			}
-			r.TimePX2 = append(r.TimePX2, time.Unix(ctpx2, 0).Unix())
-			for _, k := range keys {
-				r.DataMapPX2[k] = append(r.DataMapPX2[k], entPX2[k])
 			}
 			for _, k := range keys {
 				entPX2[k] = 0.0
