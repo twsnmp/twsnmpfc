@@ -187,25 +187,37 @@ func getSnmpInfo(t string, dent *discoverInfoEnt) {
 		ExponentialTimeout: true,
 		MaxOids:            gosnmp.MaxOids,
 	}
-	if datastore.MapConf.SnmpMode != "" {
+	switch datastore.MapConf.SnmpMode {
+	case "v3auth":
 		agent.Version = gosnmp.Version3
 		agent.SecurityModel = gosnmp.UserSecurityModel
-		if datastore.MapConf.SnmpMode == "v3auth" {
-			agent.MsgFlags = gosnmp.AuthNoPriv
-			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 datastore.MapConf.SnmpUser,
-				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
-			}
-		} else {
-			agent.MsgFlags = gosnmp.AuthPriv
-			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 datastore.MapConf.SnmpUser,
-				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
-				PrivacyProtocol:          gosnmp.AES,
-				PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
-			}
+		agent.MsgFlags = gosnmp.AuthNoPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 datastore.MapConf.SnmpUser,
+			AuthenticationProtocol:   gosnmp.SHA,
+			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
+		}
+	case "v3authpriv":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 datastore.MapConf.SnmpUser,
+			AuthenticationProtocol:   gosnmp.SHA,
+			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
+			PrivacyProtocol:          gosnmp.AES,
+			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
+		}
+	case "v3authprivex":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 datastore.MapConf.SnmpUser,
+			AuthenticationProtocol:   gosnmp.SHA256,
+			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
+			PrivacyProtocol:          gosnmp.AES256,
+			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
 		}
 	}
 	err := agent.Connect()
@@ -222,9 +234,9 @@ func getSnmpInfo(t string, dent *discoverInfoEnt) {
 	}
 	for _, variable := range result.Variables {
 		if datastore.MIBDB.OIDToName(variable.Name) == "sysName.0" {
-			dent.SysName = variable.Value.(string)
+			dent.SysName = getMIBStringVal(variable.Value)
 		} else if datastore.MIBDB.OIDToName(variable.Name) == "sysObjectID.0" {
-			dent.SysObjectID = variable.Value.(string)
+			dent.SysObjectID = getMIBStringVal(variable.Value)
 		}
 	}
 	_ = agent.Walk(datastore.MIBDB.NameToOID("ifType"), func(variable gosnmp.SnmpPDU) error {
@@ -496,4 +508,16 @@ func doTCPConnect(dst string) bool {
 	}
 	defer conn.Close()
 	return true
+}
+
+func getMIBStringVal(i interface{}) string {
+	switch v := i.(type) {
+	case string:
+		return v
+	case []uint8:
+		return string(v)
+	case int, int64, uint, uint64:
+		return fmt.Sprintf("%d", v)
+	}
+	return ""
 }

@@ -34,7 +34,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
 	github.com/twsnmp/golof v1.0.0
-	github.com/twsnmp/gosnmp v1.28.4
+	github.com/twsnmp/gosnmp v1.32.2
 	github.com/vjeantet/grok v1.0.1
 	github.com/vmware/govmomi v0.24.0
 	go.etcd.io/bbolt v1.3.5

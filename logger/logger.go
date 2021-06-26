@@ -107,6 +107,12 @@ func logger(ctx context.Context) {
 					arpWatchRunning = false
 					log.Printf("stop arpWatch")
 				}
+				if datastore.RestartSnmpTrapd && trapdRunning {
+					close(stopTrapd)
+					datastore.RestartSnmpTrapd = false
+					trapdRunning = false
+					log.Printf("stop trapd and restart")
+				}
 			}
 		}
 	}

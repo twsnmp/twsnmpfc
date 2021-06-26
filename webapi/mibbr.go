@@ -77,25 +77,37 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 		ExponentialTimeout: true,
 		MaxOids:            gosnmp.MaxOids,
 	}
-	if n.SnmpMode != "" {
+	switch n.SnmpMode {
+	case "v3auth":
 		agent.Version = gosnmp.Version3
 		agent.SecurityModel = gosnmp.UserSecurityModel
-		if n.SnmpMode == "v3auth" {
-			agent.MsgFlags = gosnmp.AuthNoPriv
-			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 n.User,
-				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: n.Password,
-			}
-		} else {
-			agent.MsgFlags = gosnmp.AuthPriv
-			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 n.User,
-				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: n.Password,
-				PrivacyProtocol:          gosnmp.AES,
-				PrivacyPassphrase:        n.Password,
-			}
+		agent.MsgFlags = gosnmp.AuthNoPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 n.User,
+			AuthenticationProtocol:   gosnmp.SHA,
+			AuthenticationPassphrase: n.Password,
+		}
+	case "v3authpriv":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 n.User,
+			AuthenticationProtocol:   gosnmp.SHA,
+			AuthenticationPassphrase: n.Password,
+			PrivacyProtocol:          gosnmp.AES,
+			PrivacyPassphrase:        n.Password,
+		}
+	case "v3authprivex":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 n.User,
+			AuthenticationProtocol:   gosnmp.SHA256,
+			AuthenticationPassphrase: n.Password,
+			PrivacyProtocol:          gosnmp.AES256,
+			PrivacyPassphrase:        n.Password,
 		}
 	}
 	err := agent.Connect()
@@ -106,18 +118,19 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 	err = agent.Walk(datastore.MIBDB.NameToOID(p.Name), func(variable gosnmp.SnmpPDU) error {
 		name := datastore.MIBDB.OIDToName(variable.Name)
 		value := ""
-		if variable.Type == gosnmp.OctetString {
+		switch variable.Type {
+		case gosnmp.OctetString:
 			if strings.Contains(datastore.MIBDB.OIDToName(variable.Name), "ifPhysAd") {
-				a := variable.Value.(string)
+				a := getMIBStringVal(variable.Value)
 				if len(a) > 5 {
 					value = fmt.Sprintf("%02X:%02X:%02X:%02X:%02X:%02X", a[0], a[1], a[2], a[3], a[4], a[5])
 				}
 			} else {
-				value = variable.Value.(string)
+				value = getMIBStringVal(variable.Value)
 			}
-		} else if variable.Type == gosnmp.ObjectIdentifier {
-			value = datastore.MIBDB.OIDToName(variable.Value.(string))
-		} else {
+		case gosnmp.ObjectIdentifier:
+			value = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
+		default:
 			value = fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Uint64())
 		}
 		ret = append(ret, &mibEnt{
@@ -127,4 +140,16 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 		return nil
 	})
 	return ret, err
+}
+
+func getMIBStringVal(i interface{}) string {
+	switch v := i.(type) {
+	case string:
+		return v
+	case []uint8:
+		return string(v)
+	case int, int64, uint, uint64:
+		return fmt.Sprintf("%d", v)
+	}
+	return ""
 }

@@ -32,25 +32,37 @@ func doPollingSnmp(pe *datastore.PollingEnt) {
 		ExponentialTimeout: true,
 		MaxOids:            gosnmp.MaxOids,
 	}
-	if n.SnmpMode != "" {
+	switch n.SnmpMode {
+	case "v3auth":
 		agent.Version = gosnmp.Version3
 		agent.SecurityModel = gosnmp.UserSecurityModel
-		if n.SnmpMode == "v3auth" {
-			agent.MsgFlags = gosnmp.AuthNoPriv
-			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 n.User,
-				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: n.Password,
-			}
-		} else {
-			agent.MsgFlags = gosnmp.AuthPriv
-			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 n.User,
-				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: n.Password,
-				PrivacyProtocol:          gosnmp.AES,
-				PrivacyPassphrase:        n.Password,
-			}
+		agent.MsgFlags = gosnmp.AuthNoPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 n.User,
+			AuthenticationProtocol:   gosnmp.SHA,
+			AuthenticationPassphrase: n.Password,
+		}
+	case "v3authpriv":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 n.User,
+			AuthenticationProtocol:   gosnmp.SHA,
+			AuthenticationPassphrase: n.Password,
+			PrivacyProtocol:          gosnmp.AES,
+			PrivacyPassphrase:        n.Password,
+		}
+	case "v3authprivex":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 n.User,
+			AuthenticationProtocol:   gosnmp.SHA256,
+			AuthenticationPassphrase: n.Password,
+			PrivacyProtocol:          gosnmp.AES256,
+			PrivacyPassphrase:        n.Password,
 		}
 	}
 	err := agent.Connect()
@@ -194,11 +206,11 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		n := datastore.MIBDB.OIDToName(variable.Name)
 		vn := getValueName(n)
 		if variable.Type == gosnmp.OctetString {
-			v := variable.Value.(string)
+			v := getMIBStringVal(variable.Value)
 			vm.Set(vn, v)
 			lr[n] = v
 		} else if variable.Type == gosnmp.ObjectIdentifier {
-			v := datastore.MIBDB.OIDToName(variable.Value.(string))
+			v := datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
 			vm.Set(vn, v)
 			lr[n] = v
 		} else {
@@ -287,15 +299,15 @@ func doPollingSnmpCount(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		s := ""
 		if variable.Type == gosnmp.OctetString {
 			if strings.Contains(datastore.MIBDB.OIDToName(variable.Name), "ifPhysAd") {
-				a := variable.Value.(string)
+				a := getMIBStringVal(variable.Value)
 				if len(a) > 5 {
 					s = fmt.Sprintf("%02X:%02X:%02X:%02X:%02X:%02X", a[0], a[1], a[2], a[3], a[4], a[5])
 				}
 			} else {
-				s = variable.Value.(string)
+				s = getMIBStringVal(variable.Value)
 			}
 		} else if variable.Type == gosnmp.ObjectIdentifier {
-			s = datastore.MIBDB.OIDToName(variable.Value.(string))
+			s = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
 		} else {
 			s = fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Uint64())
 		}
@@ -349,7 +361,7 @@ func doPollingSnmpProcess(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		}
 		n := datastore.MIBDB.OIDToName(variable.Name)
 		a := strings.SplitN(n, ".", 2)
-		s := variable.Value.(string)
+		s := getMIBStringVal(variable.Value)
 		if len(a) != 2 || a[0] != "hrSWRunName" {
 			return nil
 		}
@@ -487,25 +499,37 @@ func getSnmpIndex(n *datastore.NodeEnt, name string) []string {
 		ExponentialTimeout: true,
 		MaxOids:            gosnmp.MaxOids,
 	}
-	if n.SnmpMode != "" {
+	switch n.SnmpMode {
+	case "v3auth":
 		agent.Version = gosnmp.Version3
 		agent.SecurityModel = gosnmp.UserSecurityModel
-		if n.SnmpMode == "v3auth" {
-			agent.MsgFlags = gosnmp.AuthNoPriv
-			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 n.User,
-				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: n.Password,
-			}
-		} else {
-			agent.MsgFlags = gosnmp.AuthPriv
-			agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 n.User,
-				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: n.Password,
-				PrivacyProtocol:          gosnmp.AES,
-				PrivacyPassphrase:        n.Password,
-			}
+		agent.MsgFlags = gosnmp.AuthNoPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 n.User,
+			AuthenticationProtocol:   gosnmp.SHA,
+			AuthenticationPassphrase: n.Password,
+		}
+	case "v3authpriv":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 n.User,
+			AuthenticationProtocol:   gosnmp.SHA,
+			AuthenticationPassphrase: n.Password,
+			PrivacyProtocol:          gosnmp.AES,
+			PrivacyPassphrase:        n.Password,
+		}
+	case "v3authprivex":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 n.User,
+			AuthenticationProtocol:   gosnmp.SHA256,
+			AuthenticationPassphrase: n.Password,
+			PrivacyProtocol:          gosnmp.AES256,
+			PrivacyPassphrase:        n.Password,
 		}
 	}
 	err := agent.Connect()
@@ -554,10 +578,10 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		}
 		n := datastore.MIBDB.OIDToName(variable.Name)
 		if variable.Type == gosnmp.OctetString {
-			v := variable.Value.(string)
+			v := getMIBStringVal(variable.Value)
 			lr[n] = v
 		} else if variable.Type == gosnmp.ObjectIdentifier {
-			v := datastore.MIBDB.OIDToName(variable.Value.(string))
+			v := datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
 			lr[n] = v
 		} else {
 			v := gosnmp.ToBigInt(variable.Value).Uint64()
@@ -684,4 +708,16 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		return
 	}
 	setPollingState(pe, "normal")
+}
+
+func getMIBStringVal(i interface{}) string {
+	switch v := i.(type) {
+	case string:
+		return v
+	case []uint8:
+		return string(v)
+	case int, int64, uint, uint64:
+		return fmt.Sprintf("%d", v)
+	}
+	return ""
 }

@@ -54,10 +54,14 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.Retry = mc.Retry
 	datastore.MapConf.LogDays = mc.LogDays
 	datastore.MapConf.LogDispSize = mc.LogDispSize
+	datastore.RestartSnmpTrapd = datastore.MapConf.SnmpMode != mc.SnmpMode ||
+		datastore.MapConf.Community != mc.Community ||
+		datastore.MapConf.SnmpUser != mc.SnmpUser
 	datastore.MapConf.SnmpMode = mc.SnmpMode
 	datastore.MapConf.Community = mc.Community
 	datastore.MapConf.SnmpUser = mc.SnmpUser
 	if mc.SnmpPassword != "" {
+		datastore.RestartSnmpTrapd = datastore.RestartSnmpTrapd || datastore.MapConf.SnmpPassword != mc.SnmpPassword
 		datastore.MapConf.SnmpPassword = mc.SnmpPassword
 	}
 	datastore.MapConf.EnableSyslogd = mc.EnableSyslogd

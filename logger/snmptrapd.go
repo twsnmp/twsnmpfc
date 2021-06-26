@@ -19,26 +19,50 @@ import (
 
 func snmptrapd(stopCh chan bool) {
 	tl := gosnmp.NewTrapListener()
-	if datastore.MapConf.SnmpMode != "" {
-		tl.Params = &gosnmp.GoSNMP{}
+	tl.Params = &gosnmp.GoSNMP{}
+	switch datastore.MapConf.SnmpMode {
+	case "v3auth":
 		tl.Params.Version = gosnmp.Version3
 		tl.Params.SecurityModel = gosnmp.UserSecurityModel
-		if datastore.MapConf.SnmpMode == "v3auth" {
-			tl.Params.MsgFlags = gosnmp.AuthNoPriv
-			tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 datastore.MapConf.SnmpUser,
-				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
-			}
-		} else {
-			tl.Params.MsgFlags = gosnmp.AuthPriv
-			tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
-				UserName:                 datastore.MapConf.SnmpUser,
-				AuthenticationProtocol:   gosnmp.SHA,
-				AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
-				PrivacyProtocol:          gosnmp.AES,
-				PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
-			}
+		tl.Params.MsgFlags = gosnmp.AuthNoPriv
+		tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 datastore.MapConf.SnmpUser,
+			AuthenticationProtocol:   gosnmp.SHA,
+			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
+		}
+	case "v3authpriv":
+		tl.Params.Version = gosnmp.Version3
+		tl.Params.SecurityModel = gosnmp.UserSecurityModel
+		tl.Params.MsgFlags = gosnmp.AuthPriv
+		tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 datastore.MapConf.SnmpUser,
+			AuthenticationProtocol:   gosnmp.SHA,
+			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
+			PrivacyProtocol:          gosnmp.AES,
+			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
+		}
+	case "v3authprivex":
+		tl.Params.Version = gosnmp.Version3
+		tl.Params.SecurityModel = gosnmp.UserSecurityModel
+		tl.Params.MsgFlags = gosnmp.AuthPriv
+		tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 datastore.MapConf.SnmpUser,
+			AuthenticationProtocol:   gosnmp.SHA256,
+			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
+			PrivacyProtocol:          gosnmp.AES256,
+			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
+		}
+	default:
+		// SNMPv2c
+		tl.Params.Version = gosnmp.Version2c
+		tl.Params.SecurityModel = gosnmp.UserSecurityModel
+		tl.Params.MsgFlags = gosnmp.NoAuthNoPriv
+		tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 datastore.MapConf.SnmpUser,
+			AuthenticationProtocol:   gosnmp.SHA,
+			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
+			PrivacyProtocol:          gosnmp.AES,
+			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
 		}
 	}
 	tl.OnNewTrap = func(s *gosnmp.SnmpPacket, u *net.UDPAddr) {

@@ -34,6 +34,8 @@ var (
 	DBStats      DBStatsEnt
 	DBStatsLog   []DBStatsLogEnt
 	Yasumi       string
+	// Restrt snmptrapd
+	RestartSnmpTrapd bool
 	// Map Data on Memory
 	nodes    sync.Map
 	lines    sync.Map

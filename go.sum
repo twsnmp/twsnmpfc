@@ -156,6 +156,7 @@ github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJy
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/tehmaze/netflow v0.0.0-20170921210347-852af103667f h1:5dYJ4SDGn0SYo/BSXCDTf7W+LeUDj7v+VwXX723Kymw=
 github.com/tehmaze/netflow v0.0.0-20170921210347-852af103667f/go.mod h1:QRP5wJOf7gGMGL2fCAfmh/5CMZQspRxT5DqghaPRrjM=
 github.com/tklauser/go-sysconf v0.3.5 h1:uu3Xl4nkLzQfXNsWn15rPc/HQCJKObbt1dKJeWp3vU4=
@@ -168,6 +169,8 @@ github.com/twsnmp/golof v1.0.0 h1:+jtR5WYdaW1JnC7+T6Um3zMgv24Npg+CcbFgAP5QocE=
 github.com/twsnmp/golof v1.0.0/go.mod h1:W4eMdArbmzA6FjLuspL/YDKPsG5C324OPnqQWNtxYFc=
 github.com/twsnmp/gosnmp v1.28.4 h1:LCktx4hUAfMKPdGommsGWgiqSkp7ieEk6NThkGr/3yk=
 github.com/twsnmp/gosnmp v1.28.4/go.mod h1:82af6qRbG+vP359TNpKGEP1WZvU6ezG8e+TP6Gg1Kmk=
+github.com/twsnmp/gosnmp v1.32.2 h1:w2lB5EhrQVLZs0AvgtgZl8mg8JzKhMSkH0GRcweXY0s=
+github.com/twsnmp/gosnmp v1.32.2/go.mod h1:HopRisyhdAyOGPQLVWBCZyft/82pcJ2aLtjUOoK+GUs=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.0.1/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
