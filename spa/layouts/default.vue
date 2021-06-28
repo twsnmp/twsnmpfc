@@ -105,7 +105,7 @@
       </v-btn>
     </v-app-bar>
     <v-main>
-      <v-container>
+      <v-container fluid="true">
         <div v-show="showMAP" id="map"></div>
         <nuxt />
       </v-container>
