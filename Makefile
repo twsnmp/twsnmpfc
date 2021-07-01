@@ -50,7 +50,7 @@ spa/dist/index.html: spa/*.js* spa/pages/* spa/pages/report/* spa/pages/conf/*  
     spa/pages/log/* spa/pages/node/*/* spa/pages/polling/* spa/pages/mibbr/* \
     spa/pages/report/*/* spa/layouts/* spa/plugins/* spa/plugins/echarts/*
 	cd spa && npm run generate
-statik/statik.go: spa/dist/* conf/*
+statik/statik.go: spa/dist/* conf/* spa/dist/index.html
 	cp -a conf  spa/dist
 	statik -src spa/dist
 clean_spa:
