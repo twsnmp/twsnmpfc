@@ -8,13 +8,14 @@
       <v-data-table
         :headers="headers"
         :items="ips"
-        :items-per-page="15"
-        sort-by="Score"
-        sort-asec
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
       >
         <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
@@ -50,22 +51,28 @@
           <tr>
             <td></td>
             <td>
-              <v-text-field v-model="ip" label="ip"></v-text-field>
+              <v-text-field v-model="conf.ip" label="ip"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="name" label="name"></v-text-field>
+              <v-text-field v-model="conf.name" label="name"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="country" label="country"></v-text-field>
+              <v-text-field
+                v-model="conf.country"
+                label="country"
+              ></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="mac" label="mac"></v-text-field>
+              <v-text-field v-model="conf.mac" label="mac"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="vendor" label="vendor"></v-text-field>
+              <v-text-field v-model="conf.vendor" label="vendor"></v-text-field>
             </td>
             <td colspan="3">
-              <v-switch v-model="excludeFlag" label="条件を反転"></v-switch>
+              <v-switch
+                v-model="conf.excludeFlag"
+                label="条件を反転"
+              ></v-switch>
             </td>
           </tr>
         </template>
@@ -397,10 +404,10 @@ export default {
           value: 'IP',
           width: '10%',
           filter: (value) => {
-            if (!this.ip) return true
-            return this.excludeFlag
-              ? !value.includes(this.ip)
-              : value.includes(this.ip)
+            if (!this.conf.ip) return true
+            return this.conf.excludeFlag
+              ? !value.includes(this.conf.ip)
+              : value.includes(this.conf.ip)
           },
           sort: (a, b) => {
             return this.$cmpIP(a, b)
@@ -411,10 +418,10 @@ export default {
           value: 'Name',
           width: '14%',
           filter: (value) => {
-            if (!this.name) return true
-            return this.excludeFlag
-              ? !value.includes(this.name)
-              : value.includes(this.name)
+            if (!this.conf.name) return true
+            return this.conf.excludeFlag
+              ? !value.includes(this.conf.name)
+              : value.includes(this.conf.name)
           },
         },
         {
@@ -422,10 +429,10 @@ export default {
           value: 'Country',
           width: '10%',
           filter: (value) => {
-            if (!this.country) return true
-            return this.excludeFlag
-              ? !value.includes(this.country)
-              : value.includes(this.country)
+            if (!this.conf.country) return true
+            return this.conf.excludeFlag
+              ? !value.includes(this.conf.country)
+              : value.includes(this.conf.country)
           },
         },
         {
@@ -433,10 +440,10 @@ export default {
           value: 'MAC',
           width: '10%',
           filter: (value) => {
-            if (!this.mac) return true
-            return this.excludeFlag
-              ? !value.includes(this.mac)
-              : value.includes(this.mac)
+            if (!this.conf.mac) return true
+            return this.conf.excludeFlag
+              ? !value.includes(this.conf.mac)
+              : value.includes(this.conf.mac)
           },
         },
         {
@@ -444,11 +451,10 @@ export default {
           value: 'Vendor',
           width: '12%',
           filter: (value) => {
-            if (this.excludeVM && value.includes('VMware')) return false
-            if (!this.vendor) return true
-            return this.excludeFlag
-              ? !value.includes(this.vendor)
-              : value.includes(this.vendor)
+            if (!this.conf.vendor) return true
+            return this.conf.excludeFlag
+              ? !value.includes(this.conf.vendor)
+              : value.includes(this.conf.vendor)
           },
         },
         { text: '初回', value: 'First', width: '12%' },
@@ -466,17 +472,24 @@ export default {
       mapChartDialog: false,
       selected: {},
       infoDialog: false,
-      ip: '',
-      name: '',
-      country: '',
-      mac: '',
-      vendor: '',
-      excludeFlag: false,
       node: {},
       addNodeDialog: false,
       addNodeError: false,
       copyDone: false,
       copyError: false,
+      conf: {
+        ip: '',
+        name: '',
+        country: '',
+        mac: '',
+        vendor: '',
+        excludeFlag: false,
+        sortBy: 'Score',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
     }
   },
   async fetch() {
@@ -498,6 +511,23 @@ export default {
       ip.LocInfo = loc.LocInfo
       ip.Country = loc.Country
     })
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
+  },
+  created() {
+    const c = this.$store.state.report.ipreport.conf
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
+  },
+  beforeDestroy() {
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('report/ipreport/setConf', this.conf)
   },
   methods: {
     doDelete() {

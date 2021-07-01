@@ -8,12 +8,13 @@
       <v-data-table
         :headers="headers"
         :items="devices"
-        :items-per-page="15"
-        sort-by="Score"
-        sort-asec
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
       >
         <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
@@ -42,19 +43,22 @@
           <tr>
             <td></td>
             <td>
-              <v-text-field v-model="mac" label="mac"></v-text-field>
+              <v-text-field v-model="conf.mac" label="mac"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="name" label="name"></v-text-field>
+              <v-text-field v-model="conf.name" label="name"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="ip" label="ip"></v-text-field>
+              <v-text-field v-model="conf.ip" label="ip"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="vendor" label="vendor"></v-text-field>
+              <v-text-field v-model="conf.vendor" label="vendor"></v-text-field>
             </td>
             <td colspan="3">
-              <v-switch v-model="excludeVM" label="仮想マシンを除外"></v-switch>
+              <v-switch
+                v-model="conf.excludeVM"
+                label="仮想マシンを除外"
+              ></v-switch>
             </td>
           </tr>
         </template>
@@ -310,8 +314,8 @@ export default {
           value: 'ID',
           width: '10%',
           filter: (value) => {
-            if (!this.mac) return true
-            return value.includes(this.mac)
+            if (!this.conf.mac) return true
+            return value.includes(this.conf.mac)
           },
         },
         {
@@ -319,8 +323,8 @@ export default {
           value: 'Name',
           width: '15%',
           filter: (value) => {
-            if (!this.name) return true
-            return value.includes(this.name)
+            if (!this.conf.name) return true
+            return value.includes(this.conf.name)
           },
         },
         {
@@ -328,8 +332,8 @@ export default {
           value: 'IP',
           width: '10%',
           filter: (value) => {
-            if (!this.ip) return true
-            return value.includes(this.ip)
+            if (!this.conf.ip) return true
+            return value.includes(this.conf.ip)
           },
           sort: (a, b) => {
             return this.$cmpIP(a, b)
@@ -340,9 +344,9 @@ export default {
           value: 'Vendor',
           width: '15%',
           filter: (value) => {
-            if (this.excludeVM && value.includes('VMware')) return false
-            if (!this.vendor) return true
-            return value.includes(this.vendor)
+            if (this.conf.excludeVM && value.includes('VMware')) return false
+            if (!this.conf.vendor) return true
+            return value.includes(this.conf.vendor)
           },
         },
         { text: '初回', value: 'First', width: '15%' },
@@ -358,14 +362,21 @@ export default {
       vendorDialog: false,
       selected: {},
       infoDialog: false,
-      mac: '',
-      name: '',
-      ip: '',
-      vendor: '',
-      excludeVM: false,
       node: {},
       addNodeDialog: false,
       addNodeError: false,
+      conf: {
+        mac: '',
+        name: '',
+        ip: '',
+        vendor: '',
+        excludeVM: false,
+        sortBy: 'Score',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
     }
   },
   async fetch() {
@@ -383,6 +394,23 @@ export default {
         '{MM}/{dd} {HH}:{mm}:{ss}'
       )
     })
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
+  },
+  created() {
+    const c = this.$store.state.report.devices.conf
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
+  },
+  beforeDestroy() {
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('report/devices/setConf', this.conf)
   },
   methods: {
     doDelete() {

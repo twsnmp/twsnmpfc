@@ -8,13 +8,14 @@
       <v-data-table
         :headers="headers"
         :items="flows"
-        :items-per-page="15"
-        sort-by="Score"
-        sort-asec
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
       >
         <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
@@ -56,16 +57,22 @@
           <tr>
             <td></td>
             <td>
-              <v-text-field v-model="client" label="client"></v-text-field>
+              <v-text-field v-model="conf.client" label="client"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="server" label="server"></v-text-field>
+              <v-text-field v-model="conf.server" label="server"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="country" label="country"></v-text-field>
+              <v-text-field
+                v-model="conf.country"
+                label="country"
+              ></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="service" label="service"></v-text-field>
+              <v-text-field
+                v-model="conf.service"
+                label="service"
+              ></v-text-field>
             </td>
             <td colspan="5"></td>
           </tr>
@@ -469,8 +476,8 @@ export default {
           value: 'ClientName',
           width: '16%',
           filter: (value) => {
-            if (!this.client) return true
-            return value.includes(this.client)
+            if (!this.conf.client) return true
+            return value.includes(this.conf.client)
           },
         },
         {
@@ -478,8 +485,8 @@ export default {
           value: 'ServerName',
           width: '16%',
           filter: (value) => {
-            if (!this.server) return true
-            return value.includes(this.server)
+            if (!this.conf.server) return true
+            return value.includes(this.conf.server)
           },
         },
         {
@@ -487,8 +494,8 @@ export default {
           value: 'Country',
           width: '8%',
           filter: (value) => {
-            if (!this.country) return true
-            return value.includes(this.country)
+            if (!this.conf.country) return true
+            return value.includes(this.conf.country)
           },
         },
         {
@@ -496,8 +503,8 @@ export default {
           value: 'ServiceInfo',
           width: '12%',
           filter: (value) => {
-            if (!this.service) return true
-            return value.includes(this.service)
+            if (!this.conf.service) return true
+            return value.includes(this.conf.service)
           },
           sort: (a, b) => {
             const re = /\d+/
@@ -567,10 +574,6 @@ export default {
         { text: '不明(TCP)', value: 'other/tcp' },
         { text: '不明(UDP)', value: 'other/tcp' },
       ],
-      client: '',
-      server: '',
-      country: '',
-      service: '',
       unkownPortsHeaders: [
         { text: '名前', value: 'Name', width: '60%' },
         { text: '回数', value: 'Count', width: '40%' },
@@ -578,6 +581,17 @@ export default {
       unknownPorts: [],
       unknownPortDialog: false,
       unknownPortError: false,
+      conf: {
+        client: '',
+        server: '',
+        country: '',
+        service: '',
+        sortBy: 'Score',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
     }
   },
   async fetch() {
@@ -606,6 +620,10 @@ export default {
       f.Country = loc.Country
       f.Loc = f.ServerLoc
     })
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
   },
   computed: {
     hasFilter() {
@@ -618,6 +636,19 @@ export default {
         this.filter.ServerIP
       )
     },
+  },
+  created() {
+    const c = this.$store.state.report.flows.conf
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
+  },
+  beforeDestroy() {
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('report/flows/setConf', this.conf)
   },
   methods: {
     doDelete() {

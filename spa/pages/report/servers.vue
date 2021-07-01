@@ -8,13 +8,14 @@
       <v-data-table
         :headers="headers"
         :items="servers"
-        :items-per-page="15"
-        sort-by="Score"
-        sort-asec
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
       >
         <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
@@ -49,13 +50,19 @@
           <tr>
             <td></td>
             <td>
-              <v-text-field v-model="name" label="name"></v-text-field>
+              <v-text-field v-model="conf.name" label="name"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="country" label="country"></v-text-field>
+              <v-text-field
+                v-model="conf.country"
+                label="country"
+              ></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="service" label="service"></v-text-field>
+              <v-text-field
+                v-model="conf.service"
+                label="service"
+              ></v-text-field>
             </td>
             <td colspan="4"></td>
           </tr>
@@ -388,8 +395,8 @@ export default {
           value: 'ServerName',
           width: '20%',
           filter: (value) => {
-            if (!this.name) return true
-            return value.includes(this.name)
+            if (!this.conf.name) return true
+            return value.includes(this.conf.name)
           },
         },
         {
@@ -397,8 +404,8 @@ export default {
           value: 'Country',
           width: '10%',
           filter: (value) => {
-            if (!this.country) return true
-            return value.includes(this.country)
+            if (!this.conf.country) return true
+            return value.includes(this.conf.country)
           },
         },
         {
@@ -406,8 +413,8 @@ export default {
           value: 'ServiceInfo',
           width: '15%',
           filter: (value) => {
-            if (!this.service) return true
-            return value.includes(this.service)
+            if (!this.conf.service) return true
+            return value.includes(this.conf.service)
           },
           sort: (a, b) => {
             const re = /\d+/
@@ -436,12 +443,19 @@ export default {
       resetError: false,
       mapChartDialog: false,
       countryChartDialog: false,
-      name: '',
-      country: '',
-      service: '',
       node: {},
       addNodeDialog: false,
       addNodeError: false,
+      conf: {
+        name: '',
+        country: '',
+        service: '',
+        sortBy: 'Score',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
     }
   },
   async fetch() {
@@ -466,6 +480,23 @@ export default {
       s.LocInfo = loc.LocInfo
       s.Country = loc.Country
     })
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
+  },
+  created() {
+    const c = this.$store.state.report.servers.conf
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
+  },
+  beforeDestroy() {
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('report/servers/setConf', this.conf)
   },
   methods: {
     doDelete() {

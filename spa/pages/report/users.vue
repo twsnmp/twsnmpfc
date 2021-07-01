@@ -8,12 +8,13 @@
       <v-data-table
         :headers="headers"
         :items="users"
-        :items-per-page="15"
-        sort-by="Score"
-        sort-asec
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
       >
         <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
@@ -36,10 +37,10 @@
           <tr>
             <td></td>
             <td>
-              <v-text-field v-model="user" label="user"></v-text-field>
+              <v-text-field v-model="conf.user" label="user"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="server" label="server"></v-text-field>
+              <v-text-field v-model="conf.server" label="server"></v-text-field>
             </td>
             <td colspan="6"></td>
           </tr>
@@ -51,7 +52,7 @@
           <template #activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
-              グラフ表示
+              グラフと集計
             </v-btn>
           </template>
           <v-list>
@@ -275,8 +276,8 @@ export default {
           value: 'UserID',
           width: '15%',
           filter: (value) => {
-            if (!this.user) return true
-            return value.includes(this.user)
+            if (!this.conf.user) return true
+            return value.includes(this.conf.user)
           },
         },
         {
@@ -284,8 +285,8 @@ export default {
           value: 'ServerName',
           width: '15%',
           filter: (value) => {
-            if (!this.server) return true
-            return value.includes(this.server)
+            if (!this.conf.server) return true
+            return value.includes(this.conf.server)
           },
         },
         { text: 'CL数', value: 'Client', width: '8%' },
@@ -303,8 +304,15 @@ export default {
       resetError: false,
       usersChartDialog: false,
       infoDialog: false,
-      user: '',
-      server: '',
+      conf: {
+        user: '',
+        server: '',
+        sortBy: 'Score',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
     }
   },
   async fetch() {
@@ -327,6 +335,23 @@ export default {
       const cl = u.ClientMap ? Object.keys(u.ClientMap) : 0
       u.Client = cl.length
     })
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
+  },
+  created() {
+    const c = this.$store.state.report.users.conf
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
+  },
+  beforeDestroy() {
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('report/users/setConf', this.conf)
   },
   methods: {
     doDelete() {
