@@ -901,6 +901,16 @@ const showSyslogFFT = (div, fftMap, host, type) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: {},
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -913,12 +923,6 @@ const showSyslogFFT = (div, fftMap, host, type) => {
       top: '10%',
       buttom: '10%',
     },
-    dataZoom: [
-      {
-        type: 'inside',
-      },
-      {},
-    ],
     xAxis: {
       type: 'value',
       name: freq ? '周波数(Hz)' : '周期(Sec)',

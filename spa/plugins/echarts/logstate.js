@@ -18,6 +18,16 @@ const makeLogStateChart = (div) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: {},
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       formatter: (params) => {

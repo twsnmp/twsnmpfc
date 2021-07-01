@@ -1600,12 +1600,16 @@ const showNetFlowFFT = (div, fftMap, src, type) => {
       top: '10%',
       buttom: '10%',
     },
-    dataZoom: [
-      {
-        type: 'inside',
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
       },
-      {},
-    ],
+      feature: {
+        dataZoom: {},
+        saveAsImage: {},
+      },
+    },
+    dataZoom: [{}],
     xAxis: {
       type: 'value',
       name: freq ? '周波数(Hz)' : '周期(Sec)',

@@ -621,6 +621,16 @@ const makeFFTChart = (div) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: {},
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -633,12 +643,6 @@ const makeFFTChart = (div) => {
       top: '10%',
       buttom: '10%',
     },
-    dataZoom: [
-      {
-        type: 'inside',
-      },
-      {},
-    ],
     xAxis: {
       type: 'value',
       name: 'Hz',
