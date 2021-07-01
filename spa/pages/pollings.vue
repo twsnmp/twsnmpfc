@@ -18,9 +18,10 @@
         item-key="ID"
         show-select
         dense
-        :items-per-page="15"
-        sort-by="State"
-        sort-asec
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
       >
         <template #[`item.State`]="{ item }">
           <v-icon :color="$getStateColor(item.State)">{{
@@ -56,18 +57,18 @@
           <tr>
             <td></td>
             <td>
-              <v-select v-model="state" :items="stateList" label="level">
+              <v-select v-model="conf.state" :items="stateList" label="State">
               </v-select>
             </td>
             <td>
-              <v-text-field v-model="node" label="node"></v-text-field>
+              <v-text-field v-model="conf.node" label="node"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="name" label="name"></v-text-field>
+              <v-text-field v-model="conf.name" label="name"></v-text-field>
             </td>
             <td></td>
             <td>
-              <v-select v-model="polltype" :items="typeList" label="type">
+              <v-select v-model="conf.polltype" :items="typeList" label="type">
               </v-select>
             </td>
             <td></td>
@@ -431,8 +432,8 @@ export default {
           value: 'State',
           width: '10%',
           filter: (value) => {
-            if (!this.state) return true
-            return this.state === value
+            if (!this.conf.state) return true
+            return this.conf.state === value
           },
         },
         {
@@ -440,8 +441,8 @@ export default {
           value: 'NodeName',
           width: '18%',
           filter: (value) => {
-            if (!this.node) return true
-            return value.includes(this.node)
+            if (!this.conf.node) return true
+            return value.includes(this.conf.node)
           },
         },
         {
@@ -449,8 +450,8 @@ export default {
           value: 'Name',
           width: '18%',
           filter: (value) => {
-            if (!this.name) return true
-            return value.includes(this.name)
+            if (!this.conf.name) return true
+            return value.includes(this.conf.name)
           },
         },
         { text: 'レベル', value: 'Level', width: '13%' },
@@ -486,10 +487,6 @@ export default {
       newLevel: 'off',
       setPollingLogModeDialog: false,
       newLogMode: 0,
-      state: '',
-      node: '',
-      name: '',
-      polltype: '',
       stateList: [
         { text: '', value: '' },
         { text: '重度', value: 'high' },
@@ -518,6 +515,17 @@ export default {
         { text: 'TWSNMP', value: 'twsnmp' },
         { text: 'VMware', value: 'vmware' },
       ],
+      conf: {
+        state: '',
+        node: '',
+        name: '',
+        polltype: '',
+        sortBy: 'State',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
     }
   },
   async fetch() {
@@ -550,6 +558,19 @@ export default {
     hasSelectedPollings() {
       return this.selectedPollings.length > 0
     },
+  },
+  created() {
+    const c = this.$store.state.pollings.conf
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
+  },
+  beforeDestroy() {
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('pollings/setConf', this.conf)
   },
   methods: {
     editPollingFunc(item) {
