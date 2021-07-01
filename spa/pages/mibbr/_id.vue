@@ -2,15 +2,15 @@
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
       <v-card-title>
-        MIBブラウザー - {{ node.Name }} - {{ mibget.Name }}
+        MIBブラウザー - {{ node.Name }}
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
+        <v-combobox
+          v-model="mibget.Name"
+          :items="history"
           append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
+          label="オブジェクト名"
+          dense
+        ></v-combobox>
       </v-card-title>
       <v-alert v-model="error" color="error" dense dismissible>
         MIBを取得できませんでした
@@ -18,16 +18,41 @@
       <v-data-table
         :headers="headers"
         :items="items"
-        :search="search"
+        :search="conf.search"
         dense
         :loading="$fetchState.pending || wait"
         loading-text="Loading... Please wait"
         class="mibbr"
+        sort-by="Index"
+        :items-per-page="conf.itemsPerPage"
+        :options.sync="options"
       >
+        <template v-if="!tableMode" #[`body.append`]>
+          <tr>
+            <td></td>
+            <td>
+              <v-text-field v-model="conf.name" label="name"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="conf.value" label="value"></v-text-field>
+            </td>
+          </tr>
+        </template>
+        <template v-else #[`body.append`]>
+          <tr>
+            <td colspan="3">
+              <v-text-field v-model="conf.search" label="filter"></v-text-field>
+            </td>
+          </tr>
+        </template>
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" dark @click="mibGetDialog = true">
+        <v-btn color="info" dark @click="mibTreeDialog = true">
+          <v-icon>mdi-file-tree</v-icon>
+          MIBツリー
+        </v-btn>
+        <v-btn v-if="mibget.Name" color="primary" dark @click="doMIBGet">
           <v-icon>mdi-file-find</v-icon>
           取得
         </v-btn>
@@ -61,10 +86,10 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="mibGetDialog" persistent width="600px">
+    <v-dialog v-model="mibTreeDialog" persistent width="600px">
       <v-card max-height="90%">
         <v-card-title>
-          <span class="headline">取得したMIBの選択</span>
+          <span class="headline">MIBツリー</span>
         </v-card-title>
         <v-card-text>
           <v-text-field
@@ -93,7 +118,7 @@
             <v-icon>mdi-file-find</v-icon>
             取得
           </v-btn>
-          <v-btn color="normal" dark @click="mibGetDialog = false">
+          <v-btn color="normal" dark @click="mibTreeDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -105,15 +130,6 @@
 
 <script>
 export default {
-  async fetch() {
-    const r = await this.$axios.$get('/api/mibbr/' + this.$route.params.id)
-    if (!r) {
-      return
-    }
-    this.node = r.Node
-    this.mibget.NodeID = r.Node.ID
-    this.mibtree = r.MIBTree
-  },
   data() {
     return {
       node: {
@@ -131,14 +147,45 @@ export default {
       items: [],
       mibs: [],
       searchMIBTree: '',
-      mibGetDialog: false,
+      mibTreeDialog: false,
       error: false,
       wait: false,
+      conf: {
+        name: '',
+        value: '',
+        search: '',
+        history: '',
+        itemsPerPage: 15,
+      },
+      history: [],
+      options: {},
+      tableMode: false,
     }
+  },
+  async fetch() {
+    const r = await this.$axios.$get('/api/mibbr/' + this.$route.params.id)
+    if (!r) {
+      return
+    }
+    this.node = r.Node
+    this.mibget.NodeID = r.Node.ID
+    this.mibtree = r.MIBTree
+  },
+  created() {
+    const c = this.$store.state.mibbr.conf
+    if (c && c.itemsPerPage) {
+      Object.assign(this.conf, c)
+      this.history = c.history.split(',')
+    }
+  },
+  beforeDestroy() {
+    this.conf.history = this.history.join(',')
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('mibbr/setConf', this.conf)
   },
   methods: {
     doMIBGet() {
-      this.mibGetDialog = false
+      this.mibTreeDialog = false
       this.headers = []
       this.items = []
       this.wait = true
@@ -156,6 +203,9 @@ export default {
             this.showTable()
           }
           this.wait = false
+          if (!this.history.includes(this.mibget.Name)) {
+            this.history.push(this.mibget.Name)
+          }
         })
         .catch((e) => {
           this.error = true
@@ -164,14 +214,31 @@ export default {
         })
     },
     showList() {
+      this.tableMode = false
+      this.conf.search = ''
       this.headers = [
         { text: 'Index', value: 'Index' },
-        { text: '名前', value: 'Name' },
-        { text: '値', value: 'Value' },
+        {
+          text: '名前',
+          value: 'Name',
+          filter: (value) => {
+            if (!this.conf.name) return true
+            return value.includes(this.conf.name)
+          },
+        },
+        {
+          text: '値',
+          value: 'Value',
+          filter: (value) => {
+            if (!this.conf.value) return true
+            return value.includes(this.conf.value)
+          },
+        },
       ]
       this.items = this.mibs
     },
     showTable() {
+      this.tableMode = true
       const names = []
       const indexes = []
       const rows = []
