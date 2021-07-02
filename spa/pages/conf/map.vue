@@ -142,8 +142,8 @@
             v-model="mapconf.LogDispSize"
             label="ログ表示件数"
             class="align-center"
-            max="100000"
-            min="1000"
+            max="200000"
+            min="10000"
             hide-details
           >
             <template #append>
