@@ -240,7 +240,7 @@ export default {
       },
       search: '',
       headers: [
-        { text: '受信日時', value: 'TimeStr', width: '15%' },
+        { text: '受信日時', value: 'TimeStr', width: '20%' },
         {
           text: '送信元',
           value: 'FromAddress',
@@ -262,7 +262,7 @@ export default {
         {
           text: '付帯MIB値',
           value: 'Variables',
-          width: '45%',
+          width: '40%',
           filter: (value) => {
             if (!this.varbind) return true
             return value.includes(this.varbind)
@@ -279,7 +279,7 @@ export default {
     this.logs = await this.$axios.$post('/api/log/snmptrap', this.filter)
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t)
+      e.TimeStr = this.$timeFormat(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}.{SSS}')
     })
     this.$showLogCountChart(this.logs)
   },

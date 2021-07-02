@@ -889,8 +889,8 @@ export default {
         Extractor: '',
       },
       headers: [
-        { text: '状態', value: 'Level', width: '10%' },
-        { text: '日時', value: 'TimeStr', width: '15%' },
+        { text: '状態', value: 'Level', width: '8%' },
+        { text: '日時', value: 'TimeStr', width: '17%' },
         {
           text: '種別',
           value: 'Type',
@@ -1064,7 +1064,7 @@ export default {
     let id = 0
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t)
+      e.TimeStr = this.$timeFormat(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}.{SSS}')
       e.AIClass = ''
       e.AIResult = ''
       e.ID = id++
