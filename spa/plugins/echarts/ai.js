@@ -48,6 +48,16 @@ const showAIHeatMap = (div, scores, cb) => {
       top: 30,
       buttom: 0,
     },
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'item',
       formatter(params) {
@@ -189,13 +199,19 @@ const showAIPieChart = (div, scores) => {
       },
     ]),
     color: ['#1f78b4', '#dfdf22', '#e31a1c'],
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {
       trigger: 'item',
       formatter: '{a} <br/>{b} : {c} ({d}%)',
     },
     legend: {
-      orient: 'vertical',
-      left: 'right',
       data: ['正常', '注意', '異常'],
       textStyle: {
         fontSize: 10,
@@ -251,12 +267,18 @@ const showAITimeChart = (div, scores, cb) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
-      formatter(params) {
-        const p = params[0]
-        return p.name + ' : ' + p.value[1]
-      },
       axisPointer: {
         type: 'shadow',
       },
@@ -315,6 +337,7 @@ const showAITimeChart = (div, scores, cb) => {
       {
         color: '#1f78b4',
         type: 'line',
+        name: '異常スコア',
         showSymbol: false,
         data: [],
       },

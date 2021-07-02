@@ -37,11 +37,16 @@ const showServerMapChart = (div, servers) => {
       },
       roam: true,
     },
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {
       trigger: 'item',
-      formatter: (params) => {
-        return params.name + ' : ' + params.value[2]
-      },
     },
     series: [
       {
@@ -123,6 +128,14 @@ const showCountryChart = (div, list) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {
       trigger: 'axis',
       axisPointer: {

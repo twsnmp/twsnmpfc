@@ -24,6 +24,16 @@ const makeNetFlowHistogram = (div) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       formatter(params) {
@@ -117,6 +127,16 @@ const makeNetFlowCluster = (div) => {
     legend: {
       data: [],
     },
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -244,12 +264,18 @@ const makeNetFlowTraffic = (div, type) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
-      formatter: (params) => {
-        const p = params[0]
-        return p.name + ' : ' + p.value[1]
-      },
       axisPointer: {
         type: 'shadow',
       },
@@ -449,6 +475,14 @@ const showNetFlowTop = (div, list, type) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -756,6 +790,14 @@ const showNetFlowGraph = (div, logs, type) => {
       bottom: '3%',
       containLabel: true,
     },
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {},
     legend: [
       {
@@ -988,6 +1030,14 @@ const showNetFlowService3D = (div, logs, type) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {},
     animationDurationUpdate: 1500,
     animationEasingUpdate: 'quinticInOut',
@@ -1191,6 +1241,14 @@ const showNetFlowSender3D = (div, logs, type) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {},
     animationDurationUpdate: 1500,
     animationEasingUpdate: 'quinticInOut',
@@ -1399,6 +1457,14 @@ const showNetFlowIPFlow3D = (div, logs, type) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {},
     animationDurationUpdate: 1500,
     animationEasingUpdate: 'quinticInOut',
@@ -1606,7 +1672,7 @@ const showNetFlowFFT = (div, fftMap, src, type) => {
       },
       feature: {
         dataZoom: {},
-        saveAsImage: {},
+        saveAsImage: { name: 'twsnmp_' + div },
       },
     },
     dataZoom: [{}],
@@ -1713,6 +1779,14 @@ const showNetFlowFFT3D = (div, fftMap, fftType) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {},
     animationDurationUpdate: 1500,
     animationEasingUpdate: 'quinticInOut',

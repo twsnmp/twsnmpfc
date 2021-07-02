@@ -23,6 +23,16 @@ const makeSyslogHistogram = (div) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       formatter(params) {
@@ -110,6 +120,16 @@ const makeSyslogCluster = (div) => {
     legend: {
       data: [],
     },
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -228,6 +248,14 @@ const showSyslogHost = (div, list) => {
         color: '#ccc',
       },
       data: ['重度', '軽度', '注意', '情報', 'デバッグ'],
+    },
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
     },
     tooltip: {
       trigger: 'axis',
@@ -375,6 +403,14 @@ const showSyslogHost3D = (div, logs) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {},
     animationDurationUpdate: 1500,
     animationEasingUpdate: 'quinticInOut',
@@ -600,6 +636,14 @@ const showSyslogExtractTopList = (div, list) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -719,6 +763,14 @@ const showSyslogExtract3D = (div, extractDatas, xType, zType, colorType) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {},
     animationDurationUpdate: 1500,
     animationEasingUpdate: 'quinticInOut',
@@ -907,7 +959,7 @@ const showSyslogFFT = (div, fftMap, host, type) => {
       },
       feature: {
         dataZoom: {},
-        saveAsImage: {},
+        saveAsImage: { name: 'twsnmp_' + div },
       },
     },
     dataZoom: [{}],
@@ -1026,6 +1078,14 @@ const showSyslogFFT3D = (div, fftMap, fftType) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {},
     animationDurationUpdate: 1500,
     animationEasingUpdate: 'quinticInOut',

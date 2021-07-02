@@ -16,13 +16,19 @@ const showServicePieChart = (div, data) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
     tooltip: {
       trigger: 'item',
       formatter: '{a} <br/>{b} : {c} ({d}%)',
     },
     legend: {
-      orient: 'vertical',
-      left: 'right',
       data: [],
       textStyle: {
         fontSize: 10,

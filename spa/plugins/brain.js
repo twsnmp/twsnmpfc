@@ -24,12 +24,18 @@ const makeErrorChart = (div) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
-      formatter: (params) => {
-        const p = params[0]
-        return p.name + ' : ' + p.value[1]
-      },
       axisPointer: {
         type: 'shadow',
       },
@@ -86,17 +92,9 @@ const makeErrorChart = (div) => {
     },
     series: [
       {
-        name: 'cpu',
+        name: 'error',
         type: 'line',
         color: '#1f78b4',
-        showSymbol: false,
-        large: true,
-        data: [],
-      },
-      {
-        name: 'gpu',
-        type: 'line',
-        color: '#f11',
         showSymbol: false,
         large: true,
         data: [],

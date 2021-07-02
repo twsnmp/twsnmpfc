@@ -23,9 +23,17 @@ const showFlowsChart = (div, flows, filter) => {
     ]),
     grid: {
       left: '7%',
-      right: '4%',
-      bottom: '3%',
+      right: '5%',
+      bottom: '5%',
       containLabel: true,
+    },
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
     },
     tooltip: {
       trigger: 'item',
@@ -85,7 +93,7 @@ const showFlowsChart = (div, flows, filter) => {
   let bOver = false
   const nodes = {}
   flows.forEach((f) => {
-    if (option.series[0].links.length > 1000) {
+    if (option.series[0].links.length > 2000) {
       bOver = true
       return
     }
@@ -133,6 +141,9 @@ const showFlowsChart = (div, flows, filter) => {
         category: getLocCategory(f.ServerLoc),
         draggable: true,
         value: f.ServerLoc,
+        label: {
+          show: false,
+        },
       }
     }
     if (!nodes[c]) {
@@ -141,6 +152,9 @@ const showFlowsChart = (div, flows, filter) => {
         category: getLocCategory(f.ClientLoc),
         draggable: true,
         value: f.ClientLoc,
+        label: {
+          show: false,
+        },
       }
     }
     option.series[0].links.push({

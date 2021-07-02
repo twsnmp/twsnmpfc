@@ -57,7 +57,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="sysResChartDialog" persistent max-width="1000px">
+    <v-dialog v-model="sysResChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline"> システムリソース </span>
@@ -72,7 +72,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="sysNetChartDialog" persistent max-width="1000px">
+    <v-dialog v-model="sysNetChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline"> 通信量 </span>
@@ -87,7 +87,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="sysProcChartDialog" persistent max-width="1000px">
+    <v-dialog v-model="sysProcChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline"> プロセス数と負荷 </span>

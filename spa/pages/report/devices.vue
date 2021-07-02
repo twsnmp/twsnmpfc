@@ -157,7 +157,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="vendorDialog" persistent max-width="900px">
+    <v-dialog v-model="vendorDialog" persistent max-width="950px">
       <v-card>
         <v-card-title>
           <span class="headline">メーカー別</span>

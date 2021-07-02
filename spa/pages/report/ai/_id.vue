@@ -74,14 +74,14 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="heatMapDialog" persistent max-width="1000px">
+    <v-dialog v-model="heatMapDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline">
             AI分析ヒートマップ - {{ ai.NodeName }} - {{ ai.PollingName }}
           </span>
         </v-card-title>
-        <div id="heatMap" style="width: 1000px; height: 400px"></div>
+        <div id="heatMap" style="width: 1000px; height: 500px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="heatMapDialog = false">
@@ -91,14 +91,14 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="pieChartDialog" persistent max-width="1000px">
+    <v-dialog v-model="pieChartDialog" persistent max-width="850px">
       <v-card>
         <v-card-title>
           <span class="headline">
             AI分析異常割合 - {{ ai.NodeName }} - {{ ai.PollingName }}
           </span>
         </v-card-title>
-        <div id="pieChart" style="width: 1000px; height: 400px"></div>
+        <div id="pieChart" style="width: 800px; height: 400px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="pieChartDialog = false">
@@ -108,14 +108,14 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="timeChartDialog" persistent max-width="1000px">
+    <v-dialog v-model="timeChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline">
             AI分析時系列 - {{ ai.NodeName }} - {{ ai.PollingName }}
           </span>
         </v-card-title>
-        <div id="timeChart" style="width: 1000px; height: 300px"></div>
+        <div id="timeChart" style="width: 1000px; height: 400px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="timeChartDialog = false">
@@ -125,7 +125,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="pollingChartDialog" persistent max-width="1000px">
+    <v-dialog v-model="pollingChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline">
@@ -141,8 +141,8 @@
             @change="selectValEnt"
           ></v-select>
         </v-card-title>
-        <div id="logStateChart" style="width: 1000px; height: 200px"></div>
-        <div id="pollingChart" style="width: 1000px; height: 200px"></div>
+        <div id="logStateChart" style="width: 1000px; height: 300px"></div>
+        <div id="pollingChart" style="width: 1000px; height: 300px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="pollingChartDialog = false">

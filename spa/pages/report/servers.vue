@@ -168,7 +168,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="mapChartDialog" persistent max-width="1000px">
+    <v-dialog v-model="mapChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline">サーバー位置</span>
@@ -183,7 +183,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="countryChartDialog" persistent max-width="900px">
+    <v-dialog v-model="countryChartDialog" persistent max-width="950px">
       <v-card>
         <v-card-title>
           <span class="headline">国別</span>
@@ -308,7 +308,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="servicePieChartDialog" persistent max-width="900px">
+    <v-dialog v-model="servicePieChartDialog" persistent max-width="950px">
       <v-card>
         <v-card-title>
           <span class="headline">サービス割合</span>

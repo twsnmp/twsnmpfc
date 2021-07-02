@@ -16,6 +16,16 @@ const showSysResChart = (div, monitor) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       formatter: (params) => {
@@ -156,6 +166,16 @@ const showSysNetChart = (div, monitor) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       formatter: (params) => {
@@ -302,6 +322,16 @@ const showSysProcChart = (div, monitor) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       formatter: (params) => {

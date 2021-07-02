@@ -24,16 +24,12 @@ const makeLogCountChart = (div) => {
       },
       feature: {
         dataZoom: {},
-        saveAsImage: {},
+        saveAsImage: { name: 'twsnmp_' + div },
       },
     },
     dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
-      formatter: (params) => {
-        const p = params[0]
-        return p.name + ' : ' + p.value[1]
-      },
       axisPointer: {
         type: 'shadow',
       },
@@ -91,6 +87,7 @@ const makeLogCountChart = (div) => {
     series: [
       {
         type: 'bar',
+        name: '件数',
         color: '#1f78b4',
         large: true,
         data: [],

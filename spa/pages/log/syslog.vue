@@ -417,7 +417,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="histogramDialog" persistent max-width="900px">
+    <v-dialog v-model="histogramDialog" persistent max-width="950px">
       <v-card style="width: 100%">
         <v-card-title>
           ヒストグラム
@@ -441,7 +441,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="clusterDialog" persistent max-width="900px">
+    <v-dialog v-model="clusterDialog" persistent max-width="950px">
       <v-card style="width: 100%">
         <v-card-title>
           クラスター分析
@@ -462,7 +462,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="host3DDialog" persistent max-width="1000px">
+    <v-dialog v-model="host3DDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
         <v-card-title>
           ホスト別ログ(3D)
@@ -478,7 +478,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="hostListDialog" persistent max-width="900px">
+    <v-dialog v-model="hostListDialog" persistent max-width="950px">
       <v-card style="width: 100%">
         <v-card-title>
           ホスト別ログ
@@ -539,7 +539,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="extractHistogramDialog" persistent max-width="900px">
+    <v-dialog v-model="extractHistogramDialog" persistent max-width="950px">
       <v-card style="width: 100%">
         <v-card-title>
           抽出情報のヒストグラム分析
@@ -563,7 +563,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="extractClusterDialog" persistent max-width="900px">
+    <v-dialog v-model="extractClusterDialog" persistent max-width="950px">
       <v-card style="width: 100%">
         <v-card-title>
           抽出情報のクラスター分析
@@ -584,7 +584,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="extract3DDialog" persistent max-width="1000px">
+    <v-dialog v-model="extract3DDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
         <v-card-title> 抽出情報の項目別3Dグラフ </v-card-title>
         <v-card-text>
@@ -631,7 +631,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="extractTopListDialog" persistent max-width="900px">
+    <v-dialog v-model="extractTopListDialog" persistent max-width="950px">
       <v-card style="width: 100%">
         <v-card-title>
           抽出情報の項目別集計
@@ -703,7 +703,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="aiAssistDialog" persistent max-width="1000px">
+    <v-dialog v-model="aiAssistDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
         <v-card-title> AIアシスト分析 </v-card-title>
         <v-card-text>
@@ -797,7 +797,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="fftDialog" persistent max-width="1000px">
+    <v-dialog v-model="fftDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline"> Syslog - FFT分析 </span>
@@ -836,7 +836,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="fft3DDialog" persistent max-width="1000px">
+    <v-dialog v-model="fft3DDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline"> Syslog - FFT分析(3D) </span>

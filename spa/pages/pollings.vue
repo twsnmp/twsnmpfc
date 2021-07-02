@@ -365,7 +365,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="templateDialog" persistent max-width="900px">
+    <v-dialog v-model="templateDialog" persistent max-width="90%">
       <v-card>
         <v-card-title>
           <span class="headline">テンプレートから選択</span>

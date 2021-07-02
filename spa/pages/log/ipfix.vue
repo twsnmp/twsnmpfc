@@ -364,7 +364,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="histogramDialog" persistent max-width="900px">
+    <v-dialog v-model="histogramDialog" persistent max-width="950px">
       <v-card style="width: 100%">
         <v-card-title>
           ヒストグラム
@@ -388,7 +388,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="clusterDialog" persistent max-width="900px">
+    <v-dialog v-model="clusterDialog" persistent max-width="950px">
       <v-card style="width: 100%">
         <v-card-title>
           クラスター分析
@@ -417,7 +417,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="trafficDialog" persistent max-width="900px">
+    <v-dialog v-model="trafficDialog" persistent max-width="950px">
       <v-card style="width: 100%">
         <v-card-title>
           通信量
@@ -441,7 +441,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="graphDialog" persistent max-width="1000px">
+    <v-dialog v-model="graphDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
         <v-card-title>
           IPペアーのグラフ分析
@@ -465,7 +465,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="service3DDialog" persistent max-width="1000px">
+    <v-dialog v-model="service3DDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
         <v-card-title>
           サービス別の通信量(3D)
@@ -489,7 +489,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="sender3DDialog" persistent max-width="1000px">
+    <v-dialog v-model="sender3DDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
         <v-card-title>
           送信元別の通信量(3D)
@@ -513,7 +513,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="ipFlow3DDialog" persistent max-width="1000px">
+    <v-dialog v-model="ipFlow3DDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
         <v-card-title>
           IPペアー別の通信量(3D)
@@ -537,7 +537,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="topListDialog" persistent max-width="900px">
+    <v-dialog v-model="topListDialog" persistent max-width="950px">
       <v-card style="width: 100%">
         <v-card-title>
           {{ topListTitle }}
@@ -610,7 +610,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="fftDialog" persistent max-width="1000px">
+    <v-dialog v-model="fftDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline"> IPFIX - FFT分析 </span>
@@ -649,7 +649,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="fft3DDialog" persistent max-width="1000px">
+    <v-dialog v-model="fft3DDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline"> IPFIX - FFT分析(3D) </span>

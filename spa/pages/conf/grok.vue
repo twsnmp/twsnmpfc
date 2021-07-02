@@ -43,7 +43,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="editDialog" persistent max-width="900px">
+    <v-dialog v-model="editDialog" persistent max-width="90%">
       <v-card>
         <v-card-title>
           <span class="headline"> 抽出パターン(Grok)編集 </span>
@@ -81,7 +81,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="testDialog" persistent max-width="900px">
+    <v-dialog v-model="testDialog" persistent max-width="90%">
       <v-card>
         <v-card-title>
           <span class="headline"> 抽出パターン(Grok)テスト </span>

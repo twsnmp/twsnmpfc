@@ -189,7 +189,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="vendorDialog" persistent max-width="900px">
+    <v-dialog v-model="vendorDialog" persistent max-width="950px">
       <v-card>
         <v-card-title>
           <span class="headline">ベンダー別</span>
@@ -204,7 +204,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="mapChartDialog" persistent max-width="1000px">
+    <v-dialog v-model="mapChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
           <span class="headline">IP位置</span>
@@ -219,7 +219,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="countryChartDialog" persistent max-width="900px">
+    <v-dialog v-model="countryChartDialog" persistent max-width="950px">
       <v-card>
         <v-card-title>
           <span class="headline">国別</span>

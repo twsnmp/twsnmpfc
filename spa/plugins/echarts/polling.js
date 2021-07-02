@@ -22,12 +22,18 @@ const makePollingChart = (div) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
-      formatter(params) {
-        const p = params[0]
-        return p.name + ' : ' + p.value[1]
-      },
       axisPointer: {
         type: 'shadow',
       },
@@ -116,6 +122,7 @@ const showPollingChart = (polling, logs, ent, at) => {
     },
     series: [
       {
+        name: dp.axis,
         data,
       },
     ],
@@ -125,7 +132,7 @@ const showPollingChart = (polling, logs, ent, at) => {
     const et = new Date((at.UnixTime + 3600) * 1000)
     opt.series[0].markArea = {
       itemStyle: {
-        color: 'rgba(245,173, 172, 0.4)',
+        color: 'rgba(24,173, 172, 0.2)',
       },
       data: [
         [
@@ -162,6 +169,16 @@ const makePollingHistogram = (div) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       formatter(params) {
@@ -415,6 +432,16 @@ const makeSTLChart = (div) => {
         color: '#404a59',
       },
     ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -429,11 +456,6 @@ const makeSTLChart = (div) => {
       textStyle: {
         fontSize: 10,
         color: '#ccc',
-      },
-    },
-    toolbox: {
-      feature: {
-        saveAsImage: {},
       },
     },
     grid: {
@@ -627,7 +649,7 @@ const makeFFTChart = (div) => {
       },
       feature: {
         dataZoom: {},
-        saveAsImage: {},
+        saveAsImage: { name: 'twsnmp_' + div },
       },
     },
     dataZoom: [{}],
