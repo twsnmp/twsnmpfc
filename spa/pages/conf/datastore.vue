@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="900">
+    <v-card min-width="900px" width="80%">
       <v-form>
         <v-card-title primary-title> データストア </v-card-title>
         <v-alert v-if="$fetchState.error" color="error" dense>
@@ -66,6 +66,10 @@
             <v-icon>mdi-chart-line</v-icon>
             統計グラフ
           </v-btn>
+          <v-btn color="info" dark @click="openDBSizeForecast">
+            <v-icon>mdi-chart-line</v-icon>
+            DBサイズ予測
+          </v-btn>
           <v-btn
             v-if="!inBackup"
             color="primary"
@@ -88,14 +92,10 @@
             <v-icon>mdi-cached</v-icon>
             更新
           </v-btn>
-          <v-btn color="normal" dark to="/map">
-            <v-icon>mdi-lan</v-icon>
-            マップ
-          </v-btn>
         </v-card-actions>
       </v-form>
     </v-card>
-    <v-dialog v-model="dbStatsChartDialog" persistent max-width="1000px">
+    <v-dialog v-model="dbStatsChartDialog" persistent max-width="1020px">
       <v-card>
         <v-card-title>
           <span class="headline"> データベース統計 </span>
@@ -104,6 +104,21 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="dbStatsChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dbSizeForecastDialog" persistent max-width="1020px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> データベースサイズ予測 </span>
+        </v-card-title>
+        <div id="dbSizeForecast" style="width: 1000px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="dbSizeForecastDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -257,6 +272,7 @@ export default {
       cleanupDialog: false,
       cleanupError: false,
       dbStatsChartDialog: false,
+      dbSizeForecastDialog: false,
     }
   },
   async fetch() {
@@ -313,6 +329,12 @@ export default {
       this.dbStatsChartDialog = true
       this.$nextTick(() => {
         this.$showDBStatsChart('dbStatsChart', this.dbStatsLog)
+      })
+    },
+    openDBSizeForecast() {
+      this.dbSizeForecastDialog = true
+      this.$nextTick(() => {
+        this.$showDBSizeForecast('dbSizeForecast', this.dbStatsLog)
       })
     },
     strTime(t) {
