@@ -244,7 +244,35 @@
             <v-icon>mdi-calendar-clock</v-icon>
             時間範囲
           </v-btn>
+          <v-btn color="info" dark @click="showPollingForecast">
+            <v-icon>mdi-calendar-clock</v-icon>
+            予測
+          </v-btn>
           <v-btn color="normal" dark @click="pollingResultDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="pollingForecastDialog" persistent max-width="950px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          ポーリング予測 - {{ node.Name }} - {{ polling.Name }}
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="selectedValEnt"
+            :items="numValEntList"
+            label="項目"
+            single-line
+            hide-details
+            @change="updatePollingForcast"
+          ></v-select>
+        </v-card-title>
+        <div id="pollingForecast" style="width: 900px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="pollingForecastDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -643,6 +671,7 @@ export default {
         { text: '周期(Sec)', value: 't' },
         { text: '周波数(Hz)', value: 'hz' },
       ],
+      pollingForecastDialog: false,
     }
   },
   async fetch() {
@@ -715,6 +744,20 @@ export default {
         this.$makePollingChart('pollingChart')
         this.$showPollingChart(this.polling, this.logs, this.selectedValEnt, at)
       })
+    },
+    showPollingForecast() {
+      this.pollingForecastDialog = true
+      this.$nextTick(() => {
+        this.updatePollingForcast()
+      })
+    },
+    updatePollingForcast() {
+      this.$showPollingLogForecast(
+        'pollingForecast',
+        this.polling,
+        this.logs,
+        this.selectedValEnt
+      )
     },
     showPollingHistogram() {
       this.pollingHistogramDialog = true

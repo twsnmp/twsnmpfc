@@ -1,5 +1,6 @@
 import * as echarts from 'echarts'
 import * as ecStat from 'echarts-stat'
+import { getChartParams } from '~/plugins/echarts/chartparams.js'
 
 let chart
 
@@ -105,7 +106,7 @@ const showPollingChart = (polling, logs, ent, at) => {
     return
   }
   const data = []
-  const dp = getDispParams(polling, ent)
+  const dp = getChartParams(polling, ent)
   logs.forEach((l) => {
     const t = new Date(l.Time / (1000 * 1000))
     const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
@@ -221,7 +222,7 @@ const showPollingHistogram = (polling, logs, ent) => {
     return
   }
   const data = []
-  const dp = getDispParams(polling, ent)
+  const dp = getChartParams(polling, ent)
   logs.forEach((l) => {
     if (!l.Result.error) {
       let numVal = getNumVal(ent, l.Result)
@@ -244,8 +245,8 @@ const showPollingHistogram = (polling, logs, ent) => {
 }
 
 const getChartModeName = (mode) => {
-  const r = chartDispInfo[mode]
-  if (r) {
+  const r = getChartParams(mode)
+  if (r && r.axis) {
     return r.axis
   }
   return mode
@@ -269,148 +270,6 @@ const setDataList = (r, numValEntList) => {
 
 const getNumVal = (key, r) => {
   return r[key] || 0.0
-}
-
-const chartDispInfo = {
-  rtt: {
-    mul: 1.0 / (1000 * 1000 * 1000),
-    axis: '応答時間(秒)',
-  },
-  rtt_cv: {
-    mul: 1.0,
-    axis: '応答時間変動係数',
-  },
-  successRate: {
-    mul: 100.0,
-    axis: '成功率(%)',
-  },
-  speed: {
-    mul: 1.0,
-    axis: '回線速度(Mbps)',
-  },
-  speed_cv: {
-    mul: 1.0,
-    axis: '回線速度変動係数',
-  },
-  feels_like: {
-    mul: 1.0,
-    axis: '体感温度(℃）',
-  },
-  humidity: {
-    mul: 1.0,
-    axis: '湿度(%)',
-  },
-  pressure: {
-    mul: 1.0,
-    axis: '気圧(hPa)',
-  },
-  temp: {
-    mul: 1.0,
-    axis: '温度(℃）',
-  },
-  temp_max: {
-    mul: 1.0,
-    axis: '最高温度(℃）',
-  },
-  temp_min: {
-    mul: 1.0,
-    axis: '最低温度(℃）',
-  },
-  wind: {
-    mul: 1.0,
-    axis: '風速(m/sec)',
-  },
-  offset: {
-    mul: 1.0 / (1000 * 1000 * 1000),
-    axis: '時刻差(秒)',
-  },
-  stratum: {
-    mul: 1,
-    axis: '階層',
-  },
-  load1m: {
-    mul: 1.0,
-    axis: '１分間負荷',
-  },
-  load5m: {
-    mul: 1.0,
-    axis: '５分間負荷',
-  },
-  load15m: {
-    mul: 1.0,
-    axis: '１５分間負荷',
-  },
-  up: {
-    mul: 1.0,
-    axis: '稼働数',
-  },
-  total: {
-    mul: 1.0,
-    axis: '総数',
-  },
-  rate: {
-    mul: 1.0,
-    axis: '稼働率',
-  },
-  capacity: {
-    mul: 0.000000001,
-    axis: '総容量(GB)',
-  },
-  freeSpace: {
-    mul: 0.000000001,
-    axis: '空き容量(GB)',
-  },
-  usage: {
-    mul: 1.0,
-    axis: '使用率(%)',
-  },
-  totalCPU: {
-    mul: 0.001,
-    axis: '総CPUクロック(GHz)',
-  },
-  usedCPU: {
-    mul: 0.001,
-    axis: '使用中のCPUクロック(GHz)',
-  },
-  usageCPU: {
-    mul: 1.0,
-    axis: 'CPU使用率(%)',
-  },
-  totalMEM: {
-    mul: 0.000001,
-    axis: '総メモリー(MB)',
-  },
-  usedMEM: {
-    mul: 0.000001,
-    axis: '使用中メモリー(MB)',
-  },
-  usageMEM: {
-    mul: 1.0,
-    axis: 'メモリー使用率(%)',
-  },
-  totalHost: {
-    mul: 1.0,
-    axis: 'ホスト数',
-  },
-  fail: {
-    mul: 1.0,
-    axis: '失敗回数',
-  },
-  count: {
-    mul: 1.0,
-    axis: '回数',
-  },
-}
-
-const getDispParams = (p, ent) => {
-  const r = chartDispInfo[ent]
-  if (r) {
-    return r
-  }
-  return {
-    mul: 1.0,
-    axis: '',
-  }
 }
 
 const makeSTLChart = (div) => {
@@ -560,7 +419,7 @@ const showPollingLogSTL = (div, polling, data, ent, unit) => {
   const seasonal = []
   const trend = []
   const resid = []
-  const dp = getDispParams(polling, ent)
+  const dp = getChartParams(polling, ent)
   for (let i = 0; i < timeList.length; i++) {
     const t = new Date(timeList[i] * 1000)
     const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
@@ -720,7 +579,7 @@ const showPollingLogFFT = (div, polling, data, ent, unit, fftType) => {
     return
   }
   const freq = fftType === 'hz'
-  const dp = getDispParams(polling, ent)
+  const dp = getChartParams(polling, ent)
   const fft = []
   for (let i = 0; i < fftin.length; i++) {
     if (freq) {
@@ -756,6 +615,144 @@ const showPollingLogFFT = (div, polling, data, ent, unit, fftType) => {
   chart.resize()
 }
 
+let forecastChart
+
+const showPollingLogForecast = (div, polling, logs, ent) => {
+  if (forecastChart) {
+    forecastChart.dispose()
+  }
+  forecastChart = echarts.init(document.getElementById(div))
+  const option = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    grid: {
+      left: '10%',
+      right: '10%',
+      top: 40,
+      buttom: 0,
+    },
+    xAxis: {
+      type: 'time',
+      name: '日時',
+      axisLabel: {
+        color: '#ccc',
+        fontSize: '8px',
+        formatter: (value, index) => {
+          const date = new Date(value)
+          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+        },
+      },
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      splitLine: {
+        show: false,
+      },
+    },
+    yAxis: [
+      {
+        type: 'value',
+        name: '',
+        nameTextStyle: {
+          color: '#ccc',
+          fontSize: 10,
+          margin: 2,
+        },
+        axisLine: {
+          lineStyle: {
+            color: '#ccc',
+          },
+        },
+        axisLabel: {
+          color: '#ccc',
+          fontSize: 8,
+          margin: 2,
+        },
+      },
+    ],
+    series: [
+      {
+        name: '',
+        type: 'line',
+        large: true,
+        symbol: 'none',
+        data: [],
+      },
+    ],
+  }
+  if (ent !== '') {
+    const dp = getChartParams(polling, ent)
+    const data = []
+    logs.forEach((l) => {
+      if (!l.Result.error) {
+        let numVal = getNumVal(ent, l.Result)
+        numVal *= dp.mul
+        data.push([l.Time / (1000 * 1000), numVal])
+      }
+    })
+    const reg = ecStat.regression('linear', data)
+    const sd = Math.floor(Date.now() / (24 * 3600 * 1000))
+    for (let d = sd; d < sd + 365; d++) {
+      const x = d * 24 * 3600 * 1000
+      const t = new Date(x)
+      option.series[0].data.push({
+        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
+        value: [t, reg.parameter.intercept + reg.parameter.gradient * x],
+      })
+    }
+    if (dp.vmap) {
+      option.visualMap = {
+        top: 50,
+        right: 10,
+        textStyle: {
+          color: '#ccc',
+          fontSize: 8,
+        },
+        pieces: dp.vmap,
+        outOfRange: {
+          color: '#eee',
+        },
+      }
+    }
+  }
+  forecastChart.setOption(option)
+  forecastChart.resize()
+}
+
 export default (context, inject) => {
   inject('makePollingChart', makePollingChart)
   inject('showPollingChart', showPollingChart)
@@ -764,4 +761,5 @@ export default (context, inject) => {
   inject('setDataList', setDataList)
   inject('showPollingLogSTL', showPollingLogSTL)
   inject('showPollingLogFFT', showPollingLogFFT)
+  inject('showPollingLogForecast', showPollingLogForecast)
 }
