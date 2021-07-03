@@ -47,13 +47,13 @@
             </v-list-item>
           </v-list>
         </v-menu>
+        <v-btn color="info" dark @click="openDiskUsageForecast">
+          <v-icon>mdi-chart-line</v-icon>
+          ディスク使用量予測
+        </v-btn>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           更新
-        </v-btn>
-        <v-btn color="normal" dark to="/map">
-          <v-icon>mdi-lan</v-icon>
-          マップ
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -102,6 +102,21 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="diskUsageForecastDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> ディスク使用量の予測 </span>
+        </v-card-title>
+        <div id="diskUsageForecast" style="width: 1000px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="diskUsageForecastDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -124,6 +139,7 @@ export default {
       sysResChartDialog: false,
       sysNetChartDialog: false,
       sysProcChartDialog: false,
+      diskUsageForecastDialog: false,
     }
   },
   async fetch() {
@@ -158,6 +174,12 @@ export default {
       this.sysProcChartDialog = true
       this.$nextTick(() => {
         this.$showSysProcChart('sysProcChart', this.monitor)
+      })
+    },
+    openDiskUsageForecast() {
+      this.diskUsageForecastDialog = true
+      this.$nextTick(() => {
+        this.$showDiskUsageForecast('diskUsageForecast', this.monitor)
       })
     },
     strTime(t) {
