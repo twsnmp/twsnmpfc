@@ -25,6 +25,10 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-btn color="primary" dark @click="addGrok">
+          <v-icon>mdi-plus</v-icon>
+          追加
+        </v-btn>
         <v-btn color="primary" dark @click="importDialog = true">
           <v-icon>mdi-upload</v-icon>
           インポート
@@ -43,7 +47,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="editDialog" persistent max-width="90%">
+    <v-dialog v-model="editDialog" persistent max-width="80%">
       <v-card>
         <v-card-title>
           <span class="headline"> 抽出パターン(Grok)編集 </span>
@@ -226,6 +230,16 @@ export default {
     },
     editGrok(item) {
       this.selected = item
+      this.editDialog = true
+    },
+    addGrok() {
+      this.selected = {
+        ID: 'New',
+        Name: '',
+        Descr: '',
+        Pat: '',
+        Ok: '',
+      }
       this.editDialog = true
     },
     deleteGrok(item) {
