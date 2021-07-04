@@ -15,6 +15,7 @@
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"
+        @dblclick:row="copyLog"
       >
         <template #[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{
@@ -41,6 +42,12 @@
           </tr>
         </template>
       </v-data-table>
+      <v-snackbar v-model="copyError" absolute centered color="error">
+        コピーできません
+      </v-snackbar>
+      <v-snackbar v-model="copyDone" absolute centered color="primary">
+        コピーしました
+      </v-snackbar>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" dark @click="filterDialog = true">
@@ -1052,6 +1059,8 @@ export default {
         { text: '周波数(Hz)', value: 'hz' },
       ],
       fft3DDialog: false,
+      copyDone: false,
+      copyError: false,
     }
   },
   async fetch() {
@@ -1319,6 +1328,28 @@ export default {
       this.$nextTick(() => {
         this.$showSyslogFFT3D('FFTChart3D', this.fftMap, this.fftType)
       })
+    },
+    copyLog(me, p) {
+      if (!navigator.clipboard) {
+        this.copyError = true
+        return
+      }
+      const s =
+        p.item.TimeStr +
+        ' ' +
+        p.item.Type +
+        ' ' +
+        p.item.Tag +
+        ' ' +
+        p.item.Message
+      navigator.clipboard.writeText(s).then(
+        () => {
+          this.copyDone = true
+        },
+        () => {
+          this.copyError = true
+        }
+      )
     },
   },
 }
