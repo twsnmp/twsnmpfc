@@ -5,6 +5,9 @@
       <v-alert v-model="timeAnalyzeDataError" color="error" dense dismissible>
         時系列分析時にエラーが発生しました
       </v-alert>
+      <v-alert v-model="clearPollinhLogError" color="error" dense dismissible>
+        ポーリングログのクリア時にエラーが発生しました
+      </v-alert>
       <v-simple-table dense>
         <template #default>
           <thead>
@@ -172,6 +175,10 @@
             </v-list-item>
           </v-list>
         </v-menu>
+        <v-btn v-if="logs" color="error" @click="clearPollingLogDialog = true">
+          <v-icon>mdi-delete</v-icon>
+          ログクリア
+        </v-btn>
         <v-btn color="normal" dark @click="$router.go(-1)">
           <v-icon>mdi-arrow-left</v-icon>
           戻る
@@ -616,6 +623,25 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="clearPollingLogDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ポーリングクリア</span>
+        </v-card-title>
+        <v-card-text> ポーリングログを全て削除しますか？ </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="doClearPollingLog">
+            <v-icon>mdi-delete</v-icon>
+            クリア
+          </v-btn>
+          <v-btn color="normal" @click="clearPollingLogDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -672,6 +698,8 @@ export default {
         { text: '周波数(Hz)', value: 'hz' },
       ],
       pollingForecastDialog: false,
+      clearPollingLogDialog: false,
+      clearPollinhLogError: false,
     }
   },
   async fetch() {
@@ -684,6 +712,7 @@ export default {
     this.timeStr = this.$timeFormat(
       new Date(r.Polling.LastTime / (1000 * 1000))
     )
+    this.results = []
     Object.keys(r.Polling.Result).forEach((k) => {
       this.results.push({
         title: k,
@@ -875,6 +904,17 @@ export default {
           this.showPollingResult
         )
       })
+    },
+    doClearPollingLog() {
+      this.clearPollingLogDialog = false
+      this.$axios
+        .delete('/api/polling/clear/' + this.$route.params.id)
+        .then((r) => {
+          this.$fetch()
+        })
+        .catch(() => {
+          this.clearPollinhLogError = true
+        })
     },
   },
 }

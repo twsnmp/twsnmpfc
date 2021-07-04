@@ -317,3 +317,21 @@ func getPollingLogTimeAnalyze(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, r)
 }
+
+func deletePollingLog(c echo.Context) error {
+	id := c.Param("id")
+	p := datastore.GetPolling(id)
+	if p == nil {
+		log.Printf("polling not found id=%s", id)
+		return echo.ErrBadRequest
+	}
+	p.NextTime = 0
+	p.State = "unknown"
+	p.Result = make(map[string]interface{})
+	datastore.UpdatePolling(p)
+	if err := datastore.ClearPollingLog(id); err != nil {
+		log.Printf("ClearPollingLog err=%v", err)
+		return echo.ErrInternalServerError
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}

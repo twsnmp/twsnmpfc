@@ -130,6 +130,7 @@ func setup(p *WebAPI) {
 	r.POST("/pollings/setlogmode", setPollingLogMode)
 	r.GET("/polling/check/:id", getPollingCheck)
 	r.GET("/polling/TimeAnalyze/:id", getPollingLogTimeAnalyze)
+	r.DELETE("/polling/clear/:id", deletePollingLog)
 	// log
 	r.POST("/log/eventlogs", postEventLogs)
 	r.GET("/log/lastlogs/:st", postLastEventLogs)

@@ -460,8 +460,8 @@ export default {
           value: 'Type',
           width: '8%',
           filter: (value) => {
-            if (!this.polltype) return true
-            return this.polltype === value
+            if (!this.conf.polltype) return true
+            return this.conf.polltype === value
           },
         },
         { text: 'ログ', value: 'LogMode', width: '6%' },
