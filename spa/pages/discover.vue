@@ -94,7 +94,7 @@
         <v-icon>mdi-stop</v-icon>
         停止
       </v-btn>
-      <v-btn color="primary" to="/map">
+      <v-btn color="normal" to="/map">
         <v-icon>mdi-lan</v-icon>
         マップ
       </v-btn>

@@ -41,10 +41,6 @@
           <v-icon>mdi-cached</v-icon>
           更新
         </v-btn>
-        <v-btn color="normal" dark to="/map">
-          <v-icon>mdi-lan</v-icon>
-          マップ
-        </v-btn>
       </v-card-actions>
     </v-card>
     <v-dialog v-model="editDialog" persistent max-width="80%">
