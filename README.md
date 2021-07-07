@@ -11,15 +11,16 @@
 
 ## Status
 
-そこそこ、動作する状態になっています。
+かなり実用的なレベルになっています。
 
 - マップ表示
 - 自動発見
-- ポーリング
+- ポーリング（PING,SNMP,HTTP,TLS,DNS,NTP,VMWare..)
 - MIBブラウザー
 - ログ検索表示（Event Log,Syslog,SNMP TRAP,NetFlow,IPFIX,ARP Watch)
-- レポート（デバイス、ユーザー、サーバー、フロー）
+- レポート（デバイス、ユーザー、サーバー、フロー、IPアドレス）
 - AI分析
+- ログ、ポーリング結果の分析機能(FFT,ヒストグラム、クラスター)
 
 ![2021-04-10_11-56-00](https://user-images.githubusercontent.com/5225950/114256371-cc61db80-99f3-11eb-8631-c1917554ce26.png)
 
