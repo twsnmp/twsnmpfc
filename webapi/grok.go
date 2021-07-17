@@ -160,3 +160,8 @@ func postTestGrok(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, r)
 }
+
+func postDefGrok(c echo.Context) error {
+	datastore.LoadDefGrokEnt()
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}

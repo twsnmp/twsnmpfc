@@ -8,6 +8,12 @@
       <v-alert v-model="exportError" color="error" dense dismissible>
         抽出パターンのエクスポートに失敗しました
       </v-alert>
+      <v-alert v-if="loadDefErr" color="error" dense>
+        デフォルト抽出パターンの読み込みに失敗しました
+      </v-alert>
+      <v-alert v-model="loadDefDone" color="primary" dense dismissible>
+        デフォルト抽出パターンを読み込みました
+      </v-alert>
       <v-data-table
         :headers="headers"
         :items="grok"
@@ -28,6 +34,10 @@
         <v-btn color="primary" dark @click="addGrok">
           <v-icon>mdi-plus</v-icon>
           追加
+        </v-btn>
+        <v-btn color="error" dark @click="loadDefault">
+          <v-icon>mdi-reload</v-icon>
+          デフォルト
         </v-btn>
         <v-btn color="primary" dark @click="importDialog = true">
           <v-icon>mdi-upload</v-icon>
@@ -209,6 +219,8 @@ export default {
       testData: '',
       extractHeader: [],
       extractDatas: [],
+      loadDefDone: false,
+      loadDefErr: false,
     }
   },
   async fetch() {
@@ -251,6 +263,18 @@ export default {
         })
         .catch((e) => {
           this.updateError = true
+          this.$fetch()
+        })
+    },
+    loadDefault() {
+      this.$axios
+        .post('/api/conf/defgrok')
+        .then(() => {
+          this.loadDefDone = true
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.loadDefErr = true
           this.$fetch()
         })
     },

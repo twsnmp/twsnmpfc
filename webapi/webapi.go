@@ -93,6 +93,7 @@ func setup(p *WebAPI) {
 	r.GET("/conf/grok", getGrok)
 	r.GET("/export/grok", getExportGrok)
 	r.POST("/conf/grok", postGrok)
+	r.POST("/conf/defgrok", postDefGrok)
 	r.POST("/test/grok", postTestGrok)
 	r.POST("/import/grok", postImportGrok)
 	r.DELETE("/conf/grok/:id", deleteGrok)

@@ -152,3 +152,9 @@ func ForEachGrokEnt(f func(*GrokEnt) bool) {
 		}
 	}
 }
+
+func LoadDefGrokEnt() {
+	for i := range defGrockList {
+		UpdateGrokEnt(&defGrockList[i])
+	}
+}
