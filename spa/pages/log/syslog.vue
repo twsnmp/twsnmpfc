@@ -294,11 +294,11 @@
             v-model="filter.Message"
             label="メッセージ（パイプライン正規表現）"
           ></v-text-field>
-          <v-select
+          <v-autocomplete
             v-model="filter.Extractor"
             :items="filterExtractorList"
             label="抽出パターン"
-          ></v-select>
+          ></v-autocomplete>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -1088,6 +1088,15 @@ export default {
             text: g.Name,
             value: g.ID,
           })
+        })
+        this.filterExtractorList.sort((a, b) => {
+          if (a.value < b.value) {
+            return -1
+          }
+          if (a.value < b.value) {
+            return 1
+          }
+          return 0
         })
       }
     }
