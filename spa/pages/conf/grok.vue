@@ -59,7 +59,11 @@
           <span class="headline"> 抽出パターン(Grok)編集 </span>
         </v-card-title>
         <v-card-text>
-          <v-text-field v-model="selected.ID" label="ID"></v-text-field>
+          <v-text-field
+            v-model="selected.ID"
+            :rules="idRules"
+            label="ID"
+          ></v-text-field>
           <v-text-field v-model="selected.Name" label="名前"></v-text-field>
           <v-textarea
             v-model="selected.Descr"
@@ -221,6 +225,12 @@ export default {
       extractDatas: [],
       loadDefDone: false,
       loadDefErr: false,
+      idRules: [
+        (v) => !!v || 'IDは必須です。',
+        (v) =>
+          /^[_0-9a-zA-Z]+$/.test(v) ||
+          '半角英数字と_（アンダーバー）が使用できます。',
+      ],
     }
   },
   async fetch() {
