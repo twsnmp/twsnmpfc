@@ -29,6 +29,9 @@ func checkIPReport(ip, mac string, t int64) {
 	}
 	i := datastore.GetIPReport(ip)
 	if i != nil {
+		if t < i.LastTime {
+			return
+		}
 		if mac != "" && i.MAC != mac {
 			i.MAC = mac
 			i.Change++

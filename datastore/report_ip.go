@@ -1,7 +1,5 @@
 package datastore
 
-import "log"
-
 type IPReportEnt struct {
 	IP         string
 	MAC        string
@@ -27,7 +25,6 @@ func GetIPReport(id string) *IPReportEnt {
 }
 
 func AddIPReport(ip *IPReportEnt) {
-	log.Printf("add IP Report %#v", ip)
 	ips.Store(ip.IP, ip)
 }
 

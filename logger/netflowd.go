@@ -165,7 +165,8 @@ func logIPFIX(p *ipfix.Message) {
 				}()
 				prot, ok := record["protocolIdentifier"]
 				if ok {
-					if prot.(uint8) == 6 || prot.(uint8) == 17 {
+					switch prot.(uint8) {
+					case 6, 17:
 						report.ReportFlow(
 							record["sourceIPv6Address"].(net.IP).String(),
 							int(record["sourceTransportPort"].(uint16)),
@@ -176,7 +177,7 @@ func logIPFIX(p *ipfix.Message) {
 							int64(record["octetDeltaCount"].(uint64)),
 							time.Now().UnixNano(),
 						)
-					} else if prot.(uint8) == 1 {
+					case 1:
 						report.ReportFlow(
 							record["sourceIPv6Address"].(net.IP).String(),
 							0,
@@ -187,7 +188,6 @@ func logIPFIX(p *ipfix.Message) {
 							int64(record["octetDeltaCount"].(uint64)),
 							time.Now().UnixNano(),
 						)
-						log.Printf("icmp6 IPFIX record=%#v", record)
 					}
 				} else {
 					log.Printf("unknown IPFIX record=%#v", record)

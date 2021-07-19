@@ -138,13 +138,14 @@ var UnKnownPortMap = make(map[string]int64)
 func addToUnknownPortMap(fr *flowReportEnt) {
 	var skey string
 	var dkey string
-	if fr.Prot == 6 {
+	switch fr.Prot {
+	case 6:
 		skey = fmt.Sprintf("%d/tcp", fr.SrcPort)
 		dkey = fmt.Sprintf("%d/tcp", fr.DstPort)
-	} else if fr.Prot == 17 {
+	case 17:
 		skey = fmt.Sprintf("%d/udp", fr.SrcPort)
 		dkey = fmt.Sprintf("%d/udp", fr.DstPort)
-	} else {
+	default:
 		return
 	}
 	if _, ok := UnKnownPortMap[skey]; !ok {

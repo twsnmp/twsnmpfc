@@ -176,15 +176,16 @@ func DeleteReport(report, id string) error {
 		}
 		return nil
 	})
-	if report == "devices" {
+	switch report {
+	case "devices":
 		devices.Delete(id)
-	} else if report == "users" {
+	case "users":
 		users.Delete(id)
-	} else if report == "servers" {
+	case "servers":
 		servers.Delete(id)
-	} else if report == "flows" {
+	case "flows":
 		flows.Delete(id)
-	} else if report == "ips" {
+	case "ips":
 		ips.Delete(id)
 	}
 	return nil

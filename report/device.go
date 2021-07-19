@@ -3,6 +3,7 @@ package report
 import (
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -37,8 +38,19 @@ func checkDeviceReport(dr *deviceReportEnt) {
 	ip := dr.IP
 	mac := dr.MAC
 	checkIPReport(ip, mac, dr.Time)
+	if strings.Contains(ip, ":") {
+		// skip IPv6
+		return
+	}
+	updateDeviceReport(mac, ip, dr.Time)
+}
+
+func updateDeviceReport(mac, ip string, t int64) {
 	d := datastore.GetDevice(mac)
 	if d != nil {
+		if t < d.LastTime {
+			return
+		}
 		if d.IP != ip {
 			d.IP = ip
 			d.Name, d.NodeID = findNodeInfoFromIP(ip)
@@ -46,7 +58,7 @@ func checkDeviceReport(dr *deviceReportEnt) {
 			// IPアドレスが変わるもの
 			d.Penalty++
 		}
-		d.LastTime = dr.Time
+		d.LastTime = t
 		d.UpdateTime = time.Now().UnixNano()
 		return
 	}
@@ -54,8 +66,8 @@ func checkDeviceReport(dr *deviceReportEnt) {
 		ID:         mac,
 		IP:         ip,
 		Vendor:     datastore.FindVendor(mac),
-		FirstTime:  dr.Time,
-		LastTime:   dr.Time,
+		FirstTime:  t,
+		LastTime:   t,
 		UpdateTime: time.Now().UnixNano(),
 	}
 	d.Name, d.NodeID = findNodeInfoFromIP(ip)

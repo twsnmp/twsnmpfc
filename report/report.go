@@ -21,6 +21,7 @@ var (
 	deviceReportCh chan *deviceReportEnt
 	userReportCh   chan *userReportEnt
 	flowReportCh   chan *flowReportEnt
+	twpcapReportCh chan map[string]interface{}
 	allowDNS       map[string]bool
 	allowDHCP      map[string]bool
 	allowMail      map[string]bool
@@ -38,6 +39,7 @@ func Start(ctx context.Context) error {
 	deviceReportCh = make(chan *deviceReportEnt, 100)
 	userReportCh = make(chan *userReportEnt, 100)
 	flowReportCh = make(chan *flowReportEnt, 500)
+	twpcapReportCh = make(chan map[string]interface{}, 100)
 	go reportBackend(ctx)
 	return nil
 }
@@ -149,6 +151,8 @@ func reportBackend(ctx context.Context) {
 			checkUserReport(ur)
 		case fr := <-flowReportCh:
 			checkFlowReport(fr)
+		case twpcap := <-twpcapReportCh:
+			checkTWPCAPReport(twpcap)
 		}
 	}
 }
@@ -372,7 +376,8 @@ func getMeanSD(xs *[]float64) (float64, float64) {
 }
 
 func resetPenalty(report string) {
-	if report == "devices" {
+	switch report {
+	case "devices":
 		datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 			d.Penalty = 0
 			setDevicePenalty(d)
@@ -380,14 +385,14 @@ func resetPenalty(report string) {
 			return true
 		})
 		calcDeviceScore()
-	} else if report == "users" {
+	case "users":
 		datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 			u.Penalty = 0
 			u.UpdateTime = time.Now().UnixNano()
 			return true
 		})
 		calcUserScore()
-	} else if report == "servers" {
+	case "servers":
 		datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
 			if s.Loc == "" {
 				s.Loc = datastore.GetLoc(s.Server)
@@ -397,7 +402,7 @@ func resetPenalty(report string) {
 			return true
 		})
 		calcServerScore()
-	} else if report == "flows" {
+	case "flows":
 		datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
 			if f.ServerLoc == "" {
 				f.ServerLoc = datastore.GetLoc(f.Server)

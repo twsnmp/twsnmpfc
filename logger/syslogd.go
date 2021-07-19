@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/report"
 	syslog "gopkg.in/mcuadros/go-syslog.v2"
 )
 
@@ -35,6 +36,9 @@ func syslogd(stopCh chan bool) {
 			{
 				s, err := json.Marshal(sl)
 				if err == nil {
+					if tag, ok := sl["tag"].(string); ok && tag == "twpcap" {
+						report.ReportTWPCAP(sl)
+					}
 					logCh <- &datastore.LogEnt{
 						Time: time.Now().UnixNano(),
 						Type: "syslog",
