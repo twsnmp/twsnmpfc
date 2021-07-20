@@ -89,19 +89,19 @@ var defGrockList = []GrokEnt{
 		ID:    "TWPCAP_DNS",
 		Name:  "TWPCAPのDNS問い合わせ",
 		Descr: "TWPCAPで収集したDNSの問い合わせ情報を抽出",
-		Pat:   `type=DNS,DNSType=%{WORD:dnsType},Name=%{IPORHOST:name},count=%{BASE10NUM:count},change=%{BASE10NUM:chnage},lastIP=%{IP:lastIP},lastMAC=%{MAC:lastMAC}`,
+		Pat:   `type=DNS,sv=%{IP:sv},DNSType=%{WORD:dnsType},Name=%{IPORHOST:name},count=%{BASE10NUM:count},change=%{BASE10NUM:chnage},lcl=%{IP:lastIP},lMAC=%{MAC:lastMAC}`,
 	},
 	{
 		ID:    "TWPCAP_DHCP",
 		Name:  "TWPCAPのDHCPサーバー情報",
 		Descr: "TWPCAPで収集したDHCPサーバー情報を抽出",
-		Pat:   `type=DHCP,ip=%{IP:ip},count=%{BASE10NUM:count},offer=%{BASE10NUM:offer},ack=%{BASE10NUM:ack},nak=%{BASE10NUM:nak}`,
+		Pat:   `type=DHCP,sv=%{IP:sv},count=%{BASE10NUM:count},offer=%{BASE10NUM:offer},ack=%{BASE10NUM:ack},nak=%{BASE10NUM:nak}`,
 	},
 	{
 		ID:    "TWPCAP_NTP",
 		Name:  "TWPCAPのNTPサーバー情報",
 		Descr: "TWPCAPで収集したNTPサーバー情報を抽出",
-		Pat:   `type=NTP,ip=%{IP:ip},count=%{BASE10NUM:count},change=%{BASE10NUM:change},client=%{IP:client},version=%{BASE10NUM:version},stratum=%{BASE10NUM:stratum},refid=%{WORD:refid}`,
+		Pat:   `type=NTP,sv=%{IP:sv},count=%{BASE10NUM:count},change=%{BASE10NUM:change},lcl=%{IP:client},version=%{BASE10NUM:version},stratum=%{BASE10NUM:stratum},refid=%{WORD:refid}`,
 	},
 	{
 		ID:    "TWPCAP_RADIUS",
