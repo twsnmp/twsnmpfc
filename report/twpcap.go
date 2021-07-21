@@ -67,6 +67,7 @@ func checkIPTOMACReport(twpcap map[string]string) {
 		log.Printf("twpcap report err=%v", err)
 		return
 	}
+	mac = normMACAddr(mac)
 	// Device Report
 	if !strings.Contains(ip, ":") {
 		updateDeviceReport(mac, ip, lt.UnixNano())
