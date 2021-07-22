@@ -18,6 +18,16 @@ func getEtherType(c echo.Context) error {
 	return c.JSON(http.StatusOK, r)
 }
 
+func deleteEtherType(c echo.Context) error {
+	go datastore.ClearReport("ether")
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "Ethernetタイプレポートを削除しました",
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
 func getDNSQ(c echo.Context) error {
 	r := []*datastore.DNSQEnt{}
 	datastore.ForEachDNSQ(func(e *datastore.DNSQEnt) bool {
@@ -25,6 +35,16 @@ func getDNSQ(c echo.Context) error {
 		return true
 	})
 	return c.JSON(http.StatusOK, r)
+}
+
+func deleteDNSQ(c echo.Context) error {
+	go datastore.ClearReport("dnsq")
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "DNS問い合わせレポートを削除しました",
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
 func getRADIUSFlows(c echo.Context) error {

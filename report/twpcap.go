@@ -96,6 +96,8 @@ func checkEtherTypeReport(h string, twpcap map[string]string) {
 			}
 			datastore.AddEtherType(&datastore.EtherTypeEnt{
 				ID:        id,
+				Host:      h,
+				Type:      k,
 				Count:     c,
 				Name:      getEtherTypeName(k),
 				FirstTime: now,
@@ -110,7 +112,7 @@ var etherTypeMap = map[string]string{
 	"0x0806": "ARP",
 	"0x8035": "RARP",
 	"0x86dd": "IPv6",
-	"0x8899": "BUFF",
+	"0x8899": "RRCP",
 	"0x88cc": "LLDP",
 	"0x8100": "VLAN",
 	"0x9100": "VLAN DT",
@@ -273,6 +275,8 @@ func checkTLSFlowReport(twpcap map[string]string) {
 		if f.ClientLoc == "" {
 			f.ClientLoc = datastore.GetLoc(f.Client)
 		}
+		f.Cipher = twpcap["cipher"]
+		f.Version = twpcap["maxver"]
 		f.Count = getNumberFromTWPCAPLog(twpcap["count"])
 		f.FirstTime = getTimeFromTWPCAPLog(twpcap["ft"])
 		f.LastTime = getTimeFromTWPCAPLog(twpcap["lt"])
@@ -285,6 +289,8 @@ func checkTLSFlowReport(twpcap map[string]string) {
 		Server:     sv,
 		Service:    service,
 		Count:      1,
+		Version:    twpcap["maxver"],
+		Cipher:     twpcap["cipher"],
 		ServerLoc:  datastore.GetLoc(sv),
 		ClientLoc:  datastore.GetLoc(sv),
 		FirstTime:  getTimeFromTWPCAPLog(twpcap["ft"]),

@@ -70,18 +70,18 @@ type TLSFlowEnt struct {
 }
 
 func GetEtherType(id string) *EtherTypeEnt {
-	if v, ok := dnsq.Load(id); ok {
+	if v, ok := etherType.Load(id); ok {
 		return v.(*EtherTypeEnt)
 	}
 	return nil
 }
 
 func AddEtherType(s *EtherTypeEnt) {
-	dnsq.Store(s.ID, s)
+	etherType.Store(s.ID, s)
 }
 
 func ForEachEtherType(f func(*EtherTypeEnt) bool) {
-	dnsq.Range(func(k, v interface{}) bool {
+	etherType.Range(func(k, v interface{}) bool {
 		s := v.(*EtherTypeEnt)
 		return f(s)
 	})

@@ -211,7 +211,27 @@ export default {
         {
           icon: 'mdi-file-find',
           title: 'アドレス分析',
-          to: '/report/address/',
+          to: '/report/address',
+        },
+        {
+          icon: 'mdi-file-find',
+          title: 'Ethernetタイプ',
+          to: '/report/ether',
+        },
+        {
+          icon: 'mdi-file-find',
+          title: 'DNS問い合わせ',
+          to: '/report/dnsq',
+        },
+        {
+          icon: 'mdi-file-find',
+          title: 'RADIUS通信',
+          to: '/report/radius',
+        },
+        {
+          icon: 'mdi-file-find',
+          title: 'TLS通信',
+          to: '/report/tls',
         },
       ],
       logMenus: [
