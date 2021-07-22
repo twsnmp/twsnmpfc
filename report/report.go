@@ -166,6 +166,10 @@ func checkOldReport() {
 	checkOldDevices(safeOld, delOld)
 	checkOldIPReport(safeOld, delOld)
 	checkOldUsers(delOld)
+	checkOldEtherType(delOld)
+	checkOldDNSQ(delOld)
+	checkOldRadiusFlow(safeOld, delOld)
+	checkOldTLSFlow(safeOld, delOld)
 	log.Println("end check old report")
 }
 
@@ -247,12 +251,74 @@ func checkOldUsers(delOld int64) {
 	}
 }
 
+func checkOldEtherType(delOld int64) {
+	count := 0
+	datastore.ForEachEtherType(func(u *datastore.EtherTypeEnt) bool {
+		if u.LastTime < delOld {
+			datastore.DeleteReport("ether", u.ID)
+			count++
+		}
+		return true
+	})
+	if count > 0 {
+		log.Printf("delete etherType=%d", count)
+	}
+}
+
+func checkOldDNSQ(delOld int64) {
+	count := 0
+	datastore.ForEachDNSQ(func(u *datastore.DNSQEnt) bool {
+		if u.LastTime < delOld {
+			datastore.DeleteReport("dns", u.ID)
+			count++
+		}
+		return true
+	})
+	if count > 0 {
+		log.Printf("delete DNSQ=%d", count)
+	}
+}
+
+func checkOldRadiusFlow(safeOld, delOld int64) {
+	count := 0
+	datastore.ForEachRADIUSFlows(func(i *datastore.RADIUSFlowEnt) bool {
+		if i.LastTime < safeOld {
+			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
+				datastore.DeleteReport("radius", i.ID)
+				count++
+			}
+		}
+		return true
+	})
+	if count > 0 {
+		log.Printf("report delete radiusFlow=%d", count)
+	}
+}
+
+func checkOldTLSFlow(safeOld, delOld int64) {
+	count := 0
+	datastore.ForEachTLSFlows(func(i *datastore.TLSFlowEnt) bool {
+		if i.LastTime < safeOld {
+			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
+				datastore.DeleteReport("tls", i.ID)
+				count++
+			}
+		}
+		return true
+	})
+	if count > 0 {
+		log.Printf("report delete tlsFlow=%d", count)
+	}
+}
+
 func calcScore() {
 	calcDeviceScore()
 	calcServerScore()
 	calcFlowScore()
 	calcUserScore()
 	calcIPReportScore()
+	calcTLSFlowScore()
+	calcRADIUSFlowScore()
 }
 
 func calcDeviceScore() {
@@ -363,6 +429,48 @@ func calcServerScore() {
 	})
 }
 
+func calcRADIUSFlowScore() {
+	var xs []float64
+	datastore.ForEachRADIUSFlows(func(e *datastore.RADIUSFlowEnt) bool {
+		if e.Penalty > 100 {
+			e.Penalty = 100
+		}
+		xs = append(xs, float64(100-e.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachRADIUSFlows(func(e *datastore.RADIUSFlowEnt) bool {
+		if sd != 0 {
+			e.Score = ((10 * (float64(100-e.Penalty) - m) / sd) + 50)
+		} else {
+			e.Score = 50.0
+		}
+		e.ValidScore = true
+		return true
+	})
+}
+
+func calcTLSFlowScore() {
+	var xs []float64
+	datastore.ForEachTLSFlows(func(e *datastore.TLSFlowEnt) bool {
+		if e.Penalty > 100 {
+			e.Penalty = 100
+		}
+		xs = append(xs, float64(100-e.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachTLSFlows(func(e *datastore.TLSFlowEnt) bool {
+		if sd != 0 {
+			e.Score = ((10 * (float64(100-e.Penalty) - m) / sd) + 50)
+		} else {
+			e.Score = 50.0
+		}
+		e.ValidScore = true
+		return true
+	})
+}
+
 func getMeanSD(xs *[]float64) (float64, float64) {
 	m, err := stats.Mean(*xs)
 	if err != nil {
@@ -415,6 +523,26 @@ func resetPenalty(report string) {
 			return true
 		})
 		calcFlowScore()
+	case "radius":
+		datastore.ForEachRADIUSFlows(func(e *datastore.RADIUSFlowEnt) bool {
+			setRADIUSFlowPenalty(e)
+			e.UpdateTime = time.Now().UnixNano()
+			return true
+		})
+		calcRADIUSFlowScore()
+	case "tls":
+		datastore.ForEachTLSFlows(func(f *datastore.TLSFlowEnt) bool {
+			if f.ServerLoc == "" {
+				f.ServerLoc = datastore.GetLoc(f.Server)
+			}
+			if f.ClientLoc == "" {
+				f.ClientLoc = datastore.GetLoc(f.Client)
+			}
+			setTLSFlowPenalty(f)
+			f.UpdateTime = time.Now().UnixNano()
+			return true
+		})
+		calcTLSFlowScore()
 	}
 }
 

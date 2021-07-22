@@ -63,6 +63,46 @@ func LoadReport() error {
 				return nil
 			})
 		}
+		b = r.Bucket([]byte("ether"))
+		if b != nil {
+			_ = b.ForEach(func(k, v []byte) error {
+				var e EtherTypeEnt
+				if err := json.Unmarshal(v, &e); err == nil {
+					etherType.Store(e.ID, &e)
+				}
+				return nil
+			})
+		}
+		b = r.Bucket([]byte("dns"))
+		if b != nil {
+			_ = b.ForEach(func(k, v []byte) error {
+				var e DNSQEnt
+				if err := json.Unmarshal(v, &e); err == nil {
+					dnsq.Store(e.ID, &e)
+				}
+				return nil
+			})
+		}
+		b = r.Bucket([]byte("radius"))
+		if b != nil {
+			_ = b.ForEach(func(k, v []byte) error {
+				var e RADIUSFlowEnt
+				if err := json.Unmarshal(v, &e); err == nil {
+					radiusFlows.Store(e.ID, &e)
+				}
+				return nil
+			})
+		}
+		b = r.Bucket([]byte("tls"))
+		if b != nil {
+			_ = b.ForEach(func(k, v []byte) error {
+				var e TLSFlowEnt
+				if err := json.Unmarshal(v, &e); err == nil {
+					tlsFlows.Store(e.ID, &e)
+				}
+				return nil
+			})
+		}
 		return nil
 	})
 }
@@ -158,6 +198,74 @@ func SaveReport(last int64) error {
 			}
 			return true
 		})
+		r = b.Bucket([]byte("ether"))
+		etherType.Range(func(k, v interface{}) bool {
+			e := v.(*EtherTypeEnt)
+			if e.LastTime < last {
+				return true
+			}
+			s, err := json.Marshal(e)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+				return true
+			}
+			err = r.Put([]byte(e.ID), s)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+			}
+			return true
+		})
+		r = b.Bucket([]byte("dns"))
+		dnsq.Range(func(k, v interface{}) bool {
+			e := v.(*DNSQEnt)
+			if e.UpdateTime < last {
+				return true
+			}
+			s, err := json.Marshal(e)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+				return true
+			}
+			err = r.Put([]byte(e.ID), s)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+			}
+			return true
+		})
+		r = b.Bucket([]byte("radius"))
+		radiusFlows.Range(func(k, v interface{}) bool {
+			e := v.(*RADIUSFlowEnt)
+			if e.UpdateTime < last {
+				return true
+			}
+			s, err := json.Marshal(e)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+				return true
+			}
+			err = r.Put([]byte(e.ID), s)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+			}
+			return true
+		})
+		r = b.Bucket([]byte("tls"))
+		tlsFlows.Range(func(k, v interface{}) bool {
+			e := v.(*TLSFlowEnt)
+			if e.UpdateTime < last {
+				return true
+			}
+			s, err := json.Marshal(e)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+				return true
+			}
+			err = r.Put([]byte(e.ID), s)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+			}
+			return true
+		})
 		return nil
 	})
 }
@@ -187,6 +295,14 @@ func DeleteReport(report, id string) error {
 		flows.Delete(id)
 	case "ips":
 		ips.Delete(id)
+	case "ether":
+		etherType.Delete(id)
+	case "dns":
+		dnsq.Delete(id)
+	case "radius":
+		radiusFlows.Delete(id)
+	case "tls":
+		tlsFlows.Delete(id)
 	}
 	return nil
 }
@@ -234,6 +350,30 @@ func ClearReport(r string) error {
 	if r == "servers" {
 		servers.Range(func(k, v interface{}) bool {
 			servers.Delete(k)
+			return true
+		})
+	}
+	if r == "ether" {
+		etherType.Range(func(k, v interface{}) bool {
+			etherType.Delete(k)
+			return true
+		})
+	}
+	if r == "dns" {
+		dnsq.Range(func(k, v interface{}) bool {
+			dnsq.Delete(k)
+			return true
+		})
+	}
+	if r == "radius" {
+		radiusFlows.Range(func(k, v interface{}) bool {
+			radiusFlows.Delete(k)
+			return true
+		})
+	}
+	if r == "tls" {
+		tlsFlows.Range(func(k, v interface{}) bool {
+			tlsFlows.Delete(k)
 			return true
 		})
 	}

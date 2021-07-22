@@ -12,6 +12,9 @@ type ServerEnt struct {
 	Score        float64
 	ValidScore   bool
 	Penalty      int64
+	TLSInfo      string
+	NTPInfo      string
+	DHCPInfo     string
 	FirstTime    int64
 	LastTime     int64
 	UpdateTime   int64
