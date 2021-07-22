@@ -324,3 +324,27 @@ func setRADIUSFlowPenalty(e *datastore.RADIUSFlowEnt) {
 		e.Penalty++
 	}
 }
+
+func ResetRADIUSFlowsScore() {
+	datastore.ForEachRADIUSFlows(func(f *datastore.RADIUSFlowEnt) bool {
+		f.Penalty = 0
+		f.ClientName, f.ClientNodeID = findNodeInfoFromIP(f.Client)
+		f.ServerName, f.ServerNodeID = findNodeInfoFromIP(f.Server)
+		setRADIUSFlowPenalty(f)
+		f.UpdateTime = time.Now().UnixNano()
+		return true
+	})
+	calcRADIUSFlowScore()
+}
+
+func ResetTLSFlowsScore() {
+	datastore.ForEachTLSFlows(func(f *datastore.TLSFlowEnt) bool {
+		f.Penalty = 0
+		f.ClientName, f.ClientNodeID = findNodeInfoFromIP(f.Client)
+		f.ServerName, f.ServerNodeID = findNodeInfoFromIP(f.Server)
+		setTLSFlowPenalty(f)
+		f.UpdateTime = time.Now().UnixNano()
+		return true
+	})
+	calcTLSFlowScore()
+}
