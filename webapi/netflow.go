@@ -110,15 +110,16 @@ func postNetFlow(c echo.Context) error {
 		if v, ok := sl["protocol"]; ok {
 			pi = int(v.(float64))
 			if prot == "" {
-				if pi == 1 {
+				switch pi {
+				case 1:
 					prot = "icmp"
-				} else if pi == 2 {
+				case 2:
 					prot = "igmp"
-				} else if pi == 6 {
+				case 6:
 					prot = "tcp"
-				} else if pi == 17 {
+				case 17:
 					prot = "udp"
-				} else {
+				default:
 					prot = fmt.Sprintf("%d", int(pi))
 				}
 			}
