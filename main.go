@@ -40,7 +40,7 @@ var cpuprofile string
 var memprofile string
 var restore string
 
-var version = "v1.2.0"
+var version = "v1.3.0"
 var commit = ""
 
 func init() {
