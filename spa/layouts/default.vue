@@ -214,24 +214,29 @@ export default {
           to: '/report/address',
         },
         {
-          icon: 'mdi-file-find',
+          icon: 'mdi-chart-pie',
           title: 'Ethernetタイプ',
           to: '/report/ether',
         },
         {
-          icon: 'mdi-file-find',
+          icon: 'mdi-dns',
           title: 'DNS問い合わせ',
           to: '/report/dnsq',
         },
         {
-          icon: 'mdi-file-find',
+          icon: 'mdi-account-check',
           title: 'RADIUS通信',
           to: '/report/radius',
         },
         {
-          icon: 'mdi-file-find',
+          icon: 'mdi-swap-horizontal',
           title: 'TLS通信',
           to: '/report/tls',
+        },
+        {
+          icon: 'mdi-certificate',
+          title: 'サーバー証明書',
+          to: '/report/cert',
         },
       ],
       logMenus: [
