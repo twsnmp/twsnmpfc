@@ -270,6 +270,9 @@ func checkTLSFlowReport(twpcap map[string]string) {
 	if !ok {
 		return
 	}
+	if service == "HTTPS" {
+		checkHTTPSServer(sv, twpcap)
+	}
 	id := cl + ":" + sv + ":" + service
 	f := datastore.GetTLSFlow(id)
 	if f != nil {
@@ -305,6 +308,16 @@ func checkTLSFlowReport(twpcap map[string]string) {
 	f.ServerName, f.ServerNodeID = findNodeInfoFromIP(sv)
 	setTLSFlowPenalty(f)
 	datastore.AddTLSFlow(f)
+}
+
+func checkHTTPSServer(sv string, twpcap map[string]string) {
+	e := datastore.GetServer(sv)
+	if e != nil {
+		e.TLSInfo = fmt.Sprintf("version=%s,cipher=%s",
+			twpcap["maxver"],
+			twpcap["cipher"],
+		)
+	}
 }
 
 func setTLSFlowPenalty(f *datastore.TLSFlowEnt) {
