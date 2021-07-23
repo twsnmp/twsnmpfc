@@ -238,6 +238,7 @@ func checkRADIUSReport(twpcap map[string]string) {
 		return
 	}
 	e = &datastore.RADIUSFlowEnt{
+		ID:        id,
 		Client:    cl,
 		Server:    sv,
 		Accept:    getNumberFromTWPCAPLog(twpcap["accept"]),

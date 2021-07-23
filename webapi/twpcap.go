@@ -38,7 +38,7 @@ func getDNSQ(c echo.Context) error {
 }
 
 func deleteDNSQ(c echo.Context) error {
-	go datastore.ClearReport("dnsq")
+	go datastore.ClearReport("dns")
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",
 		Level: "info",
