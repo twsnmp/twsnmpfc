@@ -110,6 +110,7 @@ func checkEtherTypeReport(h string, twpcap map[string]string) {
 var etherTypeMap = map[string]string{
 	"0x0800": "IPv4",
 	"0x0806": "ARP",
+	"0x0842": "WakeOnLAN",
 	"0x8035": "RARP",
 	"0x86dd": "IPv6",
 	"0x8899": "RRCP",
@@ -121,6 +122,8 @@ var etherTypeMap = map[string]string{
 	"0x8863": "PPPoE DS",
 	"0x8864": "PPPoE SS",
 	"0x888e": "802.1X",
+	"0x88a2": "ATAoE",
+	"0x9000": "EConfTest",
 }
 
 func getEtherTypeName(t string) string {
