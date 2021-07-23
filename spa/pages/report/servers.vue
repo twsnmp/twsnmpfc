@@ -135,7 +135,7 @@
         <v-card-title>
           <span class="headline">サーバー削除</span>
         </v-card-title>
-        <v-card-text> サーバー{{ selected.Name }}を削除しますか？ </v-card-text>
+        <v-card-text> 選択したサーバーを削除しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="error" @click="doDelete">
@@ -257,6 +257,18 @@
                     <v-icon color="grey">mdi-google-maps</v-icon>
                   </v-btn>
                 </td>
+              </tr>
+              <tr v-if="selected.NTPInfo">
+                <td>NTP情報</td>
+                <td>{{ selected.NTPInfo }}</td>
+              </tr>
+              <tr v-if="selected.DHCPInfo">
+                <td>DHCP情報</td>
+                <td>{{ selected.DHCPInfo }}</td>
+              </tr>
+              <tr v-if="selected.TLSInfo">
+                <td>TLS情報</td>
+                <td>{{ selected.TLSInfo }}</td>
               </tr>
               <tr>
                 <td>サービス概要</td>

@@ -189,11 +189,11 @@ func checkDHCPReport(twpcap map[string]string) {
 	}
 	e := datastore.GetServer(sv)
 	if e != nil {
-		e.DHCPInfo = fmt.Sprintf("count=%s,offer=%s,ack=%s,nack=%s",
+		e.DHCPInfo = fmt.Sprintf("count=%s,offer=%s,ack=%s,nak=%s",
 			twpcap["count"],
 			twpcap["offer"],
 			twpcap["ack"],
-			twpcap["nack"],
+			twpcap["nak"],
 		)
 		return
 	}
