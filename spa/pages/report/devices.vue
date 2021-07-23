@@ -69,7 +69,7 @@
           <template #activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
-              グラフ表示
+              グラフと集計
             </v-btn>
           </template>
           <v-list>

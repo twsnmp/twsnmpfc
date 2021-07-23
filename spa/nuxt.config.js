@@ -43,6 +43,7 @@ export default {
     '@/plugins/echarts/monitor.js',
     '@/plugins/echarts/netflow.js',
     '@/plugins/echarts/syslog.js',
+    '@/plugins/echarts/ethertype.js',
     '@/plugins/brain.js',
   ],
 

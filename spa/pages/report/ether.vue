@@ -33,6 +33,24 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openEtherTypeChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-pie</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>タイプ別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="etherType"
           type="csv"
@@ -63,6 +81,21 @@
         </v-btn>
       </v-card-actions>
     </v-card>
+    <v-dialog v-model="etherTypeChartDialog" persistent max-width="950px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">Ethernetタイプ別</span>
+        </v-card-title>
+        <div id="etherTypeChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="etherTypeChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -81,6 +114,7 @@ export default {
         { text: '最終', value: 'Last', width: '20%' },
       ],
       etherType: [],
+      etherTypeChartDialog: false,
     }
   },
   async fetch() {
@@ -100,6 +134,12 @@ export default {
     })
   },
   methods: {
+    openEtherTypeChart() {
+      this.etherTypeChartDialog = true
+      this.$nextTick(() => {
+        this.$showEtherTypeChart('etherTypeChart', this.etherType)
+      })
+    },
     formatCount(n) {
       return numeral(n).format('0,0')
     },
