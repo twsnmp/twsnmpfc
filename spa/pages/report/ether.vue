@@ -17,8 +17,9 @@
         :items="etherType"
         :search="search"
         :items-per-page="15"
-        sort-by="Type"
-        sort-desc
+        :sort-by="['Host', 'Count']"
+        :sort-desc="[false, true]"
+        multi-sort
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
