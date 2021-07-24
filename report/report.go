@@ -144,6 +144,7 @@ func reportBackend(ctx context.Context) {
 				datastore.SaveReport(last)
 				last = time.Now().UnixNano()
 				log.Printf("end calc report score")
+				clearIpToNameCache()
 			}
 		case dr := <-deviceReportCh:
 			checkDeviceReport(dr)
@@ -567,15 +568,57 @@ func normMACAddr(m string) string {
 	return strings.ToUpper(r)
 }
 
+type ipToNameCacheEnt struct {
+	Name      string
+	NodeID    string
+	TimeLimit int64
+}
+
+var ipToNameCache sync.Map
+var hitCache = 0
+
 func findNodeInfoFromIP(ip string) (string, string) {
+	if v, ok := ipToNameCache.Load(ip); ok {
+		if c, ok := v.(*ipToNameCacheEnt); ok {
+			hitCache++
+			return c.Name, c.NodeID
+		}
+	}
 	n := datastore.FindNodeFromIP(ip)
 	if n != nil {
+		addIpToNameChahe(ip, n.Name, n.ID)
 		return n.Name, n.ID
 	}
 	if names, err := net.LookupAddr(ip); err == nil && len(names) > 0 {
+		addIpToNameChahe(ip, names[0], "")
 		return names[0], ""
 	}
+	addIpToNameChahe(ip, ip, "")
 	return ip, ""
+}
+
+func addIpToNameChahe(ip, name, nodeID string) {
+	ipToNameCache.Store(ip, &ipToNameCacheEnt{
+		Name:      name,
+		NodeID:    nodeID,
+		TimeLimit: time.Now().Add(time.Hour * 24).Unix(),
+	})
+}
+
+func clearIpToNameCache() {
+	del := 0
+	sz := 0
+	now := time.Now().Unix()
+	ipToNameCache.Range(func(k, v interface{}) bool {
+		if c, ok := v.(*ipToNameCacheEnt); !ok || c.TimeLimit < now {
+			del++
+			ipToNameCache.Delete(k)
+		} else {
+			sz++
+		}
+		return true
+	})
+	log.Printf("ipToName cache size=%d,hit=%d,del=%d", sz, hitCache, del)
 }
 
 func isSafeCountry(loc string) bool {
