@@ -214,7 +214,8 @@ func doPolling(pe *datastore.PollingEnt) {
 func setPollingState(pe *datastore.PollingEnt, newState string) {
 	sendEvent := false
 	oldState := pe.State
-	if newState == "normal" {
+	switch newState {
+	case "normal":
 		if pe.State != "normal" && pe.State != "repair" {
 			if pe.State == "unknown" {
 				pe.State = "normal"
@@ -223,12 +224,12 @@ func setPollingState(pe *datastore.PollingEnt, newState string) {
 			}
 			sendEvent = true
 		}
-	} else if newState == "unknown" {
+	case "unknown":
 		if pe.State != "unknown" {
 			pe.State = "unknown"
 			sendEvent = true
 		}
-	} else {
+	default:
 		if pe.State != pe.Level {
 			pe.State = pe.Level
 			sendEvent = true

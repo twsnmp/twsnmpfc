@@ -103,6 +103,16 @@ func LoadReport() error {
 				return nil
 			})
 		}
+		b = r.Bucket([]byte("cert"))
+		if b != nil {
+			_ = b.ForEach(func(k, v []byte) error {
+				var e CertEnt
+				if err := json.Unmarshal(v, &e); err == nil {
+					certs.Store(e.ID, &e)
+				}
+				return nil
+			})
+		}
 		return nil
 	})
 }
@@ -266,6 +276,23 @@ func SaveReport(last int64) error {
 			}
 			return true
 		})
+		r = b.Bucket([]byte("cert"))
+		certs.Range(func(k, v interface{}) bool {
+			e := v.(*CertEnt)
+			if e.UpdateTime < last {
+				return true
+			}
+			s, err := json.Marshal(e)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+				return true
+			}
+			err = r.Put([]byte(e.ID), s)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+			}
+			return true
+		})
 		return nil
 	})
 }
@@ -303,6 +330,8 @@ func DeleteReport(report, id string) error {
 		radiusFlows.Delete(id)
 	case "tls":
 		tlsFlows.Delete(id)
+	case "cert":
+		certs.Delete(id)
 	}
 	return nil
 }

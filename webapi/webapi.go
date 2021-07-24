@@ -168,6 +168,10 @@ func setup(p *WebAPI) {
 	r.GET("/report/tls", getTLSFlows)
 	r.DELETE("/report/tls/:id", deleteTLSFlow)
 	r.POST("/report/tls/reset", resetTLSFlows)
+	r.GET("/report/cert", getCert)
+	r.POST("/report/cert", postCert)
+	r.DELETE("/report/cert/:id", deleteCert)
+	r.POST("/report/cert/reset", resetCert)
 	// AI
 	r.GET("/report/ailist", getAIList)
 	r.GET("/report/ai/:id", getAIResult)

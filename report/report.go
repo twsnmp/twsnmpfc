@@ -21,6 +21,7 @@ var (
 	deviceReportCh chan *deviceReportEnt
 	userReportCh   chan *userReportEnt
 	flowReportCh   chan *flowReportEnt
+	checkCertCh    chan bool
 	twpcapReportCh chan map[string]interface{}
 	allowDNS       map[string]bool
 	allowDHCP      map[string]bool
@@ -40,6 +41,7 @@ func Start(ctx context.Context) error {
 	userReportCh = make(chan *userReportEnt, 100)
 	flowReportCh = make(chan *flowReportEnt, 500)
 	twpcapReportCh = make(chan map[string]interface{}, 100)
+	checkCertCh = make(chan bool, 5)
 	go reportBackend(ctx)
 	return nil
 }
@@ -126,6 +128,7 @@ func reportBackend(ctx context.Context) {
 	timer := time.NewTicker(time.Minute * 5)
 	checkOldReport()
 	calcScore()
+	checkCerts()
 	last := int64(0)
 	for {
 		select {
@@ -138,6 +141,7 @@ func reportBackend(ctx context.Context) {
 			}
 		case <-timer.C:
 			{
+				checkCertCh <- true
 				log.Printf("start calc report score")
 				checkOldReport()
 				calcScore()
@@ -154,6 +158,8 @@ func reportBackend(ctx context.Context) {
 			checkFlowReport(fr)
 		case twpcap := <-twpcapReportCh:
 			checkTWPCAPReport(twpcap)
+		case <-checkCertCh:
+			checkCerts()
 		}
 	}
 }
@@ -320,6 +326,7 @@ func calcScore() {
 	calcIPReportScore()
 	calcTLSFlowScore()
 	calcRADIUSFlowScore()
+	calcCertScore()
 }
 
 func calcDeviceScore() {
@@ -472,6 +479,26 @@ func calcTLSFlowScore() {
 	})
 }
 
+func calcCertScore() {
+	var xs []float64
+	datastore.ForEachCerts(func(e *datastore.CertEnt) bool {
+		if e.Penalty > 100 {
+			e.Penalty = 100
+		}
+		xs = append(xs, float64(100-e.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachCerts(func(e *datastore.CertEnt) bool {
+		if sd != 0 {
+			e.Score = ((10 * (float64(100-e.Penalty) - m) / sd) + 50)
+		} else {
+			e.Score = 50.0
+		}
+		return true
+	})
+}
+
 func getMeanSD(xs *[]float64) (float64, float64) {
 	m, err := stats.Mean(*xs)
 	if err != nil {
@@ -544,6 +571,13 @@ func resetPenalty(report string) {
 			return true
 		})
 		calcTLSFlowScore()
+	case "cert":
+		datastore.ForEachCerts(func(c *datastore.CertEnt) bool {
+			setCertPenalty(c)
+			c.UpdateTime = time.Now().UnixNano()
+			return true
+		})
+		calcCertScore()
 	}
 }
 

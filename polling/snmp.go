@@ -76,19 +76,20 @@ func doPollingSnmp(pe *datastore.PollingEnt) {
 		setPollingError("snmp", pe, fmt.Errorf("invalid snmp polling"))
 		return
 	}
-	if mode == "sysUpTime" {
+	switch mode {
+	case "sysUpTime":
 		doPollingSnmpSysUpTime(pe, agent)
-	} else if mode == "ifOperStatus" {
+	case "ifOperStatus":
 		doPollingSnmpIF(pe, agent)
-	} else if mode == "count" {
+	case "count":
 		doPollingSnmpCount(pe, agent)
-	} else if mode == "process" {
+	case "process":
 		doPollingSnmpProcess(pe, agent)
-	} else if mode == "stats" {
+	case "stats":
 		doPollingSnmpStats(pe, agent)
-	} else if mode == "traffic" {
+	case "traffic":
 		doPollingSnmpTraffic(pe, agent)
-	} else {
+	default:
 		doPollingSnmpGet(pe, agent)
 	}
 }
@@ -205,15 +206,17 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		}
 		n := datastore.MIBDB.OIDToName(variable.Name)
 		vn := getValueName(n)
-		if variable.Type == gosnmp.OctetString {
+		switch variable.Type {
+
+		case gosnmp.OctetString:
 			v := getMIBStringVal(variable.Value)
 			vm.Set(vn, v)
 			lr[n] = v
-		} else if variable.Type == gosnmp.ObjectIdentifier {
+		case gosnmp.ObjectIdentifier:
 			v := datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
 			vm.Set(vn, v)
 			lr[n] = v
-		} else {
+		default:
 			v := gosnmp.ToBigInt(variable.Value).Uint64()
 			vm.Set(vn, v)
 			lr[n] = float64(v)
@@ -297,7 +300,8 @@ func doPollingSnmpCount(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	}
 	if err := agent.Walk(oid, func(variable gosnmp.SnmpPDU) error {
 		s := ""
-		if variable.Type == gosnmp.OctetString {
+		switch variable.Type {
+		case gosnmp.OctetString:
 			if strings.Contains(datastore.MIBDB.OIDToName(variable.Name), "ifPhysAd") {
 				a := getMIBStringVal(variable.Value)
 				if len(a) > 5 {
@@ -306,9 +310,9 @@ func doPollingSnmpCount(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			} else {
 				s = getMIBStringVal(variable.Value)
 			}
-		} else if variable.Type == gosnmp.ObjectIdentifier {
+		case gosnmp.ObjectIdentifier:
 			s = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
-		} else {
+		default:
 			s = fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Uint64())
 		}
 		if regexFilter != nil && !regexFilter.Match([]byte(s)) {
@@ -577,13 +581,14 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			continue
 		}
 		n := datastore.MIBDB.OIDToName(variable.Name)
-		if variable.Type == gosnmp.OctetString {
+		switch variable.Type {
+		case gosnmp.OctetString:
 			v := getMIBStringVal(variable.Value)
 			lr[n] = v
-		} else if variable.Type == gosnmp.ObjectIdentifier {
+		case gosnmp.ObjectIdentifier:
 			v := datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
 			lr[n] = v
-		} else {
+		default:
 			v := gosnmp.ToBigInt(variable.Value).Uint64()
 			lr[n] = float64(v)
 		}
