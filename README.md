@@ -11,16 +11,21 @@
 
 ## Status
 
-かなり実用的なレベルになっています。
+かなり実用的なレベルになっています
+
+１日100GBのログを受信する環境でデータベースサイズが5.4TBまで耐えることが
+できました。
 
 - マップ表示
 - 自動発見
 - ポーリング（PING,SNMP,HTTP,TLS,DNS,NTP,VMWare..)
 - MIBブラウザー
-- ログ検索表示（Event Log,Syslog,SNMP TRAP,NetFlow,IPFIX,ARP Watch)
+- ログ受信検索表示（Event Log,Syslog,SNMP TRAP,NetFlow,IPFIX,ARP Watch)
 - レポート（デバイス、ユーザー、サーバー、フロー、IPアドレス）
 - AI分析
 - ログ、ポーリング結果の分析機能(FFT,ヒストグラム、クラスター)
+- TWPCAP連携のレポート（EtherType,TLS,RADIUS,DNS問い合わせ）
+- サーバー証明書レポート（発行者、期限、検証状態）
 
 ![2021-04-10_11-56-00](https://user-images.githubusercontent.com/5225950/114256371-cc61db80-99f3-11eb-8631-c1917554ce26.png)
 
