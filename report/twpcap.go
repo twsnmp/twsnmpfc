@@ -234,6 +234,7 @@ func checkRADIUSReport(twpcap map[string]string) {
 		e.Accept = getNumberFromTWPCAPLog(twpcap["accept"])
 		e.Reject = getNumberFromTWPCAPLog(twpcap["reject"])
 		e.Request = getNumberFromTWPCAPLog(twpcap["request"])
+		e.Challenge = getNumberFromTWPCAPLog(twpcap["challenge"])
 		e.Count = getNumberFromTWPCAPLog(twpcap["count"])
 		e.LastTime = getTimeFromTWPCAPLog(twpcap["lt"])
 		e.FirstTime = getTimeFromTWPCAPLog(twpcap["ft"])
@@ -246,6 +247,7 @@ func checkRADIUSReport(twpcap map[string]string) {
 		Server:    sv,
 		Accept:    getNumberFromTWPCAPLog(twpcap["accept"]),
 		Request:   getNumberFromTWPCAPLog(twpcap["req"]),
+		Challenge: getNumberFromTWPCAPLog(twpcap["challenge"]),
 		Reject:    getNumberFromTWPCAPLog(twpcap["reject"]),
 		Count:     getNumberFromTWPCAPLog(twpcap["count"]),
 		LastTime:  getTimeFromTWPCAPLog(twpcap["lt"]),
@@ -299,7 +301,7 @@ func checkTLSFlowReport(twpcap map[string]string) {
 		Version:    twpcap["maxver"],
 		Cipher:     twpcap["cipher"],
 		ServerLoc:  datastore.GetLoc(sv),
-		ClientLoc:  datastore.GetLoc(sv),
+		ClientLoc:  datastore.GetLoc(cl),
 		FirstTime:  getTimeFromTWPCAPLog(twpcap["ft"]),
 		LastTime:   getTimeFromTWPCAPLog(twpcap["lt"]),
 		UpdateTime: time.Now().UnixNano(),

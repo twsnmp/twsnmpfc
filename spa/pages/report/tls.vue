@@ -86,6 +86,40 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openFlowsChart">
+              <v-list-item-icon>
+                <v-icon>mdi-lan-connect</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>力学モデル</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openFlows3DChart">
+              <v-list-item-icon>
+                <v-icon>mdi-earth</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>地球儀</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openCountryChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>国別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="tls"
           type="csv"
@@ -203,6 +237,14 @@
                 <td>{{ selected.Server }}</td>
               </tr>
               <tr>
+                <td>TLSバージョン</td>
+                <td>{{ selected.Version }}</td>
+              </tr>
+              <tr>
+                <td>暗号スイート</td>
+                <td>{{ selected.Cipher }}</td>
+              </tr>
+              <tr>
                 <td>サーバー位置</td>
                 <td>
                   {{ selected.ServerLocInfo }}
@@ -247,6 +289,51 @@
           </v-btn>
           <v-btn color="normal" dark @click="infoDialog = false">
             <v-icon>mdi-close</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="flowsChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">通信フロー（力学モデル）</span>
+        </v-card-title>
+        <div id="flowsChart" style="width: 1000px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="flowsChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="flows3DChartDialog" persistent max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">通信フロー（位置情報）</span>
+        </v-card-title>
+        <div id="flows3DChart" style="width: 800px; height: 800px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="flows3DChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="countryChartDialog" persistent max-width="950px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">国別</span>
+        </v-card-title>
+        <div id="countryChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="countryChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
         </v-card-actions>
@@ -340,6 +427,10 @@ export default {
       resetDialog: false,
       resetError: false,
       infoDialog: false,
+      filter: '',
+      flowsChartDialog: false,
+      flows3DChartDialog: false,
+      countryChartDialog: false,
     }
   },
   async fetch() {
@@ -415,6 +506,24 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    openFlowsChart() {
+      this.flowsChartDialog = true
+      this.$nextTick(() => {
+        this.over = this.$showTLSFlowsChart('flowsChart', this.tls, this.filter)
+      })
+    },
+    openFlows3DChart() {
+      this.flows3DChartDialog = true
+      this.$nextTick(() => {
+        this.$showTLSFlows3DChart('flows3DChart', this.tls)
+      })
+    },
+    openCountryChart() {
+      this.countryChartDialog = true
+      this.$nextTick(() => {
+        this.$showCountryChart('countryChart', this.tls)
+      })
     },
     formatCount(n) {
       return numeral(n).format('0,0')
