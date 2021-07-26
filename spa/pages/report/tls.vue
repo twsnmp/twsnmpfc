@@ -297,11 +297,22 @@
     <v-dialog v-model="flowsChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
-          <span class="headline">通信フロー（力学モデル）</span>
+          <span class="headline">TLS通信フロー（力学モデル）</span>
         </v-card-title>
+        <v-alert v-model="over" color="error" dense dismissible>
+          対象のTLS通信フローの数が多すぎます。フィルターしてください。
+        </v-alert>
         <div id="flowsChart" style="width: 1000px; height: 700px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn color="primary" @click="filterDialog = true">
+            <v-icon>mdi-magnify</v-icon>
+            フィルター
+          </v-btn>
+          <v-btn v-if="hasFilter" color="normal" @click="clearFilter">
+            <v-icon>mdi-cancel</v-icon>
+            フィルター解除
+          </v-btn>
           <v-btn color="normal" @click="flowsChartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
@@ -312,7 +323,7 @@
     <v-dialog v-model="flows3DChartDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
-          <span class="headline">通信フロー（位置情報）</span>
+          <span class="headline">TLS通信フロー（位置情報）</span>
         </v-card-title>
         <div id="flows3DChart" style="width: 800px; height: 800px"></div>
         <v-card-actions>
@@ -335,6 +346,51 @@
           <v-btn color="normal" @click="countryChartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="filterDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">表示条件</span>
+        </v-card-title>
+        <v-card-text>
+          <v-autocomplete
+            v-model="filter.Clinet"
+            :items="clientList"
+            label="クライアント"
+          ></v-autocomplete>
+          <v-autocomplete
+            v-model="filter.Server"
+            :items="serverList"
+            label="サーバー"
+          ></v-autocomplete>
+          <v-autocomplete
+            v-model="filter.Service"
+            :items="serviceList"
+            label="サービス"
+          ></v-autocomplete>
+          <v-autocomplete
+            v-model="filter.Version"
+            :items="versionList"
+            label="Version"
+          ></v-autocomplete>
+          <v-autocomplete
+            v-model="filter.Cipher"
+            :items="cipherList"
+            label="暗号スイート"
+          ></v-autocomplete>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="doFilter">
+            <v-icon>mdi-magnify</v-icon>
+            適用
+          </v-btn>
+          <v-btn color="normal" dark @click="filterDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -427,10 +483,23 @@ export default {
       resetDialog: false,
       resetError: false,
       infoDialog: false,
-      filter: '',
       flowsChartDialog: false,
       flows3DChartDialog: false,
       countryChartDialog: false,
+      filterDialog: false,
+      filter: {
+        Client: '',
+        Server: '',
+        Service: '',
+        Version: '',
+        Cipher: '',
+      },
+      over: false,
+      clientList: [],
+      serverList: [],
+      serviceList: [],
+      versionList: [],
+      cipherList: [],
     }
   },
   async fetch() {
@@ -438,6 +507,11 @@ export default {
     if (!this.tls) {
       return
     }
+    const svMap = new Map()
+    const clMap = new Map()
+    const svcMap = new Map()
+    const verMap = new Map()
+    const csMap = new Map()
     this.tls.forEach((t) => {
       t.First = this.$timeFormat(
         new Date(t.FirstTime / (1000 * 1000)),
@@ -455,11 +529,32 @@ export default {
       t.ServerLocInfo = loc.LocInfo
       t.Country = loc.Country
       t.Loc = t.ServerLoc
+      svMap.set(t.Server, true)
+      clMap.set(t.Client, true)
+      svcMap.set(t.Service, true)
+      verMap.set(t.Version, true)
+      csMap.set(t.Cipher, true)
     })
+    this.clientList = Array.from(clMap.keys())
+    this.serverList = Array.from(svMap.keys())
+    this.serviceList = Array.from(svcMap.keys())
+    this.versionList = Array.from(verMap.keys())
+    this.cipherList = Array.from(csMap.keys())
     if (this.conf.page > 1) {
       this.options.page = this.conf.page
       this.conf.page = 1
     }
+  },
+  computed: {
+    hasFilter() {
+      return (
+        this.filter.Service ||
+        this.filter.Version ||
+        this.filter.Client ||
+        this.filter.Server ||
+        this.filter.Cipher
+      )
+    },
   },
   created() {
     const c = this.$store.state.report.tls.conf
@@ -510,7 +605,11 @@ export default {
     openFlowsChart() {
       this.flowsChartDialog = true
       this.$nextTick(() => {
-        this.over = this.$showTLSFlowsChart('flowsChart', this.tls, this.filter)
+        this.over = this.over = this.$showTLSFlowsChart(
+          'flowsChart',
+          this.tls,
+          this.filter
+        )
       })
     },
     openFlows3DChart() {
@@ -524,6 +623,20 @@ export default {
       this.$nextTick(() => {
         this.$showCountryChart('countryChart', this.tls)
       })
+    },
+    doFilter() {
+      this.filterDialog = false
+      this.openFlowsChart()
+    },
+    clearFilter() {
+      this.filter = {
+        Service: '',
+        Client: '',
+        Server: '',
+        Version: '',
+        Cipher: '',
+      }
+      this.openFlowsChart()
     },
     formatCount(n) {
       return numeral(n).format('0,0')

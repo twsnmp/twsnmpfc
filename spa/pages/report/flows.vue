@@ -541,8 +541,8 @@ export default {
         ServiceReg: '',
         ClientName: '',
         ClientIP: '',
-        CerverName: '',
-        CerverIP: '',
+        ServerName: '',
+        ServerIP: '',
       },
       filterServiceList: [
         { text: 'DNS', value: 'domain/udp' },
@@ -741,8 +741,8 @@ export default {
         ServiceReg: '',
         ClientName: '',
         ClientIP: '',
-        CerverName: '',
-        CerverIP: '',
+        ServerName: '',
+        ServerIP: '',
       }
       this.doFilter()
     },

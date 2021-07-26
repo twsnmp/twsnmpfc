@@ -202,8 +202,25 @@ const showTLSFlowsChart = (div, tls, filter) => {
     return false
   }
   const nodes = {}
+  let over = false
   tls.forEach((f) => {
-    if (filter && f.Services !== filter) {
+    if (option.series[0].links.length > 2000) {
+      over = true
+      return
+    }
+    if (filter.Service && f.Service !== filter.Service) {
+      return
+    }
+    if (filter.Client && f.Client !== filter.Client) {
+      return
+    }
+    if (filter.Server && f.Server !== filter.Server) {
+      return
+    }
+    if (filter.Version && f.Version !== filter.Version) {
+      return
+    }
+    if (filter.Cipher && f.Cipher !== filter.Cipher) {
       return
     }
     const c = `${f.ClientName}(${f.Client})`
@@ -233,7 +250,7 @@ const showTLSFlowsChart = (div, tls, filter) => {
     option.series[0].links.push({
       source: c,
       target: s,
-      value: f.ServiceInfo + ':' + f.Score.toFixed(2),
+      value: f.Service + ':' + f.Score.toFixed(2),
       lineStyle: {
         color: getScoreColor(f.Score),
       },
@@ -244,6 +261,7 @@ const showTLSFlowsChart = (div, tls, filter) => {
   }
   chart.setOption(option)
   chart.resize()
+  return over
 }
 
 const getScoreColor = (s) => {
@@ -396,7 +414,6 @@ const showTLSFlows3DChart = (div, tls) => {
     count++
     option.series[si].data.push([c, s])
   })
-  console.log(option)
   chart.setOption(option)
   chart.resize()
 }
