@@ -429,8 +429,82 @@ const getLatLong = (loc) => {
   return [a[1], a[0]]
 }
 
+const showTLSVersionPieChart = (div, tls) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b} : {c} ({d}%)',
+    },
+    legend: {
+      data: [],
+      textStyle: {
+        fontSize: 10,
+        color: '#ccc',
+      },
+    },
+    series: [
+      {
+        name: 'TLSバージョン',
+        type: 'pie',
+        radius: '75%',
+        center: ['45%', '50%'],
+        label: {
+          fontSize: 10,
+          color: '#ccc',
+        },
+        data: [],
+      },
+    ],
+  }
+  const verMap = new Map()
+  tls.forEach((t) => {
+    if (!verMap.has(t.Version)) {
+      verMap.set(t.Version, { count: 0 })
+    }
+    verMap.get(t.Version).count++
+  })
+  verMap.forEach((v, k) => {
+    if (option.legend.data.length > 20) {
+      return
+    }
+    option.legend.data.push(k)
+    option.series[0].data.push({
+      name: k,
+      value: v.count,
+    })
+  })
+  chart.setOption(option)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showEtherTypeChart', showEtherTypeChart)
   inject('showTLSFlowsChart', showTLSFlowsChart)
   inject('showTLSFlows3DChart', showTLSFlows3DChart)
+  inject('showTLSVersionPieChart', showTLSVersionPieChart)
 }

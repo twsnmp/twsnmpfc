@@ -118,6 +118,14 @@
                 <v-list-item-title>国別</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="openVersionChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-pie</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>TLSバージョン別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <download-excel
@@ -395,6 +403,21 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="versionChartDialog" persistent max-width="950px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">TLSバージョン別割合</span>
+        </v-card-title>
+        <div id="versionChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="versionChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -500,6 +523,7 @@ export default {
       serviceList: [],
       versionList: [],
       cipherList: [],
+      versionChartDialog: false,
     }
   },
   async fetch() {
@@ -622,6 +646,12 @@ export default {
       this.countryChartDialog = true
       this.$nextTick(() => {
         this.$showCountryChart('countryChart', this.tls)
+      })
+    },
+    openVersionChart() {
+      this.versionChartDialog = true
+      this.$nextTick(() => {
+        this.$showTLSVersionPieChart('versionChart', this.tls)
       })
     },
     doFilter() {
