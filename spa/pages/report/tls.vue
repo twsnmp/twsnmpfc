@@ -126,6 +126,14 @@
                 <v-list-item-title>TLSバージョン別</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="openCipherChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>暗号スイート別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <download-excel
@@ -418,6 +426,21 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="cipherChartDialog" persistent max-width="950px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">暗号スイート別</span>
+        </v-card-title>
+        <div id="cipherChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="cipherChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -524,6 +547,7 @@ export default {
       versionList: [],
       cipherList: [],
       versionChartDialog: false,
+      cipherChartDialog: false,
     }
   },
   async fetch() {
@@ -652,6 +676,12 @@ export default {
       this.versionChartDialog = true
       this.$nextTick(() => {
         this.$showTLSVersionPieChart('versionChart', this.tls)
+      })
+    },
+    openCipherChart() {
+      this.cipherChartDialog = true
+      this.$nextTick(() => {
+        this.$showTLSCipherChart('cipherChart', this.tls)
       })
     },
     doFilter() {
