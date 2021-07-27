@@ -46,6 +46,40 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openDNSChart('name')">
+              <v-list-item-icon>
+                <v-icon>mdi-lan-connect</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>問い合わせ別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openDNSChart('type')">
+              <v-list-item-icon>
+                <v-icon>mdi-earth</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>タイプ別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openDNSChart('server')">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>サーバー別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="dnsq"
           type="csv"
@@ -76,6 +110,51 @@
         </v-btn>
       </v-card-actions>
     </v-card>
+    <v-dialog v-model="nameChartDialog" persistent max-width="950px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">問い合わせ別</span>
+        </v-card-title>
+        <div id="nameChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="nameChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="typeChartDialog" persistent max-width="950px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">タイプ別</span>
+        </v-card-title>
+        <div id="typeChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="typeChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="serverChartDialog" persistent max-width="950px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">サーバー別</span>
+        </v-card-title>
+        <div id="serverChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="serverChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -139,6 +218,9 @@ export default {
         itemsPerPage: 15,
       },
       options: {},
+      nameChartDialog: false,
+      typeChartDialog: false,
+      serverChartDialog: false,
     }
   },
   async fetch() {
@@ -175,6 +257,24 @@ export default {
     this.$store.commit('report/dnsq/setConf', this.conf)
   },
   methods: {
+    openDNSChart(type) {
+      switch (type) {
+        case 'server':
+          this.serverChartDialog = true
+          break
+        case 'name':
+          this.nameChartDialog = true
+          break
+        case 'type':
+          this.typeChartDialog = true
+          break
+        default:
+          return
+      }
+      this.$nextTick(() => {
+        this.$showDNSChart(type + 'Chart', this.dnsq)
+      })
+    },
     formatCount(n) {
       return numeral(n).format('0,0')
     },

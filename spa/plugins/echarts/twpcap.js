@@ -645,10 +645,138 @@ const showTLSCipherChart = (div, tls) => {
   chart.resize()
 }
 
+const showDNSChart = (div, dns) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = {
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    color: ['#e31a1c', '#1f78b4'],
+    legend: {
+      top: 15,
+      textStyle: {
+        fontSize: 10,
+        color: '#ccc',
+      },
+      data: ['変化', '固定'],
+    },
+    grid: {
+      top: '10%',
+      left: '5%',
+      right: '10%',
+      bottom: '10%',
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'value',
+      name: '回数',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    yAxis: {
+      type: 'category',
+      axisLine: {
+        show: false,
+      },
+      axisTick: {
+        show: false,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+      data: [],
+    },
+    series: [
+      {
+        name: '変化',
+        type: 'bar',
+        stack: '回数',
+        data: [],
+      },
+      {
+        name: '固定',
+        type: 'bar',
+        stack: '回数',
+        data: [],
+      },
+    ],
+  }
+  if (!dns) {
+    return
+  }
+  const kn =
+    div === 'nameChart' ? 'Name' : div === 'typeChart' ? 'Type' : 'Server'
+
+  const m = new Map()
+  dns.forEach((d) => {
+    const k = d[kn]
+    if (!m.has(k)) {
+      m.set(k, [0, 0])
+    }
+    m.get(k)[0] += d.Change
+    m.get(k)[1] += d.Count - d.Change
+  })
+  const keys = Array.from(m.keys())
+  keys.sort(function (a, b) {
+    return m.get(b)[0] - m.get(a)[0]
+  })
+  let i = keys.length - 1
+  if (i > 49) {
+    i = 49
+  }
+  for (; i >= 0; i--) {
+    option.yAxis.data.push(keys[i])
+    option.series[0].data.push(m.get(keys[i])[0])
+    option.series[1].data.push(m.get(keys[i])[1])
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showEtherTypeChart', showEtherTypeChart)
   inject('showTLSFlowsChart', showTLSFlowsChart)
   inject('showTLSFlows3DChart', showTLSFlows3DChart)
   inject('showTLSVersionPieChart', showTLSVersionPieChart)
   inject('showTLSCipherChart', showTLSCipherChart)
+  inject('showDNSChart', showDNSChart)
 }
