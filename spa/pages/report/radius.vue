@@ -77,6 +77,48 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openRADIUSFlowsChart">
+              <v-list-item-icon>
+                <v-icon>mdi-lan-connect</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>力学モデル</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openRADIUSBarChart('Client')">
+              <v-list-item-icon>
+                <v-icon>mdi-earth</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>クライアント別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openRADIUSBarChart('Server')">
+              <v-list-item-icon>
+                <v-icon>mdi-earth</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>サーバー別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openRADIUSBarChart('ClientToServer')">
+              <v-list-item-icon>
+                <v-icon>mdi-earth</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>クライアント/サーバー間</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="radius"
           type="csv"
@@ -217,6 +259,36 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="flowsChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">RADIUS通信フロー（力学モデル）</span>
+        </v-card-title>
+        <div id="flowsChart" style="width: 1000px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="flowsChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="barChartDialog" persistent max-width="950px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">{{ barChartTitle }}</span>
+        </v-card-title>
+        <div id="barChart" style="width: 900px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="barChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -273,6 +345,9 @@ export default {
       resetDialog: false,
       resetError: false,
       infoDialog: false,
+      flowsChartDialog: false,
+      barChartDialog: false,
+      barChartTitle: '',
     }
   },
   async fetch() {
@@ -340,6 +415,31 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    openRADIUSFlowsChart() {
+      this.flowsChartDialog = true
+      this.$nextTick(() => {
+        this.$showRADIUSFlowsChart('flowsChart', this.radius)
+      })
+    },
+    openRADIUSBarChart(type) {
+      switch (type) {
+        case 'Server':
+          this.barChartTitle = 'RADIUSサーバー別'
+          break
+        case 'Client':
+          this.barChartTitle = 'RADIUSクライアント別'
+          break
+        case 'ClientToServer':
+          this.barChartTitle = 'RADIUSクライアント/サーバー間'
+          break
+        default:
+          return
+      }
+      this.barChartDialog = true
+      this.$nextTick(() => {
+        this.$showRADIUSBarChart('barChart', type, this.radius)
+      })
     },
     formatCount(n) {
       return numeral(n).format('0,0')

@@ -777,6 +777,253 @@ const showDNSChart = (div, dns) => {
   chart.resize()
 }
 
+const showRADIUSFlowsChart = (div, radius) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = {
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    grid: {
+      left: '7%',
+      right: '5%',
+      bottom: '5%',
+      containLabel: true,
+    },
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: (params) => {
+        return params.name + '<br/>' + params.value
+      },
+      textStyle: {
+        fontSize: 10,
+      },
+      position: 'right',
+    },
+    animationDurationUpdate: 1500,
+    animationEasingUpdate: 'quinticInOut',
+    series: [
+      {
+        type: 'graph',
+        layout: 'force',
+        symbolSize: 6,
+        roam: true,
+        label: {
+          show: false,
+        },
+        data: [],
+        links: [],
+        lineStyle: {
+          width: 1,
+          curveness: 0,
+        },
+      },
+    ],
+  }
+  if (!radius) {
+    return false
+  }
+  const nodes = {}
+  radius.forEach((f) => {
+    if (option.series[0].links.length > 2000) {
+      return
+    }
+    const c = `${f.ClientName}(${f.Client})`
+    const s = `${f.ServerName}(${f.Server})`
+    if (!nodes[s]) {
+      nodes[s] = {
+        name: s,
+        draggable: true,
+        value: f.ServerLoc,
+        label: {
+          show: false,
+        },
+      }
+    }
+    if (!nodes[c]) {
+      nodes[c] = {
+        name: c,
+        draggable: true,
+        value: f.ClientLoc,
+        label: {
+          show: false,
+        },
+      }
+    }
+    option.series[0].links.push({
+      source: c,
+      target: s,
+      value: f.Accept + ':' + f.Reject + ':' + f.Score.toFixed(2),
+      lineStyle: {
+        color: getScoreColor(f.Score),
+      },
+    })
+  })
+  for (const k in nodes) {
+    option.series[0].data.push(nodes[k])
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
+const showRADIUSBarChart = (div, type, radius) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = {
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + type + div },
+      },
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    color: ['#e31a1c', '#1f78b4'],
+    legend: {
+      top: 15,
+      textStyle: {
+        fontSize: 10,
+        color: '#ccc',
+      },
+      data: ['Reject', 'Accept'],
+    },
+    grid: {
+      top: '10%',
+      left: '5%',
+      right: '10%',
+      bottom: '10%',
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'value',
+      name: '回数',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    yAxis: {
+      type: 'category',
+      axisLine: {
+        show: false,
+      },
+      axisTick: {
+        show: false,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+      data: [],
+    },
+    series: [
+      {
+        name: 'Reject',
+        type: 'bar',
+        stack: '回数',
+        data: [],
+      },
+      {
+        name: 'Accept',
+        type: 'bar',
+        stack: '回数',
+        data: [],
+      },
+    ],
+  }
+  if (!radius) {
+    return
+  }
+
+  const m = new Map()
+  radius.forEach((r) => {
+    let k
+    switch (type) {
+      case 'Client':
+        k = r.Client
+        break
+      case 'Server':
+        k = r.Server
+        break
+      case 'ClientToServer':
+        k = r.Client + ':' + r.Server
+        break
+      default:
+        return
+    }
+    if (!m.has(k)) {
+      m.set(k, [0, 0])
+    }
+    m.get(k)[0] += r.Reject
+    m.get(k)[1] += r.Accept
+  })
+  const keys = Array.from(m.keys())
+  keys.sort((a, b) => {
+    if (m.get(b)[0] === m.get(a)[0]) {
+      return m.get(b)[1] - m.get(a)[1]
+    }
+    return m.get(b)[0] - m.get(a)[0]
+  })
+  let i = keys.length - 1
+  if (i > 49) {
+    i = 49
+  }
+  for (; i >= 0; i--) {
+    option.yAxis.data.push(keys[i])
+    option.series[0].data.push(m.get(keys[i])[0])
+    option.series[1].data.push(m.get(keys[i])[1])
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showEtherTypeChart', showEtherTypeChart)
   inject('showTLSFlowsChart', showTLSFlowsChart)
@@ -784,4 +1031,6 @@ export default (context, inject) => {
   inject('showTLSVersionPieChart', showTLSVersionPieChart)
   inject('showTLSCipherChart', showTLSCipherChart)
   inject('showDNSChart', showDNSChart)
+  inject('showRADIUSFlowsChart', showRADIUSFlowsChart)
+  inject('showRADIUSBarChart', showRADIUSBarChart)
 }
