@@ -159,8 +159,12 @@ const showTLSFlowsChart = (div, tls, filter) => {
     tooltip: {
       trigger: 'item',
       formatter: (params) => {
-        return params.name + ':' + params.value
+        return params.name + '<br/>' + params.value
       },
+      textStyle: {
+        fontSize: 10,
+      },
+      position: 'right',
     },
     legend: [
       {
@@ -250,7 +254,8 @@ const showTLSFlowsChart = (div, tls, filter) => {
     option.series[0].links.push({
       source: c,
       target: s,
-      value: f.Service + ':' + f.Score.toFixed(2),
+      value:
+        f.Service + ':' + f.Version + ':' + f.Cipher + ':' + f.Score.toFixed(2),
       lineStyle: {
         color: getScoreColor(f.Score),
       },

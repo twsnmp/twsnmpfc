@@ -38,8 +38,12 @@ const showFlowsChart = (div, flows, filter) => {
     tooltip: {
       trigger: 'item',
       formatter: (params) => {
-        return params.name + ':' + params.value
+        return params.name + '<br/>' + params.value
       },
+      textStyle: {
+        fontSize: 10,
+      },
+      position: 'right',
     },
     legend: [
       {
