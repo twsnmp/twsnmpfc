@@ -260,7 +260,7 @@ func checkRADIUSReport(twpcap map[string]string) {
 	if e != nil {
 		e.Accept = getNumberFromTWPCAPLog(twpcap["accept"])
 		e.Reject = getNumberFromTWPCAPLog(twpcap["reject"])
-		e.Request = getNumberFromTWPCAPLog(twpcap["request"])
+		e.Request = getNumberFromTWPCAPLog(twpcap["req"])
 		e.Challenge = getNumberFromTWPCAPLog(twpcap["challenge"])
 		e.Count = getNumberFromTWPCAPLog(twpcap["count"])
 		e.LastTime = getTimeFromTWPCAPLog(twpcap["lt"])

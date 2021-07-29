@@ -824,6 +824,8 @@ const showRADIUSFlowsChart = (div, radius) => {
         type: 'graph',
         layout: 'force',
         symbolSize: 6,
+        edgeSymbol: ['circle', 'arrow'],
+        edgeSymbolSize: [2, 8],
         roam: true,
         label: {
           show: false,
@@ -851,21 +853,25 @@ const showRADIUSFlowsChart = (div, radius) => {
       nodes[s] = {
         name: s,
         draggable: true,
-        value: f.ServerLoc,
+        value: f.Count,
         label: {
           show: false,
         },
       }
+    } else {
+      nodes[s].value += f.Count
     }
     if (!nodes[c]) {
       nodes[c] = {
         name: c,
         draggable: true,
-        value: f.ClientLoc,
+        value: f.Count,
         label: {
           show: false,
         },
       }
+    } else {
+      nodes[c].value += f.Count
     }
     option.series[0].links.push({
       source: c,
