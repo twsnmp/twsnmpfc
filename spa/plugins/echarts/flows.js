@@ -118,7 +118,7 @@ const showFlowsChart = (div, flows, filter) => {
       if (!hit) return
     }
     if (filter.ClientNameReg) {
-      if (!f.ClientName.match(filter.ClinetNameReg)) {
+      if (!f.ClientName.match(filter.ClientNameReg)) {
         return
       }
     }

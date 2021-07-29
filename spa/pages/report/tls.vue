@@ -373,7 +373,7 @@
         </v-card-title>
         <v-card-text>
           <v-autocomplete
-            v-model="filter.Clinet"
+            v-model="filter.Client"
             :items="clientList"
             label="クライアント"
           ></v-autocomplete>
@@ -577,14 +577,26 @@ export default {
       t.ServerLocInfo = loc.LocInfo
       t.Country = loc.Country
       t.Loc = t.ServerLoc
-      svMap.set(t.Server, true)
-      clMap.set(t.Client, true)
+      svMap.set(t.Server, t.ServerName)
+      clMap.set(t.Client, t.ClientName)
       svcMap.set(t.Service, true)
       verMap.set(t.Version, true)
       csMap.set(t.Cipher, true)
     })
-    this.clientList = Array.from(clMap.keys())
-    this.serverList = Array.from(svMap.keys())
+    this.clientList = []
+    clMap.forEach((v, k) => {
+      this.clientList.push({
+        text: v,
+        value: k,
+      })
+    })
+    this.serverList = []
+    svMap.forEach((v, k) => {
+      this.serverList.push({
+        text: v,
+        value: k,
+      })
+    })
     this.serviceList = Array.from(svcMap.keys())
     this.versionList = Array.from(verMap.keys())
     this.cipherList = Array.from(csMap.keys())
