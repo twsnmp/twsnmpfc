@@ -11,13 +11,13 @@ import (
 )
 
 var (
-	etherType    = 0
-	ipToMacCount = 0
-	ntpCount     = 0
-	dhcpCount    = 0
-	dnsCount     = 0
-	radiusCount  = 0
-	tlsCount     = 0
+	etherTypeCount = 0
+	ipToMacCount   = 0
+	ntpCount       = 0
+	dhcpCount      = 0
+	dnsCount       = 0
+	radiusCount    = 0
+	tlsCount       = 0
 )
 
 func ReportTWPCAP(log map[string]interface{}) {
@@ -48,18 +48,25 @@ func checkTWPCAPReport(log map[string]interface{}) {
 	switch t {
 	case "IPToMAC":
 		checkIPTOMACReport(twpcapMap)
+		ipToMacCount++
 	case "EtherType":
 		checkEtherTypeReport(h, twpcapMap)
+		etherTypeCount++
 	case "DNS":
 		checkDNSReport(h, twpcapMap)
+		dnsCount++
 	case "DHCP":
 		checkDHCPReport(twpcapMap)
+		dhcpCount++
 	case "NTP":
 		checkNTPReport(twpcapMap)
+		ntpCount++
 	case "RADIUS":
 		checkRADIUSReport(twpcapMap)
+		radiusCount++
 	case "TLSFlow":
 		checkTLSFlowReport(twpcapMap)
+		tlsCount++
 	}
 }
 
