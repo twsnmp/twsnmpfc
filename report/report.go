@@ -149,6 +149,8 @@ func reportBackend(ctx context.Context) {
 				last = time.Now().UnixNano()
 				log.Printf("end calc report score")
 				clearIpToNameCache()
+				log.Printf("twpcap report ipToMac=%d dns=%d dhcp=%d ntp=%d tls=%d radius=%d",
+					ipToMacCount, dnsCount, dhcpCount, ntpCount, tlsCount, radiusCount)
 			}
 		case dr := <-deviceReportCh:
 			checkDeviceReport(dr)

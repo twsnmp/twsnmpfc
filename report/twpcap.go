@@ -10,6 +10,16 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
+var (
+	etherType    = 0
+	ipToMacCount = 0
+	ntpCount     = 0
+	dhcpCount    = 0
+	dnsCount     = 0
+	radiusCount  = 0
+	tlsCount     = 0
+)
+
 func ReportTWPCAP(log map[string]interface{}) {
 	twpcapReportCh <- log
 }
@@ -238,20 +248,22 @@ func checkRADIUSReport(twpcap map[string]string) {
 		e.Count = getNumberFromTWPCAPLog(twpcap["count"])
 		e.LastTime = getTimeFromTWPCAPLog(twpcap["lt"])
 		e.FirstTime = getTimeFromTWPCAPLog(twpcap["ft"])
+		e.UpdateTime = time.Now().UnixNano()
 		setRADIUSFlowPenalty(e)
 		return
 	}
 	e = &datastore.RADIUSFlowEnt{
-		ID:        id,
-		Client:    cl,
-		Server:    sv,
-		Accept:    getNumberFromTWPCAPLog(twpcap["accept"]),
-		Request:   getNumberFromTWPCAPLog(twpcap["req"]),
-		Challenge: getNumberFromTWPCAPLog(twpcap["challenge"]),
-		Reject:    getNumberFromTWPCAPLog(twpcap["reject"]),
-		Count:     getNumberFromTWPCAPLog(twpcap["count"]),
-		LastTime:  getTimeFromTWPCAPLog(twpcap["lt"]),
-		FirstTime: getTimeFromTWPCAPLog(twpcap["ft"]),
+		ID:         id,
+		Client:     cl,
+		Server:     sv,
+		Accept:     getNumberFromTWPCAPLog(twpcap["accept"]),
+		Request:    getNumberFromTWPCAPLog(twpcap["req"]),
+		Challenge:  getNumberFromTWPCAPLog(twpcap["challenge"]),
+		Reject:     getNumberFromTWPCAPLog(twpcap["reject"]),
+		Count:      getNumberFromTWPCAPLog(twpcap["count"]),
+		LastTime:   getTimeFromTWPCAPLog(twpcap["lt"]),
+		FirstTime:  getTimeFromTWPCAPLog(twpcap["ft"]),
+		UpdateTime: time.Now().UnixNano(),
 	}
 	e.ClientName, e.ClientNodeID = findNodeInfoFromIP(cl)
 	e.ServerName, e.ServerNodeID = findNodeInfoFromIP(sv)
