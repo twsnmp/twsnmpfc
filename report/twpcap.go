@@ -18,19 +18,23 @@ var (
 	dnsCount       = 0
 	radiusCount    = 0
 	tlsCount       = 0
+	statsCount     = 0
+	otherCount     = 0
 )
 
-func ReportTWPCAP(log map[string]interface{}) {
-	twpcapReportCh <- log
+func ReportTWPCAP(l map[string]interface{}) {
+	twpcapReportCh <- l
 }
 
-func checkTWPCAPReport(log map[string]interface{}) {
-	h, ok := log["hostname"].(string)
+func checkTWPCAPReport(l map[string]interface{}) {
+	h, ok := l["hostname"].(string)
 	if !ok {
+		log.Printf("twpcap no hostname %v", l)
 		return
 	}
-	m, ok := log["content"].(string)
+	m, ok := l["content"].(string)
 	if !ok {
+		log.Printf("twpcap no content %v", l)
 		return
 	}
 	kvs := strings.Split(m, ",")
@@ -43,6 +47,7 @@ func checkTWPCAPReport(log map[string]interface{}) {
 	}
 	t, ok := twpcapMap["type"]
 	if !ok {
+		log.Printf("twpcap no type %v", twpcapMap)
 		return
 	}
 	switch t {
@@ -67,6 +72,11 @@ func checkTWPCAPReport(log map[string]interface{}) {
 	case "TLSFlow":
 		checkTLSFlowReport(twpcapMap)
 		tlsCount++
+	case "Stats":
+		statsCount++
+	default:
+		log.Printf("twpcap unkown type %v", twpcapMap)
+		otherCount++
 	}
 }
 

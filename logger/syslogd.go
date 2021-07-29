@@ -16,7 +16,7 @@ import (
 )
 
 func syslogd(stopCh chan bool) {
-	syslogCh := make(syslog.LogPartsChannel)
+	syslogCh := make(syslog.LogPartsChannel, 2000)
 	server := syslog.NewServer()
 	server.SetFormat(syslog.Automatic)
 	server.SetHandler(syslog.NewChannelHandler(syslogCh))
@@ -44,6 +44,8 @@ func syslogd(stopCh chan bool) {
 						Type: "syslog",
 						Log:  string(s),
 					}
+				} else {
+					log.Printf("syslog Marshal err=%v", err)
 				}
 			}
 		}
