@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ type NodeEnt struct {
 	X         int
 	Y         int
 	IP        string
+	IPv6      string
 	MAC       string
 	SnmpMode  string
 	Community string
@@ -87,6 +89,7 @@ func AddNode(n *NodeEnt) error {
 			break
 		}
 	}
+	setIPv6AndMAC(n)
 	s, err := json.Marshal(n)
 	if err != nil {
 		return err
@@ -115,6 +118,34 @@ func UpdateNode(n *NodeEnt) error {
 		return b.Put([]byte(n.ID), s)
 	})
 	return nil
+}
+
+func setIPv6AndMAC(n *NodeEnt) {
+	if n.MAC == "" {
+		ForEachDevices(func(d *DeviceEnt) bool {
+			if d.IP == n.IP {
+				mac := d.ID
+				v := FindVendor(mac)
+				if v != "" {
+					mac += fmt.Sprintf("(%s)", v)
+				}
+				n.MAC = mac
+				return false
+			}
+			return true
+		})
+	}
+	if n.IPv6 == "" && n.MAC != "" {
+		ForEachIPReport(func(i *IPReportEnt) bool {
+			if strings.HasPrefix(n.MAC, i.MAC) && strings.Contains(i.IP, ":") {
+				if n.IPv6 != "" {
+					n.IPv6 += ","
+					n.IPv6 += i.IP
+				}
+			}
+			return true
+		})
+	}
 }
 
 func DeleteNode(nodeID string) error {
@@ -163,18 +194,33 @@ func GetNode(nodeID string) *NodeEnt {
 
 func FindNodeFromIP(ip string) *NodeEnt {
 	var ret *NodeEnt
-	nodes.Range(func(_, p interface{}) bool {
-		if p.(*NodeEnt).IP == ip {
-			ret = p.(*NodeEnt)
-			return false
-		}
-		return true
-	})
+	if strings.Contains(ip, ":") {
+		// IPv6
+		ForEachNodes(func(n *NodeEnt) bool {
+			if strings.Contains(n.IPv6, ip) {
+				ret = n
+				return false
+			}
+			return true
+		})
+	} else {
+		// IPv4
+		ForEachNodes(func(n *NodeEnt) bool {
+			if n.IP == ip {
+				ret = n
+				return false
+			}
+			return true
+		})
+	}
 	return ret
 }
 
 func FindNodeFromMAC(mac string) *NodeEnt {
 	var ret *NodeEnt
+	if mac == "" {
+		return ret
+	}
 	nodes.Range(func(_, p interface{}) bool {
 		if strings.HasPrefix(p.(*NodeEnt).MAC, mac) {
 			ret = p.(*NodeEnt)
@@ -188,6 +234,54 @@ func FindNodeFromMAC(mac string) *NodeEnt {
 func ForEachNodes(f func(*NodeEnt) bool) {
 	nodes.Range(func(_, p interface{}) bool {
 		return f(p.(*NodeEnt))
+	})
+}
+
+func CheckNodeAddress(ip, mac, oldmac string) {
+	if strings.Contains(ip, ":") {
+		// IPv6
+		ForEachNodes(func(n *NodeEnt) bool {
+			if oldmac != "" && strings.HasPrefix(n.MAC, oldmac) && strings.Contains(n.IPv6, ip) {
+				ipv6s := strings.Split(n.IPv6, ",")
+				n.IPv6 = ""
+				for _, ipv6 := range ipv6s {
+					if ipv6 == ip {
+						continue
+					}
+					if n.IPv6 != "" {
+						n.IPv6 += ","
+					}
+					n.IPv6 += ipv6
+				}
+			}
+			if strings.HasPrefix(n.MAC, mac) {
+				if !strings.Contains(n.IPv6, ip) {
+					if n.IPv6 != "" {
+						n.IPv6 += ","
+					}
+					n.IPv6 += ip
+				}
+				if oldmac == "" {
+					return false
+				}
+			}
+			return true
+		})
+		return
+	}
+	// IPv4
+	ForEachNodes(func(n *NodeEnt) bool {
+		if n.IP == ip {
+			if !strings.Contains(n.MAC, mac) {
+				v := FindVendor(mac)
+				if v != "" {
+					mac += fmt.Sprintf("(%s)", v)
+				}
+				n.MAC = mac
+			}
+			return false
+		}
+		return true
 	})
 }
 

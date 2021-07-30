@@ -210,6 +210,10 @@
                 <td>{{ editNode.IP }}</td>
               </tr>
               <tr>
+                <td>IPv6アドレス</td>
+                <td>{{ editNode.IPv6 }}</td>
+              </tr>
+              <tr>
                 <td>MACアドレス</td>
                 <td>{{ editNode.MAC }}</td>
               </tr>

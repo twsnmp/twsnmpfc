@@ -155,7 +155,7 @@ func setup(p *WebAPI) {
 	r.POST("/report/flows/reset", resetFlows)
 	r.GET("/report/ips", getIPReport)
 	r.DELETE("/report/ip/:ip", deleteIPReport)
-	r.POST("/report/flows/reset", resetIPReport)
+	r.POST("/report/ips/reset", resetIPReport)
 	r.GET("/report/address/:addr", getAddressInfo)
 	r.GET("/report/unknownport", getUnknownPortList)
 	r.GET("/report/ether", getEtherType)

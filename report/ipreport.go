@@ -12,6 +12,11 @@ import (
 func ResetIPReportScore() {
 	datastore.ForEachIPReport(func(ip *datastore.IPReportEnt) bool {
 		ip.Name, ip.NodeID = findNodeInfoFromIP(ip.IP)
+		if ip.Name == ip.IP {
+			if n := datastore.FindNodeFromMAC(ip.MAC); n != nil {
+				ip.Name = n.Name
+			}
+		}
 		setIPReportPenalty(ip)
 		ip.UpdateTime = time.Now().UnixNano()
 		return true
@@ -33,9 +38,15 @@ func checkIPReport(ip, mac string, t int64) {
 			return
 		}
 		if mac != "" && i.MAC != mac {
+			datastore.CheckNodeAddress(ip, mac, i.MAC)
 			i.MAC = mac
 			i.Change++
 			i.Name, i.NodeID = findNodeInfoFromIP(ip)
+			if i.Name == i.IP {
+				if n := datastore.FindNodeFromMAC(mac); n != nil {
+					i.Name = n.Name
+				}
+			}
 			setIPReportPenalty(i)
 		}
 		i.Count++
@@ -55,8 +66,14 @@ func checkIPReport(ip, mac string, t int64) {
 		UpdateTime: time.Now().UnixNano(),
 	}
 	i.Name, i.NodeID = findNodeInfoFromIP(ip)
+	if i.Name == i.IP {
+		if n := datastore.FindNodeFromMAC(mac); n != nil {
+			i.Name = n.Name
+		}
+	}
 	setIPReportPenalty(i)
 	datastore.AddIPReport(i)
+	datastore.CheckNodeAddress(ip, mac, "")
 }
 
 func setIPReportPenalty(i *datastore.IPReportEnt) {
