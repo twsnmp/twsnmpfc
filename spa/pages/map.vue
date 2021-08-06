@@ -634,9 +634,7 @@ export default {
       this.$router.push({ path: '/mibbr/' + this.editNode.ID })
     },
     openURL(url) {
-      if (this.editNode.URL) {
-        window.open(url, '_blank')
-      }
+      window.open(url, '_blank')
     },
     addLine() {
       this.$axios
