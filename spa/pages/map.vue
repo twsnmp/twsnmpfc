@@ -354,6 +354,14 @@
             <v-list-item-title>ログ</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item v-for="(url, i) in urls" :key="i" @click="openURL(url)">
+          <v-list-item-icon>
+            <v-icon>mdi-link</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>{{ url }}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-menu>
   </v-row>
@@ -411,6 +419,7 @@ export default {
         { text: '4', value: 4 },
         { text: '5', value: 5 },
       ],
+      urls: [],
     }
   },
   async fetch() {
@@ -518,6 +527,13 @@ export default {
             }
             this.copyFrom = ''
             this.editNode = this.map.Nodes[r.Node]
+            this.urls = []
+            this.editNode.URL.split(',').forEach((u) => {
+              u = u.trim()
+              if (u !== '') {
+                this.urls.push(u)
+              }
+            })
             this.deleteNodes = [r.Node]
             this.showNodeContextMenu = true
           }
@@ -617,6 +633,11 @@ export default {
     showMIBBr() {
       this.$router.push({ path: '/mibbr/' + this.editNode.ID })
     },
+    openURL(url) {
+      if (this.editNode.URL) {
+        window.open(url, '_blank')
+      }
+    },
     addLine() {
       this.$axios
         .post('/api/line/add', this.editLine)
@@ -657,3 +678,15 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+/* コンテキストメニューの高さ調整 */
+.v-list--dense .v-list-item .v-list-item__icon {
+  height: 20px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+.v-list--dense .v-list-item {
+  min-height: 30px;
+}
+</style>
