@@ -51,6 +51,8 @@ var (
 	tlsFlows    sync.Map
 	dnsq        sync.Map
 	certs       sync.Map
+	sensors     sync.Map
+	wineventIDs sync.Map
 	// MAP Changed check
 	stateChangedNodes sync.Map
 	lastLogAdded      time.Time
@@ -243,7 +245,10 @@ func openDB(path string) error {
 func initDB() error {
 	buckets := []string{"config", "nodes", "lines", "pollings", "logs", "pollingLogs",
 		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report", "grok"}
-	reports := []string{"devices", "users", "flows", "servers", "ips", "ether", "dns", "radius", "tls", "cert"}
+	reports := []string{"devices", "users", "flows", "servers", "ips",
+		"ether", "dns", "radius", "tls", "cert",
+		"sensor", "wineventid",
+	}
 	initConf()
 	return db.Update(func(tx *bbolt.Tx) error {
 		for _, b := range buckets {

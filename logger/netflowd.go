@@ -77,10 +77,12 @@ func netflowd(stopCh chan bool) {
 				case *netflow5.Packet:
 					{
 						logNetflow(p)
+						report.UpdateFlowSensor(remote.IP.String(), "netflow", len(p.Records))
 					}
 				case *ipfix.Message:
 					{
-						logIPFIX(p)
+						r := logIPFIX(p)
+						report.UpdateFlowSensor(remote.IP.String(), "ipfix", r)
 					}
 				}
 			}
@@ -88,12 +90,14 @@ func netflowd(stopCh chan bool) {
 	}
 }
 
-func logIPFIX(p *ipfix.Message) {
+func logIPFIX(p *ipfix.Message) int {
+	r := 0
 	for _, ds := range p.DataSets {
 		if ds.Records == nil {
 			continue
 		}
 		for _, dr := range ds.Records {
+			r++
 			var record = make(map[string]interface{})
 			for _, f := range dr.Fields {
 				if f.Translated != nil {
@@ -197,6 +201,7 @@ func logIPFIX(p *ipfix.Message) {
 			}
 		}
 	}
+	return r
 }
 
 func logNetflow(p *netflow5.Packet) {

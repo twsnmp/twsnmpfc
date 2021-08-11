@@ -23,6 +23,7 @@ var (
 	flowReportCh   chan *flowReportEnt
 	checkCertCh    chan bool
 	twpcapReportCh chan map[string]interface{}
+	twWinLogCh     chan map[string]interface{}
 	allowDNS       map[string]bool
 	allowDHCP      map[string]bool
 	allowMail      map[string]bool
@@ -41,6 +42,7 @@ func Start(ctx context.Context) error {
 	userReportCh = make(chan *userReportEnt, 100)
 	flowReportCh = make(chan *flowReportEnt, 500)
 	twpcapReportCh = make(chan map[string]interface{}, 100)
+	twWinLogCh = make(chan map[string]interface{}, 100)
 	checkCertCh = make(chan bool, 5)
 	go reportBackend(ctx)
 	return nil
@@ -107,7 +109,6 @@ func UpdateReportConf() {
 			p = strings.ReplaceAll(p, ".", "\\.")
 			p = "^" + strings.ReplaceAll(p, "*", ".*")
 		}
-		log.Printf("allowLocalIP=%s", p)
 		if reg, err := regexp.Compile(p); err == nil {
 			allowLocalIP = reg
 		} else {
@@ -144,6 +145,7 @@ func reportBackend(ctx context.Context) {
 				checkCertCh <- true
 				log.Printf("start calc report score")
 				checkOldReport()
+				setSensorState()
 				calcScore()
 				datastore.SaveReport(last)
 				last = time.Now().UnixNano()
@@ -160,6 +162,8 @@ func reportBackend(ctx context.Context) {
 			checkFlowReport(fr)
 		case twpcap := <-twpcapReportCh:
 			checkTWPCAPReport(twpcap)
+		case twwinlog := <-twWinLogCh:
+			checkTWWinLogReport(twwinlog)
 		case <-checkCertCh:
 			checkCerts()
 		}

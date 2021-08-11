@@ -36,8 +36,14 @@ func syslogd(stopCh chan bool) {
 			{
 				s, err := json.Marshal(sl)
 				if err == nil {
-					if tag, ok := sl["tag"].(string); ok && tag == "twpcap" {
-						report.ReportTWPCAP(sl)
+					tag, ok := sl["tag"].(string)
+					if ok {
+						switch tag {
+						case "twpcap":
+							report.ReportTWPCAP(sl)
+						case "twwinlog":
+							report.ReportTwWinLog(sl)
+						}
 					}
 					logCh <- &datastore.LogEnt{
 						Time: time.Now().UnixNano(),

@@ -238,6 +238,11 @@ export default {
           title: 'サーバー証明書',
           to: '/report/cert',
         },
+        {
+          icon: 'mdi-webcam',
+          title: 'センサー',
+          to: '/report/sensor',
+        },
       ],
       logMenus: [
         {

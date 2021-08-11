@@ -113,6 +113,16 @@ func LoadReport() error {
 				return nil
 			})
 		}
+		b = r.Bucket([]byte("sensor"))
+		if b != nil {
+			_ = b.ForEach(func(k, v []byte) error {
+				var e SensorEnt
+				if err := json.Unmarshal(v, &e); err == nil {
+					sensors.Store(e.ID, &e)
+				}
+				return nil
+			})
+		}
 		return nil
 	})
 }
@@ -293,6 +303,27 @@ func SaveReport(last int64) error {
 			}
 			return true
 		})
+		r = b.Bucket([]byte("sensor"))
+		sensors.Range(func(k, v interface{}) bool {
+			e, ok := v.(*SensorEnt)
+			if !ok {
+				return true
+			}
+			if e.LastTime < last {
+				return true
+			}
+			s, err := json.Marshal(e)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+				return true
+			}
+			log.Println(r, e.ID)
+			err = r.Put([]byte(e.ID), s)
+			if err != nil {
+				log.Printf("Save Report err=%v", err)
+			}
+			return true
+		})
 		return nil
 	})
 }
@@ -332,6 +363,8 @@ func DeleteReport(report, id string) error {
 		tlsFlows.Delete(id)
 	case "cert":
 		certs.Delete(id)
+	case "sensor":
+		sensors.Delete(id)
 	}
 	return nil
 }
@@ -403,6 +436,18 @@ func ClearReport(r string) error {
 	if r == "tls" {
 		tlsFlows.Range(func(k, v interface{}) bool {
 			tlsFlows.Delete(k)
+			return true
+		})
+	}
+	if r == "cert" {
+		certs.Range(func(k, v interface{}) bool {
+			certs.Delete(k)
+			return true
+		})
+	}
+	if r == "sensor" {
+		sensors.Range(func(k, v interface{}) bool {
+			sensors.Delete(k)
 			return true
 		})
 	}

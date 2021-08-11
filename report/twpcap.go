@@ -3,7 +3,6 @@ package report
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,7 +17,6 @@ var (
 	dnsCount       = 0
 	radiusCount    = 0
 	tlsCount       = 0
-	statsCount     = 0
 	otherCount     = 0
 )
 
@@ -53,27 +51,22 @@ func checkTWPCAPReport(l map[string]interface{}) {
 	switch t {
 	case "IPToMAC":
 		checkIPTOMACReport(twpcapMap)
-		ipToMacCount++
 	case "EtherType":
 		checkEtherTypeReport(h, twpcapMap)
-		etherTypeCount++
 	case "DNS":
 		checkDNSReport(h, twpcapMap)
-		dnsCount++
 	case "DHCP":
 		checkDHCPReport(twpcapMap)
-		dhcpCount++
 	case "NTP":
 		checkNTPReport(twpcapMap)
-		ntpCount++
 	case "RADIUS":
 		checkRADIUSReport(twpcapMap)
-		radiusCount++
 	case "TLSFlow":
 		checkTLSFlowReport(twpcapMap)
-		tlsCount++
 	case "Stats":
-		statsCount++
+		checkStats(h, "twpcap", twpcapMap)
+	case "Monitor":
+		checkMonitor(h, "twpcap", twpcapMap)
 	default:
 		log.Printf("twpcap unkown type %v", twpcapMap)
 		otherCount++
@@ -81,6 +74,7 @@ func checkTWPCAPReport(l map[string]interface{}) {
 }
 
 func checkIPTOMACReport(twpcap map[string]string) {
+	ipToMacCount++
 	mac, ok := twpcap["mac"]
 	if !ok {
 		return
@@ -110,10 +104,11 @@ func checkIPTOMACReport(twpcap map[string]string) {
 
 // Ethernet type report
 func checkEtherTypeReport(h string, twpcap map[string]string) {
+	etherTypeCount++
 	now := time.Now().UnixNano()
 	for k, v := range twpcap {
 		if strings.HasPrefix(k, "0x") {
-			c := getNumberFromTWPCAPLog(v)
+			c := getNumberFromTWLog(v)
 			id := h + ":" + k
 			e := datastore.GetEtherType(id)
 			if e != nil {
@@ -160,21 +155,8 @@ func getEtherTypeName(t string) string {
 	return fmt.Sprintf("Other(%s)", t)
 }
 
-func getNumberFromTWPCAPLog(s string) int64 {
-	if c, err := strconv.ParseInt(s, 10, 64); err == nil {
-		return c
-	}
-	return 0
-}
-
-func getTimeFromTWPCAPLog(s string) int64 {
-	if t, err := time.Parse(time.RFC3339, s); err == nil {
-		return t.UnixNano()
-	}
-	return time.Now().UnixNano()
-}
-
 func checkDNSReport(h string, twpcap map[string]string) {
+	dnsCount++
 	t, ok := twpcap["DNSType"]
 	if !ok {
 		return
@@ -190,10 +172,10 @@ func checkDNSReport(h string, twpcap map[string]string) {
 	id := h + ":" + sv + ":" + t + ":" + n
 	e := datastore.GetDNSQ(id)
 	if e != nil {
-		e.Count = getNumberFromTWPCAPLog(twpcap["count"])
-		e.Change = getNumberFromTWPCAPLog(twpcap["change"])
-		e.LastTime = getTimeFromTWPCAPLog(twpcap["lt"])
-		e.FirstTime = getTimeFromTWPCAPLog(twpcap["ft"])
+		e.Count = getNumberFromTWLog(twpcap["count"])
+		e.Change = getNumberFromTWLog(twpcap["change"])
+		e.LastTime = getTimeFromTWLog(twpcap["lt"])
+		e.FirstTime = getTimeFromTWLog(twpcap["ft"])
 		return
 	}
 	datastore.AddDNSQ(&datastore.DNSQEnt{
@@ -202,14 +184,15 @@ func checkDNSReport(h string, twpcap map[string]string) {
 		Type:      t,
 		Server:    sv,
 		Name:      n,
-		Count:     getNumberFromTWPCAPLog(twpcap["count"]),
-		Change:    getNumberFromTWPCAPLog(twpcap["change"]),
-		LastTime:  getTimeFromTWPCAPLog(twpcap["lt"]),
-		FirstTime: getTimeFromTWPCAPLog(twpcap["ft"]),
+		Count:     getNumberFromTWLog(twpcap["count"]),
+		Change:    getNumberFromTWLog(twpcap["change"]),
+		LastTime:  getTimeFromTWLog(twpcap["lt"]),
+		FirstTime: getTimeFromTWLog(twpcap["ft"]),
 	})
 }
 
 func checkDHCPReport(twpcap map[string]string) {
+	dhcpCount++
 	sv, ok := twpcap["sv"]
 	if !ok {
 		return
@@ -228,6 +211,7 @@ func checkDHCPReport(twpcap map[string]string) {
 }
 
 func checkNTPReport(twpcap map[string]string) {
+	ntpCount++
 	sv, ok := twpcap["sv"]
 	if !ok {
 		return
@@ -247,6 +231,7 @@ func checkNTPReport(twpcap map[string]string) {
 }
 
 func checkRADIUSReport(twpcap map[string]string) {
+	radiusCount++
 	sv, ok := twpcap["sv"]
 	if !ok {
 		return
@@ -258,13 +243,13 @@ func checkRADIUSReport(twpcap map[string]string) {
 	id := cl + ":" + sv
 	e := datastore.GetRADIUSFlow(id)
 	if e != nil {
-		e.Accept = getNumberFromTWPCAPLog(twpcap["accept"])
-		e.Reject = getNumberFromTWPCAPLog(twpcap["reject"])
-		e.Request = getNumberFromTWPCAPLog(twpcap["req"])
-		e.Challenge = getNumberFromTWPCAPLog(twpcap["challenge"])
-		e.Count = getNumberFromTWPCAPLog(twpcap["count"])
-		e.LastTime = getTimeFromTWPCAPLog(twpcap["lt"])
-		e.FirstTime = getTimeFromTWPCAPLog(twpcap["ft"])
+		e.Accept = getNumberFromTWLog(twpcap["accept"])
+		e.Reject = getNumberFromTWLog(twpcap["reject"])
+		e.Request = getNumberFromTWLog(twpcap["req"])
+		e.Challenge = getNumberFromTWLog(twpcap["challenge"])
+		e.Count = getNumberFromTWLog(twpcap["count"])
+		e.LastTime = getTimeFromTWLog(twpcap["lt"])
+		e.FirstTime = getTimeFromTWLog(twpcap["ft"])
 		e.UpdateTime = time.Now().UnixNano()
 		setRADIUSFlowPenalty(e)
 		return
@@ -273,13 +258,13 @@ func checkRADIUSReport(twpcap map[string]string) {
 		ID:         id,
 		Client:     cl,
 		Server:     sv,
-		Accept:     getNumberFromTWPCAPLog(twpcap["accept"]),
-		Request:    getNumberFromTWPCAPLog(twpcap["req"]),
-		Challenge:  getNumberFromTWPCAPLog(twpcap["challenge"]),
-		Reject:     getNumberFromTWPCAPLog(twpcap["reject"]),
-		Count:      getNumberFromTWPCAPLog(twpcap["count"]),
-		LastTime:   getTimeFromTWPCAPLog(twpcap["lt"]),
-		FirstTime:  getTimeFromTWPCAPLog(twpcap["ft"]),
+		Accept:     getNumberFromTWLog(twpcap["accept"]),
+		Request:    getNumberFromTWLog(twpcap["req"]),
+		Challenge:  getNumberFromTWLog(twpcap["challenge"]),
+		Reject:     getNumberFromTWLog(twpcap["reject"]),
+		Count:      getNumberFromTWLog(twpcap["count"]),
+		LastTime:   getTimeFromTWLog(twpcap["lt"]),
+		FirstTime:  getTimeFromTWLog(twpcap["ft"]),
 		UpdateTime: time.Now().UnixNano(),
 	}
 	e.ClientName, e.ClientNodeID = findNodeInfoFromIP(cl)
@@ -289,6 +274,7 @@ func checkRADIUSReport(twpcap map[string]string) {
 }
 
 func checkTLSFlowReport(twpcap map[string]string) {
+	tlsCount++
 	sv, ok := twpcap["sv"]
 	if !ok {
 		return
@@ -315,9 +301,9 @@ func checkTLSFlowReport(twpcap map[string]string) {
 		}
 		f.Cipher = twpcap["cipher"]
 		f.Version = twpcap["maxver"]
-		f.Count = getNumberFromTWPCAPLog(twpcap["count"])
-		f.FirstTime = getTimeFromTWPCAPLog(twpcap["ft"])
-		f.LastTime = getTimeFromTWPCAPLog(twpcap["lt"])
+		f.Count = getNumberFromTWLog(twpcap["count"])
+		f.FirstTime = getTimeFromTWLog(twpcap["ft"])
+		f.LastTime = getTimeFromTWLog(twpcap["lt"])
 		f.UpdateTime = time.Now().UnixNano()
 		return
 	}
@@ -331,8 +317,8 @@ func checkTLSFlowReport(twpcap map[string]string) {
 		Cipher:     twpcap["cipher"],
 		ServerLoc:  datastore.GetLoc(sv),
 		ClientLoc:  datastore.GetLoc(cl),
-		FirstTime:  getTimeFromTWPCAPLog(twpcap["ft"]),
-		LastTime:   getTimeFromTWPCAPLog(twpcap["lt"]),
+		FirstTime:  getTimeFromTWLog(twpcap["ft"]),
+		LastTime:   getTimeFromTWLog(twpcap["lt"]),
 		UpdateTime: time.Now().UnixNano(),
 	}
 	f.ClientName, f.ClientNodeID = findNodeInfoFromIP(cl)
