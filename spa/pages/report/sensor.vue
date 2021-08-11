@@ -148,12 +148,115 @@
         </v-simple-table>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" dark @click="doDelete">
-            <v-icon>mdi-delete</v-icon>
-            削除
-          </v-btn>
+          <v-menu
+            v-if="selected.MonitorLen > 0 || selected.StatsLen > 0"
+            offset-y
+          >
+            <template #activator="{ on, attrs }">
+              <v-btn color="primary" dark v-bind="attrs" v-on="on">
+                <v-icon>mdi-chart-line</v-icon>
+                グラフ表示
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item v-if="selected.StatsLen > 0" @click="openStatsChart">
+                <v-list-item-icon>
+                  <v-icon>mdi-chart-bar</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>統計情報</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item
+                v-if="selected.MonitorLen > 0"
+                @click="openCpuMemChart"
+              >
+                <v-list-item-icon><v-icon>mdi-gauge</v-icon></v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>CPU/Memory</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item v-if="selected.MonitorLen > 0" @click="openNetChart">
+                <v-list-item-icon><v-icon>mdi-lan</v-icon></v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>通信量</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item
+                v-if="selected.MonitorLen > 0"
+                @click="openProcChart"
+              >
+                <v-list-item-icon>
+                  <v-icon>mdi-animation</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>プロセス</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list>
+          </v-menu>
           <v-btn color="normal" dark @click="infoDialog = false">
             <v-icon>mdi-close</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="statsChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> 統計情報 </span>
+        </v-card-title>
+        <div id="statsChart" style="width: 1000px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="statsChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="cpuMemChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> CPU/Memory </span>
+        </v-card-title>
+        <div id="cpuMemChart" style="width: 1000px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="cpuMemChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="netChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> 通信量 </span>
+        </v-card-title>
+        <div id="netChart" style="width: 1000px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="netChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="procChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> プロセス数と負荷 </span>
+        </v-card-title>
+        <div id="procChart" style="width: 1000px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="procChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
         </v-card-actions>
@@ -207,6 +310,10 @@ export default {
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
+      statsChartDialog: false,
+      cpuMemChartDialog: false,
+      netChartDialog: false,
+      procChartDialog: false,
     }
   },
   async fetch() {
@@ -248,6 +355,30 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    openStatsChart() {
+      this.statsChartDialog = true
+      this.$nextTick(() => {
+        this.$showSensorStatsChart('statsChart', this.selected.Stats)
+      })
+    },
+    openCpuMemChart() {
+      this.cpuMemChartDialog = true
+      this.$nextTick(() => {
+        this.$showSensorCpuMemChart('cpuMemChart', this.selected.Monitors)
+      })
+    },
+    openNetChart() {
+      this.netChartDialog = true
+      this.$nextTick(() => {
+        this.$showSensorNetChart('netChart', this.selected.Monitors)
+      })
+    },
+    openProcChart() {
+      this.procChartDialog = true
+      this.$nextTick(() => {
+        this.$showSensorProcChart('procChart', this.selected.Monitors)
+      })
     },
     formatCount(n) {
       return numeral(n).format('0,0')

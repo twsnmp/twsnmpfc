@@ -100,6 +100,7 @@ func checkMonitor(h, t string, m map[string]string) {
 	rxSpeed := getFloatFromTWLog(m["rxSpeed"])
 	sent := getNumberFromTWLog(m["sent"])
 	recv := getNumberFromTWLog(m["recv"])
+	proc := getNumberFromTWLog(m["process"])
 	id := h + ":" + t + ":" + param
 	e := datastore.GetSensor(id)
 	if e != nil {
@@ -112,6 +113,7 @@ func checkMonitor(h, t string, m map[string]string) {
 			RxSpeed: rxSpeed,
 			Recv:    recv,
 			Sent:    sent,
+			Process: proc,
 		})
 		for len(e.Monitors) > 1440*2 {
 			e.Monitors = e.Monitors[1:]

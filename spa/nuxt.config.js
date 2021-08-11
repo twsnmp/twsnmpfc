@@ -44,6 +44,7 @@ export default {
     '@/plugins/echarts/netflow.js',
     '@/plugins/echarts/syslog.js',
     '@/plugins/echarts/twpcap.js',
+    '@/plugins/echarts/sensor.js',
     '@/plugins/brain.js',
   ],
 

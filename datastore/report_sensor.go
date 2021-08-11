@@ -28,7 +28,7 @@ type SensorMonitorEnt struct {
 	CPU     float64
 	Mem     float64
 	Load    float64
-	Process float64
+	Process int64
 	Recv    int64
 	Sent    int64
 	TxSpeed float64
