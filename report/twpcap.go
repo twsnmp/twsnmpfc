@@ -83,23 +83,15 @@ func checkIPTOMACReport(twpcap map[string]string) {
 	if !ok {
 		return
 	}
-	lts, ok := twpcap["lt"]
-	if !ok {
-		return
-	}
-	lt, err := time.Parse(time.RFC3339, lts)
-	if err != nil {
-		log.Printf("twpcap report err=%v", err)
-		return
-	}
+	lt := getTimeFromTWLog("lt")
 	mac = normMACAddr(mac)
 	// Device Report
 	if !strings.Contains(ip, ":") {
-		updateDeviceReport(mac, ip, lt.UnixNano())
+		updateDeviceReport(mac, ip, lt)
 	}
 
 	// IP Report
-	checkIPReport(ip, mac, lt.UnixNano())
+	checkIPReport(ip, mac, lt)
 }
 
 // Ethernet type report

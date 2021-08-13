@@ -34,6 +34,63 @@
               <v-list-item-title v-text="item.title" />
             </v-list-item-content>
           </v-list-item>
+          <v-list-group no-action sub-group>
+            <template #activator>
+              <v-list-item-title>NetFlow分析</v-list-item-title>
+            </template>
+            <v-list-item
+              v-for="(item, i) in netflowMenus"
+              :key="i"
+              :to="item.to"
+              router
+              exact
+            >
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title v-text="item.title" />
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
+          <v-list-group no-action sub-group>
+            <template #activator>
+              <v-list-item-title>パケット分析</v-list-item-title>
+            </template>
+            <v-list-item
+              v-for="(item, i) in twpcapMenus"
+              :key="i"
+              :to="item.to"
+              router
+              exact
+            >
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title v-text="item.title" />
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
+          <v-list-group no-action sub-group>
+            <template #activator>
+              <v-list-item-title>Windows分析</v-list-item-title>
+            </template>
+            <v-list-item
+              v-for="(item, i) in windowsMenus"
+              :key="i"
+              :to="item.to"
+              router
+              exact
+            >
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title v-text="item.title" />
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
         </v-list-group>
         <v-list-group no-action prepend-icon="mdi-view-list" :value="false">
           <template #activator>
@@ -189,6 +246,23 @@ export default {
           to: '/report/users',
         },
         {
+          icon: 'mdi-file-find',
+          title: 'アドレス分析',
+          to: '/report/address',
+        },
+        {
+          icon: 'mdi-webcam',
+          title: 'センサー',
+          to: '/report/sensor',
+        },
+        {
+          icon: 'mdi-brain',
+          title: 'AI分析',
+          to: '/report/ailist',
+        },
+      ],
+      netflowMenus: [
+        {
           icon: 'mdi-server',
           title: 'サーバー',
           to: '/report/servers',
@@ -203,16 +277,8 @@ export default {
           title: 'IPアドレス',
           to: '/report/ipreport',
         },
-        {
-          icon: 'mdi-brain',
-          title: 'AI分析',
-          to: '/report/ailist',
-        },
-        {
-          icon: 'mdi-file-find',
-          title: 'アドレス分析',
-          to: '/report/address',
-        },
+      ],
+      twpcapMenus: [
         {
           icon: 'mdi-chart-pie',
           title: 'Ethernetタイプ',
@@ -238,10 +304,42 @@ export default {
           title: 'サーバー証明書',
           to: '/report/cert',
         },
+      ],
+      windowsMenus: [
         {
-          icon: 'mdi-webcam',
-          title: 'センサー',
-          to: '/report/sensor',
+          icon: 'mdi-calendar-check',
+          title: 'イベントID',
+          to: '/report/winEventID',
+        },
+        {
+          icon: 'mdi-calendar-text',
+          title: 'ログオン',
+          to: '/report/winLogon',
+        },
+        {
+          icon: 'mdi-alert',
+          title: 'アカウント',
+          to: '/report/winAccount',
+        },
+        {
+          icon: 'mdi-swap-horizontal',
+          title: 'Kerberos',
+          to: '/report/winKerberos',
+        },
+        {
+          icon: 'mdi-check-network',
+          title: '特権アクセス',
+          to: '/report/winPrivilege',
+        },
+        {
+          icon: 'mdi-swap-horizontal',
+          title: 'プロセス',
+          to: '/report/winProcess',
+        },
+        {
+          icon: 'mdi-swap-horizontal',
+          title: 'タスク',
+          to: '/report/winTask',
         },
       ],
       logMenus: [

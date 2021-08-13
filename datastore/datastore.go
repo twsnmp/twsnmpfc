@@ -52,7 +52,7 @@ var (
 	dnsq        sync.Map
 	certs       sync.Map
 	sensors     sync.Map
-	wineventIDs sync.Map
+	winEventID  sync.Map
 	// MAP Changed check
 	stateChangedNodes sync.Map
 	lastLogAdded      time.Time
