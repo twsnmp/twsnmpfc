@@ -256,7 +256,7 @@ export default {
     }
   },
   async fetch() {
-    this.eventids = await this.$axios.$get('/api/report/wineventids')
+    this.eventids = await this.$axios.$get('/api/report/WinEventIDs')
     if (!this.eventids) {
       return
     }
@@ -291,7 +291,7 @@ export default {
   methods: {
     doDelete() {
       this.$axios
-        .delete('/api/report/wineventid/' + this.selected.ID)
+        .delete('/api/report/WinEventID/' + this.selected.ID)
         .then((r) => {
           this.$fetch()
         })

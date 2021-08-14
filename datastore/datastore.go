@@ -41,18 +41,27 @@ var (
 	lines    sync.Map
 	pollings sync.Map
 	// Report Data on Memory
-	devices     sync.Map
-	users       sync.Map
-	flows       sync.Map
-	servers     sync.Map
-	ips         sync.Map
+	devices sync.Map
+	users   sync.Map
+	flows   sync.Map
+	servers sync.Map
+	ips     sync.Map
+	// TWPCAP
 	etherType   sync.Map
 	radiusFlows sync.Map
 	tlsFlows    sync.Map
 	dnsq        sync.Map
 	certs       sync.Map
 	sensors     sync.Map
-	winEventID  sync.Map
+	// TWWINLOG
+	winEventID     sync.Map
+	winLogon       sync.Map
+	winAccount     sync.Map
+	winKerberosTGT sync.Map
+	winKerberosST  sync.Map
+	winPrivilege   sync.Map
+	winProcess     sync.Map
+	winTask        sync.Map
 	// MAP Changed check
 	stateChangedNodes sync.Map
 	lastLogAdded      time.Time
@@ -247,7 +256,9 @@ func initDB() error {
 		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report", "grok"}
 	reports := []string{"devices", "users", "flows", "servers", "ips",
 		"ether", "dns", "radius", "tls", "cert",
-		"sensor", "wineventid",
+		"sensor",
+		"winEventID", "winLogon", "winAccount", "winKerberosTGT", "winKerberosST",
+		"winPrivilege", "winProcess", "winTask",
 	}
 	initConf()
 	return db.Update(func(tx *bbolt.Tx) error {
