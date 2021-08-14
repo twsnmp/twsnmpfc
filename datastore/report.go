@@ -537,7 +537,7 @@ func saveSensor(b *bbolt.Bucket, last int64) {
 }
 
 func saveWinEventID(b *bbolt.Bucket, last int64) {
-	r := b.Bucket([]byte("WinEventID"))
+	r := b.Bucket([]byte("winEventID"))
 	winEventID.Range(func(k, v interface{}) bool {
 		e, ok := v.(*WinEventIDEnt)
 		if !ok {
@@ -560,7 +560,7 @@ func saveWinEventID(b *bbolt.Bucket, last int64) {
 }
 
 func saveWinLogon(b *bbolt.Bucket, last int64) {
-	r := b.Bucket([]byte("WinLogon"))
+	r := b.Bucket([]byte("winLogon"))
 	winLogon.Range(func(k, v interface{}) bool {
 		e, ok := v.(*WinLogonEnt)
 		if !ok {
@@ -583,7 +583,7 @@ func saveWinLogon(b *bbolt.Bucket, last int64) {
 }
 
 func saveWinAccount(b *bbolt.Bucket, last int64) {
-	r := b.Bucket([]byte("WinAccount"))
+	r := b.Bucket([]byte("winAccount"))
 	winAccount.Range(func(k, v interface{}) bool {
 		e, ok := v.(*WinAccountEnt)
 		if !ok {
@@ -606,7 +606,7 @@ func saveWinAccount(b *bbolt.Bucket, last int64) {
 }
 
 func saveWinKerberosTGT(b *bbolt.Bucket, last int64) {
-	r := b.Bucket([]byte("WinKerberosTGT"))
+	r := b.Bucket([]byte("winKerberosTGT"))
 	winKerberosTGT.Range(func(k, v interface{}) bool {
 		e, ok := v.(*WinKerberosTGTEnt)
 		if !ok {
@@ -629,7 +629,7 @@ func saveWinKerberosTGT(b *bbolt.Bucket, last int64) {
 }
 
 func saveWinKerberosST(b *bbolt.Bucket, last int64) {
-	r := b.Bucket([]byte("WinKerberosST"))
+	r := b.Bucket([]byte("winKerberosST"))
 	winKerberosST.Range(func(k, v interface{}) bool {
 		e, ok := v.(*WinKerberosSTEnt)
 		if !ok {
@@ -652,7 +652,7 @@ func saveWinKerberosST(b *bbolt.Bucket, last int64) {
 }
 
 func saveWinPrivilege(b *bbolt.Bucket, last int64) {
-	r := b.Bucket([]byte("WinPrivilege"))
+	r := b.Bucket([]byte("winPrivilege"))
 	winPrivilege.Range(func(k, v interface{}) bool {
 		e, ok := v.(*WinPrivilegeEnt)
 		if !ok {
@@ -675,7 +675,7 @@ func saveWinPrivilege(b *bbolt.Bucket, last int64) {
 }
 
 func saveWinProcess(b *bbolt.Bucket, last int64) {
-	r := b.Bucket([]byte("WinProcess"))
+	r := b.Bucket([]byte("winProcess"))
 	winProcess.Range(func(k, v interface{}) bool {
 		e, ok := v.(*WinProcessEnt)
 		if !ok {
@@ -698,7 +698,7 @@ func saveWinProcess(b *bbolt.Bucket, last int64) {
 }
 
 func saveWinTask(b *bbolt.Bucket, last int64) {
-	r := b.Bucket([]byte("WinTask"))
+	r := b.Bucket([]byte("winTask"))
 	winTask.Range(func(k, v interface{}) bool {
 		e, ok := v.(*WinTaskEnt)
 		if !ok {
@@ -757,21 +757,21 @@ func DeleteReport(report, id string) error {
 		certs.Delete(id)
 	case "sensor":
 		sensors.Delete(id)
-	case "WinEventID":
+	case "winEventID":
 		winEventID.Delete(id)
-	case "WinLogon":
+	case "winLogon":
 		winLogon.Delete(id)
-	case "WinAccount":
+	case "winAccount":
 		winAccount.Delete(id)
-	case "WinKerberosTGT":
+	case "winKerberosTGT":
 		winKerberosTGT.Delete(id)
-	case "WinKebrosST":
+	case "winKebrosST":
 		winKerberosST.Delete(id)
-	case "WinPrivilege":
+	case "winPrivilege":
 		winPrivilege.Delete(id)
-	case "WinProcess":
+	case "winProcess":
 		winProcess.Delete(id)
-	case "WinTask":
+	case "winTask":
 		winTask.Delete(id)
 	}
 	return nil
@@ -812,21 +812,21 @@ func ClearReport(r string) error {
 		deleteSyncMapAllData(&certs)
 	case "sensor":
 		deleteSyncMapAllData(&sensors)
-	case "WinEventID":
+	case "winEventID":
 		deleteSyncMapAllData(&winEventID)
-	case "WinLogon":
+	case "winLogon":
 		deleteSyncMapAllData(&winLogon)
-	case "WinAccount":
+	case "winAccount":
 		deleteSyncMapAllData(&winAccount)
-	case "WinKeberosTGT":
+	case "winKeberosTGT":
 		deleteSyncMapAllData(&winKerberosTGT)
-	case "WinKerberosST":
+	case "winKerberosST":
 		deleteSyncMapAllData(&winKerberosST)
-	case "WinPrivilege":
+	case "winPrivilege":
 		deleteSyncMapAllData(&winPrivilege)
-	case "WinProcess":
+	case "winProcess":
 		deleteSyncMapAllData(&winProcess)
-	case "WinTask":
+	case "winTask":
 		deleteSyncMapAllData(&winTask)
 	}
 	return nil

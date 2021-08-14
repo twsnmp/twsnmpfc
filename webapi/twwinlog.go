@@ -19,9 +19,9 @@ func getWinEventID(c echo.Context) error {
 func deleteWinEventID(c echo.Context) error {
 	id := c.Param("id")
 	if id == "all" {
-		go datastore.ClearReport("WinEventID")
+		go datastore.ClearReport("winEventID")
 	} else {
-		datastore.DeleteReport("WinEventID", id)
+		datastore.DeleteReport("winEventID", id)
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
