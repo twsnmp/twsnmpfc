@@ -355,6 +355,15 @@
       <v-card>
         <v-card-title>
           <span class="headline">国別</span>
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="countryChartMode"
+            :items="CSList"
+            label="集計モード"
+            single-line
+            hide-details
+            @change="showCountryChart"
+          ></v-select>
         </v-card-title>
         <div id="countryChart" style="width: 900px; height: 600px"></div>
         <v-card-actions>
@@ -548,6 +557,11 @@ export default {
       cipherList: [],
       versionChartDialog: false,
       cipherChartDialog: false,
+      countryChartMode: 'server',
+      CSList: [
+        { text: 'サーバー', value: 'server' },
+        { text: 'クライアント', value: 'client' },
+      ],
     }
   },
   async fetch() {
@@ -680,8 +694,30 @@ export default {
     },
     openCountryChart() {
       this.countryChartDialog = true
+      this.showCountryChart()
+    },
+    showCountryChart() {
+      const list = []
+      if (this.countryChartMode === 'client') {
+        this.tls.forEach((t) => {
+          const loc = this.$getLocInfo(t.ClientLoc)
+          list.push({
+            Score: t.Score,
+            Loc: t.ClientLoc,
+            Country: loc.Country,
+          })
+        })
+      } else {
+        this.tls.forEach((t) => {
+          list.push({
+            Score: t.Score,
+            Loc: t.Loc,
+            Country: t.Country,
+          })
+        })
+      }
       this.$nextTick(() => {
-        this.$showCountryChart('countryChart', this.tls)
+        this.$showCountryChart('countryChart', list)
       })
     },
     openVersionChart() {
