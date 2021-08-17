@@ -28,8 +28,7 @@ func LoadReport() error {
 		loadWinEventID(r)
 		loadWinLogon(r)
 		loadWinAccount(r)
-		loadWinKerberosTGT(r)
-		loadWinKerberosST(r)
+		loadWinKerberos(r)
 		loadWinPrivilege(r)
 		loadWinProcess(r)
 		loadWinTask(r)
@@ -219,26 +218,13 @@ func loadWinAccount(r *bbolt.Bucket) {
 	}
 }
 
-func loadWinKerberosTGT(r *bbolt.Bucket) {
-	b := r.Bucket([]byte("winKerberosTGT"))
+func loadWinKerberos(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("winKerberos"))
 	if b != nil {
 		_ = b.ForEach(func(k, v []byte) error {
-			var e WinKerberosTGTEnt
+			var e WinKerberosEnt
 			if err := json.Unmarshal(v, &e); err == nil {
-				winKerberosTGT.Store(e.ID, &e)
-			}
-			return nil
-		})
-	}
-}
-
-func loadWinKerberosST(r *bbolt.Bucket) {
-	b := r.Bucket([]byte("winKerberosST"))
-	if b != nil {
-		_ = b.ForEach(func(k, v []byte) error {
-			var e WinKerberosSTEnt
-			if err := json.Unmarshal(v, &e); err == nil {
-				winKerberosST.Store(e.ID, &e)
+				winKerberos.Store(e.ID, &e)
 			}
 			return nil
 		})
@@ -304,8 +290,7 @@ func SaveReport(last int64) error {
 		saveWinEventID(b, last)
 		saveWinLogon(b, last)
 		saveWinAccount(b, last)
-		saveWinKerberosTGT(b, last)
-		saveWinKerberosST(b, last)
+		saveWinKerberos(b, last)
 		saveWinPrivilege(b, last)
 		saveWinProcess(b, last)
 		saveWinTask(b, last)
@@ -605,10 +590,10 @@ func saveWinAccount(b *bbolt.Bucket, last int64) {
 	})
 }
 
-func saveWinKerberosTGT(b *bbolt.Bucket, last int64) {
-	r := b.Bucket([]byte("winKerberosTGT"))
-	winKerberosTGT.Range(func(k, v interface{}) bool {
-		e, ok := v.(*WinKerberosTGTEnt)
+func saveWinKerberos(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("winKerberos"))
+	winKerberos.Range(func(k, v interface{}) bool {
+		e, ok := v.(*WinKerberosEnt)
 		if !ok {
 			return true
 		}
@@ -617,35 +602,12 @@ func saveWinKerberosTGT(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(e)
 		if err != nil {
-			log.Printf("saveWinKerberosTGT err=%v", err)
+			log.Printf("saveWinKerberos err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(e.ID), s)
 		if err != nil {
-			log.Printf("saveWinKerberosTGT err=%v", err)
-		}
-		return true
-	})
-}
-
-func saveWinKerberosST(b *bbolt.Bucket, last int64) {
-	r := b.Bucket([]byte("winKerberosST"))
-	winKerberosST.Range(func(k, v interface{}) bool {
-		e, ok := v.(*WinKerberosSTEnt)
-		if !ok {
-			return true
-		}
-		if e.LastTime < last {
-			return true
-		}
-		s, err := json.Marshal(e)
-		if err != nil {
-			log.Printf("saveWinKerberosST err=%v", err)
-			return true
-		}
-		err = r.Put([]byte(e.ID), s)
-		if err != nil {
-			log.Printf("saveWinKerberosST err=%v", err)
+			log.Printf("saveWinKerberos err=%v", err)
 		}
 		return true
 	})
@@ -763,10 +725,8 @@ func DeleteReport(report, id string) error {
 		winLogon.Delete(id)
 	case "winAccount":
 		winAccount.Delete(id)
-	case "winKerberosTGT":
-		winKerberosTGT.Delete(id)
-	case "winKebrosST":
-		winKerberosST.Delete(id)
+	case "winKerberos":
+		winKerberos.Delete(id)
 	case "winPrivilege":
 		winPrivilege.Delete(id)
 	case "winProcess":
@@ -818,10 +778,8 @@ func ClearReport(r string) error {
 		deleteSyncMapAllData(&winLogon)
 	case "winAccount":
 		deleteSyncMapAllData(&winAccount)
-	case "winKeberosTGT":
-		deleteSyncMapAllData(&winKerberosTGT)
-	case "winKerberosST":
-		deleteSyncMapAllData(&winKerberosST)
+	case "winKeberos":
+		deleteSyncMapAllData(&winKerberos)
 	case "winPrivilege":
 		deleteSyncMapAllData(&winPrivilege)
 	case "winProcess":

@@ -1,5 +1,6 @@
 package datastore
 
+// type=EventID,computer=%s,channel=%s,provider=%s,eventID=%d,total=%d,count=%d,ft=%s,lt=%s
 type WinEventIDEnt struct {
 	ID        string // Computer + Provider + EventID
 	Level     string
@@ -30,25 +31,18 @@ func ForEachWinEventID(f func(*WinEventIDEnt) bool) {
 	})
 }
 
-// type=Logon,target=%s,sid=%s,count=%d,logon=%d,failed=%d,logoff=%d,changeSubject=%d,changeLogonType=%d,changeIP=%d,subject=%s,subsid=%s,logonType=%s,ip=%s,failCode=%s,ft=%s,lt=%s
-
+// type=Logon,target=%s,computer=%s,ip=%s,count=%d,logon=%d,failed=%d,logoff=%d%s%s,ft=%s,lt=%s",
+// type=LogonFailed,subject=%s@%s,target=%s@%s,targetsid=%s,logonType=%s,ip=%s,code=%s,time=%s",
 type WinLogonEnt struct {
-	ID              string // target
-	SID             string
-	Count           int64
-	Logon           int64
-	Logoff          int64
-	Failed          int64
-	ChangeSubject   int64
-	ChangeLogonType int64
-	ChangeIP        int64
-	LastSubject     string
-	LastSubjectSID  string
-	LastIP          string
-	LastLogonType   string
-	LastFailedCode  string
-	FirstTime       int64
-	LastTime        int64
+	ID        string // target
+	Target    string
+	Count     int64
+	Logon     int64
+	Logoff    int64
+	Failed    int64
+	LastIP    string
+	FirstTime int64
+	LastTime  int64
 }
 
 func GetWinLogon(id string) *WinLogonEnt {
@@ -69,23 +63,18 @@ func ForEachWinLogon(f func(*WinLogonEnt) bool) {
 	})
 }
 
-// type=Account,target=%s,sid=%s,computer=%s,count=%d,edit=%d,password=%d,other=%d,changesubject=%d,subject=%s,sbjectsid=%s,ft=%s,lt=%s
-
+// type=Account,subject=%s,target=%s,computer=%s,count=%d,edit=%d,password=%d,other=%d,ft=%s,lt=%s",
 type WinAccountEnt struct {
-	ID             string // host + target
-	Host           string
-	Target         string
-	SID            string
-	Computer       string
-	Count          int64
-	Edit           int64
-	Password       int64
-	Other          int64
-	ChangeSubject  int64
-	LastSubject    string
-	LastSubjectSID string
-	FirstTime      int64
-	LastTime       int64
+	ID        string // subject + target + computer
+	Subject   string
+	Target    string
+	Computer  string
+	Count     int64
+	Edit      int64
+	Password  int64
+	Other     int64
+	FirstTime int64
+	LastTime  int64
 }
 
 func GetWinAccount(id string) *WinAccountEnt {
@@ -106,13 +95,15 @@ func ForEachWinAccount(f func(*WinAccountEnt) bool) {
 	})
 }
 
-// type=KerberosTGT,target=%s,sid=%s,ip=%s,computer=%s,count=%d,failed=%d,changeStatus=%d,changeCert=%d,status=%s,cert=%s,ft=%s,lt=%s
-type WinKerberosTGTEnt struct {
-	ID         string // target + ip
+// type=Kerberos,target=%s,computer=%s,ip=%s,service=%s,ticketType=%s,count=%d,failed=%d,status=%s,cert=%s,ft=%s,lt=%s
+// type=KerberosFailed,target=%s,computer=%s,ip=%s,service=%s,ticketType=%s,status=%s,time=%s
+type WinKerberosEnt struct {
+	ID         string // target + computer + service + ip
 	Target     string
-	SID        string
-	IP         string
 	Computer   string
+	IP         string
+	Service    string
+	TicketType string
 	Count      int64
 	Failed     int64
 	LastCert   string
@@ -121,70 +112,32 @@ type WinKerberosTGTEnt struct {
 	LastTime   int64
 }
 
-func GetWinKerberosTGT(id string) *WinKerberosTGTEnt {
-	if v, ok := winKerberosTGT.Load(id); ok {
-		return v.(*WinKerberosTGTEnt)
+func GetWinKerberos(id string) *WinKerberosEnt {
+	if v, ok := winKerberos.Load(id); ok {
+		return v.(*WinKerberosEnt)
 	}
 	return nil
 }
 
-func AddWinKerberosTGT(e *WinKerberosTGTEnt) {
-	winKerberosTGT.Store(e.ID, e)
+func AddWinKerberos(e *WinKerberosEnt) {
+	winKerberos.Store(e.ID, e)
 }
 
-func ForEachWinKerberosTGT(f func(*WinKerberosTGTEnt) bool) {
-	winKerberosTGT.Range(func(k, v interface{}) bool {
-		e := v.(*WinKerberosTGTEnt)
+func ForEachWinKerberos(f func(*WinKerberosEnt) bool) {
+	winKerberos.Range(func(k, v interface{}) bool {
+		e := v.(*WinKerberosEnt)
 		return f(e)
 	})
 }
 
-// type=KerberosST,target=%s,servcie=%s,sid=%s,ip=%s,computer=%s,count=%d,failed=%d,changeStatus=%d,status=%s,ft=%s,lt=%s
-type WinKerberosSTEnt struct {
-	ID           string // host + target
-	Host         string
-	Target       string
-	Service      string
-	SID          string
-	IP           string
-	Computer     string
-	Count        int64
-	Failed       int64
-	ChangeStatus int64
-	LastStatus   string
-	FirstTime    int64
-	LastTime     int64
-}
-
-func GetWinKerberosST(id string) *WinKerberosSTEnt {
-	if v, ok := winKerberosST.Load(id); ok {
-		return v.(*WinKerberosSTEnt)
-	}
-	return nil
-}
-
-func AddWinKerberosST(e *WinKerberosSTEnt) {
-	winKerberosST.Store(e.ID, e)
-}
-
-func ForEachWinKerberosST(f func(*WinKerberosSTEnt) bool) {
-	winKerberosST.Range(func(k, v interface{}) bool {
-		e := v.(*WinKerberosSTEnt)
-		return f(e)
-	})
-}
-
-// type=Privilege,subject=%s,sid=%s,computer=%s,count=%d,ft=%s,lt=%s
+// type=Privilege,subject=%s,computer=%s,count=%d,ft=%s,lt=%s
 type WinPrivilegeEnt struct {
-	ID         string // host + target
-	Host       string
-	Subject    string
-	SID        string
-	Computer   string
-	Count      int64
-	LastStatus string
-	FirstTime  int64
-	LastTime   int64
+	ID        string //  subject + computer
+	Subject   string
+	Computer  string
+	Count     int64
+	FirstTime int64
+	LastTime  int64
 }
 
 func GetWinPrivilege(id string) *WinPrivilegeEnt {
@@ -205,22 +158,19 @@ func ForEachWinPrivilege(f func(*WinPrivilegeEnt) bool) {
 	})
 }
 
-// type=Process,computer=%s,process=%s,count=%d,start=%d,exit=%d,changeSubject=%d,changeStatus=%d,changeParent=%d,subject=%s,status=%s,parent=%s,ft=%s,lt=%s
+// type=Process,computer=%s,process=%s,count=%d,start=%d,exit=%d,subject=%s,status=%s,parent=%s,ft=%s,lt=%s",
 type WinProcessEnt struct {
-	ID            string // Computer + Process
-	Computer      string
-	Process       string
-	Count         int64
-	Start         int64
-	Exit          int64
-	ChangeSubject int64
-	ChangeStatus  int64
-	ChangeParent  int64
-	LastParent    string
-	LastSubject   string
-	LastStatus    string
-	FirstTime     int64
-	LastTime      int64
+	ID          string // Computer + Process
+	Computer    string
+	Process     string
+	Count       int64
+	Start       int64
+	Exit        int64
+	LastParent  string
+	LastSubject string
+	LastStatus  string
+	FirstTime   int64
+	LastTime    int64
 }
 
 func GetWinProcess(id string) *WinProcessEnt {
@@ -241,13 +191,12 @@ func ForEachWinProcess(f func(*WinProcessEnt) bool) {
 	})
 }
 
-// type=Task,taskname=%s,computer=%s,subject=%s,sid=%s,count=%d,ft=%s,lt=%s
+// type=Task,subject=%s,taskname=%s,computer=%s,count=%d,ft=%s,lt=%s",
 type WinTaskEnt struct {
 	ID        string // Computer + TaskName
 	TaskName  string
 	Computer  string
 	Subject   string
-	SID       string
 	Count     int64
 	FirstTime int64
 	LastTime  int64

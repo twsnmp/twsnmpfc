@@ -9,15 +9,14 @@ import (
 )
 
 var (
-	winEventIDCount     = 0
-	winLogonCount       = 0
-	winAccountCount     = 0
-	winKerberosTGTCount = 0
-	winKerberosSTCount  = 0
-	winPrivilegeCount   = 0
-	winProcessCount     = 0
-	winTaskCount        = 0
-	winOtherCount       = 0
+	winEventIDCount   = 0
+	winLogonCount     = 0
+	winAccountCount   = 0
+	winKerberosCount  = 0
+	winPrivilegeCount = 0
+	winProcessCount   = 0
+	winTaskCount      = 0
+	winOtherCount     = 0
 )
 
 func ReportTwWinLog(l map[string]interface{}) {
@@ -53,16 +52,14 @@ func checkTWWinLogReport(l map[string]interface{}) {
 		checkStats(h, "twwinlog", m)
 	case "Monitor":
 		checkMonitor(h, "twwinlog", m)
-	case "Summary":
+	case "EventID":
 		checkWinEventID(h, m, l)
 	case "Logon":
 		checkWinLogon(h, m)
 	case "Account":
 		checkWinAccount(h, m)
-	case "KerberosTGT":
-		checkWinKerberosTGT(h, m)
-	case "KerberosST":
-		checkWinKerberosST(h, m)
+	case "Kerberos":
+		checkWinKerberos(h, m)
 	case "Privilege":
 		checkWinPrivilege(h, m)
 	case "Process":
@@ -75,7 +72,7 @@ func checkTWWinLogReport(l map[string]interface{}) {
 	}
 }
 
-// type=Summary,computer=%s,channel=%s,provider=%s,eventID=%d,total=%d,count=%d,ft=%s,lt=%s
+// type=EventID,computer=%s,channel=%s,provider=%s,eventID=%d,total=%d,count=%d,ft=%s,lt=%s
 func checkWinEventID(h string, m map[string]string, l map[string]interface{}) {
 	winEventIDCount++
 	eventID := getNumberFromTWLog(m["eventID"])
@@ -129,7 +126,7 @@ func checkWinEventID(h string, m map[string]string, l map[string]interface{}) {
 	})
 }
 
-// type=Logon,target=%s,sid=%s,count=%d,logon=%d,failed=%d,logoff=%d,changeSubject=%d,changeLogonType=%d,changeIP=%d,subject=%s,subsid=%s,logonType=%s,ip=%s,failCode=%s,ft=%s,lt=%s
+// type=Logon,target=%s,computer=%s,ip=%s,count=%d,logon=%d,failed=%d,logoff=%d%s%s,ft=%s,lt=%s",
 func checkWinLogon(h string, m map[string]string) {
 	winLogonCount++
 	id, ok := m["target"]
@@ -147,27 +144,26 @@ func checkWinLogon(h string, m map[string]string) {
 	e := datastore.GetWinLogon(id)
 	if e != nil {
 		e.LastTime = lt
-		e.Count = count
-		e.Logon = logon
-		e.Logoff = logoff
-		e.Failed = failed
+		e.Count += count
+		e.Logon += logon
+		e.Logoff += logoff
+		e.Failed += failed
 		e.LastIP = m["ip"]
 		return
 	}
 	datastore.AddWinLogon(&datastore.WinLogonEnt{
-		ID:          id,
-		Count:       count,
-		Logon:       logon,
-		Logoff:      logoff,
-		Failed:      failed,
-		LastIP:      m["ip"],
-		LastSubject: m["subject"],
-		FirstTime:   getTimeFromTWLog(m["ft"]),
-		LastTime:    lt,
+		ID:        id,
+		Count:     count,
+		Logon:     logon,
+		Logoff:    logoff,
+		Failed:    failed,
+		LastIP:    m["ip"],
+		FirstTime: getTimeFromTWLog(m["ft"]),
+		LastTime:  lt,
 	})
 }
 
-// type=Account,target=%s,sid=%s,computer=%s,count=%d,edit=%d,password=%d,other=%d,changesubject=%d,subject=%s,sbjectsid=%s,ft=%s,lt=%s
+// type=Account,subject=%s,target=%s,computer=%s,count=%d,edit=%d,password=%d,other=%d,ft=%s,lt=%s",
 func checkWinAccount(h string, m map[string]string) {
 	winAccountCount++
 	target, ok := m["target"]
@@ -182,32 +178,33 @@ func checkWinAccount(h string, m map[string]string) {
 	password := getNumberFromTWLog(m["password"])
 	other := getNumberFromTWLog(m["other"])
 	lt := getTimeFromTWLog(m["lt"])
-	id := fmt.Sprintf("%s:%s", target, m["computer"])
+	id := fmt.Sprintf("%s:%s:%s", target, m["computer"], m["subject"])
 	e := datastore.GetWinAccount(id)
 	if e != nil {
 		e.LastTime = lt
-		e.Count = count
-		e.Edit = edit
-		e.Password = password
-		e.Other = other
-		e.LastSubject = m["subject"]
+		e.Count += count
+		e.Edit += edit
+		e.Password += password
+		e.Other += other
 		return
 	}
 	datastore.AddWinAccount(&datastore.WinAccountEnt{
-		ID:          id,
-		Count:       count,
-		Edit:        edit,
-		Password:    password,
-		Other:       other,
-		LastSubject: m["subject"],
-		FirstTime:   getTimeFromTWLog(m["ft"]),
-		LastTime:    lt,
+		ID:        id,
+		Subject:   m["subject"],
+		Target:    target,
+		Computer:  m["computer"],
+		Count:     count,
+		Edit:      edit,
+		Password:  password,
+		Other:     other,
+		FirstTime: getTimeFromTWLog(m["ft"]),
+		LastTime:  lt,
 	})
 }
 
-// type=KerberosTGT,target=%s,sid=%s,ip=%s,computer=%s,count=%d,failed=%d,changeStatus=%d,changeCert=%d,status=%s,cert=%s,ft=%s,lt=%s
-func checkWinKerberosTGT(h string, m map[string]string) {
-	winKerberosTGTCount++
+// type=Kerberos,target=%s,computer=%s,ip=%s,service=%s,ticketType=%s,count=%d,failed=%d,status=%s,cert=%s,ft=%s,lt=%s
+func checkWinKerberos(h string, m map[string]string) {
+	winKerberosCount++
 	target, ok := m["target"]
 	if !ok {
 		return
@@ -216,18 +213,18 @@ func checkWinKerberosTGT(h string, m map[string]string) {
 	if count < 1 {
 		return
 	}
-	id := fmt.Sprintf("%s<%s", target, m["ip"])
+	id := fmt.Sprintf("%s:%s:%s:%s:%s", target, m["ricketType"], m["computer"], m["service"], m["ip"])
 	failed := getNumberFromTWLog(m["failed"])
 	lt := getTimeFromTWLog(m["lt"])
-	e := datastore.GetWinKerberosTGT(id)
+	e := datastore.GetWinKerberos(id)
 	if e != nil {
 		e.LastTime = lt
-		e.Count = count
-		e.Failed = failed
+		e.Count += count
+		e.Failed += failed
 		e.IP = m["ip"]
 		return
 	}
-	datastore.AddWinKerberosTGT(&datastore.WinKerberosTGTEnt{
+	datastore.AddWinKerberos(&datastore.WinKerberosEnt{
 		ID:        id,
 		Target:    target,
 		Count:     count,
@@ -238,40 +235,7 @@ func checkWinKerberosTGT(h string, m map[string]string) {
 	})
 }
 
-// type=KerberosST,target=%s,servcie=%s,sid=%s,ip=%s,computer=%s,count=%d,failed=%d,changeStatus=%d,status=%s,ft=%s,lt=%s
-func checkWinKerberosST(h string, m map[string]string) {
-	winKerberosSTCount++
-	target, ok := m["target"]
-	if !ok {
-		return
-	}
-	count := getNumberFromTWLog(m["count"])
-	if count < 1 {
-		return
-	}
-	id := fmt.Sprintf("%s<%s", target, m["ip"])
-	failed := getNumberFromTWLog(m["failed"])
-	lt := getTimeFromTWLog(m["lt"])
-	e := datastore.GetWinKerberosST(id)
-	if e != nil {
-		e.LastTime = lt
-		e.Count = count
-		e.Failed = failed
-		e.IP = m["ip"]
-		return
-	}
-	datastore.AddWinKerberosST(&datastore.WinKerberosSTEnt{
-		ID:        id,
-		Target:    target,
-		Count:     count,
-		Failed:    failed,
-		IP:        m["ip"],
-		FirstTime: getTimeFromTWLog(m["ft"]),
-		LastTime:  lt,
-	})
-}
-
-// type=Privilege,subject=%s,sid=%s,computer=%s,count=%d,ft=%s,lt=%s
+// type=Privilege,subject=%s,computer=%s,count=%d,ft=%s,lt=%s
 func checkWinPrivilege(h string, m map[string]string) {
 	winPrivilegeCount++
 	subject, ok := m["subject"]
@@ -287,7 +251,7 @@ func checkWinPrivilege(h string, m map[string]string) {
 	e := datastore.GetWinPrivilege(id)
 	if e != nil {
 		e.LastTime = lt
-		e.Count = count
+		e.Count += count
 		return
 	}
 	datastore.AddWinPrivilege(&datastore.WinPrivilegeEnt{
@@ -300,7 +264,8 @@ func checkWinPrivilege(h string, m map[string]string) {
 	})
 }
 
-// type=Process,computer=%s,process=%s,count=%d,start=%d,exit=%d,changeSubject=%d,changeStatus=%d,changeParent=%d,subject=%s,status=%s,parent=%s,ft=%s,lt=%s
+// type=Process,computer=%s,process=%s,count=%d,start=%d,exit=%d,subject=%s,status=%s,parent=%s,ft=%s,lt=%s",
+
 func checkWinProcess(h string, m map[string]string) {
 	winProcessCount++
 	process, ok := m["process"]
@@ -318,9 +283,9 @@ func checkWinProcess(h string, m map[string]string) {
 	e := datastore.GetWinProcess(id)
 	if e != nil {
 		e.LastTime = lt
-		e.Count = count
-		e.Start = start
-		e.Exit = exit
+		e.Count += count
+		e.Start += start
+		e.Exit += exit
 		return
 	}
 	datastore.AddWinProcess(&datastore.WinProcessEnt{
@@ -335,7 +300,7 @@ func checkWinProcess(h string, m map[string]string) {
 	})
 }
 
-// type=Task,taskname=%s,computer=%s,subject=%s,sid=%s,count=%d,ft=%s,lt=%s
+// type=Task,subject=%s,taskname=%s,computer=%s,count=%d,ft=%s,lt=%s
 func checkWinTask(h string, m map[string]string) {
 	winTaskCount++
 	taskname, ok := m["taskname"]
@@ -351,7 +316,7 @@ func checkWinTask(h string, m map[string]string) {
 	e := datastore.GetWinTask(id)
 	if e != nil {
 		e.LastTime = lt
-		e.Count = count
+		e.Count += count
 		return
 	}
 	datastore.AddWinTask(&datastore.WinTaskEnt{
@@ -364,9 +329,3 @@ func checkWinTask(h string, m map[string]string) {
 		LastTime:  lt,
 	})
 }
-
-// 通知系
-// type=ClearLog,subject=%s@%s,sid=%s
-// type=LogonFailed,subject=%s@%s,target=%s@%s,targetsid=%s,logonType=%s,ip=%s,code=%s,time=%s
-// type=KerberosTGTFailed,target=%s,sid=%s,ip=%s,status=%s,time=%s
-// type=KerberosSTFailed,target=%s,servcie=%s,sid=%s,ip=%s,status=%s,time=%s",

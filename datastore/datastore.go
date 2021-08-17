@@ -54,14 +54,13 @@ var (
 	certs       sync.Map
 	sensors     sync.Map
 	// TWWINLOG
-	winEventID     sync.Map
-	winLogon       sync.Map
-	winAccount     sync.Map
-	winKerberosTGT sync.Map
-	winKerberosST  sync.Map
-	winPrivilege   sync.Map
-	winProcess     sync.Map
-	winTask        sync.Map
+	winEventID   sync.Map
+	winLogon     sync.Map
+	winAccount   sync.Map
+	winKerberos  sync.Map
+	winPrivilege sync.Map
+	winProcess   sync.Map
+	winTask      sync.Map
 	// MAP Changed check
 	stateChangedNodes sync.Map
 	lastLogAdded      time.Time
@@ -257,7 +256,7 @@ func initDB() error {
 	reports := []string{"devices", "users", "flows", "servers", "ips",
 		"ether", "dns", "radius", "tls", "cert",
 		"sensor",
-		"winEventID", "winLogon", "winAccount", "winKerberosTGT", "winKerberosST",
+		"winEventID", "winLogon", "winAccount", "winKerberos",
 		"winPrivilege", "winProcess", "winTask",
 	}
 	initConf()
