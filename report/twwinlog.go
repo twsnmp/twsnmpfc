@@ -129,7 +129,7 @@ func checkWinEventID(h string, m map[string]string, l map[string]interface{}) {
 // type=Logon,target=%s,computer=%s,ip=%s,count=%d,logon=%d,failed=%d,logoff=%d%s%s,ft=%s,lt=%s",
 func checkWinLogon(h string, m map[string]string) {
 	winLogonCount++
-	id, ok := m["target"]
+	target, ok := m["target"]
 	if !ok {
 		return
 	}
@@ -141,6 +141,7 @@ func checkWinLogon(h string, m map[string]string) {
 	failed := getNumberFromTWLog(m["failed"])
 	logoff := getNumberFromTWLog(m["logoff"])
 	lt := getTimeFromTWLog(m["lt"])
+	id := fmt.Sprintf("%s:%s:%s", target, m["computer"], m["ip"])
 	e := datastore.GetWinLogon(id)
 	if e != nil {
 		e.LastTime = lt
@@ -148,16 +149,17 @@ func checkWinLogon(h string, m map[string]string) {
 		e.Logon += logon
 		e.Logoff += logoff
 		e.Failed += failed
-		e.LastIP = m["ip"]
 		return
 	}
 	datastore.AddWinLogon(&datastore.WinLogonEnt{
 		ID:        id,
+		Target:    target,
+		Computer:  m["computer"],
+		IP:        m["ip"],
 		Count:     count,
 		Logon:     logon,
 		Logoff:    logoff,
 		Failed:    failed,
-		LastIP:    m["ip"],
 		FirstTime: getTimeFromTWLog(m["ft"]),
 		LastTime:  lt,
 	})

@@ -34,13 +34,14 @@ func ForEachWinEventID(f func(*WinEventIDEnt) bool) {
 // type=Logon,target=%s,computer=%s,ip=%s,count=%d,logon=%d,failed=%d,logoff=%d%s%s,ft=%s,lt=%s",
 // type=LogonFailed,subject=%s@%s,target=%s@%s,targetsid=%s,logonType=%s,ip=%s,code=%s,time=%s",
 type WinLogonEnt struct {
-	ID        string // target
+	ID        string // target + computer + IP
 	Target    string
+	Computer  string
+	IP        string
 	Count     int64
 	Logon     int64
 	Logoff    int64
 	Failed    int64
-	LastIP    string
 	FirstTime int64
 	LastTime  int64
 }
@@ -213,7 +214,7 @@ func AddWinTask(e *WinTaskEnt) {
 	winTask.Store(e.ID, e)
 }
 
-func ForEachTask(f func(*WinTaskEnt) bool) {
+func ForEachWinTask(f func(*WinTaskEnt) bool) {
 	winTask.Range(func(k, v interface{}) bool {
 		e := v.(*WinTaskEnt)
 		return f(e)

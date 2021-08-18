@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
       <v-card-title>
-        WindowsイベントID
+        Windowsログオン
         <v-spacer></v-spacer>
       </v-card-title>
       <v-alert v-if="$fetchState.error" color="error" dense>
@@ -10,7 +10,7 @@
       </v-alert>
       <v-data-table
         :headers="headers"
-        :items="eventids"
+        :items="logon"
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
@@ -32,8 +32,7 @@
         <template #[`body.append`]>
           <tr>
             <td>
-              <v-select v-model="conf.level" :items="levelList" label="Level">
-              </v-select>
+              <v-text-field v-model="conf.target" label="Target"></v-text-field>
             </td>
             <td>
               <v-text-field
@@ -42,22 +41,7 @@
               ></v-text-field>
             </td>
             <td>
-              <v-text-field
-                v-model="conf.channel"
-                label="Channel"
-              ></v-text-field>
-            </td>
-            <td>
-              <v-text-field
-                v-model="conf.provider"
-                label="Provider"
-              ></v-text-field>
-            </td>
-            <td>
-              <v-text-field
-                v-model="conf.eventID"
-                label="EventID"
-              ></v-text-field>
+              <v-text-field v-model="conf.ip" label="From IP"></v-text-field>
             </td>
           </tr>
         </template>
@@ -65,10 +49,10 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <download-excel
-          :data="eventids"
+          :data="logon"
           type="csv"
-          name="TWSNMP_FC_Windows_EventID_List.csv"
-          header="TWSNMP FC Windows Event ID List"
+          name="TWSNMP_FC_Windows_Logon_List.csv"
+          header="TWSNMP FC Windows Logon List"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -77,10 +61,10 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="eventids"
+          :data="logon"
           type="xls"
-          name="TWSNMP_FC_Windows_EventID_List.xls"
-          header="TWSNMP FC Windows Event ID"
+          name="TWSNMP_FC_Windows_Logon_List.xls"
+          header="TWSNMP FC Windows Logon List"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -116,7 +100,7 @@
     <v-dialog v-model="infoDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
-          <span class="headline">イベントID情報</span>
+          <span class="headline">ログオン情報</span>
         </v-card-title>
         <v-simple-table dense>
           <template #default>
@@ -128,33 +112,32 @@
             </thead>
             <tbody>
               <tr>
-                <td>レベル</td>
-                <td>
-                  <v-icon :color="$getStateColor(selected.Level)">
-                    {{ $getStateIconName(selected.Level) }}
-                  </v-icon>
-                  {{ $getStateName(selected.Level) }}
-                </td>
+                <td>ログオン先</td>
+                <td>{{ selected.Target }}</td>
               </tr>
               <tr>
                 <td>コンピュータ</td>
                 <td>{{ selected.Computer }}</td>
               </tr>
               <tr>
-                <td>チャネル</td>
-                <td>{{ selected.Channel }}</td>
-              </tr>
-              <tr>
-                <td>プロバイダー</td>
-                <td>{{ selected.Provider }}</td>
-              </tr>
-              <tr>
-                <td>イベントID</td>
-                <td>{{ selected.EventID }}</td>
+                <td>接続元</td>
+                <td>{{ selected.IP }}</td>
               </tr>
               <tr>
                 <td>回数</td>
                 <td>{{ selected.Count }}</td>
+              </tr>
+              <tr>
+                <td>ログオン回数</td>
+                <td>{{ selected.Logon }}</td>
+              </tr>
+              <tr>
+                <td>ログオフ回数</td>
+                <td>{{ selected.Logoff }}</td>
+              </tr>
+              <tr>
+                <td>失敗回数</td>
+                <td>{{ selected.Failed }}</td>
               </tr>
               <tr>
                 <td>初回日時</td>
@@ -185,12 +168,12 @@ export default {
     return {
       headers: [
         {
-          text: '状態',
-          value: 'Level',
-          width: '10%',
+          text: 'ログオン先',
+          value: 'Target',
+          width: '15%',
           filter: (value) => {
-            if (!this.conf.level) return true
-            return this.conf.level === value
+            if (!this.conf.target) return true
+            return value.includes(this.conf.target)
           },
         },
         {
@@ -203,67 +186,44 @@ export default {
           },
         },
         {
-          text: 'チャネル',
-          value: 'Channel',
-          width: '13%',
+          text: '接続元',
+          value: 'IP',
+          width: '10%',
           filter: (value) => {
-            if (!this.conf.channel) return true
-            return value.includes(this.conf.channel)
+            if (!this.conf.ip) return true
+            return value.includes(this.conf.ip)
           },
         },
-        {
-          text: 'プロバイダー',
-          value: 'Provider',
-          width: '15%',
-          filter: (value) => {
-            if (!this.conf.provider) return true
-            return value.includes(this.conf.provider)
-          },
-        },
-        {
-          text: 'イベントID',
-          value: 'EventID',
-          width: '12%',
-          filter: (value) => {
-            if (!this.conf.eventID) return true
-            return value.includes(this.conf.eventID)
-          },
-        },
-        { text: '回数', value: 'Count', width: '10%' },
-        { text: '最終', value: 'Last', width: '15%' },
+        { text: '回数', value: 'Count', width: '8%' },
+        { text: 'ログオン', value: 'Logon', width: '10%' },
+        { text: 'ログオフ', value: 'Logoff', width: '10%' },
+        { text: '失敗', value: 'Failed', width: '8%' },
+        { text: '最終', value: 'Last', width: '14%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
-      eventids: [],
+      logon: [],
       selected: {},
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
       conf: {
-        level: '',
+        target: '',
         computer: '',
-        channel: '',
-        provider: '',
-        eventID: '',
+        ip: '',
         sortBy: 'Count',
         sortDesc: false,
         page: 1,
         itemsPerPage: 15,
       },
       options: {},
-      levelList: [
-        { text: '', value: '' },
-        { text: 'エラー', value: 'error' },
-        { text: '注意', value: 'warn' },
-        { text: '正常', value: 'normal' },
-      ],
     }
   },
   async fetch() {
-    this.eventids = await this.$axios.$get('/api/report/WinEventIDs')
-    if (!this.eventids) {
+    this.logon = await this.$axios.$get('/api/report/WinLogon')
+    if (!this.logon) {
       return
     }
-    this.eventids.forEach((e) => {
+    this.logon.forEach((e) => {
       e.First = this.$timeFormat(
         new Date(e.FirstTime / (1000 * 1000)),
         '{MM}/{dd} {HH}:{mm}:{ss}'
@@ -279,7 +239,7 @@ export default {
     }
   },
   created() {
-    const c = this.$store.state.report.twwinlog.winEventID
+    const c = this.$store.state.report.twwinlog.winLogon
     if (c && c.sortBy) {
       Object.assign(this.conf, c)
     }
@@ -289,12 +249,12 @@ export default {
     this.conf.sortDesc = this.options.sortDesc[0]
     this.conf.page = this.options.page
     this.conf.itemsPerPage = this.options.itemsPerPage
-    this.$store.commit('report/twwinlog/setWinEventID', this.conf)
+    this.$store.commit('report/twwinlog/setWinLogon', this.conf)
   },
   methods: {
     doDelete() {
       this.$axios
-        .delete('/api/report/WinEventID/' + this.selected.ID)
+        .delete('/api/report/WinLogon/' + this.selected.ID)
         .then((r) => {
           this.$fetch()
         })

@@ -6,7 +6,16 @@ export const state = () => ({
     provider: '',
     eventID: '',
     sortBy: 'Count',
-    sortDesc: false,
+    sortDesc: true,
+    page: 1,
+    itemsPerPage: 15,
+  },
+  winLogon: {
+    target: '',
+    computer: '',
+    ip: '',
+    sortBy: 'Count',
+    sortDesc: true,
     page: 1,
     itemsPerPage: 15,
   },
@@ -15,5 +24,8 @@ export const state = () => ({
 export const mutations = {
   setWinEventID(state, c) {
     state.winEventID = c
+  },
+  setLogon(state, c) {
+    state.winLogon = c
   },
 }
