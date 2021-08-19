@@ -226,7 +226,6 @@ export default {
         new Date(e.LastTime / (1000 * 1000)),
         '{MM}/{dd} {HH}:{mm}:{ss}'
       )
-      console.log(e)
     })
     if (this.conf.page > 1) {
       this.options.page = this.conf.page
