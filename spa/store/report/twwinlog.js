@@ -19,13 +19,25 @@ export const state = () => ({
     page: 1,
     itemsPerPage: 15,
   },
+  winAccount: {
+    subject: '',
+    target: '',
+    computer: '',
+    sortBy: 'Count',
+    sortDesc: true,
+    page: 1,
+    itemsPerPage: 15,
+  },
 })
 
 export const mutations = {
   setWinEventID(state, c) {
     state.winEventID = c
   },
-  setLogon(state, c) {
+  setWinLogon(state, c) {
     state.winLogon = c
+  },
+  setWinAccount(state, c) {
+    state.winAccount = c
   },
 }

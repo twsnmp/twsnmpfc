@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
       <v-card-title>
-        Windowsログオン
+        Windowsアカウント
         <v-spacer></v-spacer>
       </v-card-title>
       <v-alert v-if="$fetchState.error" color="error" dense>
@@ -10,7 +10,7 @@
       </v-alert>
       <v-data-table
         :headers="headers"
-        :items="logon"
+        :items="account"
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
@@ -26,16 +26,16 @@
         <template #[`body.append`]>
           <tr>
             <td>
-              <v-text-field v-model="conf.target" label="Target"></v-text-field>
+              <v-text-field v-model="conf.subject" label="Subject">
+              </v-text-field>
             </td>
             <td>
-              <v-text-field
-                v-model="conf.computer"
-                label="Computer"
-              ></v-text-field>
+              <v-text-field v-model="conf.target" label="Target">
+              </v-text-field>
             </td>
             <td>
-              <v-text-field v-model="conf.ip" label="From IP"></v-text-field>
+              <v-text-field v-model="conf.computer" label="Computer">
+              </v-text-field>
             </td>
           </tr>
         </template>
@@ -43,10 +43,10 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <download-excel
-          :data="logon"
+          :data="account"
           type="csv"
-          name="TWSNMP_FC_Windows_Logon_List.csv"
-          header="TWSNMP FC Windows Logon List"
+          name="TWSNMP_FC_Windows_Account_List.csv"
+          header="TWSNMP FC Windows Account List"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -55,10 +55,10 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="logon"
+          :data="account"
           type="xls"
-          name="TWSNMP_FC_Windows_Logon_List.xls"
-          header="TWSNMP FC Windows Logon List"
+          name="TWSNMP_FC_Windows_Account_List.xls"
+          header="TWSNMP FC Windows Account List"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -94,7 +94,7 @@
     <v-dialog v-model="infoDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
-          <span class="headline">ログオン情報</span>
+          <span class="headline">アカウント情報</span>
         </v-card-title>
         <v-simple-table dense>
           <template #default>
@@ -106,7 +106,11 @@
             </thead>
             <tbody>
               <tr>
-                <td>ログオン先</td>
+                <td>操作したアカウント</td>
+                <td>{{ selected.Subject }}</td>
+              </tr>
+              <tr>
+                <td>対象アカウント</td>
                 <td>{{ selected.Target }}</td>
               </tr>
               <tr>
@@ -114,24 +118,20 @@
                 <td>{{ selected.Computer }}</td>
               </tr>
               <tr>
-                <td>接続元</td>
-                <td>{{ selected.IP }}</td>
-              </tr>
-              <tr>
                 <td>回数</td>
                 <td>{{ selected.Count }}</td>
               </tr>
               <tr>
-                <td>ログオン回数</td>
-                <td>{{ selected.Logon }}</td>
+                <td>編集</td>
+                <td>{{ selected.Edit }}</td>
               </tr>
               <tr>
-                <td>ログオフ回数</td>
-                <td>{{ selected.Logoff }}</td>
+                <td>パスワード変更</td>
+                <td>{{ selected.Password }}</td>
               </tr>
               <tr>
-                <td>失敗回数</td>
-                <td>{{ selected.Failed }}</td>
+                <td>その他</td>
+                <td>{{ selected.Other }}</td>
               </tr>
               <tr>
                 <td>初回日時</td>
@@ -162,7 +162,16 @@ export default {
     return {
       headers: [
         {
-          text: 'ログオン先',
+          text: '操作したアカウント',
+          value: 'Subject',
+          width: '20%',
+          filter: (value) => {
+            if (!this.conf.target) return true
+            return value.includes(this.conf.target)
+          },
+        },
+        {
+          text: '対象アカウント',
           value: 'Target',
           width: '20%',
           filter: (value) => {
@@ -179,31 +188,22 @@ export default {
             return value.includes(this.conf.computer)
           },
         },
-        {
-          text: '接続元',
-          value: 'IP',
-          width: '10%',
-          filter: (value) => {
-            if (!this.conf.ip) return true
-            return value.includes(this.conf.ip)
-          },
-        },
         { text: '回数', value: 'Count', width: '8%' },
-        { text: 'ログオン', value: 'Logon', width: '8%' },
-        { text: 'ログオフ', value: 'Logoff', width: '8%' },
-        { text: '失敗', value: 'Failed', width: '8%' },
+        { text: '編集', value: 'Edit', width: '8%' },
+        { text: 'パスワード', value: 'Password', width: '8%' },
+        { text: 'その他', value: 'Other', width: '8%' },
         { text: '最終', value: 'Last', width: '13%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
-      logon: [],
+      account: [],
       selected: {},
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
       conf: {
+        subject: '',
         target: '',
         computer: '',
-        ip: '',
         sortBy: 'Count',
         sortDesc: false,
         page: 1,
@@ -213,11 +213,11 @@ export default {
     }
   },
   async fetch() {
-    this.logon = await this.$axios.$get('/api/report/WinLogon')
-    if (!this.logon) {
+    this.account = await this.$axios.$get('/api/report/WinAccount')
+    if (!this.account) {
       return
     }
-    this.logon.forEach((e) => {
+    this.account.forEach((e) => {
       e.First = this.$timeFormat(
         new Date(e.FirstTime / (1000 * 1000)),
         '{MM}/{dd} {HH}:{mm}:{ss}'
@@ -226,6 +226,7 @@ export default {
         new Date(e.LastTime / (1000 * 1000)),
         '{MM}/{dd} {HH}:{mm}:{ss}'
       )
+      console.log(e)
     })
     if (this.conf.page > 1) {
       this.options.page = this.conf.page
@@ -233,7 +234,7 @@ export default {
     }
   },
   created() {
-    const c = this.$store.state.report.twwinlog.winLogon
+    const c = this.$store.state.report.twwinlog.winAccount
     if (c && c.sortBy) {
       Object.assign(this.conf, c)
     }
@@ -243,12 +244,12 @@ export default {
     this.conf.sortDesc = this.options.sortDesc[0]
     this.conf.page = this.options.page
     this.conf.itemsPerPage = this.options.itemsPerPage
-    this.$store.commit('report/twwinlog/setWinLogon', this.conf)
+    this.$store.commit('report/twwinlog/setWinAccount', this.conf)
   },
   methods: {
     doDelete() {
       this.$axios
-        .delete('/api/report/WinLogon/' + this.selected.ID)
+        .delete('/api/report/WinAccount/' + this.selected.ID)
         .then((r) => {
           this.$fetch()
         })

@@ -203,16 +203,6 @@ func checkWinLogon(m map[string]string) {
 	datastore.AddWinLogon(e)
 }
 
-/*
-2021-08-19T04:47:58.322 logon id=MYAMAI@DESKTOP-T6L1D1U,e=type=Logon,target=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,ip=,count=7,logon=3,failed=1,logoff=3,logonType[Network]=3,logonType[Unlock]=4,failedCode[BadPassword]=1,ft=2021-08-19T04:46:10+09:00,lt=2021-08-19T04:46:33+09:00
-2021-08-19T04:47:58.323 logon id=MYAMAI@LOCALHOST,e=type=Logon,target=myamai@localhost,computer=DESKTOP-T6L1D1U,ip=192.168.1.9,count=1,logon=1,failed=0,logoff=0,logonType[Explicit]=1,ft=2021-08-19T04:46:33+09:00,lt=2021-08-19T04:46:33+09:00
-2021-08-19T04:48:12.053 privilege id=myamai@DESKTOP-T6L1D1U,e=type=Privilege,subject=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,count=6,ft=2021-08-19T04:48:02+09:00,lt=2021-08-19T04:48:03+09:00
-2021-08-19T04:47:58.323 privilege id=myamai@DESKTOP-T6L1D1U,e=type=Privilege,subject=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,count=13,ft=2021-08-19T04:46:11+09:00,lt=2021-08-19T04:46:34+09:00
-2021-08-19T04:47:53.337 privilege id=myamai@DESKTOP-T6L1D1U,e=type=Privilege,subject=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,count=462,ft=2021-08-18T16:51:00+09:00,lt=2021-08-19T04:41:17+09:00
-2021-08-19T04:47:58.323 privilege id=DESKTOP-T6L1D1U$@WORKGROUP,e=type=Privilege,subject=DESKTOP-T6L1D1U$@WORKGROUP,computer=DESKTOP-T6L1D1U,count=11,ft=2021-08-19T04:46:11+09:00,lt=2021-08-19T04:46:33+09:00
-2021-08-19T04:47:53.339 privilege id=DESKTOP-T6L1D1U$@WORKGROUP,e=type=Privilege,subject=DESKTOP-T6L1D1U$@WORKGROUP,computer=DESKTOP-T6L1D1U,count=295,ft=2021-08-18T16:55:52+09:00,lt=2021-08-19T04:40:31+09:00
-*/
-
 // type=Account,subject=%s,target=%s,computer=%s,count=%d,edit=%d,password=%d,other=%d,ft=%s,lt=%s",
 func checkWinAccount(h string, m map[string]string) {
 	winAccountCount++
