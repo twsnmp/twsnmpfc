@@ -253,7 +253,7 @@ func checkWinKerberos(h string, m map[string]string) {
 	if count < 1 {
 		return
 	}
-	id := fmt.Sprintf("%s:%s:%s:%s:%s", target, m["ricketType"], m["computer"], m["service"], m["ip"])
+	id := fmt.Sprintf("%s:%s:%s:%s:%s", target, m["computer"], m["ip"], m["service"], m["ticketType"])
 	failed := getNumberFromTWLog(m["failed"])
 	lt := getTimeFromTWLog(m["lt"])
 	e := datastore.GetWinKerberos(id)
@@ -261,17 +261,19 @@ func checkWinKerberos(h string, m map[string]string) {
 		e.LastTime = lt
 		e.Count += count
 		e.Failed += failed
-		e.IP = m["ip"]
 		return
 	}
 	datastore.AddWinKerberos(&datastore.WinKerberosEnt{
-		ID:        id,
-		Target:    target,
-		Count:     count,
-		Failed:    failed,
-		IP:        m["ip"],
-		FirstTime: getTimeFromTWLog(m["ft"]),
-		LastTime:  lt,
+		ID:         id,
+		Target:     target,
+		Computer:   m["computer"],
+		Service:    m["service"],
+		TicketType: m["ticketType"],
+		IP:         m["ip"],
+		Count:      count,
+		Failed:     failed,
+		FirstTime:  getTimeFromTWLog(m["ft"]),
+		LastTime:   lt,
 	})
 }
 
@@ -305,7 +307,6 @@ func checkWinPrivilege(h string, m map[string]string) {
 }
 
 // type=Process,computer=%s,process=%s,count=%d,start=%d,exit=%d,subject=%s,status=%s,parent=%s,ft=%s,lt=%s",
-
 func checkWinProcess(h string, m map[string]string) {
 	winProcessCount++
 	process, ok := m["process"]
@@ -326,17 +327,29 @@ func checkWinProcess(h string, m map[string]string) {
 		e.Count += count
 		e.Start += start
 		e.Exit += exit
+		if v, ok := m["subject"]; ok && v != "" {
+			e.LastSubject = v
+		}
+		if v, ok := m["status"]; ok && v != "" {
+			e.LastStatus = v
+		}
+		if v, ok := m["parent"]; ok && v != "" {
+			e.LastParent = v
+		}
 		return
 	}
 	datastore.AddWinProcess(&datastore.WinProcessEnt{
-		ID:        id,
-		Process:   process,
-		Computer:  m["computer"],
-		Count:     count,
-		Start:     start,
-		Exit:      exit,
-		FirstTime: getTimeFromTWLog(m["ft"]),
-		LastTime:  lt,
+		ID:          id,
+		Process:     process,
+		Computer:    m["computer"],
+		Count:       count,
+		Start:       start,
+		Exit:        exit,
+		LastSubject: m["subject"],
+		LastParent:  m["parent"],
+		LastStatus:  m["subject"],
+		FirstTime:   getTimeFromTWLog(m["ft"]),
+		LastTime:    lt,
 	})
 }
 
@@ -351,7 +364,7 @@ func checkWinTask(h string, m map[string]string) {
 	if count < 1 {
 		return
 	}
-	id := fmt.Sprintf("%s:%s", taskname, m["computer"])
+	id := fmt.Sprintf("%s:%s:%s", taskname, m["computer"], m["subject"])
 	lt := getTimeFromTWLog(m["lt"])
 	e := datastore.GetWinTask(id)
 	if e != nil {

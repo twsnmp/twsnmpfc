@@ -28,6 +28,42 @@ export const state = () => ({
     page: 1,
     itemsPerPage: 15,
   },
+  winKerberos: {
+    target: '',
+    computer: '',
+    ip: '',
+    service: '',
+    ticketType: '',
+    subject: '',
+    sortBy: 'Count',
+    sortDesc: true,
+    page: 1,
+    itemsPerPage: 15,
+  },
+  winPrivilege: {
+    subject: '',
+    computer: '',
+    sortBy: 'Count',
+    sortDesc: true,
+    page: 1,
+    itemsPerPage: 15,
+  },
+  winProcess: {
+    process: '',
+    computer: '',
+    sortBy: 'Count',
+    sortDesc: true,
+    page: 1,
+    itemsPerPage: 15,
+  },
+  winTask: {
+    task: '',
+    computer: '',
+    sortBy: 'Count',
+    sortDesc: true,
+    page: 1,
+    itemsPerPage: 15,
+  },
 })
 
 export const mutations = {
@@ -39,5 +75,17 @@ export const mutations = {
   },
   setWinAccount(state, c) {
     state.winAccount = c
+  },
+  setWinKerberos(state, c) {
+    state.winKerberos = c
+  },
+  setWinPrivilege(state, c) {
+    state.winPrivilege = c
+  },
+  setWinProcess(state, c) {
+    state.winProcess = c
+  },
+  setWinTask(state, c) {
+    state.winTask = c
   },
 }

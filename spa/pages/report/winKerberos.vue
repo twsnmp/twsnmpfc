@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
       <v-card-title>
-        Windowsアカウント
+        Windows Kerberos
         <v-spacer></v-spacer>
       </v-card-title>
       <v-alert v-if="$fetchState.error" color="error" dense>
@@ -10,7 +10,7 @@
       </v-alert>
       <v-data-table
         :headers="headers"
-        :items="account"
+        :items="kerberos"
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
@@ -26,15 +26,22 @@
         <template #[`body.append`]>
           <tr>
             <td>
-              <v-text-field v-model="conf.subject" label="Subject">
-              </v-text-field>
-            </td>
-            <td>
               <v-text-field v-model="conf.target" label="Target">
               </v-text-field>
             </td>
             <td>
               <v-text-field v-model="conf.computer" label="Computer">
+              </v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="conf.ip" label="From IP"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="conf.service" label="Service">
+              </v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="conf.ticketType" label="Ticket Type">
               </v-text-field>
             </td>
           </tr>
@@ -43,10 +50,10 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <download-excel
-          :data="account"
+          :data="kerberos"
           type="csv"
-          name="TWSNMP_FC_Windows_Account_List.csv"
-          header="TWSNMP FC Windows Account List"
+          name="TWSNMP_FC_Windows_Kerberos_List.csv"
+          header="TWSNMP FC Windows Kerberos List"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -55,10 +62,10 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="account"
+          :data="kerberos"
           type="xls"
-          name="TWSNMP_FC_Windows_Account_List.xls"
-          header="TWSNMP FC Windows Account List"
+          name="TWSNMP_FC_Windows_Kerberos_List.xls"
+          header="TWSNMP FC Windows Kerberos List"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -94,7 +101,7 @@
     <v-dialog v-model="infoDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
-          <span class="headline">アカウント情報</span>
+          <span class="headline">Kerberos情報</span>
         </v-card-title>
         <v-simple-table dense>
           <template #default>
@@ -106,11 +113,7 @@
             </thead>
             <tbody>
               <tr>
-                <td>操作したアカウント</td>
-                <td>{{ selected.Subject }}</td>
-              </tr>
-              <tr>
-                <td>対象アカウント</td>
+                <td>対象</td>
                 <td>{{ selected.Target }}</td>
               </tr>
               <tr>
@@ -118,20 +121,24 @@
                 <td>{{ selected.Computer }}</td>
               </tr>
               <tr>
+                <td>IP</td>
+                <td>{{ selected.IP }}</td>
+              </tr>
+              <tr>
+                <td>サービス</td>
+                <td>{{ selected.Service }}</td>
+              </tr>
+              <tr>
+                <td>チケット種別</td>
+                <td>{{ selected.TicketType }}</td>
+              </tr>
+              <tr>
                 <td>回数</td>
                 <td>{{ selected.Count }}</td>
               </tr>
               <tr>
-                <td>編集</td>
-                <td>{{ selected.Edit }}</td>
-              </tr>
-              <tr>
-                <td>パスワード変更</td>
-                <td>{{ selected.Password }}</td>
-              </tr>
-              <tr>
-                <td>その他</td>
-                <td>{{ selected.Other }}</td>
+                <td>失敗</td>
+                <td>{{ selected.Failed }}</td>
               </tr>
               <tr>
                 <td>初回日時</td>
@@ -162,18 +169,9 @@ export default {
     return {
       headers: [
         {
-          text: '操作したアカウント',
-          value: 'Subject',
-          width: '20%',
-          filter: (value) => {
-            if (!this.conf.subject) return true
-            return value.includes(this.conf.subject)
-          },
-        },
-        {
-          text: '対象アカウント',
+          text: '対象',
           value: 'Target',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.target) return true
             return value.includes(this.conf.target)
@@ -182,28 +180,55 @@ export default {
         {
           text: 'コンピュータ',
           value: 'Computer',
-          width: '15%',
+          width: '12%',
           filter: (value) => {
             if (!this.conf.computer) return true
             return value.includes(this.conf.computer)
           },
         },
+        {
+          text: '要求元IP',
+          value: 'IP',
+          width: '10%',
+          filter: (value) => {
+            if (!this.conf.ip) return true
+            return value.includes(this.conf.ip)
+          },
+        },
+        {
+          text: 'サービス',
+          value: 'Service',
+          width: '13%',
+          filter: (value) => {
+            if (!this.conf.service) return true
+            return value.includes(this.conf.service)
+          },
+        },
+        {
+          text: 'チケット種別',
+          value: 'TicketType',
+          width: '10%',
+          filter: (value) => {
+            if (!this.conf.ticketType) return true
+            return value.includes(this.conf.ticketType)
+          },
+        },
         { text: '回数', value: 'Count', width: '8%' },
-        { text: '編集', value: 'Edit', width: '8%' },
-        { text: 'パスワード', value: 'Password', width: '8%' },
-        { text: 'その他', value: 'Other', width: '8%' },
-        { text: '最終', value: 'Last', width: '13%' },
+        { text: '失敗', value: 'Failed', width: '8%' },
+        { text: '最終', value: 'Last', width: '14%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
-      account: [],
+      kerberos: [],
       selected: {},
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
       conf: {
-        subject: '',
         target: '',
         computer: '',
+        ip: '',
+        service: '',
+        ticketType: '',
         sortBy: 'Count',
         sortDesc: false,
         page: 1,
@@ -213,11 +238,11 @@ export default {
     }
   },
   async fetch() {
-    this.account = await this.$axios.$get('/api/report/WinAccount')
-    if (!this.account) {
+    this.kerberos = await this.$axios.$get('/api/report/WinKerberos')
+    if (!this.kerberos) {
       return
     }
-    this.account.forEach((e) => {
+    this.kerberos.forEach((e) => {
       e.First = this.$timeFormat(
         new Date(e.FirstTime / (1000 * 1000)),
         '{MM}/{dd} {HH}:{mm}:{ss}'
@@ -233,7 +258,7 @@ export default {
     }
   },
   created() {
-    const c = this.$store.state.report.twwinlog.winAccount
+    const c = this.$store.state.report.twwinlog.winKerberos
     if (c && c.sortBy) {
       Object.assign(this.conf, c)
     }
@@ -243,12 +268,12 @@ export default {
     this.conf.sortDesc = this.options.sortDesc[0]
     this.conf.page = this.options.page
     this.conf.itemsPerPage = this.options.itemsPerPage
-    this.$store.commit('report/twwinlog/setWinAccount', this.conf)
+    this.$store.commit('report/twwinlog/setWinKerberos', this.conf)
   },
   methods: {
     doDelete() {
       this.$axios
-        .delete('/api/report/WinAccount/' + this.selected.ID)
+        .delete('/api/report/WinKerberos/' + this.selected.ID)
         .then((r) => {
           this.$fetch()
         })

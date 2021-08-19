@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
       <v-card-title>
-        Windowsアカウント
+        Windowsプロセス
         <v-spacer></v-spacer>
       </v-card-title>
       <v-alert v-if="$fetchState.error" color="error" dense>
@@ -10,7 +10,7 @@
       </v-alert>
       <v-data-table
         :headers="headers"
-        :items="account"
+        :items="process"
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
@@ -18,6 +18,7 @@
         :sort-by="conf.sortBy"
         :sort-desc="conf.sortDesc"
         :options.sync="options"
+        class="log"
       >
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
@@ -26,15 +27,11 @@
         <template #[`body.append`]>
           <tr>
             <td>
-              <v-text-field v-model="conf.subject" label="Subject">
-              </v-text-field>
-            </td>
-            <td>
-              <v-text-field v-model="conf.target" label="Target">
-              </v-text-field>
-            </td>
-            <td>
               <v-text-field v-model="conf.computer" label="Computer">
+              </v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="conf.process" label="Process">
               </v-text-field>
             </td>
           </tr>
@@ -43,10 +40,10 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <download-excel
-          :data="account"
+          :data="process"
           type="csv"
-          name="TWSNMP_FC_Windows_Account_List.csv"
-          header="TWSNMP FC Windows Account List"
+          name="TWSNMP_FC_Windows_Process_List.csv"
+          header="TWSNMP FC Windows Process List"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -55,10 +52,10 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="account"
+          :data="process"
           type="xls"
-          name="TWSNMP_FC_Windows_Account_List.xls"
-          header="TWSNMP FC Windows Account List"
+          name="TWSNMP_FC_Windows_Process_List.xls"
+          header="TWSNMP FC Windows Process List"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -94,7 +91,7 @@
     <v-dialog v-model="infoDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
-          <span class="headline">アカウント情報</span>
+          <span class="headline">プロセス情報</span>
         </v-card-title>
         <v-simple-table dense>
           <template #default>
@@ -106,32 +103,36 @@
             </thead>
             <tbody>
               <tr>
-                <td>操作したアカウント</td>
-                <td>{{ selected.Subject }}</td>
-              </tr>
-              <tr>
-                <td>対象アカウント</td>
-                <td>{{ selected.Target }}</td>
-              </tr>
-              <tr>
                 <td>コンピュータ</td>
                 <td>{{ selected.Computer }}</td>
+              </tr>
+              <tr>
+                <td>プロセス</td>
+                <td>{{ selected.Process }}</td>
               </tr>
               <tr>
                 <td>回数</td>
                 <td>{{ selected.Count }}</td>
               </tr>
               <tr>
-                <td>編集</td>
-                <td>{{ selected.Edit }}</td>
+                <td>起動</td>
+                <td>{{ selected.Start }}</td>
               </tr>
               <tr>
-                <td>パスワード変更</td>
-                <td>{{ selected.Password }}</td>
+                <td>停止</td>
+                <td>{{ selected.Exit }}</td>
               </tr>
               <tr>
-                <td>その他</td>
-                <td>{{ selected.Other }}</td>
+                <td>親プロセス</td>
+                <td>{{ selected.LastParent }}</td>
+              </tr>
+              <tr>
+                <td>関連アカウント</td>
+                <td>{{ selected.LastSubject }}</td>
+              </tr>
+              <tr>
+                <td>最終ステータス</td>
+                <td>{{ selected.LastStatus }}</td>
               </tr>
               <tr>
                 <td>初回日時</td>
@@ -162,24 +163,6 @@ export default {
     return {
       headers: [
         {
-          text: '操作したアカウント',
-          value: 'Subject',
-          width: '20%',
-          filter: (value) => {
-            if (!this.conf.subject) return true
-            return value.includes(this.conf.subject)
-          },
-        },
-        {
-          text: '対象アカウント',
-          value: 'Target',
-          width: '20%',
-          filter: (value) => {
-            if (!this.conf.target) return true
-            return value.includes(this.conf.target)
-          },
-        },
-        {
           text: 'コンピュータ',
           value: 'Computer',
           width: '15%',
@@ -188,22 +171,29 @@ export default {
             return value.includes(this.conf.computer)
           },
         },
+        {
+          text: 'プロセス',
+          value: 'Process',
+          width: '35%',
+          filter: (value) => {
+            if (!this.conf.process) return true
+            return value.includes(this.conf.process)
+          },
+        },
         { text: '回数', value: 'Count', width: '8%' },
-        { text: '編集', value: 'Edit', width: '8%' },
-        { text: 'パスワード', value: 'Password', width: '8%' },
-        { text: 'その他', value: 'Other', width: '8%' },
-        { text: '最終', value: 'Last', width: '13%' },
+        { text: '開始', value: 'Start', width: '8%' },
+        { text: '終了', value: 'Exit', width: '8%' },
+        { text: '最終', value: 'Last', width: '16%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
-      account: [],
+      process: [],
       selected: {},
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
       conf: {
-        subject: '',
-        target: '',
         computer: '',
+        process: '',
         sortBy: 'Count',
         sortDesc: false,
         page: 1,
@@ -213,11 +203,11 @@ export default {
     }
   },
   async fetch() {
-    this.account = await this.$axios.$get('/api/report/WinAccount')
-    if (!this.account) {
+    this.process = await this.$axios.$get('/api/report/WinProcess')
+    if (!this.process) {
       return
     }
-    this.account.forEach((e) => {
+    this.process.forEach((e) => {
       e.First = this.$timeFormat(
         new Date(e.FirstTime / (1000 * 1000)),
         '{MM}/{dd} {HH}:{mm}:{ss}'
@@ -233,7 +223,7 @@ export default {
     }
   },
   created() {
-    const c = this.$store.state.report.twwinlog.winAccount
+    const c = this.$store.state.report.twwinlog.winProcess
     if (c && c.sortBy) {
       Object.assign(this.conf, c)
     }
@@ -243,12 +233,12 @@ export default {
     this.conf.sortDesc = this.options.sortDesc[0]
     this.conf.page = this.options.page
     this.conf.itemsPerPage = this.options.itemsPerPage
-    this.$store.commit('report/twwinlog/setWinAccount', this.conf)
+    this.$store.commit('report/twwinlog/setWinProcess', this.conf)
   },
   methods: {
     doDelete() {
       this.$axios
-        .delete('/api/report/WinAccount/' + this.selected.ID)
+        .delete('/api/report/WinProcess/' + this.selected.ID)
         .then((r) => {
           this.$fetch()
         })

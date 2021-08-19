@@ -103,7 +103,7 @@ func ForEachWinAccount(f func(*WinAccountEnt) bool) {
 // type=Kerberos,target=%s,computer=%s,ip=%s,service=%s,ticketType=%s,count=%d,failed=%d,status=%s,cert=%s,ft=%s,lt=%s
 // type=KerberosFailed,target=%s,computer=%s,ip=%s,service=%s,ticketType=%s,status=%s,time=%s
 type WinKerberosEnt struct {
-	ID         string // target + computer + service + ip
+	ID         string // target + computer + ip  + service + ticketType
 	Target     string
 	Computer   string
 	IP         string
@@ -198,7 +198,7 @@ func ForEachWinProcess(f func(*WinProcessEnt) bool) {
 
 // type=Task,subject=%s,taskname=%s,computer=%s,count=%d,ft=%s,lt=%s",
 type WinTaskEnt struct {
-	ID        string // Computer + TaskName
+	ID        string // Computer + TaskName + Subject
 	TaskName  string
 	Computer  string
 	Subject   string
