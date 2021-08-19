@@ -31,19 +31,23 @@ func ForEachWinEventID(f func(*WinEventIDEnt) bool) {
 	})
 }
 
-// type=Logon,target=%s,computer=%s,ip=%s,count=%d,logon=%d,failed=%d,logoff=%d%s%s,ft=%s,lt=%s",
-// type=LogonFailed,subject=%s@%s,target=%s@%s,targetsid=%s,logonType=%s,ip=%s,code=%s,time=%s",
+// type=Logon,subject=@,target=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,ip=192.168.1.250,logonType=Network,time=2021-08-19T05:17:43+09:00
+// type=LogonFailed,subject=@,target=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,ip=192.168.1.9,logonType=Network,failedCode=BadPassword,time=2021-08-19T04:46:28+09:00
+// type=Logoff,subject=@,target=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,ip=,logonType=Network,time=2021-08-19T04:46:10+09:00
+
 type WinLogonEnt struct {
-	ID        string // target + computer + IP
-	Target    string
-	Computer  string
-	IP        string
-	Count     int64
-	Logon     int64
-	Logoff    int64
-	Failed    int64
-	FirstTime int64
-	LastTime  int64
+	ID         string // target + computer + IP
+	Target     string
+	Computer   string
+	IP         string
+	Count      int64
+	Logon      int64
+	Logoff     int64
+	Failed     int64
+	LogonType  map[string]int
+	FailedCode map[string]int
+	FirstTime  int64
+	LastTime   int64
 }
 
 func GetWinLogon(id string) *WinLogonEnt {

@@ -54,8 +54,8 @@ func checkTWWinLogReport(l map[string]interface{}) {
 		checkMonitor(h, "twwinlog", m)
 	case "EventID":
 		checkWinEventID(h, m, l)
-	case "Logon":
-		checkWinLogon(h, m)
+	case "Logon", "Logoff", "LogonFailed":
+		checkWinLogon(m)
 	case "Account":
 		checkWinAccount(h, m)
 	case "Kerberos":
@@ -126,44 +126,92 @@ func checkWinEventID(h string, m map[string]string, l map[string]interface{}) {
 	})
 }
 
-// type=Logon,target=%s,computer=%s,ip=%s,count=%d,logon=%d,failed=%d,logoff=%d%s%s,ft=%s,lt=%s",
-func checkWinLogon(h string, m map[string]string) {
+// type=Logon,subject=@,target=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,ip=192.168.1.250,logonType=Network,time=2021-08-19T05:17:43+09:00
+// type=LogonFailed,subject=@,target=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,ip=192.168.1.9,logonType=Network,failedCode=BadPassword,time=2021-08-19T04:46:28+09:00
+// type=Logoff,subject=@,target=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,ip=,logonType=Network,time=2021-08-19T04:46:10+09:00
+
+func checkWinLogon(m map[string]string) {
 	winLogonCount++
+	tp, ok := m["type"]
+	if !ok {
+		return
+	}
 	target, ok := m["target"]
 	if !ok {
 		return
 	}
-	count := getNumberFromTWLog(m["count"])
-	if count < 1 {
+	computer := m["computer"]
+	logonType := m["logonType"]
+	failedCode := m["failedCode"]
+	ts := getTimeFromTWLog(m["time"])
+	if tp == "Logoff" {
+		datastore.ForEachWinLogon(func(e *datastore.WinLogonEnt) bool {
+			if e.Computer == computer && e.Target == target && e.LogonType[logonType] > 0 {
+				e.Logoff++
+				if e.LastTime < ts {
+					e.LastTime = ts
+				}
+				return false
+			}
+			return true
+		})
 		return
 	}
-	logon := getNumberFromTWLog(m["logon"])
-	failed := getNumberFromTWLog(m["failed"])
-	logoff := getNumberFromTWLog(m["logoff"])
-	lt := getTimeFromTWLog(m["lt"])
+
 	id := fmt.Sprintf("%s:%s:%s", target, m["computer"], m["ip"])
 	e := datastore.GetWinLogon(id)
 	if e != nil {
-		e.LastTime = lt
-		e.Count += count
-		e.Logon += logon
-		e.Logoff += logoff
-		e.Failed += failed
+		if e.LastTime < ts {
+			e.LastTime = ts
+		}
+		e.Count++
+		if tp == "LogonFailed" {
+			e.Failed++
+			if failedCode != "" {
+				e.FailedCode[failedCode]++
+			}
+		} else {
+			e.Logon++
+			if logonType != "" {
+				e.LogonType[logonType]++
+			}
+		}
 		return
 	}
-	datastore.AddWinLogon(&datastore.WinLogonEnt{
-		ID:        id,
-		Target:    target,
-		Computer:  m["computer"],
-		IP:        m["ip"],
-		Count:     count,
-		Logon:     logon,
-		Logoff:    logoff,
-		Failed:    failed,
-		FirstTime: getTimeFromTWLog(m["ft"]),
-		LastTime:  lt,
-	})
+	e = &datastore.WinLogonEnt{
+		ID:         id,
+		Target:     target,
+		Computer:   computer,
+		IP:         m["ip"],
+		Count:      1,
+		FirstTime:  ts,
+		LastTime:   ts,
+		LogonType:  make(map[string]int),
+		FailedCode: make(map[string]int),
+	}
+	if tp == "LogonFailed" {
+		e.Failed++
+		if failedCode != "" {
+			e.FailedCode[failedCode] = 1
+		}
+	} else {
+		if logonType != "" {
+			e.LogonType[logonType] = 1
+		}
+		e.Logon++
+	}
+	datastore.AddWinLogon(e)
 }
+
+/*
+2021-08-19T04:47:58.322 logon id=MYAMAI@DESKTOP-T6L1D1U,e=type=Logon,target=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,ip=,count=7,logon=3,failed=1,logoff=3,logonType[Network]=3,logonType[Unlock]=4,failedCode[BadPassword]=1,ft=2021-08-19T04:46:10+09:00,lt=2021-08-19T04:46:33+09:00
+2021-08-19T04:47:58.323 logon id=MYAMAI@LOCALHOST,e=type=Logon,target=myamai@localhost,computer=DESKTOP-T6L1D1U,ip=192.168.1.9,count=1,logon=1,failed=0,logoff=0,logonType[Explicit]=1,ft=2021-08-19T04:46:33+09:00,lt=2021-08-19T04:46:33+09:00
+2021-08-19T04:48:12.053 privilege id=myamai@DESKTOP-T6L1D1U,e=type=Privilege,subject=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,count=6,ft=2021-08-19T04:48:02+09:00,lt=2021-08-19T04:48:03+09:00
+2021-08-19T04:47:58.323 privilege id=myamai@DESKTOP-T6L1D1U,e=type=Privilege,subject=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,count=13,ft=2021-08-19T04:46:11+09:00,lt=2021-08-19T04:46:34+09:00
+2021-08-19T04:47:53.337 privilege id=myamai@DESKTOP-T6L1D1U,e=type=Privilege,subject=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,count=462,ft=2021-08-18T16:51:00+09:00,lt=2021-08-19T04:41:17+09:00
+2021-08-19T04:47:58.323 privilege id=DESKTOP-T6L1D1U$@WORKGROUP,e=type=Privilege,subject=DESKTOP-T6L1D1U$@WORKGROUP,computer=DESKTOP-T6L1D1U,count=11,ft=2021-08-19T04:46:11+09:00,lt=2021-08-19T04:46:33+09:00
+2021-08-19T04:47:53.339 privilege id=DESKTOP-T6L1D1U$@WORKGROUP,e=type=Privilege,subject=DESKTOP-T6L1D1U$@WORKGROUP,computer=DESKTOP-T6L1D1U,count=295,ft=2021-08-18T16:55:52+09:00,lt=2021-08-19T04:40:31+09:00
+*/
 
 // type=Account,subject=%s,target=%s,computer=%s,count=%d,edit=%d,password=%d,other=%d,ft=%s,lt=%s",
 func checkWinAccount(h string, m map[string]string) {
