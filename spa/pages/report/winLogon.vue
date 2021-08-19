@@ -170,7 +170,7 @@ export default {
         {
           text: 'ログオン先',
           value: 'Target',
-          width: '15%',
+          width: '20%',
           filter: (value) => {
             if (!this.conf.target) return true
             return value.includes(this.conf.target)
@@ -195,10 +195,10 @@ export default {
           },
         },
         { text: '回数', value: 'Count', width: '8%' },
-        { text: 'ログオン', value: 'Logon', width: '10%' },
-        { text: 'ログオフ', value: 'Logoff', width: '10%' },
+        { text: 'ログオン', value: 'Logon', width: '8%' },
+        { text: 'ログオフ', value: 'Logoff', width: '8%' },
         { text: '失敗', value: 'Failed', width: '8%' },
-        { text: '最終', value: 'Last', width: '14%' },
+        { text: '最終', value: 'Last', width: '13%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
       logon: [],
