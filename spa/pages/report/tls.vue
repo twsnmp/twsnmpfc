@@ -57,11 +57,17 @@
               <v-text-field v-model="conf.client" label="client"></v-text-field>
             </td>
             <td>
+              <v-text-field
+                v-model="conf.ccountry"
+                label="country"
+              ></v-text-field>
+            </td>
+            <td>
               <v-text-field v-model="conf.server" label="server"></v-text-field>
             </td>
             <td>
               <v-text-field
-                v-model="conf.country"
+                v-model="conf.scountry"
                 label="country"
               ></v-text-field>
             </td>
@@ -470,6 +476,15 @@ export default {
           },
         },
         {
+          text: '国',
+          value: 'CCountry',
+          width: '4%',
+          filter: (value) => {
+            if (!this.conf.ccountry) return true
+            return value.includes(this.conf.ccountry)
+          },
+        },
+        {
           text: 'サーバー',
           value: 'ServerName',
           width: '15%',
@@ -480,11 +495,11 @@ export default {
         },
         {
           text: '国',
-          value: 'Country',
-          width: '7%',
+          value: 'SCountry',
+          width: '4%',
           filter: (value) => {
-            if (!this.conf.country) return true
-            return value.includes(this.conf.country)
+            if (!this.conf.scountry) return true
+            return value.includes(this.conf.scountry)
           },
         },
         {
@@ -497,7 +512,7 @@ export default {
           },
         },
         {
-          text: 'バージョン',
+          text: 'Version',
           value: 'Version',
           width: '6%',
           filter: (value) => {
@@ -508,21 +523,22 @@ export default {
         {
           text: '暗号スイート',
           value: 'Cipher',
-          width: '16%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.cipher) return true
             return value.includes(this.conf.cipher)
           },
         },
-        { text: '回数', value: 'Count', width: '8%' },
+        { text: '回数', value: 'Count', width: '5%' },
         { text: '最終', value: 'Last', width: '12%' },
-        { text: '操作', value: 'actions', width: '5%' },
+        { text: '操作', value: 'actions', width: '8%' },
       ],
       tls: [],
       conf: {
         client: '',
         server: '',
-        country: '',
+        ccountry: '',
+        scountry: '',
         service: '',
         version: '',
         cipher: '',
@@ -586,11 +602,11 @@ export default {
       let loc = this.$getLocInfo(t.ClientLoc)
       t.ClientLatLong = loc.LatLong
       t.ClientLocInfo = loc.LocInfo
+      t.CCountry = loc.Country
       loc = this.$getLocInfo(t.ServerLoc)
       t.ServerLatLong = loc.LatLong
       t.ServerLocInfo = loc.LocInfo
-      t.Country = loc.Country
-      t.Loc = t.ServerLoc
+      t.SCountry = loc.Country
       svMap.set(t.Server, t.ServerName)
       clMap.set(t.Client, t.ClientName)
       svcMap.set(t.Service, true)
@@ -700,19 +716,18 @@ export default {
       const list = []
       if (this.countryChartMode === 'client') {
         this.tls.forEach((t) => {
-          const loc = this.$getLocInfo(t.ClientLoc)
           list.push({
             Score: t.Score,
             Loc: t.ClientLoc,
-            Country: loc.Country,
+            Country: t.CCountry,
           })
         })
       } else {
         this.tls.forEach((t) => {
           list.push({
             Score: t.Score,
-            Loc: t.Loc,
-            Country: t.Country,
+            Loc: t.ServerLoc,
+            Country: t.SCountry,
           })
         })
       }

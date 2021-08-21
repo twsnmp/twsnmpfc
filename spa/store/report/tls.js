@@ -2,7 +2,8 @@ export const state = () => ({
   conf: {
     client: '',
     server: '',
-    country: '',
+    scountry: '',
+    ccountry: '',
     service: '',
     version: '',
     cipher: '',
