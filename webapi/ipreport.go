@@ -25,7 +25,7 @@ func deleteIPReport(c echo.Context) error {
 	if ip == "all" {
 		go datastore.ClearReport("ips")
 	} else {
-		datastore.DeleteReport("ips", ip)
+		datastore.DeleteReport("ips", []string{ip})
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",

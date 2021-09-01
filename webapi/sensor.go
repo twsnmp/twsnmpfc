@@ -21,7 +21,7 @@ func deleteSensor(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("sensor")
 	} else {
-		datastore.DeleteReport("sensor", id)
+		datastore.DeleteReport("sensor", []string{id})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

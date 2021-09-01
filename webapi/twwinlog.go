@@ -21,7 +21,7 @@ func deleteWinEventID(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("winEventID")
 	} else {
-		datastore.DeleteReport("winEventID", id)
+		datastore.DeleteReport("winEventID", []string{id})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -40,7 +40,7 @@ func deleteWinLogon(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("winLogon")
 	} else {
-		datastore.DeleteReport("winLogon", id)
+		datastore.DeleteReport("winLogon", []string{id})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -59,7 +59,7 @@ func deleteWinAccount(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("winAccount")
 	} else {
-		datastore.DeleteReport("winAccount", id)
+		datastore.DeleteReport("winAccount", []string{id})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -78,7 +78,7 @@ func deleteWinKerberos(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("winKerberos")
 	} else {
-		datastore.DeleteReport("winKerberos", id)
+		datastore.DeleteReport("winKerberos", []string{id})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -97,7 +97,7 @@ func deleteWinPrivilege(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("winPrivilege")
 	} else {
-		datastore.DeleteReport("winPrivilege", id)
+		datastore.DeleteReport("winPrivilege", []string{id})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -116,7 +116,7 @@ func deleteWinProcess(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("winProcess")
 	} else {
-		datastore.DeleteReport("winProcess", id)
+		datastore.DeleteReport("winProcess", []string{id})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -135,7 +135,7 @@ func deleteWinTask(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("winTask")
 	} else {
-		datastore.DeleteReport("winTask", id)
+		datastore.DeleteReport("winTask", []string{id})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

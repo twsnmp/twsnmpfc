@@ -18,12 +18,12 @@ import (
 )
 
 var (
-	deviceReportCh chan *deviceReportEnt
-	userReportCh   chan *userReportEnt
-	flowReportCh   chan *flowReportEnt
+	deviceReportCh = make(chan *deviceReportEnt, 100)
+	userReportCh   = make(chan *userReportEnt, 100)
+	flowReportCh   = make(chan *flowReportEnt, 1000)
 	checkCertCh    chan bool
-	twpcapReportCh chan map[string]interface{}
-	twWinLogCh     chan map[string]interface{}
+	twpcapReportCh = make(chan map[string]interface{}, 100)
+	twWinLogCh     = make(chan map[string]interface{}, 100)
 	allowDNS       map[string]bool
 	allowDHCP      map[string]bool
 	allowMail      map[string]bool
@@ -116,18 +116,23 @@ func UpdateReportConf() {
 		}
 	}
 	if !datastore.ReportConf.IncludeNoMACIP {
+		ids := []string{}
 		datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
 			if i.MAC == "" {
-				datastore.DeleteReport("ips", i.IP)
+				ids = append(ids, i.IP)
 			}
 			return true
 		})
+		if len(ids) > 0 {
+			datastore.DeleteReport("ips", ids)
+		}
 	}
 }
 
 func reportBackend(ctx context.Context) {
 	timer := time.NewTicker(time.Minute * 5)
-	checkOldReport()
+	log.Println("start report backend")
+	go checkOldReport()
 	calcScore()
 	checkCerts()
 	last := int64(0)
@@ -143,16 +148,14 @@ func reportBackend(ctx context.Context) {
 		case <-timer.C:
 			{
 				checkCertCh <- true
-				log.Printf("start calc report score")
-				checkOldReport()
+				st := time.Now()
+				go checkOldReport()
 				setSensorState()
 				calcScore()
 				datastore.SaveReport(last)
 				last = time.Now().UnixNano()
-				log.Printf("end calc report score")
 				clearIpToNameCache()
-				log.Printf("twpcap report stats=%d etherType=%d ipToMac=%d dns=%d dhcp=%d ntp=%d tls=%d radius=%d otehr=%d",
-					statsCount, etherTypeCount, ipToMacCount, dnsCount, dhcpCount, ntpCount, tlsCount, radiusCount, otherCount)
+				log.Printf("end report process dur=%v", time.Since(st))
 			}
 		case dr := <-deviceReportCh:
 			checkDeviceReport(dr)
@@ -170,157 +173,173 @@ func reportBackend(ctx context.Context) {
 	}
 }
 
+var oldCheck = false
+
 func checkOldReport() {
+	if oldCheck {
+		return
+	}
+	oldCheck = true
 	safeOld := time.Now().Add(time.Hour * time.Duration(-1*datastore.ReportConf.RetentionTimeForSafe)).UnixNano()
 	delOld := time.Now().AddDate(0, 0, -datastore.MapConf.LogDays).UnixNano()
 	log.Println("start check old report")
+	log.Println("check old server report")
 	checkOldServers(safeOld, delOld)
+	log.Println("check old flow report")
 	checkOldFlows(safeOld, delOld)
+	log.Println("check old device report")
 	checkOldDevices(safeOld, delOld)
+	log.Println("check old IP report")
 	checkOldIPReport(safeOld, delOld)
+	log.Println("check old User report")
 	checkOldUsers(delOld)
+	log.Println("check old EtherType report")
 	checkOldEtherType(delOld)
+	log.Println("check old DNS report")
 	checkOldDNSQ(delOld)
+	log.Println("check old Radius report")
 	checkOldRadiusFlow(safeOld, delOld)
+	log.Println("check old TLS report")
 	checkOldTLSFlow(safeOld, delOld)
 	log.Println("end check old report")
+	oldCheck = false
 }
 
 func checkOldServers(safeOld, delOld int64) {
-	count := 0
+	ids := []string{}
 	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
 		if s.LastTime < safeOld {
 			if s.LastTime < delOld || s.Score > 50.0 || s.Count < 10 {
-				datastore.DeleteReport("servers", s.ID)
-				count++
+				ids = append(ids, s.ID)
 			}
 		}
 		return true
 	})
-	if count > 0 {
-		log.Printf("report delete severs=%d", count)
+	if len(ids) > 0 {
+		datastore.DeleteReport("servers", ids)
+		log.Printf("report delete severs=%d", len(ids))
 	}
 }
 
 func checkOldFlows(safeOld, delOld int64) {
-	count := 0
+	ids := []string{}
 	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
 		if f.LastTime < safeOld {
 			if f.LastTime < delOld || f.Score > 50.0 || f.Count < 10 {
-				datastore.DeleteReport("flows", f.ID)
-				count++
+				ids = append(ids, f.ID)
 			}
 		}
 		return true
 	})
-	if count > 0 {
-		log.Printf("report delete flows=%d", count)
+	if len(ids) > 0 {
+		datastore.DeleteReport("flows", ids)
+		log.Printf("report delete flows=%d", len(ids))
 	}
 }
 
 func checkOldDevices(safeOld, delOld int64) {
-	count := 0
+	ids := []string{}
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 		if d.LastTime < safeOld {
 			if d.LastTime < delOld || (d.Score > 50.0 && d.LastTime == d.FirstTime) {
-				datastore.DeleteReport("devices", d.ID)
-				count++
+				ids = append(ids, d.ID)
 			}
 		}
 		return true
 	})
-	if count > 0 {
-		log.Printf("report delete devices=%d", count)
+	if len(ids) > 0 {
+		datastore.DeleteReport("devices", ids)
+		log.Printf("report delete devices=%d", len(ids))
 	}
 }
 
 func checkOldIPReport(safeOld, delOld int64) {
-	count := 0
+	ids := []string{}
 	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
 		if i.LastTime < safeOld {
 			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
-				datastore.DeleteReport("ips", i.IP)
-				count++
+				ids = append(ids, i.IP)
 			}
 		}
 		return true
 	})
-	if count > 0 {
-		log.Printf("report delete ip=%d", count)
+	if len(ids) > 0 {
+		datastore.DeleteReport("ips", ids)
+		log.Printf("report delete ip=%d", len(ids))
 	}
 }
 
 func checkOldUsers(delOld int64) {
-	count := 0
+	ids := []string{}
 	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 		if u.LastTime < delOld {
-			datastore.DeleteReport("users", u.ID)
-			count++
+			ids = append(ids, u.ID)
 		}
 		return true
 	})
-	if count > 0 {
-		log.Printf("delete users=%d", count)
+	if len(ids) > 0 {
+		datastore.DeleteReport("users", ids)
+		log.Printf("delete users=%d", len(ids))
 	}
 }
 
 func checkOldEtherType(delOld int64) {
-	count := 0
-	datastore.ForEachEtherType(func(u *datastore.EtherTypeEnt) bool {
-		if u.LastTime < delOld {
-			datastore.DeleteReport("ether", u.ID)
-			count++
+	ids := []string{}
+	datastore.ForEachEtherType(func(e *datastore.EtherTypeEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
 		}
 		return true
 	})
-	if count > 0 {
-		log.Printf("delete etherType=%d", count)
+	if len(ids) > 0 {
+		datastore.DeleteReport("ether", ids)
+		log.Printf("delete etherType=%d", len(ids))
 	}
 }
 
 func checkOldDNSQ(delOld int64) {
-	count := 0
-	datastore.ForEachDNSQ(func(u *datastore.DNSQEnt) bool {
-		if u.LastTime < delOld {
-			datastore.DeleteReport("dns", u.ID)
-			count++
+	ids := []string{}
+	datastore.ForEachDNSQ(func(e *datastore.DNSQEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
 		}
 		return true
 	})
-	if count > 0 {
-		log.Printf("delete DNSQ=%d", count)
+	if len(ids) > 0 {
+		datastore.DeleteReport("dns", ids)
+		log.Printf("delete DNSQ=%d", len(ids))
 	}
 }
 
 func checkOldRadiusFlow(safeOld, delOld int64) {
-	count := 0
+	ids := []string{}
 	datastore.ForEachRADIUSFlows(func(i *datastore.RADIUSFlowEnt) bool {
 		if i.LastTime < safeOld {
 			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
-				datastore.DeleteReport("radius", i.ID)
-				count++
+				ids = append(ids, i.ID)
 			}
 		}
 		return true
 	})
-	if count > 0 {
-		log.Printf("report delete radiusFlow=%d", count)
+	if len(ids) > 0 {
+		datastore.DeleteReport("radius", ids)
+		log.Printf("report delete radiusFlow=%d", len(ids))
 	}
 }
 
 func checkOldTLSFlow(safeOld, delOld int64) {
-	count := 0
+	ids := []string{}
 	datastore.ForEachTLSFlows(func(i *datastore.TLSFlowEnt) bool {
 		if i.LastTime < safeOld {
 			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
-				datastore.DeleteReport("tls", i.ID)
-				count++
+				ids = append(ids, i.ID)
 			}
 		}
 		return true
 	})
-	if count > 0 {
-		log.Printf("report delete tlsFlow=%d", count)
+	if len(ids) > 0 {
+		datastore.DeleteReport("tls", ids)
+		log.Printf("report delete tlsFlow=%d", len(ids))
 	}
 }
 

@@ -14,7 +14,9 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-var logCh chan *datastore.LogEnt
+var logCh = make(chan *datastore.LogEnt, 5000)
+var syslogCount = 0
+var netflowCount = 0
 
 func Start(ctx context.Context) error {
 	log.Println("Start Logger")
@@ -32,6 +34,7 @@ func logger(ctx context.Context) {
 	var stopTrapd chan bool
 	var stopNetflowd chan bool
 	var stopArpWatch chan bool
+	log.Println("start logger")
 	timer := time.NewTicker(time.Second * 10)
 	logBuffer := []*datastore.LogEnt{}
 	for {
@@ -57,14 +60,15 @@ func logger(ctx context.Context) {
 				log.Printf("Stop logger")
 				return
 			}
-		case log := <-logCh:
-			{
-				logBuffer = append(logBuffer, log)
-			}
+		case l := <-logCh:
+			logBuffer = append(logBuffer, l)
 		case <-timer.C:
 			{
 				if len(logBuffer) > 0 {
+					st := time.Now()
 					datastore.SaveLogBuffer(logBuffer)
+					log.Printf("saveLogBuffer len=%d dur=%v syslog=%d netflow=%d",
+						len(logBuffer), time.Since(st), syslogCount, netflowCount)
 					logBuffer = []*datastore.LogEnt{}
 				}
 				if datastore.MapConf.EnableSyslogd && !syslogdRunning {

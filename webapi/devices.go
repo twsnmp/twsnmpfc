@@ -25,7 +25,7 @@ func deleteDevice(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("devices")
 	} else {
-		datastore.DeleteReport("devices", id)
+		datastore.DeleteReport("devices", []string{id})
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",

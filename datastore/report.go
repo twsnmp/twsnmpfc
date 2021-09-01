@@ -682,7 +682,29 @@ func saveWinTask(b *bbolt.Bucket, last int64) {
 	})
 }
 
-func DeleteReport(report, id string) error {
+//
+var reportNameToMap = map[string]*sync.Map{
+	"devices":      &devices,
+	"users":        &users,
+	"servers":      &servers,
+	"flows":        &flows,
+	"ips":          &ips,
+	"ether":        &etherType,
+	"dns":          &dnsq,
+	"radius":       &radiusFlows,
+	"tls":          &tlsFlows,
+	"cert":         &certs,
+	"sensor":       &sensors,
+	"winEventID":   &winEventID,
+	"winLogon":     &winLogon,
+	"winAccount":   &winAccount,
+	"winKerberos":  &winKerberos,
+	"winPrivilege": &winPrivilege,
+	"winProcess":   &winProcess,
+	"winTask":      &winTask,
+}
+
+func DeleteReport(report string, ids []string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -691,50 +713,24 @@ func DeleteReport(report, id string) error {
 		if b != nil {
 			r := b.Bucket([]byte(report))
 			if r != nil {
-				r.Delete([]byte(id))
+				for _, id := range ids {
+					r.Delete([]byte(id))
+				}
 			}
 		}
 		return nil
 	})
-	switch report {
-	case "devices":
-		devices.Delete(id)
-	case "users":
-		users.Delete(id)
-	case "servers":
-		servers.Delete(id)
-	case "flows":
-		flows.Delete(id)
-	case "ips":
-		ips.Delete(id)
-	case "ether":
-		etherType.Delete(id)
-	case "dns":
-		dnsq.Delete(id)
-	case "radius":
-		radiusFlows.Delete(id)
-	case "tls":
-		tlsFlows.Delete(id)
-	case "cert":
-		certs.Delete(id)
-	case "sensor":
-		sensors.Delete(id)
-	case "winEventID":
-		winEventID.Delete(id)
-	case "winLogon":
-		winLogon.Delete(id)
-	case "winAccount":
-		winAccount.Delete(id)
-	case "winKerberos":
-		winKerberos.Delete(id)
-	case "winPrivilege":
-		winPrivilege.Delete(id)
-	case "winProcess":
-		winProcess.Delete(id)
-	case "winTask":
-		winTask.Delete(id)
-	}
+	deleteSyncMap(reportNameToMap[report], ids)
 	return nil
+}
+
+func deleteSyncMap(m *sync.Map, ids []string) {
+	if m == nil {
+		log.Println("invalid symc.Map")
+	}
+	for _, id := range ids {
+		m.Delete(id)
+	}
 }
 
 func ClearReport(r string) error {
@@ -749,48 +745,14 @@ func ClearReport(r string) error {
 		}
 		return nil
 	})
-	switch r {
-	case "devices":
-		deleteSyncMapAllData(&devices)
-	case "ips":
-		deleteSyncMapAllData(&ips)
-	case "users":
-		deleteSyncMapAllData(&users)
-	case "flows":
-		deleteSyncMapAllData(&flows)
-	case "servers":
-		deleteSyncMapAllData(&servers)
-	case "ether":
-		deleteSyncMapAllData(&etherType)
-	case "dns":
-		deleteSyncMapAllData(&dnsq)
-	case "radius":
-		deleteSyncMapAllData(&radiusFlows)
-	case "tls":
-		deleteSyncMapAllData(&tlsFlows)
-	case "cert":
-		deleteSyncMapAllData(&certs)
-	case "sensor":
-		deleteSyncMapAllData(&sensors)
-	case "winEventID":
-		deleteSyncMapAllData(&winEventID)
-	case "winLogon":
-		deleteSyncMapAllData(&winLogon)
-	case "winAccount":
-		deleteSyncMapAllData(&winAccount)
-	case "winKeberos":
-		deleteSyncMapAllData(&winKerberos)
-	case "winPrivilege":
-		deleteSyncMapAllData(&winPrivilege)
-	case "winProcess":
-		deleteSyncMapAllData(&winProcess)
-	case "winTask":
-		deleteSyncMapAllData(&winTask)
-	}
+	deleteSyncMapAllData(reportNameToMap[r])
 	return nil
 }
 
 func deleteSyncMapAllData(m *sync.Map) {
+	if m == nil {
+		log.Println("invalid symc.Map")
+	}
 	m.Range(func(k, v interface{}) bool {
 		m.Delete(k)
 		return true

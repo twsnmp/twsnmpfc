@@ -25,7 +25,7 @@ func deleteFlow(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("flows")
 	} else {
-		datastore.DeleteReport("flows", id)
+		datastore.DeleteReport("flows", []string{id})
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",

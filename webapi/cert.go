@@ -48,7 +48,7 @@ func deleteCert(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("cert")
 	} else {
-		datastore.DeleteReport("cert", id)
+		datastore.DeleteReport("cert", []string{id})
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",

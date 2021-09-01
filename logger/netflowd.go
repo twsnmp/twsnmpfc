@@ -73,6 +73,7 @@ func netflowd(stopCh chan bool) {
 					log.Printf("netflowd err=%v", err)
 					continue
 				}
+				netflowCount++
 				switch p := m.(type) {
 				case *netflow5.Packet:
 					{

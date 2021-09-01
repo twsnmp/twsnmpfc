@@ -20,6 +20,7 @@ func aiBackend(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			timer.Stop()
+			log.Println("stop ai backend")
 			return
 		case <-timer.C:
 			checkAI()
@@ -92,8 +93,9 @@ func doAI(pe *datastore.PollingEnt) {
 		return
 	}
 	nextAIReqTimeMap[pe.ID] = time.Now().Unix() + 60*60
-	log.Printf("doAI start %s %s %d", pe.ID, pe.Name, len(req.Data))
-	go calcAIScore(req)
+	st := time.Now()
+	calcAIScore(req)
+	log.Printf("doAI done id=%s name=%s len=%d dur%v", pe.ID, pe.Name, len(req.Data), time.Since(st))
 }
 
 func getAIDataKeys(p *datastore.PollingEnt) []string {

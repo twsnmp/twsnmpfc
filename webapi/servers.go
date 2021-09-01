@@ -25,7 +25,7 @@ func deleteServer(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("servers")
 	} else {
-		datastore.DeleteReport("servers", id)
+		datastore.DeleteReport("servers", []string{id})
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",

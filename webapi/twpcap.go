@@ -63,7 +63,7 @@ func deleteRADIUSFlow(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("radius")
 	} else {
-		datastore.DeleteReport("radius", id)
+		datastore.DeleteReport("radius", []string{id})
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",
@@ -98,7 +98,7 @@ func deleteTLSFlow(c echo.Context) error {
 	if id == "all" {
 		go datastore.ClearReport("tls")
 	} else {
-		datastore.DeleteReport("tls", id)
+		datastore.DeleteReport("tls", []string{id})
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",
