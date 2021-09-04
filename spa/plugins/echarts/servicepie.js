@@ -1,7 +1,11 @@
 import * as echarts from 'echarts'
 
+let chart
 const showServicePieChart = (div, data) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
       show: false,

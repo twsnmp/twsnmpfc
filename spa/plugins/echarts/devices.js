@@ -1,8 +1,12 @@
 import * as echarts from 'echarts'
 import { getScoreIndex } from '~/plugins/echarts/utils.js'
 
+let chart
 const showVendorChart = (div, devices) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
       {

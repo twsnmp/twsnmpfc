@@ -1,8 +1,12 @@
 import * as echarts from 'echarts'
 import * as ecStat from 'echarts-stat'
 
+let chart
 const showDBStatsChart = (div, logs) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
       show: false,
@@ -146,7 +150,10 @@ const showDBStatsChart = (div, logs) => {
 }
 
 const showDBSizeForecast = (div, logs) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
       show: false,

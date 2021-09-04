@@ -2,8 +2,12 @@ import * as echarts from 'echarts'
 import WorldData from 'world-map-geojson'
 import { getScoreIndex } from '~/plugins/echarts/utils.js'
 
+let chart
 const showServerMapChart = (div, servers) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   echarts.registerMap('world', WorldData)
   const option = {
     backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
@@ -116,7 +120,10 @@ const showServerMapChart = (div, servers) => {
 }
 
 const showCountryChart = (div, list) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
       {

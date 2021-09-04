@@ -1,7 +1,11 @@
 import * as echarts from 'echarts'
 
+let chart
 const showAIHeatMap = (div, scores, cb) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const hours = [
     '0時',
     '1時',
@@ -183,7 +187,10 @@ const showAIHeatMap = (div, scores, cb) => {
 }
 
 const showAIPieChart = (div, scores) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
       show: false,
@@ -252,7 +259,10 @@ const showAIPieChart = (div, scores) => {
 }
 
 const showAITimeChart = (div, scores, cb) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
       show: false,

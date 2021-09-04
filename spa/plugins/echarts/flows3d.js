@@ -2,8 +2,12 @@ import * as echarts from 'echarts'
 import 'echarts-gl'
 import { getScoreIndex } from '~/plugins/echarts/utils.js'
 
+let chart
 const showFlows3DChart = (div, flows) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     backgroundColor: '#000',
     legend: {

@@ -1,8 +1,12 @@
 import * as echarts from 'echarts'
 import * as ecStat from 'echarts-stat'
 
+let chart
 const showSysResChart = (div, monitor) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
       show: false,
@@ -152,7 +156,10 @@ const showSysResChart = (div, monitor) => {
 }
 
 const showSysNetChart = (div, monitor) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
       show: false,
@@ -308,7 +315,10 @@ const showSysNetChart = (div, monitor) => {
 }
 
 const showSysProcChart = (div, monitor) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
       show: false,
@@ -455,7 +465,10 @@ const showSysProcChart = (div, monitor) => {
 }
 
 const showDiskUsageForecast = (div, monitor) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const option = {
     title: {
       show: false,

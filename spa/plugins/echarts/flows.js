@@ -1,7 +1,11 @@
 import * as echarts from 'echarts'
 
+let chart
 const showFlowsChart = (div, flows, filter) => {
-  const chart = echarts.init(document.getElementById(div))
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
   const categories = [
     { name: 'RU' },
     { name: 'CN' },
