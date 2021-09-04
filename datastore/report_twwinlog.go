@@ -1,5 +1,12 @@
 package datastore
 
+import (
+	"encoding/json"
+	"log"
+
+	"go.etcd.io/bbolt"
+)
+
 // type=EventID,computer=%s,channel=%s,provider=%s,eventID=%d,total=%d,count=%d,ft=%s,lt=%s
 type WinEventIDEnt struct {
 	ID        string // Computer + Provider + EventID
@@ -222,5 +229,258 @@ func ForEachWinTask(f func(*WinTaskEnt) bool) {
 	winTask.Range(func(k, v interface{}) bool {
 		e := v.(*WinTaskEnt)
 		return f(e)
+	})
+}
+
+// internal use
+func loadWinEventID(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("winEventID"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e WinEventIDEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				winEventID.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func loadWinLogon(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("winLogon"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e WinLogonEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				winLogon.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func loadWinAccount(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("winAccount"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e WinAccountEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				winAccount.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func loadWinKerberos(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("winKerberos"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e WinKerberosEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				winKerberos.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func loadWinPrivilege(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("winPrivilege"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e WinPrivilegeEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				winPrivilege.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func loadWinProcess(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("winProcess"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e WinProcessEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				winProcess.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func loadWinTask(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("winTask"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e WinTaskEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				winTask.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func saveWinEventID(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("winEventID"))
+	winEventID.Range(func(k, v interface{}) bool {
+		e, ok := v.(*WinEventIDEnt)
+		if !ok {
+			return true
+		}
+		if e.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("saveWinEventID err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("saveWinEventID err=%v", err)
+		}
+		return true
+	})
+}
+
+func saveWinLogon(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("winLogon"))
+	winLogon.Range(func(k, v interface{}) bool {
+		e, ok := v.(*WinLogonEnt)
+		if !ok {
+			return true
+		}
+		if e.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("saveWinLogon err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("saveWinLogon err=%v", err)
+		}
+		return true
+	})
+}
+
+func saveWinAccount(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("winAccount"))
+	winAccount.Range(func(k, v interface{}) bool {
+		e, ok := v.(*WinAccountEnt)
+		if !ok {
+			return true
+		}
+		if e.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("saveWinAccount err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("saveWinAccount err=%v", err)
+		}
+		return true
+	})
+}
+
+func saveWinKerberos(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("winKerberos"))
+	winKerberos.Range(func(k, v interface{}) bool {
+		e, ok := v.(*WinKerberosEnt)
+		if !ok {
+			return true
+		}
+		if e.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("saveWinKerberos err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("saveWinKerberos err=%v", err)
+		}
+		return true
+	})
+}
+
+func saveWinPrivilege(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("winPrivilege"))
+	winPrivilege.Range(func(k, v interface{}) bool {
+		e, ok := v.(*WinPrivilegeEnt)
+		if !ok {
+			return true
+		}
+		if e.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("saveWinPrivilege err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("saveWinPrivilege err=%v", err)
+		}
+		return true
+	})
+}
+
+func saveWinProcess(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("winProcess"))
+	winProcess.Range(func(k, v interface{}) bool {
+		e, ok := v.(*WinProcessEnt)
+		if !ok {
+			return true
+		}
+		if e.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("saveWinProcess err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("saveWinProcess err=%v", err)
+		}
+		return true
+	})
+}
+
+func saveWinTask(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("winTask"))
+	winTask.Range(func(k, v interface{}) bool {
+		e, ok := v.(*WinTaskEnt)
+		if !ok {
+			return true
+		}
+		if e.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("saveWinTask err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("saveWinTask err=%v", err)
+		}
+		return true
 	})
 }

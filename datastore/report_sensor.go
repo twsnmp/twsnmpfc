@@ -1,5 +1,12 @@
 package datastore
 
+import (
+	"encoding/json"
+	"log"
+
+	"go.etcd.io/bbolt"
+)
+
 type SensorEnt struct {
 	ID        string // Host + Type + Param
 	Host      string
@@ -50,5 +57,43 @@ func ForEachSensors(f func(*SensorEnt) bool) {
 	sensors.Range(func(k, v interface{}) bool {
 		s := v.(*SensorEnt)
 		return f(s)
+	})
+}
+
+// internal use
+
+func loadSensor(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("sensor"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e SensorEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				sensors.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func saveSensor(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("sensor"))
+	sensors.Range(func(k, v interface{}) bool {
+		e, ok := v.(*SensorEnt)
+		if !ok {
+			return true
+		}
+		if e.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+		}
+		return true
 	})
 }

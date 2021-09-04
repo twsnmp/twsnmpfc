@@ -44,6 +44,10 @@ func syslogd(stopCh chan bool) {
 							report.ReportTWPCAP(sl)
 						case "twwinlog":
 							report.ReportTwWinLog(sl)
+						case "twBlueScan":
+							report.ReportTWBuleScan(sl)
+						case "twWifiScan":
+							report.ReportTWWifiScan(sl)
 						}
 					}
 					logCh <- &datastore.LogEnt{

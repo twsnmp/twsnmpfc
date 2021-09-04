@@ -1,5 +1,12 @@
 package datastore
 
+import (
+	"encoding/json"
+	"log"
+
+	"go.etcd.io/bbolt"
+)
+
 type EtherTypeEnt struct {
 	ID        string // ID Host:EtherType
 	Host      string
@@ -138,5 +145,157 @@ func ForEachTLSFlows(f func(*TLSFlowEnt) bool) {
 	tlsFlows.Range(func(k, v interface{}) bool {
 		fl := v.(*TLSFlowEnt)
 		return f(fl)
+	})
+}
+
+func loadEther(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("ether"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e EtherTypeEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				etherType.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func loadDNS(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("dns"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e DNSQEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				dnsq.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func loadRADIUS(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("radius"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e RADIUSFlowEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				radiusFlows.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func loadTLS(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("tls"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e TLSFlowEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				tlsFlows.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func saveEther(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("ether"))
+	etherType.Range(func(k, v interface{}) bool {
+		e := v.(*EtherTypeEnt)
+		if e.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+		}
+		return true
+	})
+}
+
+func saveDNS(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("dns"))
+	dnsq.Range(func(k, v interface{}) bool {
+		e := v.(*DNSQEnt)
+		if e.UpdateTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+		}
+		return true
+	})
+}
+
+func saveRADIUS(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("radius"))
+	radiusFlows.Range(func(k, v interface{}) bool {
+		e := v.(*RADIUSFlowEnt)
+		if e.UpdateTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+		}
+		return true
+	})
+}
+
+func saveTLS(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("tls"))
+	tlsFlows.Range(func(k, v interface{}) bool {
+		e := v.(*TLSFlowEnt)
+		if e.UpdateTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+		}
+		return true
+	})
+}
+
+func saveCert(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("cert"))
+	certs.Range(func(k, v interface{}) bool {
+		e := v.(*CertEnt)
+		if e.UpdateTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+		}
+		return true
 	})
 }

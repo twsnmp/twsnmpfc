@@ -1,5 +1,12 @@
 package datastore
 
+import (
+	"encoding/json"
+	"log"
+
+	"go.etcd.io/bbolt"
+)
+
 type ServerEnt struct {
 	ID           string //  ID Server
 	Server       string
@@ -74,5 +81,72 @@ func ForEachServers(f func(*ServerEnt) bool) {
 	servers.Range(func(k, v interface{}) bool {
 		s := v.(*ServerEnt)
 		return f(s)
+	})
+}
+
+// internal use
+func loadServers(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("servers"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var s ServerEnt
+			if err := json.Unmarshal(v, &s); err == nil {
+				servers.Store(s.ID, &s)
+			}
+			return nil
+		})
+	}
+}
+
+func loadFlows(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("flows"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var f FlowEnt
+			if err := json.Unmarshal(v, &f); err == nil {
+				flows.Store(f.ID, &f)
+			}
+			return nil
+		})
+	}
+}
+
+func saveServers(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("servers"))
+	servers.Range(func(k, v interface{}) bool {
+		s := v.(*ServerEnt)
+		if s.UpdateTime < last {
+			return true
+		}
+		js, err := json.Marshal(s)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(s.ID), js)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+		}
+		return true
+	})
+}
+
+func saveFlows(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("flows"))
+	flows.Range(func(k, v interface{}) bool {
+		f := v.(*FlowEnt)
+		if f.UpdateTime < last {
+			return true
+		}
+		s, err := json.Marshal(f)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(f.ID), s)
+		if err != nil {
+			log.Printf("Save Report err=%v", err)
+		}
+		return true
 	})
 }

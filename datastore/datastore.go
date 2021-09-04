@@ -61,6 +61,11 @@ var (
 	winPrivilege sync.Map
 	winProcess   sync.Map
 	winTask      sync.Map
+	// twBlueScan
+	blueDevice sync.Map
+	envMonitor sync.Map
+	// twWifiScan
+	wifiAP sync.Map
 	// MAP Changed check
 	stateChangedNodes sync.Map
 	lastLogAdded      time.Time
@@ -258,6 +263,7 @@ func initDB() error {
 		"sensor",
 		"winEventID", "winLogon", "winAccount", "winKerberos",
 		"winPrivilege", "winProcess", "winTask",
+		"wifiAP", "buleDevice", "envMonitor",
 	}
 	initConf()
 	return db.Update(func(tx *bbolt.Tx) error {

@@ -24,6 +24,8 @@ var (
 	checkCertCh    chan bool
 	twpcapReportCh = make(chan map[string]interface{}, 100)
 	twWinLogCh     = make(chan map[string]interface{}, 100)
+	twBlueScanCh   = make(chan map[string]interface{}, 100)
+	twWifiScanCh   = make(chan map[string]interface{}, 100)
 	allowDNS       map[string]bool
 	allowDHCP      map[string]bool
 	allowMail      map[string]bool
@@ -167,6 +169,10 @@ func reportBackend(ctx context.Context) {
 			checkTWPCAPReport(twpcap)
 		case twwinlog := <-twWinLogCh:
 			checkTWWinLogReport(twwinlog)
+		case l := <-twBlueScanCh:
+			checkTWBlueScanReport(l)
+		case l := <-twWifiScanCh:
+			checkTWWifiScanReport(l)
 		case <-checkCertCh:
 			checkCerts()
 		}
@@ -182,26 +188,17 @@ func checkOldReport() {
 	oldCheck = true
 	safeOld := time.Now().Add(time.Hour * time.Duration(-1*datastore.ReportConf.RetentionTimeForSafe)).UnixNano()
 	delOld := time.Now().AddDate(0, 0, -datastore.MapConf.LogDays).UnixNano()
-	log.Println("start check old report")
-	log.Println("check old server report")
+	st := time.Now()
 	checkOldServers(safeOld, delOld)
-	log.Println("check old flow report")
 	checkOldFlows(safeOld, delOld)
-	log.Println("check old device report")
 	checkOldDevices(safeOld, delOld)
-	log.Println("check old IP report")
 	checkOldIPReport(safeOld, delOld)
-	log.Println("check old User report")
 	checkOldUsers(delOld)
-	log.Println("check old EtherType report")
 	checkOldEtherType(delOld)
-	log.Println("check old DNS report")
 	checkOldDNSQ(delOld)
-	log.Println("check old Radius report")
 	checkOldRadiusFlow(safeOld, delOld)
-	log.Println("check old TLS report")
 	checkOldTLSFlow(safeOld, delOld)
-	log.Println("end check old report")
+	log.Printf("end check old report dur=%v", time.Since(st))
 	oldCheck = false
 }
 
@@ -217,7 +214,7 @@ func checkOldServers(safeOld, delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("servers", ids)
-		log.Printf("report delete severs=%d", len(ids))
+		log.Printf("report delete servers=%d", len(ids))
 	}
 }
 

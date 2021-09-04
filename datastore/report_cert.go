@@ -1,5 +1,11 @@
 package datastore
 
+import (
+	"encoding/json"
+
+	"go.etcd.io/bbolt"
+)
+
 type CertEnt struct {
 	ID           string // Target:PORT
 	Target       string
@@ -39,4 +45,18 @@ func ForEachCerts(f func(*CertEnt) bool) {
 		}
 		return true
 	})
+}
+
+// internal use
+func loadCert(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("cert"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e CertEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				certs.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
 }

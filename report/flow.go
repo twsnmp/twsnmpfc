@@ -230,15 +230,10 @@ var udpPending = make(map[string]*flowReportEnt)
 
 // 10秒以内に逆方法の通信がないケースはレポート対象外
 func cleanupUDPPending() {
-	count := 0
 	for k, fr := range udpPending {
 		if fr.Time < time.Now().UnixNano()-(1000*1000*1000*10) {
-			count++
 			delete(udpPending, k)
 		}
-	}
-	if count > 10 {
-		log.Printf("delete pending udp flow count=%d", count)
 	}
 }
 

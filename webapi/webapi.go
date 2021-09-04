@@ -188,6 +188,12 @@ func setup(p *WebAPI) {
 	r.DELETE("/report/WinProcess/:id", deleteWinProcess)
 	r.GET("/report/WinTask", getWinTask)
 	r.DELETE("/report/WinTask/:id", deleteWinTask)
+	r.GET("/report/WifiAP", getWifiAP)
+	r.DELETE("/report/WifiAP/:id", deleteWifiAP)
+	r.GET("/report/BlueDevice", getBlueDevice)
+	r.DELETE("/report/BlueDevice/:id", deleteBlueDevice)
+	r.GET("/report/EnvMonitor", getEnvMonitor)
+	r.DELETE("/report/EnvMonitor/:id", deleteEnvMonitor)
 	// AI
 	r.GET("/report/ailist", getAIList)
 	r.GET("/report/ai/:id", getAIResult)
