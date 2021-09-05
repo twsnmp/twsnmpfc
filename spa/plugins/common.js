@@ -328,11 +328,38 @@ const getLogModeName = (m) => {
   return ''
 } 
 
+const getRSSIColor = (rssi) => {
+  if (rssi >= 0) {
+    return getStateColor('debug')
+  } else if (rssi >= -70) {
+    return getStateColor('info')
+  } else if (rssi >= -80) {
+    return getStateColor('warn')
+  }
+  return getStateColor('high')
+}
+
+const getRSSIIconName = (rssi) => {
+  if (rssi >= 0) {
+    return 'mdi-wifi-strength-alert-outline'
+  } else if (rssi >= -67) {
+    return 'mdi-wifi-strength-4'
+  } else if (rssi >= -70) {
+    return 'mdi-wifi-strength-3'
+  } else if (rssi >= -80) {
+    return 'mdi-wifi-strength-2'
+  }
+  return 'mdi-wifi-strength-1'
+}
+
+
 export default (context, inject) => {
   inject('getIconName', getIconName)
   inject('getStateName', getStateName)
   inject('getScoreColor', getScoreColor)
   inject('getScoreIconName', getScoreIconName)
+  inject('getRSSIColor', getRSSIColor)
+  inject('getRSSIIconName', getRSSIIconName)
   inject('getStateColor', getStateColor)
   inject('getStateIconName', getStateIconName)
   inject('logModeList', logModeList)

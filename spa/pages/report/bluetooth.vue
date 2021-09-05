@@ -20,21 +20,28 @@
         :options.sync="options"
         class="log"
       >
+        <template #[`item.LastRSSI`]="{ item }">
+          <v-icon :color="$getRSSIColor(item.LastRSSI)">{{
+            $getRSSIIconName(item.LastRSSI)
+          }}</v-icon>
+          {{ item.LastRSSI }}
+        </template>
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
         <template #[`body.append`]>
           <tr>
-            <td>
-              <v-text-field v-model="conf.host" label="Host"></v-text-field>
-            </td>
+            <td></td>
             <td>
               <v-text-field v-model="conf.address" label="Address">
               </v-text-field>
             </td>
             <td>
               <v-text-field v-model="conf.name" label="Name"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="conf.host" label="Host"></v-text-field>
             </td>
             <td>
               <v-text-field v-model="conf.vendor" label="Vendor"></v-text-field>
@@ -108,8 +115,13 @@
             </thead>
             <tbody>
               <tr>
-                <td>センサー</td>
-                <td>{{ selected.Host }}</td>
+                <td>現在の信号レベル</td>
+                <td>
+                  <v-icon :color="$getRSSIColor(selected.LastRSSI)">{{
+                    $getRSSIIconName(selected.LastRSSI)
+                  }}</v-icon>
+                  {{ selected.LastRSSI }}
+                </td>
               </tr>
               <tr>
                 <td>アドレス</td>
@@ -120,16 +132,20 @@
                 <td>{{ selected.AddressType }}</td>
               </tr>
               <tr>
+                <td>名前</td>
+                <td>{{ selected.Name }}</td>
+              </tr>
+              <tr>
+                <td>送信元ホスト</td>
+                <td>{{ selected.Host }}</td>
+              </tr>
+              <tr>
                 <td>ベンダー</td>
                 <td>{{ selected.LastRSSI }}</td>
               </tr>
               <tr>
                 <td>情報</td>
                 <td>{{ selected.ExtData }}</td>
-              </tr>
-              <tr>
-                <td>現在の信号レベル</td>
-                <td>{{ selected.LastRSSID }}</td>
               </tr>
               <tr>
                 <td>回数</td>
@@ -163,19 +179,11 @@ export default {
   data() {
     return {
       headers: [
-        {
-          text: 'センサー',
-          value: 'Host',
-          width: '15%',
-          filter: (value) => {
-            if (!this.conf.host) return true
-            return value.includes(this.conf.host)
-          },
-        },
+        { text: 'RSSI', value: 'LastRSSI', width: '8%' },
         {
           text: 'アドレス',
           value: 'Address',
-          width: '15%',
+          width: '12%',
           filter: (value) => {
             if (!this.conf.address) return true
             return value.includes(this.conf.address)
@@ -184,24 +192,32 @@ export default {
         {
           text: '名前',
           value: 'Name',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.name) return true
             return value.includes(this.conf.name)
           },
         },
         {
+          text: '送信元ホスト',
+          value: 'Host',
+          width: '15%',
+          filter: (value) => {
+            if (!this.conf.host) return true
+            return value.includes(this.conf.host)
+          },
+        },
+        {
           text: 'ベンダー',
           value: 'Vendor',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.vendor) return true
             return value.includes(this.conf.vendor)
           },
         },
-        { text: 'RSSI', value: 'LastRSSI', width: '8%' },
-        { text: '回数', value: 'Count', width: '8%' },
-        { text: '最終', value: 'Last', width: '16%' },
+        { text: '回数', value: 'Count', width: '10%' },
+        { text: '最終', value: 'Last', width: '15%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
       blueDevice: [],
