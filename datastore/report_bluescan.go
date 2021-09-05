@@ -69,18 +69,18 @@ type EnvMonitorEnt struct {
 }
 
 func GetEnvMonitor(id string) *EnvMonitorEnt {
-	if v, ok := blueDevice.Load(id); ok {
+	if v, ok := envMonitor.Load(id); ok {
 		return v.(*EnvMonitorEnt)
 	}
 	return nil
 }
 
 func AddEnvMonitor(e *EnvMonitorEnt) {
-	blueDevice.Store(e.ID, e)
+	envMonitor.Store(e.ID, e)
 }
 
 func ForEachEnvMonitor(f func(*EnvMonitorEnt) bool) {
-	blueDevice.Range(func(k, v interface{}) bool {
+	envMonitor.Range(func(k, v interface{}) bool {
 		e := v.(*EnvMonitorEnt)
 		return f(e)
 	})
@@ -123,7 +123,7 @@ func saveBlueDevice(b *bbolt.Bucket, last int64) {
 }
 
 func loadEnvMonitor(r *bbolt.Bucket) {
-	b := r.Bucket([]byte("enMonitor"))
+	b := r.Bucket([]byte("envMonitor"))
 	if b != nil {
 		_ = b.ForEach(func(k, v []byte) error {
 			var e EnvMonitorEnt

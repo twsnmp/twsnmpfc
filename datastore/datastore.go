@@ -263,7 +263,7 @@ func initDB() error {
 		"sensor",
 		"winEventID", "winLogon", "winAccount", "winKerberos",
 		"winPrivilege", "winProcess", "winTask",
-		"wifiAP", "buleDevice", "envMonitor",
+		"wifiAP", "blueDevice", "envMonitor",
 	}
 	initConf()
 	return db.Update(func(tx *bbolt.Tx) error {

@@ -307,6 +307,11 @@ export default {
           to: '/report/bluetooth',
         },
         {
+          icon: 'mdi-temperature-celsius',
+          title: '環境センサー',
+          to: '/report/envMonitor',
+        },
+        {
           icon: 'mdi-wifi',
           title: 'Wifi AP',
           to: '/report/wifiAP',
