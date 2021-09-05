@@ -8,21 +8,22 @@ import (
 )
 
 // type=Device,address=%s,name=%s,rssi=%d,addrType=%s,vendor=%s,md=%s
+type RSSIEnt struct {
+	Time  int64
+	Value int
+}
 type BlueDeviceEnt struct {
 	ID          string // Host + Address
 	Host        string
 	Address     string
 	Name        string
 	AddressType string
-	RSSI        []struct {
-		Time  int64
-		Value int
-	}
-	Vendor    string
-	ExtData   string
-	Count     int64
-	FirstTime int64
-	LastTime  int64
+	RSSI        []RSSIEnt
+	Vendor      string
+	ExtData     string
+	Count       int64
+	FirstTime   int64
+	LastTime    int64
 }
 
 func GetBlueDevice(id string) *BlueDeviceEnt {
@@ -44,21 +45,24 @@ func ForEachBludeDevice(f func(*BlueDeviceEnt) bool) {
 }
 
 // type=OMRONEnv,address=%s,name=%s,rssi=%d,seq=%d,temp=%.02f,hum=%.02f,lx=%d,press=%.02f,sound=%.02f,eTVOC=%d,eCO2=%d
+type EnvDataEnt struct {
+	Time               int64
+	RSSI               int
+	Temp               float64
+	Humidity           float64
+	Illuminance        float64
+	BarometricPressure float64
+	Sound              float64
+	ETVOC              float64
+	ECo2               float64
+}
+
 type EnvMonitorEnt struct {
-	ID      string // Host + Address
-	Host    string
-	Address string
-	EnvData []struct {
-		Time               int64
-		RSSI               int
-		Temp               float64
-		Humidity           float64
-		Illuminance        float64
-		BarometricPressure float64
-		Sound              float64
-		ETVOC              float64
-		ECo2               float64
-	}
+	ID        string // Host + Address
+	Host      string
+	Name      string
+	Address   string
+	EnvData   []EnvDataEnt
 	Count     int64
 	FirstTime int64
 	LastTime  int64

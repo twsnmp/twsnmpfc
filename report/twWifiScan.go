@@ -3,6 +3,9 @@ package report
 import (
 	"log"
 	"strings"
+	"time"
+
+	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
 func ReportTWWifiScan(l map[string]interface{}) {
@@ -45,6 +48,44 @@ func checkTWWifiScanReport(l map[string]interface{}) {
 	}
 }
 
+//type=APInfo,ssid=%s,bssid=%s,rssi=%s,Channel=%s,info=%s,count=%d,change=%d,ft=%s,lt=%s
 func checkAPInfoReport(h string, m map[string]string) {
+	bssid, ok := m["bssid"]
+	if !ok || bssid == "" {
+		return
+	}
+	rssi := getNumberFromTWLog(m["rssi"])
+	id := h + ":" + bssid
+	now := time.Now().Unix()
+	e := datastore.GetWifiAP(id)
+	if e != nil {
+		e.Count++
+		if e.SSID != m["ssid"] || e.Channel != m["Channel"] || e.Info != m["info"] {
+			e.Change++
+		}
+		e.SSID = m["ssid"]
+		e.Channel = m["Channel"]
+		e.Info = m["info"]
+		e.LastTime = now
+		e.RSSI = append(e.RSSI, datastore.RSSIEnt{Value: int(rssi), Time: now})
+		if len(e.RSSI) > MAX_DATA_SIZE {
+			e.RSSI = e.RSSI[1:]
+		}
+		return
+	}
+	datastore.AddWifiAP(&datastore.WifiAPEnt{
+		ID:    id,
+		Host:  h,
+		BSSID: bssid,
+		Count: 1,
+		RSSI: []datastore.RSSIEnt{
+			{Value: int(rssi), Time: now},
+		},
+		SSID:      m["ssid"],
+		Channel:   m["Channel"],
+		Info:      m["info"],
+		LastTime:  now,
+		FirstTime: now,
+	})
 
 }

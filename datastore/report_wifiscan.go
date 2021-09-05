@@ -9,17 +9,15 @@ import (
 
 //type=APInfo,ssid=%s,bssid=%s,rssi=%s,Channel=%s,info=%s,count=%d,change=%d,ft=%s,lt=%s
 type WifiAPEnt struct {
-	ID    string // HOST + BSSID
-	Host  string
-	BSSID string
-	SSID  string
-	RSSI  []struct {
-		Time  int64
-		Value int
-	}
+	ID        string // HOST + BSSID
+	Host      string
+	BSSID     string
+	SSID      string
+	RSSI      []RSSIEnt
 	Channel   string
 	Info      string
-	Count     int64
+	Count     int
+	Change    int
 	FirstTime int64
 	LastTime  int64
 }
