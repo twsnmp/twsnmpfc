@@ -1,6 +1,12 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-model="menu" clipped fixed app>
+    <v-navigation-drawer
+      v-if="isAuthenticated"
+      v-model="menu"
+      clipped
+      fixed
+      app
+    >
       <v-list>
         <v-list-item
           v-for="(item, i) in mainMenus"
@@ -20,26 +26,50 @@
           <template #activator>
             <v-list-item-title>レポート</v-list-item-title>
           </template>
-          <v-list-item
-            v-for="(item, i) in reportMenus"
-            :key="i"
-            :to="item.to"
-            router
-            exact
-          >
-            <v-list-item-action>
-              <v-icon>{{ item.icon }}</v-icon>
-            </v-list-item-action>
-            <v-list-item-content>
-              <v-list-item-title v-text="item.title" />
-            </v-list-item-content>
-          </v-list-item>
           <v-list-group no-action sub-group>
             <template #activator>
-              <v-list-item-title>NetFlow分析</v-list-item-title>
+              <v-list-item-title>デバイス分析</v-list-item-title>
             </template>
             <v-list-item
-              v-for="(item, i) in netflowMenus"
+              v-for="(item, i) in deviceMenus"
+              :key="i"
+              :to="item.to"
+              router
+              exact
+            >
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title v-text="item.title" />
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
+          <v-list-group no-action sub-group>
+            <template #activator>
+              <v-list-item-title>ユーザー分析</v-list-item-title>
+            </template>
+            <v-list-item
+              v-for="(item, i) in userMenus"
+              :key="i"
+              :to="item.to"
+              router
+              exact
+            >
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title v-text="item.title" />
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
+          <v-list-group no-action sub-group>
+            <template #activator>
+              <v-list-item-title>通信フロー</v-list-item-title>
+            </template>
+            <v-list-item
+              v-for="(item, i) in flowMenus"
               :key="i"
               :to="item.to"
               router
@@ -78,6 +108,25 @@
             </template>
             <v-list-item
               v-for="(item, i) in windowsMenus"
+              :key="i"
+              :to="item.to"
+              router
+              exact
+            >
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title v-text="item.title" />
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
+          <v-list-group no-action sub-group>
+            <template #activator>
+              <v-list-item-title>AI／センサー</v-list-item-title>
+            </template>
+            <v-list-item
+              v-for="(item, i) in aiSensorMenus"
               :key="i"
               :to="item.to"
               router
@@ -234,34 +283,43 @@ export default {
           to: '/discover',
         },
       ],
-      reportMenus: [
+      aiSensorMenus: [
         {
-          icon: 'mdi-devices',
-          title: 'デバイス',
-          to: '/report/devices',
-        },
-        {
-          icon: 'mdi-account-check',
-          title: 'ユーザー',
-          to: '/report/users',
-        },
-        {
-          icon: 'mdi-file-find',
-          title: 'アドレス分析',
-          to: '/report/address',
+          icon: 'mdi-brain',
+          title: 'AI分析',
+          to: '/report/ailist',
         },
         {
           icon: 'mdi-webcam',
           title: 'センサー',
           to: '/report/sensor',
         },
+      ],
+      deviceMenus: [
         {
-          icon: 'mdi-brain',
-          title: 'AI分析',
-          to: '/report/ailist',
+          icon: 'mdi-devices',
+          title: 'LAN',
+          to: '/report/devices',
+        },
+        {
+          icon: 'mdi-bluetooth',
+          title: 'Bluetooth',
+          to: '/report/bluetooth',
+        },
+        {
+          icon: 'mdi-wifi',
+          title: 'Wifi AP',
+          to: '/report/wifiAP',
         },
       ],
-      netflowMenus: [
+      userMenus: [
+        {
+          icon: 'mdi-account-check',
+          title: 'ユーザー',
+          to: '/report/users',
+        },
+      ],
+      flowMenus: [
         {
           icon: 'mdi-server',
           title: 'サーバー',
@@ -276,6 +334,11 @@ export default {
           icon: 'mdi-format-list-bulleted-type',
           title: 'IPアドレス',
           to: '/report/ipreport',
+        },
+        {
+          icon: 'mdi-certificate',
+          title: 'サーバー証明書',
+          to: '/report/cert',
         },
       ],
       twpcapMenus: [
@@ -298,11 +361,6 @@ export default {
           icon: 'mdi-swap-horizontal',
           title: 'TLS通信',
           to: '/report/tls',
-        },
-        {
-          icon: 'mdi-certificate',
-          title: 'サーバー証明書',
-          to: '/report/cert',
         },
       ],
       windowsMenus: [
