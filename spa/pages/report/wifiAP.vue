@@ -47,6 +47,34 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openRSSITime3DChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>RSSI時間変化 3Dグラフ</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="openRSSILoc3DChart">
+              <v-list-item-icon>
+                <v-icon>mdi-home-map-marker</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>RSSI位置変化 3Dグラフ</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="wifiAP"
           type="csv"
@@ -163,6 +191,36 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="rssiTime3DDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">Wifi AP RSSI時間変化 3Dグラフ</span>
+        </v-card-title>
+        <div id="rssiTime3DChart" style="width: 1000px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="rssiTime3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="rssiLoc3DDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">Wifi AP RSSI位置変化 3Dグラフ</span>
+        </v-card-title>
+        <div id="rssiLoc3DChart" style="width: 1000px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="rssiLoc3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -218,6 +276,8 @@ export default {
         itemsPerPage: 15,
       },
       options: {},
+      rssiTime3DDialog: false,
+      rssiLoc3DDialog: false,
     }
   },
   async fetch() {
@@ -275,6 +335,18 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    openRSSITime3DChart() {
+      this.rssiTime3DDialog = true
+      this.$nextTick(() => {
+        this.$showRSSITime3DChart('rssiTime3DChart', true, this.wifiAP)
+      })
+    },
+    openRSSILoc3DChart() {
+      this.rssiLoc3DDialog = true
+      this.$nextTick(() => {
+        this.$showRSSILoc3DChart('rssiLoc3DChart', true, this.wifiAP)
+      })
     },
   },
 }
