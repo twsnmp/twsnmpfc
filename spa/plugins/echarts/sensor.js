@@ -582,7 +582,7 @@ const showRSSITime3DChart = (div, wifi, list) => {
     i.RSSI.forEach((e) => {
       data.push([
         i.ID,
-        e.Time,
+        e.Time * 1000,
         e.Value,
         getRSSILevel(e.Value),
         wifi ? i.SSID : i.Name,
@@ -888,7 +888,13 @@ const showEnv3DChart = (div, type, list) => {
       return
     }
     i.EnvData.forEach((e) => {
-      data.push([i.ID, e.Time, e[type], getEnvLevel(e[type], type), i.Name])
+      data.push([
+        i.ID,
+        e.Time * 1000,
+        e[type],
+        getEnvLevel(e[type], type),
+        i.Name,
+      ])
     })
     cat.push(i.ID)
   })

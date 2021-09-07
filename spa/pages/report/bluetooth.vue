@@ -169,7 +169,7 @@
               </tr>
               <tr>
                 <td>ベンダー</td>
-                <td>{{ selected.LastRSSI }}</td>
+                <td>{{ selected.Vendor }}</td>
               </tr>
               <tr>
                 <td>情報</td>
