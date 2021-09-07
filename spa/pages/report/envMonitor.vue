@@ -48,6 +48,84 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openEnv3DChart('Temp')">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>気温</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="openEnv3DChart('Humidity')">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>湿度</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="openEnv3DChart('Illuminance')">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>照度</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="openEnv3DChart('BarometricPressure')">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>気圧</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="openEnv3DChart('Sound')">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>騒音</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="openEnv3DChart('ETVOC')">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>総揮発性有機化合物</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="openEnv3DChart('ECo2')">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>二酸化炭素濃度</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="envMonitor"
           type="csv"
@@ -160,6 +238,21 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="env3DDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">{{ chartTitle }}</span>
+        </v-card-title>
+        <div id="env3DChart" style="width: 1000px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="env3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -216,6 +309,8 @@ export default {
         itemsPerPage: 15,
       },
       options: {},
+      env3DDialog: false,
+      chartTitle: '',
     }
   },
   async fetch() {
@@ -276,6 +371,13 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    openEnv3DChart(type) {
+      this.chartTitle = this.$getEnvName(type)
+      this.env3DDialog = true
+      this.$nextTick(() => {
+        this.$showEnv3DChart('env3DChart', type, this.envMonitor)
+      })
     },
   },
 }
