@@ -222,6 +222,10 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			lr[n] = float64(v)
 		}
 	}
+	keys := []string{}
+	for k := range lr {
+		keys = append(keys, k)
+	}
 	if mode == "ps" || mode == "delta" {
 		if _, ok := pe.Result["lastTime"]; !ok {
 			lr["lastTime"] = float64(time.Now().UnixNano())
@@ -230,7 +234,8 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			return
 		}
 		lr["lastTime"] = float64(time.Now().UnixNano())
-		for k, v := range lr {
+		for _, k := range keys {
+			v := lr[k]
 			if vf, ok := v.(float64); ok {
 				if vo, ok := pe.Result[k]; ok {
 					if vof, ok := vo.(float64); ok {
@@ -248,13 +253,12 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 					diff = vf
 				}
 				if diff < 1.0 {
+					log.Printf("polling=%v  lr=%v", pe, lr)
 					setPollingError("snmp", pe, fmt.Errorf("no sysUptime"))
 					return
 				}
-				for k, v := range lr {
-					if strings.HasPrefix(k, "_Delta") {
-						continue
-					}
+				for _, k := range keys {
+					v := lr[k]
 					if _, ok := v.(float64); ok {
 						if vd, ok := lr[k+"_Delta"]; ok {
 							if vdf, ok := vd.(float64); ok {
@@ -593,6 +597,10 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			lr[n] = float64(v)
 		}
 	}
+	keys := []string{}
+	for k := range lr {
+		keys = append(keys, k)
+	}
 	if _, ok := pe.Result["lastTime"]; !ok {
 		lr["lastTime"] = float64(time.Now().UnixNano())
 		pe.Result = lr
@@ -600,7 +608,8 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		return
 	}
 	lr["lastTime"] = float64(time.Now().UnixNano())
-	for k, v := range lr {
+	for _, k := range keys {
+		v := lr[k]
 		if vf, ok := v.(float64); ok {
 			if vo, ok := pe.Result[k]; ok {
 				if vof, ok := vo.(float64); ok {
@@ -616,13 +625,12 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			diff = vf
 		}
 		if diff < 1.0 {
+			log.Printf("polling=%#v  lr=%v", pe, lr)
 			setPollingError("snmp", pe, fmt.Errorf("no sysUptime"))
 			return
 		}
-		for k, v := range lr {
-			if strings.HasPrefix(k, "_Delta") {
-				continue
-			}
+		for _, k := range keys {
+			v := lr[k]
 			if _, ok := v.(float64); ok {
 				if vd, ok := lr[k+"_Delta"]; ok {
 					if vdf, ok := vd.(float64); ok {
