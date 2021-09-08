@@ -13,7 +13,6 @@ func ReportTWWifiScan(l map[string]interface{}) {
 }
 
 func checkTWWifiScanReport(l map[string]interface{}) {
-	log.Println("wifi", l)
 	h, ok := l["hostname"].(string)
 	if !ok {
 		log.Printf("twWifiScan no hostname %v", l)
@@ -51,7 +50,6 @@ func checkTWWifiScanReport(l map[string]interface{}) {
 
 //type=APInfo,ssid=%s,bssid=%s,rssi=%s,Channel=%s,info=%s,count=%d,change=%d,ft=%s,lt=%s
 func checkAPInfoReport(h string, m map[string]string) {
-	log.Println(m)
 	bssid, ok := m["bssid"]
 	if !ok || bssid == "" {
 		return
@@ -89,5 +87,4 @@ func checkAPInfoReport(h string, m map[string]string) {
 		LastTime:  now,
 		FirstTime: now,
 	})
-
 }

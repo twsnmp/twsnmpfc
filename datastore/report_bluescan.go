@@ -128,7 +128,7 @@ func loadEnvMonitor(r *bbolt.Bucket) {
 		_ = b.ForEach(func(k, v []byte) error {
 			var e EnvMonitorEnt
 			if err := json.Unmarshal(v, &e); err == nil {
-				wifiAP.Store(e.ID, &e)
+				envMonitor.Store(e.ID, &e)
 			}
 			return nil
 		})
@@ -137,7 +137,7 @@ func loadEnvMonitor(r *bbolt.Bucket) {
 
 func saveEnvMonitor(b *bbolt.Bucket, last int64) {
 	r := b.Bucket([]byte("envMonitor"))
-	wifiAP.Range(func(k, v interface{}) bool {
+	envMonitor.Range(func(k, v interface{}) bool {
 		e, ok := v.(*EnvMonitorEnt)
 		if !ok {
 			return true
