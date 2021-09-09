@@ -211,12 +211,12 @@
                 <td>{{ selected.Host }}</td>
               </tr>
               <tr>
-                <td>データ数</td>
-                <td>{{ selected.EnvData.length }}</td>
-              </tr>
-              <tr>
                 <td>回数</td>
                 <td>{{ selected.Count }}</td>
+              </tr>
+              <tr>
+                <td>データ数</td>
+                <td>{{ selected.EnvData.length }}</td>
               </tr>
               <tr>
                 <td>初回日時</td>

@@ -172,6 +172,10 @@
                 <td>{{ selected.Count }}</td>
               </tr>
               <tr>
+                <td>RSSI測定数</td>
+                <td>{{ selected.RSSI.length }}</td>
+              </tr>
+              <tr>
                 <td>初回日時</td>
                 <td>{{ selected.First }}</td>
               </tr>
