@@ -155,7 +155,7 @@ func reportBackend(ctx context.Context) {
 				datastore.SaveReport(last)
 				last = time.Now().UnixNano()
 				clearIpToNameCache()
-				log.Printf("end report timer process dur=%v", time.Since(st))
+				log.Printf("report timer process dur=%v", time.Since(st))
 			}
 		case dr := <-deviceReportCh:
 			checkDeviceReport(dr)
@@ -196,7 +196,7 @@ func checkOldReport() {
 	checkOldDNSQ(delOld)
 	checkOldRadiusFlow(safeOld, delOld)
 	checkOldTLSFlow(safeOld, delOld)
-	log.Printf("end check old report dur=%v", time.Since(st))
+	log.Printf("check old report dur=%v", time.Since(st))
 	oldCheck = false
 }
 

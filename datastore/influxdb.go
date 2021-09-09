@@ -144,11 +144,17 @@ func SendPollingLogToInfluxdb(pe *PollingEnt) error {
 		"pollingID": pe.ID,
 	}
 	fields := map[string]interface{}{}
-	for k, v := range pe.Result {
+	for k, i := range pe.Result {
 		// 数値だけ送信する
-		if fv, ok := v.(float64); ok {
-			fields[k] = fv
+		switch v := i.(type) {
+		case float64:
+			fields[k] = v
+		case int, int64, int32, float32:
+			fields[k] = v
 		}
+	}
+	if len(fields) < 1 {
+		return fmt.Errorf("no send data")
 	}
 	pt, err := client.NewPoint(pe.Name, tags, fields, time.Unix(0, pe.LastTime))
 	if err != nil {

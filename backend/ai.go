@@ -94,7 +94,7 @@ func doAI(pe *datastore.PollingEnt) {
 	nextAIReqTimeMap[pe.ID] = time.Now().Unix() + 60*60
 	st := time.Now()
 	calcAIScore(req)
-	log.Printf("calc ai score id=%s name=%s len=%d dur%v", pe.ID, pe.Name, len(req.Data), time.Since(st))
+	log.Printf("calc ai score id=%s name=%s len=%d dur=%v", pe.ID, pe.Name, len(req.Data), time.Since(st))
 }
 
 func getAIDataKeys(p *datastore.PollingEnt) []string {

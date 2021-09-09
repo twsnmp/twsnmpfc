@@ -74,47 +74,39 @@ func logger(ctx context.Context) {
 					stopSyslogd = make(chan bool)
 					syslogdRunning = true
 					go syslogd(stopSyslogd)
-					log.Printf("start syslogd")
 				} else if !datastore.MapConf.EnableSyslogd && syslogdRunning {
 					close(stopSyslogd)
 					syslogdRunning = false
-					log.Printf("stop syslogd")
 				}
 				if datastore.MapConf.EnableTrapd && !trapdRunning {
 					stopTrapd = make(chan bool)
 					trapdRunning = true
 					go snmptrapd(stopTrapd)
-					log.Printf("start trapd")
 				} else if !datastore.MapConf.EnableTrapd && trapdRunning {
 					close(stopTrapd)
 					trapdRunning = false
-					log.Printf("stop trapd")
 				}
 				if datastore.MapConf.EnableNetflowd && !netflowdRunning {
 					stopNetflowd = make(chan bool)
 					netflowdRunning = true
 					go netflowd(stopNetflowd)
-					log.Printf("start netflowd")
 				} else if !datastore.MapConf.EnableNetflowd && netflowdRunning {
 					close(stopNetflowd)
 					netflowdRunning = false
-					log.Printf("stop netflowd")
 				}
 				if datastore.MapConf.EnableArpWatch && !arpWatchRunning {
 					stopArpWatch = make(chan bool)
 					arpWatchRunning = true
 					go arpWatch(stopArpWatch)
-					log.Printf("start arpWatch")
 				} else if !datastore.MapConf.EnableArpWatch && arpWatchRunning {
 					close(stopArpWatch)
 					arpWatchRunning = false
-					log.Printf("stop arpWatch")
 				}
 				if datastore.RestartSnmpTrapd && trapdRunning {
 					close(stopTrapd)
 					datastore.RestartSnmpTrapd = false
 					trapdRunning = false
-					log.Printf("stop trapd and restart")
+					log.Printf("resatrt trapd")
 				}
 			}
 		}

@@ -18,6 +18,7 @@ import (
 )
 
 func snmptrapd(stopCh chan bool) {
+	log.Printf("start snmp trapd")
 	tl := gosnmp.NewTrapListener()
 	tl.Params = &gosnmp.GoSNMP{}
 	switch datastore.MapConf.SnmpMode {
@@ -102,8 +103,8 @@ func snmptrapd(stopCh chan bool) {
 		if err := tl.Listen("0.0.0.0:162"); err != nil {
 			log.Printf("snmp trap listen err=%v", err)
 		}
-		log.Printf("close snmp trap listen")
+		log.Printf("close snmp trapd")
 	}()
 	<-stopCh
-	log.Printf("stop snmp rrap listenner")
+	log.Printf("stop snmp trapd")
 }

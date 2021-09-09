@@ -207,7 +207,7 @@ func doPolling(pe *datastore.PollingEnt) {
 	if datastore.InfluxdbConf.PollingLog != "" {
 		if datastore.InfluxdbConf.PollingLog == "all" || pe.LogMode != datastore.LogModeNone {
 			if err := datastore.SendPollingLogToInfluxdb(pe); err != nil {
-				log.Printf("send polling log to influxdb err=%v", err)
+				log.Printf("send polling log to influxdb1 err=%v", err)
 			}
 		}
 	}
