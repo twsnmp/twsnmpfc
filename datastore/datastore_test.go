@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/rakyll/statik/fs"
@@ -29,7 +30,8 @@ func TestDataStore(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(td)
-	Init(ctx, td, statikFS)
+	wg := &sync.WaitGroup{}
+	Init(ctx, td, statikFS, wg)
 	MapConf.MapName = "Test123"
 	if err := SaveMapConf(); err != nil {
 		t.Fatal(err)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -23,7 +24,7 @@ func getTmpDBFile() (string, error) {
 
 func TestDiscover(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	ping.Start(ctx)
+	ping.Start(ctx, &sync.WaitGroup{})
 	defer cancel()
 	time.Sleep(time.Second * 1)
 	statikFS, err := fs.New()
@@ -35,7 +36,7 @@ func TestDiscover(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(td)
-	datastore.Init(ctx, td, statikFS)
+	datastore.Init(ctx, td, statikFS, &sync.WaitGroup{})
 	datastore.MapConf.MapName = "Test123"
 	if err := datastore.SaveMapConf(); err != nil {
 		t.Fatal(err)

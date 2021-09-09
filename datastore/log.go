@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"sync"
 	"time"
 
 	"go.etcd.io/bbolt"
@@ -205,8 +206,9 @@ func DeleteArp() {
 	}
 }
 
-func eventLogger(ctx context.Context) {
-	log.Println("start event logger")
+func eventLogger(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	log.Println("start eventlog")
 	timer1 := time.NewTicker(time.Minute * 2)
 	timer2 := time.NewTicker(time.Second * 5)
 	list := []*EventLogEnt{}
@@ -218,6 +220,7 @@ func eventLogger(ctx context.Context) {
 			}
 			timer1.Stop()
 			timer2.Stop()
+			log.Println("stop eventlog")
 			return
 		case e := <-eventLogCh:
 			list = append(list, e)

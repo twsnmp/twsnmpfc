@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/montanaflynn/stats"
@@ -13,14 +14,15 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func aiBackend(ctx context.Context) {
-	log.Println("start ai backend")
+func aiBackend(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	log.Println("start ai")
 	timer := time.NewTicker(time.Second * 60)
 	for {
 		select {
 		case <-ctx.Done():
 			timer.Stop()
-			log.Println("stop ai backend")
+			log.Println("stop ai")
 			return
 		case <-timer.C:
 			checkAI()

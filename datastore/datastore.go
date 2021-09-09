@@ -110,7 +110,7 @@ var (
 	ErrInvalidID     = fmt.Errorf("invalid id")
 )
 
-func Init(ctx context.Context, path string, fs http.FileSystem) error {
+func Init(ctx context.Context, path string, fs http.FileSystem, wg *sync.WaitGroup) error {
 	dspath = path
 	eventLogCh = make(chan *EventLogEnt, 100)
 	protMap = map[int]string{
@@ -128,7 +128,8 @@ func Init(ctx context.Context, path string, fs http.FileSystem) error {
 	if err := loadDataFromFS(fs); err != nil {
 		return err
 	}
-	go eventLogger(ctx)
+	wg.Add(1)
+	go eventLogger(ctx, wg)
 	setLastBackupTime()
 	return nil
 }

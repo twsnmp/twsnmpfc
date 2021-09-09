@@ -36,7 +36,7 @@ var (
 	japanOnly      bool
 )
 
-func Start(ctx context.Context) error {
+func Start(ctx context.Context, wg *sync.WaitGroup) error {
 	datastore.LaodReportConf()
 	UpdateReportConf()
 	datastore.LoadReport()
@@ -46,7 +46,8 @@ func Start(ctx context.Context) error {
 	twpcapReportCh = make(chan map[string]interface{}, 100)
 	twWinLogCh = make(chan map[string]interface{}, 100)
 	checkCertCh = make(chan bool, 5)
-	go reportBackend(ctx)
+	wg.Add(1)
+	go reportBackend(ctx, wg)
 	return nil
 }
 
@@ -129,9 +130,10 @@ func UpdateReportConf() {
 	}
 }
 
-func reportBackend(ctx context.Context) {
+func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 	timer := time.NewTicker(time.Minute * 5)
-	log.Println("start report backend")
+	log.Println("start report")
 	go checkOldReport()
 	calcScore()
 	checkCerts()
@@ -142,7 +144,7 @@ func reportBackend(ctx context.Context) {
 			{
 				timer.Stop()
 				datastore.SaveReport(0)
-				log.Printf("stop report backend")
+				log.Printf("stop report")
 				return
 			}
 		case <-timer.C:

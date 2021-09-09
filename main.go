@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -70,6 +71,7 @@ func (writer logWriter) Write(bytes []byte) (int, error) {
 }
 
 func main() {
+	st := time.Now()
 	log.Printf("start twsnmpfc version=%s(%s)", version, commit)
 	if cpuprofile != "" {
 		f, err := os.Create(cpuprofile)
@@ -107,8 +109,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("no statik fs err=%v", err)
 	}
+	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
-	if err = datastore.Init(ctx, dataStorePath, statikFS); err != nil {
+	if err = datastore.Init(ctx, dataStorePath, statikFS, wg); err != nil {
 		log.Fatalf("init db err=%v", err)
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
@@ -116,22 +119,22 @@ func main() {
 		Level: "info",
 		Event: "TWSNMP FC起動",
 	})
-	if err = ping.Start(ctx); err != nil {
+	if err = ping.Start(ctx, wg); err != nil {
 		log.Fatalf("start ping err=%v", err)
 	}
-	if err = report.Start(ctx); err != nil {
+	if err = report.Start(ctx, wg); err != nil {
 		log.Fatalf("start report err=%v", err)
 	}
-	if err = logger.Start(ctx); err != nil {
+	if err = logger.Start(ctx, wg); err != nil {
 		log.Fatalf("start logger err=%v", err)
 	}
-	if err = polling.Start(ctx); err != nil {
+	if err = polling.Start(ctx, wg); err != nil {
 		log.Fatalf("start polling err=%v", err)
 	}
-	if err = backend.Start(ctx, dataStorePath, version); err != nil {
+	if err = backend.Start(ctx, dataStorePath, version, wg); err != nil {
 		log.Fatalf("start backend err=%v", err)
 	}
-	if err = notify.Start(ctx); err != nil {
+	if err = notify.Start(ctx, wg); err != nil {
 		log.Fatalf("start notify err=%v", err)
 	}
 	w := &webapi.WebAPI{
@@ -153,7 +156,8 @@ func main() {
 		openURL(fmt.Sprintf("http://127.0.0.1:%s", port))
 	}
 	sig := <-quit
-	log.Printf("stop twsnmpfc signal=%v", sig)
+	stop := time.Now()
+	log.Printf("signal twsnmpfc signal=%v", sig)
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
 		Level: "info",
@@ -161,7 +165,8 @@ func main() {
 	})
 	webapi.Stop()
 	cancel()
-	time.Sleep(time.Second * 2)
+	wg.Wait()
+	log.Printf("stop twsnmpfc dur=%v stop=%v", time.Since(st), time.Since(stop))
 }
 
 func openURL(url string) error {

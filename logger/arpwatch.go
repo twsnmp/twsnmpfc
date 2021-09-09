@@ -24,7 +24,7 @@ func ResetArpTable() {
 }
 
 func arpWatch(stopCh chan bool) {
-	log.Println("start arp watch")
+	log.Println("start arp")
 	datastore.ForEachArp(func(a *datastore.ArpEnt) bool {
 		arpTable[a.IP] = a.MAC
 		return true
@@ -37,7 +37,7 @@ func arpWatch(stopCh chan bool) {
 		select {
 		case <-stopCh:
 			timer.Stop()
-			log.Println("stop arp watch")
+			log.Println("stop arp")
 			return
 		case <-pinger.C:
 			if len(localCheckAddrs) > 0 {

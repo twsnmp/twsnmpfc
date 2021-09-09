@@ -64,10 +64,11 @@ type packet struct {
 	ttl    int
 }
 
-func Start(ctx context.Context) error {
+func Start(ctx context.Context, wg *sync.WaitGroup) error {
 	pingSendCh = make(chan *PingEnt, 100)
 	randGen = rand.New(rand.NewSource(time.Now().UnixNano()))
-	go pingBackend(ctx)
+	wg.Add(1)
+	go pingBackend(ctx, wg)
 	return nil
 }
 
@@ -142,7 +143,8 @@ func (p *PingEnt) sendICMP(conn *icmp.PacketConn) error {
 }
 
 // pingBackend : ping実行時の送受信処理
-func pingBackend(ctx context.Context) {
+func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 	log.Println("start ping backend")
 	timer := time.NewTicker(time.Millisecond * 500)
 	pingMap := make(map[int64]*PingEnt)

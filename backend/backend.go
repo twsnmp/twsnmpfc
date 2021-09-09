@@ -3,6 +3,7 @@ package backend
 
 import (
 	"context"
+	"sync"
 )
 
 var (
@@ -12,14 +13,17 @@ var (
 	dspath            string
 )
 
-func Start(ctx context.Context, dsp, vn string) error {
+func Start(ctx context.Context, dsp, vn string, wg *sync.WaitGroup) error {
 	dspath = dsp
 	versionNum = vn
 	yasumiMap = make(map[string]bool)
 	makeYasumiMap()
-	go monitor(ctx)
-	go mapBackend(ctx)
-	go aiBackend(ctx)
+	wg.Add(1)
+	go monitor(ctx, wg)
+	wg.Add(1)
+	go mapBackend(ctx, wg)
+	wg.Add(1)
+	go aiBackend(ctx, wg)
 	return nil
 }
 

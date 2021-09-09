@@ -6,14 +6,16 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func mapBackend(ctx context.Context) {
-	log.Println("start map backend")
+func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	log.Println("start map")
 	clearPollingState()
 	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
 		updateNodeState(n)
@@ -28,7 +30,7 @@ func mapBackend(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			timer.Stop()
-			log.Println("stop map backend")
+			log.Println("stop map")
 			return
 		case <-newVersionTimer.C:
 			go checkNewVersion()

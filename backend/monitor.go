@@ -3,6 +3,7 @@ package backend
 import (
 	"context"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/shirou/gopsutil/cpu"
@@ -76,12 +77,9 @@ func updateMonData() {
 }
 
 // monitor :
-func monitor(ctx context.Context) {
+func monitor(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 	log.Println("start monitor")
-	// 60秒に同期する
-	for (time.Now().Second() % 60) != 0 {
-		time.Sleep(time.Millisecond * 100)
-	}
 	timer := time.NewTicker(time.Second * 60)
 	updateMonData()
 	defer timer.Stop()

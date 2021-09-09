@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/smtp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -22,13 +23,16 @@ var (
 	lastExecLevel int
 )
 
-func Start(ctx context.Context) error {
+func Start(ctx context.Context, wg *sync.WaitGroup) error {
 	lastExecLevel = -1
-	go notifyBackend(ctx)
+	wg.Add(1)
+	go notifyBackend(ctx, wg)
 	return nil
 }
 
-func notifyBackend(ctx context.Context) {
+func notifyBackend(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	log.Println("start notify")
 	lastSendReport := time.Now().Add(time.Hour * time.Duration(-24))
 	lastLog := fmt.Sprintf("%016x", time.Now().Add(time.Hour*time.Duration(-1)).UnixNano())
 	lastLog = checkNotify(lastLog)
@@ -37,6 +41,7 @@ func notifyBackend(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			log.Println("stop notify")
 			timer.Stop()
 			return
 		case <-timer.C:

@@ -38,9 +38,10 @@ var (
 	busyPollings sync.Map
 )
 
-func Start(ctx context.Context) error {
+func Start(ctx context.Context, wg *sync.WaitGroup) error {
 	doPollingCh = make(chan string, maxPolling)
-	go pollingBackend(ctx)
+	wg.Add(1)
+	go pollingBackend(ctx, wg)
 	return nil
 }
 
@@ -108,7 +109,8 @@ func CheckAllPoll() {
 }
 
 // pollingBackend :  ポーリングのバックグランド処理
-func pollingBackend(ctx context.Context) {
+func pollingBackend(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 	time.Sleep(time.Millisecond * 100)
 	timer := time.NewTicker(time.Second * 30)
 	for {
