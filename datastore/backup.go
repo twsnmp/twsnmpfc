@@ -67,8 +67,8 @@ func CheckDBBackup() {
 		}
 		DBStats.BackupStart = time.Now().UnixNano()
 		go func() {
+			st := time.Now()
 			file := filepath.Join(dspath, "backup", "twsnmpfc.db."+time.Now().Format("20060102150405"))
-			log.Printf("backup start = %s", file)
 			stopBackup = false
 			defer func() {
 				DBStats.BackupStart = 0
@@ -88,7 +88,7 @@ func CheckDBBackup() {
 				})
 				return
 			}
-			log.Printf("backup end = %s", file)
+			log.Printf("backup file=%s dur=%v", file, time.Since(st))
 			AddEventLog(&EventLogEnt{
 				Type:  "system",
 				Level: "info",
@@ -189,7 +189,6 @@ func walkBucket(b *bbolt.Bucket, keypath [][]byte, k, v []byte, seq uint64) erro
 	if v != nil {
 		return nil
 	}
-	log.Printf("backup bucket key=%s", string(k))
 	// Iterate over each child key/value.
 	keypath = append(keypath, k)
 	return b.ForEach(func(k, v []byte) error {
@@ -263,9 +262,9 @@ func rotateBackup() {
 	for i := 0; i < len(backupList)-(Backup.Generation+1); i++ {
 		backup := filepath.Join(dspath, "backup", backupList[i].Name())
 		if err := os.Remove(backup); err != nil {
-			log.Printf("delete backup %s err=%v", backup, err)
+			log.Printf("delete backup file=%s err=%v", backup, err)
 		} else {
-			log.Printf("delete backup %s", backup)
+			log.Printf("delete backup file=%s", backup)
 		}
 	}
 }
@@ -291,7 +290,6 @@ func RestoreDB(ds, backup string) error {
 func setLastBackupTime() {
 	dirList, err := ioutil.ReadDir(filepath.Join(dspath, "backup"))
 	if err != nil {
-		log.Printf("set last backup time err=%v", err)
 		return
 	}
 	for _, f := range dirList {

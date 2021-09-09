@@ -19,7 +19,6 @@ var syslogCount = 0
 var netflowCount = 0
 
 func Start(ctx context.Context) error {
-	log.Println("Start Logger")
 	logCh = make(chan *datastore.LogEnt, 100)
 	go logger(ctx)
 	return nil
@@ -57,7 +56,7 @@ func logger(ctx context.Context) {
 				if arpWatchRunning {
 					close(stopArpWatch)
 				}
-				log.Printf("Stop logger")
+				log.Printf("stop logger")
 				return
 			}
 		case l := <-logCh:
@@ -67,7 +66,7 @@ func logger(ctx context.Context) {
 				if len(logBuffer) > 0 {
 					st := time.Now()
 					datastore.SaveLogBuffer(logBuffer)
-					log.Printf("saveLogBuffer len=%d dur=%v syslog=%d netflow=%d",
+					log.Printf("save log len=%d dur=%v syslog=%d netflow=%d",
 						len(logBuffer), time.Since(st), syslogCount, netflowCount)
 					logBuffer = []*datastore.LogEnt{}
 				}

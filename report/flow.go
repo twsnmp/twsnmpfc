@@ -2,7 +2,6 @@ package report
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"strings"
 	"time"
@@ -66,7 +65,6 @@ func getFlowDir(fr *flowReportEnt) (server, client, service string) {
 	if !guc1 && !guc2 && !strings.HasPrefix(fr.SrcIP, "fe80::") &&
 		!strings.HasPrefix(fr.SrcIP, "169.254.") {
 		// 両方ユニキャストでない場合は含めない。IPv4,IPv6のリンクローカルは含める
-		log.Printf("src and dst address is not unicast %v", fr)
 		return
 	}
 	if fr.Prot == 1 {

@@ -2,7 +2,6 @@ package webapi
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -23,7 +22,6 @@ func getMIBBr(c echo.Context) error {
 	r.Node = datastore.GetNode(id)
 	r.MIBTree = &datastore.MIBTree
 	if r.Node == nil {
-		log.Printf("node not found")
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, r)
@@ -44,16 +42,13 @@ func postMIBBr(c echo.Context) error {
 	api := c.Get("api").(*WebAPI)
 	p := new(mibGetReqWebAPI)
 	if err := c.Bind(p); err != nil {
-		log.Printf("postSyslog err=%v", err)
 		return echo.ErrBadRequest
 	}
 	r, err := snmpWalk(api, p)
 	if err != nil {
-		log.Printf("postMIBBr err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if len(r) < 1 {
-		log.Printf("postMIBBr no mibs")
 		return echo.ErrNotFound
 	}
 	return c.JSON(http.StatusOK, r)
@@ -63,7 +58,6 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 	ret := []*mibEnt{}
 	n := datastore.GetNode(p.NodeID)
 	if n == nil {
-		log.Printf("postMIBBr node not found")
 		return ret, fmt.Errorf("node not found")
 	}
 	agent := &gosnmp.GoSNMP{

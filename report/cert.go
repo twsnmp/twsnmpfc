@@ -43,18 +43,15 @@ func setCertPenalty(c *datastore.CertEnt) {
 		if c.NotAfter < now+3600*24*7 {
 			c.Penalty++
 			if c.NotAfter < now {
-				log.Println("expire cert")
 				c.Penalty++
 			}
 		}
 	} else if c.NotAfter-c.NotBefore > 3600*24*825 {
 		// 証明書の期間は２年
-		log.Println("long tem cert")
 		c.Penalty++
 	}
 	if c.Subject == c.Issuer {
 		// 自己署名
-		log.Println("self sign cert")
 		c.Penalty++
 	}
 }
@@ -75,10 +72,10 @@ func getCert(c *datastore.CertEnt) {
 			c.Error = fmt.Sprintf("%v", err)
 			switch err := err.(type) {
 			case *net.OpError:
-				log.Printf("getCert err=%v", err)
+				log.Printf("get cert err=%v", err)
 			default:
 				conf.InsecureSkipVerify = true
-				log.Printf("getCert set skip err=%v", err)
+				log.Printf("get cert set skip err=%v", err)
 			}
 			continue
 		}
@@ -128,7 +125,6 @@ func getServerCert(t string, cs *tls.ConnectionState) *x509.Certificate {
 		}
 	}
 	if len(cs.PeerCertificates) > 0 {
-		log.Println("not hit return PeerCertificates[0]")
 		return cs.PeerCertificates[0]
 	}
 	return nil

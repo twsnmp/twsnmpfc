@@ -80,7 +80,6 @@ func loadConf() error {
 			return nil
 		}
 		if err := json.Unmarshal(v, &MapConf); err != nil {
-			log.Println(fmt.Sprintf("Unmarshal mapConf from DB error=%v", err))
 			return err
 		}
 		v = b.Get([]byte("discoverConf"))
@@ -88,7 +87,6 @@ func loadConf() error {
 			return nil
 		}
 		if err := json.Unmarshal(v, &DiscoverConf); err != nil {
-			log.Println(fmt.Sprintf("Unmarshal discoverConf from DB error=%v", err))
 			return err
 		}
 		v = b.Get([]byte("notifyConf"))
@@ -96,19 +94,18 @@ func loadConf() error {
 			return nil
 		}
 		if err := json.Unmarshal(v, &NotifyConf); err != nil {
-			log.Println(fmt.Sprintf("Unmarshal notifyConf from DB error=%v", err))
 			return err
 		}
 		v = b.Get([]byte("backup"))
 		if v != nil {
 			if err := json.Unmarshal(v, &Backup); err != nil {
-				log.Println(fmt.Sprintf("Unmarshal mainWinbackupdowInfo from DB error=%v", err))
+				log.Printf("load conf err=%v", err)
 			}
 		}
 		v = b.Get([]byte("influxdbConf"))
 		if v != nil {
 			if err := json.Unmarshal(v, &InfluxdbConf); err != nil {
-				log.Println(fmt.Sprintf("Unmarshal influxdbConf from DB error=%v", err))
+				log.Printf("load conf err=%v", err)
 			}
 		}
 		return nil
@@ -118,16 +115,16 @@ func loadConf() error {
 	}
 	if err == nil && bSaveConf {
 		if err := SaveMapConf(); err != nil {
-			log.Printf("loadConf err=%v", err)
+			log.Printf("load conf err=%v", err)
 		}
 		if err := SaveNotifyConf(); err != nil {
-			log.Printf("loadConf err=%v", err)
+			log.Printf("load conf err=%v", err)
 		}
 		if err := SaveDiscoverConf(); err != nil {
-			log.Printf("loadConf err=%v", err)
+			log.Printf("load conf err=%v", err)
 		}
 		if err := SaveInfluxdbConf(); err != nil {
-			log.Printf("loadConf err=%v", err)
+			log.Printf("load conf err=%v", err)
 		}
 	}
 	return err
@@ -158,17 +155,16 @@ func GetBackImage() ([]byte, error) {
 func initSecurityKey() {
 	key, err := security.GenPrivateKey(4096, "")
 	if err != nil {
-		log.Printf("initSecurityKey err=%v", err)
+		log.Printf("init security key err=%v", err)
 		return
 	}
 	pubkey, err := security.GetSSHPublicKey(key)
 	if err != nil {
-		log.Printf("initSecurityKey err=%v", err)
+		log.Printf("init security key err=%v", err)
 		return
 	}
 	MapConf.PrivateKey = key
 	MapConf.PublicKey = pubkey
-	log.Printf("initSecurityKey Public Key=%v", pubkey)
 	_ = SaveMapConf()
 }
 

@@ -1,7 +1,6 @@
 package webapi
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
@@ -33,7 +32,6 @@ func postArp(c echo.Context) error {
 	var err error
 	filter := new(arpFilter)
 	if err = c.Bind(filter); err != nil {
-		log.Printf("postArp err=%v", err)
 		return echo.ErrBadRequest
 	}
 	ipFilter := makeStringFilter(filter.IP)

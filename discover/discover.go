@@ -222,14 +222,14 @@ func getSnmpInfo(t string, dent *discoverInfoEnt) {
 	}
 	err := agent.Connect()
 	if err != nil {
-		log.Printf("discoverGetSnmpInfo err=%v", err)
+		log.Printf("discover err=%v", err)
 		return
 	}
 	defer agent.Conn.Close()
 	oids := []string{datastore.MIBDB.NameToOID("sysName"), datastore.MIBDB.NameToOID("sysObjectID")}
 	result, err := agent.GetNext(oids)
 	if err != nil {
-		log.Printf("discoverGetSnmpInfo err=%v", err)
+		log.Printf("discover err=%v", err)
 		return
 	}
 	for _, variable := range result.Variables {
@@ -283,7 +283,7 @@ func addFoundNode(dent *discoverInfoEnt) {
 		n.Descr += strings.Join(sl, ",") + "対応"
 	}
 	if err := datastore.AddNode(&n); err != nil {
-		log.Printf("discover AddNode err=%v", err)
+		log.Printf("discover err=%v", err)
 		return
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
@@ -307,7 +307,7 @@ func autoAddPollings(n *datastore.NodeEnt) {
 	for _, id := range datastore.DiscoverConf.AutoAddPollings {
 		pt := datastore.GetPollingTemplate(id)
 		if pt == nil {
-			log.Printf("template not found id=%s", id)
+			log.Printf("add polling template not found id=%s", id)
 			continue
 		}
 		if pt.AutoMode == "disable" {
@@ -335,7 +335,7 @@ func autoAddPollings(n *datastore.NodeEnt) {
 		p.NextTime = 0
 		p.State = "unknown"
 		if err := datastore.AddPolling(p); err != nil {
-			log.Printf("discover autoAddPollings err=%v", err)
+			log.Printf("discover err=%v", err)
 			return
 		}
 	}
@@ -353,7 +353,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 		Retry:   datastore.MapConf.Retry,
 	}
 	if err := datastore.AddPolling(p); err != nil {
-		log.Printf("discover AddPolling err=%v", err)
+		log.Printf("discover err=%v", err)
 		return
 	}
 	for s := range dent.ServerList {
@@ -435,7 +435,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			Retry:   datastore.MapConf.Retry,
 		}
 		if err := datastore.AddPolling(p); err != nil {
-			log.Printf("discover AddPolling err=%v", err)
+			log.Printf("discover err=%v", err)
 			return
 		}
 	}
@@ -454,7 +454,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 		Retry:   datastore.MapConf.Retry,
 	}
 	if err := datastore.AddPolling(p); err != nil {
-		log.Printf("discover AddPolling err=%v", err)
+		log.Printf("discover err=%v", err)
 		return
 	}
 	for _, i := range dent.IfIndexList {
@@ -471,7 +471,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			Retry:   datastore.MapConf.Retry,
 		}
 		if err := datastore.AddPolling(p); err != nil {
-			log.Printf("discover AddPolling err=%v", err)
+			log.Printf("discover err=%v", err)
 			return
 		}
 	}

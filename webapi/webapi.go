@@ -43,7 +43,7 @@ func Start(p *WebAPI) {
 	e = echo.New()
 	setup(p)
 	if err := e.StartServer(makeServer(p)); err != nil {
-		log.Println(err)
+		log.Printf("start webapi err=%v", err)
 	}
 }
 
@@ -51,7 +51,7 @@ func Stop() {
 	ctxStopWeb, cancelWeb := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancelWeb()
 	if err := e.Shutdown(ctxStopWeb); err != nil {
-		log.Printf("webui shutdown err=%v", err)
+		log.Printf("shutdown webapi err=%v", err)
 	}
 }
 
@@ -204,9 +204,10 @@ func setup(p *WebAPI) {
 	m.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
 		if datastore.MapConf.EnableMobileAPI && username == datastore.MapConf.UserID &&
 			security.PasswordVerify(datastore.MapConf.Password, password) {
+			log.Printf("auth ok user=%s", username)
 			return true, nil
 		}
-		log.Printf("mobile api failed auth username=%s password=%s", username, password)
+		log.Printf("auth failed user=%s password=%s", username, password)
 		return false, nil
 	}))
 	m.GET("/api/mapstatus", getMobileMapStatus)
@@ -240,21 +241,22 @@ func makeServer(p *WebAPI) *http.Server {
 	if !p.UseTLS {
 		return sv
 	}
-	cert := getServerCert(p)
-	sv.TLSConfig = &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		CipherSuites: []uint16{
-			tls.TLS_AES_128_GCM_SHA256,
-			tls.TLS_AES_256_GCM_SHA384,
-		},
-		MinVersion:               tls.VersionTLS13,
-		PreferServerCipherSuites: true,
-		InsecureSkipVerify:       true,
+	if cert, err := getServerCert(p); err != nil {
+		sv.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			CipherSuites: []uint16{
+				tls.TLS_AES_128_GCM_SHA256,
+				tls.TLS_AES_256_GCM_SHA384,
+			},
+			MinVersion:               tls.VersionTLS13,
+			PreferServerCipherSuites: true,
+			InsecureSkipVerify:       true,
+		}
 	}
 	return sv
 }
 
-func getServerCert(p *WebAPI) tls.Certificate {
+func getServerCert(p *WebAPI) (tls.Certificate, error) {
 	//証明書、秘密鍵ファイルがある場合
 	kpath := filepath.Join(p.DataStorePath, "key.pem")
 	cpath := filepath.Join(p.DataStorePath, "cert.pem")
@@ -265,27 +267,27 @@ func getServerCert(p *WebAPI) tls.Certificate {
 			keyPem = []byte(security.GetRawKeyPem(string(keyPem), p.Password))
 			cert, err := tls.X509KeyPair(certPem, keyPem)
 			if err == nil {
-				return cert
+				return cert, nil
 			}
 		}
 	}
 	// 秘密鍵と証明書を自動作成する
 	certPem, keyPem, err := security.MakeWebAPICert(p.Host, p.Password, p.IP)
 	if err != nil {
-		log.Fatalf("getServerCert err=%v", err)
+		return tls.Certificate{}, err
 	}
 	keyPemRaw := []byte(security.GetRawKeyPem(string(keyPem), p.Password))
 	cert, err := tls.X509KeyPair(certPem, keyPemRaw)
 	if err != nil {
-		log.Fatalf("getServerCert err=%v", err)
+		return cert, err
 	}
 	if err := ioutil.WriteFile(kpath, keyPem, 0600); err != nil {
-		log.Printf("getServerCert err=%v", err)
+		return cert, err
 	}
 	if err := ioutil.WriteFile(cpath, certPem, 0600); err != nil {
-		log.Printf("getServerCert err=%v", err)
+		return cert, err
 	}
-	return cert
+	return cert, nil
 }
 
 type twsnmpfcValidator struct {

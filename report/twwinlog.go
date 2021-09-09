@@ -26,12 +26,10 @@ func ReportTwWinLog(l map[string]interface{}) {
 func checkTWWinLogReport(l map[string]interface{}) {
 	h, ok := l["hostname"].(string)
 	if !ok {
-		log.Printf("twwinlog no hostname %v", l)
 		return
 	}
 	msg, ok := l["content"].(string)
 	if !ok {
-		log.Printf("twwinlog no content %v", l)
 		return
 	}
 	kvs := strings.Split(msg, ",")
@@ -44,7 +42,6 @@ func checkTWWinLogReport(l map[string]interface{}) {
 	}
 	t, ok := m["type"]
 	if !ok {
-		log.Printf("twwinlog no type %v", m)
 		return
 	}
 	switch t {
@@ -67,7 +64,7 @@ func checkTWWinLogReport(l map[string]interface{}) {
 	case "Task":
 		checkWinTask(h, m)
 	default:
-		log.Printf("twwinlog unkown type %v", m)
+		log.Printf("twwinlog unkown type=%s", t)
 		winOtherCount++
 	}
 }

@@ -1,7 +1,6 @@
 package webapi
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -46,7 +45,6 @@ func postInfluxdb(c echo.Context) error {
 
 func deleteInfluxdb(c echo.Context) error {
 	if err := datastore.InitInfluxdb(); err != nil {
-		log.Printf("deleteInfluxdb err=%v", err)
 		return echo.ErrBadRequest
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{

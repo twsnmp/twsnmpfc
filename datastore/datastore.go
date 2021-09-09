@@ -125,20 +125,21 @@ func Init(ctx context.Context, path string, fs http.FileSystem) error {
 	geoipMap = make(map[string]string)
 	ouiMap = make(map[string]string)
 	tlsCSMap = make(map[string]string)
-	loadDataFromFS(fs)
+	if err := loadDataFromFS(fs); err != nil {
+		return err
+	}
 	go eventLogger(ctx)
 	setLastBackupTime()
 	return nil
 }
 
-func loadDataFromFS(fs http.FileSystem) {
+func loadDataFromFS(fs http.FileSystem) error {
 	if dspath == "" {
-		log.Println("No DataStore Path Skip Init")
-		return
+		return fmt.Errorf("no data base path")
 	}
 	// BBoltをオープン
 	if err := openDB(filepath.Join(dspath, "twsnmpfc.db")); err != nil {
-		log.Fatalf("InitDataStore OpenDB err=%v", err)
+		return err
 	}
 	// MIBDB
 	if r, err := os.Open(filepath.Join(dspath, "mib.txt")); err == nil {
@@ -147,7 +148,7 @@ func loadDataFromFS(fs http.FileSystem) {
 		if r, err := fs.Open("/conf/mib.txt"); err == nil {
 			loadMIBDB(r)
 		} else {
-			log.Fatalf("InitDataStore MIBDB err=%v", err)
+			return err
 		}
 	}
 	// 拡張MIBの読み込み
@@ -159,7 +160,7 @@ func loadDataFromFS(fs http.FileSystem) {
 		if r, err := fs.Open("/conf/services.txt"); err == nil {
 			loadServiceMap(r)
 		} else {
-			log.Fatalf("InitDataStore services.txt err=%v", err)
+			return err
 		}
 	}
 	makeMibTreeList()
@@ -170,7 +171,7 @@ func loadDataFromFS(fs http.FileSystem) {
 		if r, err := fs.Open("/conf/mac-vendors-export.csv"); err == nil {
 			loadOUIMap(r)
 		} else {
-			log.Fatalf("InitDataStore mac-vendors-export.csv err=%v", err)
+			return err
 		}
 	}
 	// 休みの定義
@@ -187,7 +188,7 @@ func loadDataFromFS(fs http.FileSystem) {
 			}
 			r.Close()
 		} else {
-			log.Printf("InitDataStore yasumi.txt err=%v", err)
+			log.Printf("open yasumi.txt err=%v", err)
 		}
 	}
 	// TLS暗号名の定義
@@ -197,7 +198,7 @@ func loadDataFromFS(fs http.FileSystem) {
 		if r, err := fs.Open("/conf/tlsparams.csv"); err == nil {
 			loadTLSCihperNameMap(r)
 		} else {
-			log.Fatalf("InitDataStore tlsparams.csv err=%v", err)
+			return err
 		}
 	}
 	p := filepath.Join(dspath, "geoip.mmdb")
@@ -208,21 +209,22 @@ func loadDataFromFS(fs http.FileSystem) {
 	if r, err := fs.Open("/conf/polling.json"); err == nil {
 		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
 			if err := loadPollingTemplate(b); err != nil {
-				log.Printf("InitDataStore polling.txt err=%v", err)
+				log.Printf("load polling template err=%v", err)
 			}
 		}
 		r.Close()
 	} else {
-		log.Printf("InitDataStore polling.txt err=%v", err)
+		log.Printf("open polling template err=%v", err)
 	}
 	if r, err := os.Open(filepath.Join(dspath, "polling.json")); err == nil {
 		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
 			if err := loadPollingTemplate(b); err != nil {
-				log.Printf("InitDataStore polling.txt err=%v", err)
+				log.Printf("load polling template err=%v", err)
 			}
 		}
 		r.Close()
 	}
+	return nil
 }
 
 func openDB(path string) error {
@@ -250,7 +252,7 @@ func openDB(path string) error {
 	}
 	err = setupInfluxdb()
 	if err != nil {
-		log.Printf("setupInfluxdb err=%v", err)
+		log.Printf("setup influxdb err=%v", err)
 	}
 	return nil
 }

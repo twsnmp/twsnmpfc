@@ -336,12 +336,12 @@ func saveWinEventID(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(e)
 		if err != nil {
-			log.Printf("saveWinEventID err=%v", err)
+			log.Printf("save winEventID report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(e.ID), s)
 		if err != nil {
-			log.Printf("saveWinEventID err=%v", err)
+			log.Printf("save winEventID report err=%v", err)
 		}
 		return true
 	})
@@ -359,12 +359,12 @@ func saveWinLogon(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(e)
 		if err != nil {
-			log.Printf("saveWinLogon err=%v", err)
+			log.Printf("save winLogon report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(e.ID), s)
 		if err != nil {
-			log.Printf("saveWinLogon err=%v", err)
+			log.Printf("save winLogon report  err=%v", err)
 		}
 		return true
 	})
@@ -382,12 +382,12 @@ func saveWinAccount(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(e)
 		if err != nil {
-			log.Printf("saveWinAccount err=%v", err)
+			log.Printf("save winAccount report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(e.ID), s)
 		if err != nil {
-			log.Printf("saveWinAccount err=%v", err)
+			log.Printf("save winAccount report err=%v", err)
 		}
 		return true
 	})
@@ -405,12 +405,12 @@ func saveWinKerberos(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(e)
 		if err != nil {
-			log.Printf("saveWinKerberos err=%v", err)
+			log.Printf("save winKerberos report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(e.ID), s)
 		if err != nil {
-			log.Printf("saveWinKerberos err=%v", err)
+			log.Printf("save winKerberos report err=%v", err)
 		}
 		return true
 	})
@@ -428,12 +428,12 @@ func saveWinPrivilege(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(e)
 		if err != nil {
-			log.Printf("saveWinPrivilege err=%v", err)
+			log.Printf("save winPrivilege report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(e.ID), s)
 		if err != nil {
-			log.Printf("saveWinPrivilege err=%v", err)
+			log.Printf("save winPrivilege report err=%v", err)
 		}
 		return true
 	})
@@ -451,12 +451,12 @@ func saveWinProcess(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(e)
 		if err != nil {
-			log.Printf("saveWinProcess err=%v", err)
+			log.Printf("save winProcess report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(e.ID), s)
 		if err != nil {
-			log.Printf("saveWinProcess err=%v", err)
+			log.Printf("save winProcess report err=%v", err)
 		}
 		return true
 	})
@@ -474,12 +474,12 @@ func saveWinTask(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(e)
 		if err != nil {
-			log.Printf("saveWinTask err=%v", err)
+			log.Printf("save winTask report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(e.ID), s)
 		if err != nil {
-			log.Printf("saveWinTask err=%v", err)
+			log.Printf("save winTask report err=%v", err)
 		}
 		return true
 	})

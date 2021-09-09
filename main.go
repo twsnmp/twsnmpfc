@@ -70,33 +70,34 @@ func (writer logWriter) Write(bytes []byte) (int, error) {
 }
 
 func main() {
+	log.Printf("start twsnmpfc version=%s(%s)", version, commit)
 	if cpuprofile != "" {
 		f, err := os.Create(cpuprofile)
 		if err != nil {
-			log.Fatalf("could not create CPU profile: %v", err)
+			log.Fatalf("create CPU profile err=%v", err)
 		}
 		defer f.Close()
 		if err := pprof.StartCPUProfile(f); err != nil {
-			log.Fatalf("could not start CPU profile: %v", err)
+			log.Fatalf("start CPU profile err=%v", err)
 		}
 		defer pprof.StopCPUProfile()
 	}
 	if memprofile != "" {
 		f, err := os.Create(memprofile)
 		if err != nil {
-			log.Fatalf("could not create memory profile: %v", err)
+			log.Fatalf("create memory profile  err=%v", err)
 		}
 		defer f.Close()
 		runtime.GC() // get up-to-date statistics
 		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatalf("could not write memory profile:%v", err)
+			log.Fatalf("write memory profile err=%v", err)
 		}
 	}
 	if restore != "" {
 		if err := datastore.RestoreDB(dataStorePath, restore); err != nil {
-			log.Fatalf("restore err=%v", err)
+			log.Fatalf("restore db  err=%v", err)
 		} else {
-			log.Println("restore done")
+			log.Println("restore db done")
 		}
 		os.Exit(0)
 	}
@@ -104,11 +105,11 @@ func main() {
 	log.SetOutput(new(logWriter))
 	statikFS, err := fs.New()
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("no statik fs err=%v", err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	if err = datastore.Init(ctx, dataStorePath, statikFS); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("init db err=%v", err)
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
@@ -116,22 +117,22 @@ func main() {
 		Event: "TWSNMP FC起動",
 	})
 	if err = ping.Start(ctx); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("start ping err=%v", err)
 	}
 	if err = report.Start(ctx); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("start report err=%v", err)
 	}
 	if err = logger.Start(ctx); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("start logger err=%v", err)
 	}
 	if err = polling.Start(ctx); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("start polling err=%v", err)
 	}
 	if err = backend.Start(ctx, dataStorePath, version); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("start backend err=%v", err)
 	}
 	if err = notify.Start(ctx); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("start notify err=%v", err)
 	}
 	w := &webapi.WebAPI{
 		Statik:        http.FileServer(statikFS),
@@ -144,7 +145,6 @@ func main() {
 		Version:       fmt.Sprintf("%s(%s)", version, commit),
 		DataStorePath: dataStorePath,
 	}
-	log.Printf("version=%s", w.Version)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	go webapi.Start(w)
@@ -152,8 +152,8 @@ func main() {
 		time.Sleep(3 * time.Second)
 		openURL(fmt.Sprintf("http://127.0.0.1:%s", port))
 	}
-	<-quit
-	log.Println("quit by signal")
+	sig := <-quit
+	log.Printf("stop twsnmpfc signal=%v", sig)
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
 		Level: "info",
@@ -177,7 +177,7 @@ func openURL(url string) error {
 		err = fmt.Errorf("unsupported platform")
 	}
 	if err != nil {
-		log.Printf("openUrl err=%v", err)
+		log.Printf("open url=%s err=%v", url, err)
 		return err
 	}
 	return err

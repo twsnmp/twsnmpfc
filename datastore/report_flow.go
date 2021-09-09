@@ -120,12 +120,12 @@ func saveServers(b *bbolt.Bucket, last int64) {
 		}
 		js, err := json.Marshal(s)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save server report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(s.ID), js)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save server report err=%v", err)
 		}
 		return true
 	})
@@ -140,12 +140,12 @@ func saveFlows(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(f)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save flow report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(f.ID), s)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save flow report err=%v", err)
 		}
 		return true
 	})

@@ -27,12 +27,10 @@ func ReportTWPCAP(l map[string]interface{}) {
 func checkTWPCAPReport(l map[string]interface{}) {
 	h, ok := l["hostname"].(string)
 	if !ok {
-		log.Printf("twpcap no hostname %v", l)
 		return
 	}
 	m, ok := l["content"].(string)
 	if !ok {
-		log.Printf("twpcap no content %v", l)
 		return
 	}
 	kvs := strings.Split(m, ",")
@@ -45,7 +43,6 @@ func checkTWPCAPReport(l map[string]interface{}) {
 	}
 	t, ok := twpcapMap["type"]
 	if !ok {
-		log.Printf("twpcap no type %v", twpcapMap)
 		return
 	}
 	switch t {
@@ -68,7 +65,7 @@ func checkTWPCAPReport(l map[string]interface{}) {
 	case "Monitor":
 		checkMonitor(h, "twpcap", twpcapMap)
 	default:
-		log.Printf("twpcap unkown type %v", twpcapMap)
+		log.Printf("twpcap unkown type=%v", t)
 		otherCount++
 	}
 }

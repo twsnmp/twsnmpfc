@@ -25,11 +25,11 @@ type feedbackWebAPI struct {
 func postFeedback(c echo.Context) error {
 	fb := new(feedbackWebAPI)
 	if err := c.Bind(fb); err != nil {
-		log.Printf("postFeedback  err=%v", err)
+		log.Printf("send feedback err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if err := sendFeedback(fb); err != nil {
-		log.Printf("postFeedback  err=%v", err)
+		log.Printf("send feedback err=%v", err)
 		return echo.ErrBadRequest
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
@@ -65,7 +65,6 @@ func sendFeedback(fb *feedbackWebAPI) error {
 		strings.NewReader(values.Encode()),
 	)
 	if err != nil {
-		log.Printf("sendFeedback  err=%v", err)
 		return err
 	}
 
@@ -75,13 +74,11 @@ func sendFeedback(fb *feedbackWebAPI) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("sendFeedback  err=%v", err)
 		return err
 	}
 	defer resp.Body.Close()
 	r, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("sendFeedback  err=%v", err)
 		return err
 	}
 	if string(r) != "OK" {
@@ -93,7 +90,7 @@ func sendFeedback(fb *feedbackWebAPI) error {
 func calcHash(msg string) string {
 	h := sha256.New()
 	if _, err := h.Write([]byte(msg + time.Now().Format("2006/01/02T15"))); err != nil {
-		log.Printf("calcHash  err=%v", err)
+		log.Printf("calc hash err=%v", err)
 		return ""
 	}
 	return fmt.Sprintf("%x", h.Sum(nil))

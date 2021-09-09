@@ -2,7 +2,6 @@ package webapi
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -47,12 +46,10 @@ func getPollings(c echo.Context) error {
 func deletePollings(c echo.Context) error {
 	ids := []string{}
 	if err := c.Bind(&ids); err != nil {
-		log.Printf("deletePolling err=%v", err)
 		return echo.ErrBadRequest
 	}
 	for _, id := range ids {
 		if err := datastore.DeletePolling(id); err != nil {
-			log.Printf("deletePolling err=%v", err)
 			return echo.ErrBadRequest
 		}
 	}
@@ -70,7 +67,6 @@ func setPollingLevel(c echo.Context) error {
 		IDs   []string
 	}{}
 	if err := c.Bind(&params); err != nil {
-		log.Printf("setPollingLevel err=%v", err)
 		return echo.ErrBadRequest
 	}
 	for _, id := range params.IDs {
@@ -80,7 +76,6 @@ func setPollingLevel(c echo.Context) error {
 			p.State = "unknown"
 			p.NextTime = 0
 			if err := datastore.UpdatePolling(p); err != nil {
-				log.Printf("setPollingLevel err=%v", err)
 				return echo.ErrBadRequest
 			}
 		}
@@ -99,7 +94,6 @@ func setPollingLogMode(c echo.Context) error {
 		IDs     []string
 	}{}
 	if err := c.Bind(&params); err != nil {
-		log.Printf("setPollingLevel err=%v", err)
 		return echo.ErrBadRequest
 	}
 	for _, id := range params.IDs {
@@ -107,7 +101,6 @@ func setPollingLogMode(c echo.Context) error {
 		if p != nil {
 			p.LogMode = params.LogMode
 			if err := datastore.UpdatePolling(p); err != nil {
-				log.Printf("setPollingLevel err=%v", err)
 				return echo.ErrBadRequest
 			}
 		}
@@ -143,13 +136,11 @@ func getPollingCheck(c echo.Context) error {
 func postPollingUpdate(c echo.Context) error {
 	pu := new(datastore.PollingEnt)
 	if err := c.Bind(pu); err != nil {
-		log.Printf("postNodeUpdate err=%v", err)
 		return echo.ErrBadRequest
 	}
 	// ここで入力データのチェックをする
 	p := datastore.GetPolling(pu.ID)
 	if p == nil {
-		log.Printf("postPollingUpdate Node not found ID=%s", pu.ID)
 		return echo.ErrBadRequest
 	}
 	p.Name = pu.Name
@@ -168,7 +159,6 @@ func postPollingUpdate(c echo.Context) error {
 	p.NextTime = 0
 	p.State = "unknown"
 	if err := datastore.UpdatePolling(p); err != nil {
-		log.Printf("postNodeUpdate err=%v", err)
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
@@ -177,14 +167,12 @@ func postPollingUpdate(c echo.Context) error {
 func postPollingAdd(c echo.Context) error {
 	p := new(datastore.PollingEnt)
 	if err := c.Bind(p); err != nil {
-		log.Printf("postPollingAdd err=%v", err)
 		return echo.ErrBadRequest
 	}
 	// ここで入力データのチェックをする
 	p.NextTime = 0
 	p.State = "unknown"
 	if err := datastore.AddPolling(p); err != nil {
-		log.Printf("postPollingAdd err=%v", err)
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
@@ -208,22 +196,18 @@ func postPolling(c echo.Context) error {
 	r := pollingWebAPI{}
 	r.Polling = datastore.GetPolling(id)
 	if r.Polling == nil {
-		log.Printf("polling not found id=%s", id)
 		return echo.ErrBadRequest
 	}
 	r.Node = datastore.GetNode(r.Polling.NodeID)
 	if r.Node == nil {
-		log.Printf("node not found id=%s", r.Polling.NodeID)
 		return echo.ErrBadRequest
 	}
 	filter := new(timeFilter)
 	if err := c.Bind(filter); err != nil {
-		log.Printf("postEventLogs err=%v", err)
 		return echo.ErrBadRequest
 	}
 	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24*7)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
-	log.Printf("%d %d %v", st, et, filter)
 	i := 0
 	datastore.ForEachPollingLog(st, et, id, func(l *datastore.PollingLogEnt) bool {
 		r.Logs = append(r.Logs, l)
@@ -250,18 +234,15 @@ type pollingAutoAddEnt struct {
 func postPollingAutoAdd(c echo.Context) error {
 	paa := new(pollingAutoAddEnt)
 	if err := c.Bind(paa); err != nil {
-		log.Printf("postPollingAutoAdd err=%v", err)
 		return echo.ErrBadRequest
 	}
 	n := datastore.GetNode(paa.NodeID)
 	if n == nil {
-		log.Printf("node not found id=%s", paa.NodeID)
 		return echo.ErrBadRequest
 	}
 	for _, id := range paa.PollingTemplateIDs {
 		pt := datastore.GetPollingTemplate(id)
 		if pt == nil {
-			log.Printf("template not found id=%s", id)
 			continue
 		}
 		if pt.AutoMode == "disable" {
@@ -289,7 +270,6 @@ func postPollingAutoAdd(c echo.Context) error {
 		p.NextTime = 0
 		p.State = "unknown"
 		if err := datastore.AddPolling(p); err != nil {
-			log.Printf("postPollingAutoAdd err=%v", err)
 			return echo.ErrBadRequest
 		}
 	}
@@ -302,7 +282,6 @@ func getPollingAIData(c echo.Context) error {
 		PollingID: id,
 	}
 	if err := backend.MakeAIData(&r); err != nil {
-		log.Printf("getPollingAIData err=%v", err)
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, r)
@@ -312,7 +291,6 @@ func getPollingLogTimeAnalyze(c echo.Context) error {
 	id := c.Param("id")
 	r, err := backend.TimeAnalyzePollingLog(id)
 	if err != nil {
-		log.Printf("analyzePollingLog err=%v", err)
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, r)
@@ -322,7 +300,6 @@ func deletePollingLog(c echo.Context) error {
 	id := c.Param("id")
 	p := datastore.GetPolling(id)
 	if p == nil {
-		log.Printf("polling not found id=%s", id)
 		return echo.ErrBadRequest
 	}
 	p.NextTime = 0
@@ -330,7 +307,6 @@ func deletePollingLog(c echo.Context) error {
 	p.Result = make(map[string]interface{})
 	datastore.UpdatePolling(p)
 	if err := datastore.ClearPollingLog(id); err != nil {
-		log.Printf("ClearPollingLog err=%v", err)
 		return echo.ErrInternalServerError
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})

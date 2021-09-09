@@ -3,7 +3,6 @@ package webapi
 import (
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -85,11 +84,9 @@ func postMapConf(c echo.Context) error {
 func postBackImage(c echo.Context) error {
 	f, err := c.FormFile("file")
 	if err != nil {
-		log.Printf("postBackImage err=%v", err)
 		f = nil
 	}
 	if f != nil && f.Size > 1024*1024*2 {
-		log.Printf("postBackImage size over=%v", f)
 		return echo.ErrBadRequest
 	}
 	x, _ := strconv.Atoi(c.FormValue("X"))
@@ -103,17 +100,14 @@ func postBackImage(c echo.Context) error {
 	if f != nil {
 		fp, err := f.Open()
 		if err != nil {
-			log.Printf("postBackImage err=%v", err)
 			return echo.ErrBadRequest
 		}
 		defer fp.Close()
 		img, err := ioutil.ReadAll(fp)
 		if err != nil {
-			log.Printf("postBackImage err=%v", err)
 			return echo.ErrBadRequest
 		}
 		if err = datastore.SaveBackImage(img); err != nil {
-			log.Printf("postBackImage err=%v", err)
 			return echo.ErrBadRequest
 		}
 		datastore.MapConf.BackImage.Path = f.Filename
@@ -136,7 +130,6 @@ func postBackImage(c echo.Context) error {
 func getBackImage(c echo.Context) error {
 	img, err := datastore.GetBackImage()
 	if err != nil {
-		log.Printf("postBackImage err=%v", err)
 		return echo.ErrNotFound
 	}
 	ct := http.DetectContentType(img)
@@ -145,7 +138,6 @@ func getBackImage(c echo.Context) error {
 
 func deleteBackImage(c echo.Context) error {
 	if err := datastore.SaveBackImage([]byte{}); err != nil {
-		log.Printf("postBackImage err=%v", err)
 		return echo.ErrBadRequest
 	}
 	datastore.MapConf.BackImage.Path = ""
@@ -163,34 +155,28 @@ func deleteBackImage(c echo.Context) error {
 func postGeoIP(c echo.Context) error {
 	f, err := c.FormFile("file")
 	if err != nil {
-		log.Printf("postGeoIP err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if f.Size > 1024*1024*200 {
-		log.Printf("postGeoIP size over=%v", f)
 		return echo.ErrBadRequest
 	}
 	api := c.Get("api").(*WebAPI)
 	dp := filepath.Join(api.DataStorePath, "geoio.uplaod")
 	src, err := f.Open()
 	if err != nil {
-		log.Printf("postGeoIP err=%v", err)
 		return echo.ErrBadRequest
 	}
 	defer src.Close()
 	dst, err := os.Create(dp)
 	if err != nil {
-		log.Printf("postGeoIP err=%v", err)
 		return echo.ErrInternalServerError
 	}
 	if _, err = io.Copy(dst, src); err != nil {
 		dst.Close()
-		log.Printf("postGeoIP err=%v", err)
 		return echo.ErrInternalServerError
 	}
 	dst.Close()
 	if err := datastore.UpdateGeoIP(dp); err != nil {
-		log.Printf("postGeoIP err=%v", err)
 		return echo.ErrBadRequest
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{

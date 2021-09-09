@@ -24,7 +24,7 @@ func ResetArpTable() {
 }
 
 func arpWatch(stopCh chan bool) {
-	log.Println("start arpWacher")
+	log.Println("start arp watch")
 	datastore.ForEachArp(func(a *datastore.ArpEnt) bool {
 		arpTable[a.IP] = a.MAC
 		return true
@@ -37,7 +37,7 @@ func arpWatch(stopCh chan bool) {
 		select {
 		case <-stopCh:
 			timer.Stop()
-			log.Println("Stop arpWatch")
+			log.Println("stop arp watch")
 			return
 		case <-pinger.C:
 			if len(localCheckAddrs) > 0 {
@@ -50,8 +50,6 @@ func arpWatch(stopCh chan bool) {
 			checkArpTable()
 			if len(localCheckAddrs) < 1 {
 				makeLoacalCheckAddrs()
-			} else {
-				log.Printf("arpWatcher localCheckAddrs Count %d", len(localCheckAddrs))
 			}
 		}
 	}
@@ -62,7 +60,7 @@ var lastLocalAddressUsage = 0.0
 func makeLoacalCheckAddrs() {
 	ifs, err := net.Interfaces()
 	if err != nil {
-		log.Printf("makeLoacalCheckAddrs err=%v", err)
+		log.Printf("make local check addrs err=%v", err)
 		return
 	}
 	localIPCount := 0
@@ -95,7 +93,6 @@ func makeLoacalCheckAddrs() {
 			for i := range ip {
 				broadcast[i] = ip[i] | ^mask[i]
 			}
-			log.Printf("arpWatch Check IP %s %s", cidr, broadcast)
 			for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); incIP(ip) {
 				if !ip.IsGlobalUnicast() || ip.IsMulticast() ||
 					ip.Equal(ip.Mask(ipnet.Mask)) || ip.Equal(broadcast) {
@@ -129,7 +126,6 @@ func makeLoacalCheckAddrs() {
 		Level: "info",
 		Event: fmt.Sprintf("ARP監視 ローカルアドレス使用量 %d/%d %.2f%%", localHitCount, localIPCount, lau),
 	})
-	log.Printf("Local Address Usage %d/%d", localHitCount, localIPCount)
 }
 
 func incIP(ip net.IP) {
@@ -153,7 +149,7 @@ func checkArpTable() {
 func checkArpTableWindows() {
 	out, err := exec.Command("arp", "-a").Output()
 	if err != nil {
-		log.Printf("checkArpTable err=%v", err)
+		log.Printf("check arp table err=%v", err)
 		return
 	}
 	for _, line := range strings.Split(string(out), "\n") {
@@ -169,7 +165,7 @@ func checkArpTableWindows() {
 func checkArpTableUnix() {
 	out, err := exec.Command("arp", "-an").Output()
 	if err != nil {
-		log.Printf("checkArpTable err=%v", err)
+		log.Printf("check arp table err=%v", err)
 		return
 	}
 	for _, line := range strings.Split(string(out), "\n") {
@@ -198,7 +194,7 @@ func updateArpTable(ip, mac string) {
 		// New
 		arpTable[ip] = mac
 		if err := datastore.UpdateArpEnt(ip, mac); err != nil {
-			log.Printf("updateArpEnt err=%v", err)
+			log.Printf("update arp db err=%v", err)
 		}
 		logCh <- &datastore.LogEnt{
 			Time: time.Now().UnixNano(),
@@ -212,7 +208,7 @@ func updateArpTable(ip, mac string) {
 		// Change
 		arpTable[ip] = mac
 		if err := datastore.UpdateArpEnt(ip, mac); err != nil {
-			log.Printf("updateArpEnt err=%v", err)
+			log.Printf("update arp db err=%v", err)
 		}
 		logCh <- &datastore.LogEnt{
 			Time: time.Now().UnixNano(),
@@ -226,10 +222,8 @@ func updateArpTable(ip, mac string) {
 	// Check MAC to IP Table
 	ipot, ok := macToIPTable[mac]
 	if !ok {
-		log.Printf("New MAC to IP %s %s", mac, ip)
 		macToIPTable[mac] = ip
 	} else if ip != ipot {
-		log.Printf("Change MAC to IP %s %s -> %s", mac, ipot, ip)
 		macToIPTable[mac] = ip
 	}
 }
@@ -294,7 +288,7 @@ func checkFixMACMode(n *datastore.NodeEnt) {
 			}
 			n.MAC = mac
 			if err := datastore.UpdateNode(n); err != nil {
-				log.Printf("checkFixMACMode err=%v", err)
+				log.Printf("update node err=%v", err)
 			} else {
 				datastore.AddEventLog(&datastore.EventLogEnt{
 					Type:     "system",
@@ -317,7 +311,7 @@ func checkFixMACMode(n *datastore.NodeEnt) {
 			oldIP := n.IP
 			n.IP = ip
 			if err := datastore.UpdateNode(n); err != nil {
-				log.Printf("checkFixMACMode err=%v", err)
+				log.Printf("update node err=%v", err)
 			} else {
 				datastore.AddEventLog(&datastore.EventLogEnt{
 					Type:     "system",
@@ -334,7 +328,7 @@ func checkFixMACMode(n *datastore.NodeEnt) {
 func checkFixHostMode(n *datastore.NodeEnt) {
 	ips, err := net.LookupHost(n.Name)
 	if err != nil {
-		log.Printf("checkFixHostMode err=%v", err)
+		log.Printf("check fixed host err=%v", err)
 		return
 	}
 	hitIP := ""
@@ -351,13 +345,13 @@ func checkFixHostMode(n *datastore.NodeEnt) {
 		}
 	}
 	if hitIP == "" {
-		log.Printf("checkFixHostMode no ip found")
+		log.Printf("check fixed host no ip address")
 		return
 	}
 	oldIP := n.IP
 	n.IP = hitIP
 	if err := datastore.UpdateNode(n); err != nil {
-		log.Printf("checkFixMACMode err=%v", err)
+		log.Printf("check fixed host err=%v", err)
 	} else {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:     "system",

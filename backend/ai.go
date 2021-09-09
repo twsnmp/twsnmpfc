@@ -85,17 +85,16 @@ func doAI(pe *datastore.PollingEnt) {
 	}
 	err := MakeAIData(req)
 	if err != nil {
-		log.Printf("doAI skip MakeAIData error %s %s err=%v", pe.ID, pe.Name, err)
+		log.Printf("make ai data id=%s name=%s err=%v", pe.ID, pe.Name, err)
 		return
 	}
 	if err != nil || len(req.Data) < 10 {
-		log.Printf("doAI skip AIData length  %s %s len=%d", pe.ID, pe.Name, len(req.Data))
 		return
 	}
 	nextAIReqTimeMap[pe.ID] = time.Now().Unix() + 60*60
 	st := time.Now()
 	calcAIScore(req)
-	log.Printf("doAI done id=%s name=%s len=%d dur%v", pe.ID, pe.Name, len(req.Data), time.Since(st))
+	log.Printf("calc ai score id=%s name=%s len=%d dur%v", pe.ID, pe.Name, len(req.Data), time.Since(st))
 }
 
 func getAIDataKeys(p *datastore.PollingEnt) []string {
@@ -112,7 +111,6 @@ func getAIDataKeys(p *datastore.PollingEnt) []string {
 			continue
 		}
 		if _, ok := v.(float64); !ok {
-			log.Printf("skip key %s=%v", k, v)
 			continue
 		}
 		keys = append(keys, k)
@@ -205,7 +203,7 @@ func calcAIScore(req *AIReq) {
 		return
 	}
 	if err := datastore.SaveAIResult(res); err != nil {
-		log.Printf("saveAIResult err=%v", err)
+		log.Printf("save ai result err=%v", err)
 		return
 	}
 	pe := datastore.GetPolling(req.PollingID)
@@ -229,7 +227,7 @@ func calcAIScore(req *AIReq) {
 		}
 		if datastore.InfluxdbConf.AIScore == "send" {
 			if err := datastore.SendAIScoreToInfluxdb(pe, res); err != nil {
-				log.Printf("sendAIScoreToInfluxdb err=%v", err)
+				log.Printf("send ai score to influxdb id=%s name=%s err=%v", pe.ID, pe.Name, err)
 			}
 		}
 	}
@@ -240,7 +238,7 @@ func calcLOF(req *AIReq) *datastore.AIResult {
 	samples := lof.GetSamplesFromFloat64s(req.Data)
 	lofGetter := lof.NewLOF(5)
 	if err := lofGetter.Train(samples); err != nil {
-		log.Printf("calcLOF err=%v", err)
+		log.Printf("calc lof id=%s err=%v", req.PollingID, err)
 		return &res
 	}
 	r := make([]float64, len(samples))

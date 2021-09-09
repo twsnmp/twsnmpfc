@@ -18,7 +18,6 @@ import (
 func doPollingSnmp(pe *datastore.PollingEnt) {
 	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
-		log.Printf("node not found nodeID=%s", pe.NodeID)
 		return
 	}
 	agent := &gosnmp.GoSNMP{
@@ -67,7 +66,7 @@ func doPollingSnmp(pe *datastore.PollingEnt) {
 	}
 	err := agent.Connect()
 	if err != nil {
-		log.Printf("SNMP agent.Connect err=%v", err)
+		log.Printf("polling snnmp err=%v", err)
 		return
 	}
 	defer agent.Conn.Close()
@@ -253,7 +252,6 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 					diff = vf
 				}
 				if diff < 1.0 {
-					log.Printf("polling=%v  lr=%v", pe, lr)
 					setPollingError("snmp", pe, fmt.Errorf("no sysUptime"))
 					return
 				}
@@ -298,7 +296,6 @@ func doPollingSnmpCount(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	var err error
 	if filter != "" {
 		if regexFilter, err = regexp.Compile(filter); err != nil {
-			log.Printf("doPollingSnmpCount err=%v", err)
 			regexFilter = nil
 		}
 	}
@@ -351,7 +348,6 @@ func doPollingSnmpProcess(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	var err error
 	if filter != "" {
 		if regexFilter, err = regexp.Compile(filter); err != nil {
-			log.Printf("doPollingSnmpProcess err=%v", err)
 			regexFilter = nil
 		}
 	}
@@ -458,12 +454,10 @@ func autoAddSnmpPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) 
 	if strings.HasPrefix(pt.AutoMode, "index:") {
 		a := strings.SplitAfterN(pt.AutoMode, ":", 2)
 		if len(a) != 2 {
-			log.Printf("invalid format %v", pt.AutoMode)
 			return
 		}
 		indexMIB = a[1]
 	} else {
-		log.Printf("invalid format %v", pt.AutoMode)
 		return
 	}
 	indexes := getSnmpIndex(n, indexMIB)
@@ -488,7 +482,6 @@ func autoAddSnmpPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) 
 		p.NextTime = 0
 		p.State = "unknown"
 		if err := datastore.AddPolling(p); err != nil {
-			log.Printf("autoAddSnmpPolling err=%v", err)
 			return
 		}
 	}
@@ -542,7 +535,7 @@ func getSnmpIndex(n *datastore.NodeEnt, name string) []string {
 	}
 	err := agent.Connect()
 	if err != nil {
-		log.Printf("SNMP agent.Connect err=%v", err)
+		log.Printf("polling snmp err=%v", err)
 		return ret
 	}
 	defer agent.Conn.Close()
@@ -625,7 +618,6 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			diff = vf
 		}
 		if diff < 1.0 {
-			log.Printf("polling=%#v  lr=%v", pe, lr)
 			setPollingError("snmp", pe, fmt.Errorf("no sysUptime"))
 			return
 		}
@@ -713,7 +705,6 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	vm.Set("outPackets", outPackets)
 	value, err := vm.Run(pe.Script)
 	if err != nil {
-		log.Printf("err=%v", err)
 		setPollingError("snmp", pe, err)
 	}
 	if ok, _ := value.ToBoolean(); !ok {

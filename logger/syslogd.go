@@ -23,12 +23,12 @@ func syslogd(stopCh chan bool) {
 	_ = server.ListenUDP("0.0.0.0:514")
 	_ = server.ListenTCP("0.0.0.0:514")
 	_ = server.Boot()
-	log.Printf("syslogd start")
+	log.Printf("start syslogd")
 	for {
 		select {
 		case <-stopCh:
 			{
-				log.Printf("syslogd stop")
+				log.Printf("stop syslogd")
 				_ = server.Kill()
 				return
 			}
@@ -56,7 +56,7 @@ func syslogd(stopCh chan bool) {
 						Log:  string(s),
 					}
 				} else {
-					log.Printf("syslog Marshal err=%v", err)
+					log.Printf("syslogd err=%v", err)
 				}
 			}
 		}

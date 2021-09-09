@@ -17,12 +17,10 @@ func ReportTWBuleScan(l map[string]interface{}) {
 func checkTWBlueScanReport(l map[string]interface{}) {
 	h, ok := l["hostname"].(string)
 	if !ok {
-		log.Printf("twBlueScan no hostname %v", l)
 		return
 	}
 	c, ok := l["content"].(string)
 	if !ok {
-		log.Printf("twBlueScan no content %v", l)
 		return
 	}
 	kvs := strings.Split(c, ",")
@@ -35,7 +33,6 @@ func checkTWBlueScanReport(l map[string]interface{}) {
 	}
 	t, ok := m["type"]
 	if !ok {
-		log.Printf("twBlueScan no type %v", m)
 		return
 	}
 	switch t {
@@ -48,7 +45,7 @@ func checkTWBlueScanReport(l map[string]interface{}) {
 	case "Monitor":
 		checkMonitor(h, "twBlueScan", m)
 	default:
-		log.Printf("twBlueScan unkown type %v", m)
+		log.Printf("twbluescan unkown type=%v", t)
 	}
 }
 

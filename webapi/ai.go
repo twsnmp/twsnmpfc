@@ -60,17 +60,14 @@ func getAIResult(c echo.Context) error {
 	id := c.Param("id")
 	p := datastore.GetPolling(id)
 	if p == nil {
-		log.Printf("polling not found")
 		return echo.ErrBadRequest
 	}
 	n := datastore.GetNode(p.NodeID)
 	if n == nil {
-		log.Printf("node not found")
 		return echo.ErrBadRequest
 	}
 	air, err := datastore.GetAIReesult(p.ID)
 	if err != nil || len(air.ScoreData) < 1 {
-		log.Printf("ai result not found")
 		return echo.ErrNotFound
 	}
 	r := aiWebAPI{
@@ -89,14 +86,14 @@ func deleteAIResult(c echo.Context) error {
 		go func() {
 			datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
 				if err := backend.DeleteAIResult(p.ID); err != nil {
-					log.Printf("deleteAIResult err=%v", err)
+					log.Printf("delete ai result err=%v", err)
 				}
 				return true
 			})
 		}()
 	} else {
 		if err := backend.DeleteAIResult(id); err != nil {
-			log.Printf("deleteAIResult err=%v", err)
+			log.Printf("delete ai result err=%v", err)
 		}
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{

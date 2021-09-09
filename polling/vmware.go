@@ -23,7 +23,6 @@ import (
 func doPollingVMWare(pe *datastore.PollingEnt) {
 	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
-		log.Printf("node not found nodeID=%s", pe.NodeID)
 		return
 	}
 	mode := pe.Mode
@@ -220,7 +219,6 @@ func autoAddVMwarePolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt
 		p.NextTime = 0
 		p.State = "unknown"
 		if err := datastore.AddPolling(p); err != nil {
-			log.Printf("autoAddSnmpPolling err=%v", err)
 			return
 		}
 	}
@@ -237,7 +235,7 @@ func getVMWareIndex(n *datastore.NodeEnt, mode string) []vmwareIndexEnt {
 	}
 	u, err := soap.ParseURL(us)
 	if err != nil {
-		log.Printf("getVMWareInde err=%v", err)
+		log.Printf("vmware polling err=%v", err)
 		return ret
 	}
 	if u.User == nil || u.User.String() == ":" {
@@ -247,7 +245,7 @@ func getVMWareIndex(n *datastore.NodeEnt, mode string) []vmwareIndexEnt {
 	defer cancel()
 	client, err := govmomi.NewClient(ctx, u, true)
 	if err != nil {
-		log.Printf("getVMWareInde err=%v", err)
+		log.Printf("vmware polling err=%v", err)
 		return ret
 	}
 	switch mode {
@@ -266,7 +264,7 @@ func getVMWareHostSystemIndex(ctx context.Context, c *vim25.Client) []vmwareInde
 	m := view.NewManager(c)
 	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder, []string{"HostSystem"}, true)
 	if err != nil {
-		log.Printf("getVMWareHostSystemIndex err=%v", err)
+		log.Printf("vmware polling err=%v", err)
 		return ret
 	}
 	defer func() {
@@ -275,7 +273,7 @@ func getVMWareHostSystemIndex(ctx context.Context, c *vim25.Client) []vmwareInde
 	var hss []mo.HostSystem
 	err = v.Retrieve(ctx, []string{"HostSystem"}, []string{"summary"}, &hss)
 	if err != nil {
-		log.Printf("getVMWareHostSystemIndex err=%v", err)
+		log.Printf("vmware polling err=%v", err)
 		return ret
 	}
 	for _, hs := range hss {
@@ -292,7 +290,7 @@ func getVMWareDatastoreIndex(ctx context.Context, c *vim25.Client) []vmwareIndex
 	m := view.NewManager(c)
 	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder, []string{"Datastore"}, true)
 	if err != nil {
-		log.Printf("getVMWareDatastoreIndex err=%v", err)
+		log.Printf("vmware polling err=%v", err)
 		return ret
 	}
 	defer func() {
@@ -301,7 +299,7 @@ func getVMWareDatastoreIndex(ctx context.Context, c *vim25.Client) []vmwareIndex
 	var dss []mo.Datastore
 	err = v.Retrieve(ctx, []string{"Datastore"}, []string{"summary"}, &dss)
 	if err != nil {
-		log.Printf("getVMWareDatastoreIndex err=%v", err)
+		log.Printf("vmware polling err=%v", err)
 		return ret
 	}
 	for _, ds := range dss {
@@ -318,7 +316,7 @@ func getVMWareVirtualMachineIndex(ctx context.Context, c *vim25.Client) []vmware
 	m := view.NewManager(c)
 	v, err := m.CreateContainerView(ctx, c.ServiceContent.RootFolder, []string{"VirtualMachine"}, true)
 	if err != nil {
-		log.Printf("getVMWareVirtualMachineIndex err=%v", err)
+		log.Printf("vmware polling err=%v", err)
 		return ret
 	}
 	defer func() {
@@ -327,7 +325,7 @@ func getVMWareVirtualMachineIndex(ctx context.Context, c *vim25.Client) []vmware
 	var vms []mo.VirtualMachine
 	err = v.Retrieve(ctx, []string{"VirtualMachine"}, []string{"summary"}, &vms)
 	if err != nil {
-		log.Printf("getVMWareVirtualMachineIndex err=%v", err)
+		log.Printf("vmware polling err=%v", err)
 		return ret
 	}
 	for _, vm := range vms {

@@ -74,7 +74,7 @@ func checkNotify(lastLog string) string {
 		list = append(list, l)
 		return true
 	})
-	log.Printf("checkNotify lastLog=%s len=%d", lastLog, len(list))
+	log.Printf("check notify last=%s len=%d", lastLog, len(list))
 	if len(list) > 0 {
 		nl := getLevelNum(datastore.NotifyConf.Level)
 		if nl == 3 {
@@ -112,7 +112,7 @@ func checkNotify(lastLog string) string {
 			err := sendMail(datastore.NotifyConf.Subject, strings.Join(body, "\r\n"))
 			r := ""
 			if err != nil {
-				log.Printf("sendMail err=%v", err)
+				log.Printf("send mail err=%v", err)
 				r = fmt.Sprintf("失敗 エラー=%v", err)
 			}
 			datastore.AddEventLog(&datastore.EventLogEnt{
@@ -125,7 +125,7 @@ func checkNotify(lastLog string) string {
 			err := sendMail(datastore.NotifyConf.Subject+"(復帰)", strings.Join(repair, "\r\n"))
 			r := ""
 			if err != nil {
-				log.Printf("sendMail err=%v", err)
+				log.Printf("send mail err=%v", err)
 				r = fmt.Sprintf("失敗 エラー=%v", err)
 			}
 			datastore.AddEventLog(&datastore.EventLogEnt{
@@ -153,7 +153,7 @@ func sendMail(subject, body string) error {
 	}
 	defer c.Close()
 	if err = c.StartTLS(tlsconfig); err != nil {
-		log.Printf("sendMail err=%s", err)
+		log.Printf("send mail err=%s", err)
 	}
 	msv := datastore.NotifyConf.MailServer
 	a := strings.SplitN(datastore.NotifyConf.MailServer, ":", 2)
@@ -163,23 +163,23 @@ func sendMail(subject, body string) error {
 	if datastore.NotifyConf.User != "" {
 		auth := smtp.PlainAuth("", datastore.NotifyConf.User, datastore.NotifyConf.Password, msv)
 		if err = c.Auth(auth); err != nil {
-			log.Printf("sendMail err=%s", err)
+			log.Printf("send mail err=%s", err)
 			return err
 		}
 	}
 	if err = c.Mail(datastore.NotifyConf.MailFrom); err != nil {
-		log.Printf("sendMail err=%s", err)
+		log.Printf("send mail err=%s", err)
 		return err
 	}
 	for _, rcpt := range strings.Split(datastore.NotifyConf.MailTo, ",") {
 		if err = c.Rcpt(rcpt); err != nil {
-			log.Printf("sendMail err=%s", err)
+			log.Printf("send mail err=%s", err)
 			return err
 		}
 	}
 	w, err := c.Data()
 	if err != nil {
-		log.Printf("sendMail err=%s", err)
+		log.Printf("send mail err=%s", err)
 		return err
 	}
 	defer w.Close()
@@ -187,7 +187,7 @@ func sendMail(subject, body string) error {
 	message := makeMailMessage(datastore.NotifyConf.MailFrom, datastore.NotifyConf.MailTo, subject, body)
 	_, _ = w.Write([]byte(message))
 	_ = c.Quit()
-	log.Printf("Send Mail to %s", datastore.NotifyConf.MailTo)
+	log.Printf("send mail to %s", datastore.NotifyConf.MailTo)
 	return nil
 }
 
@@ -206,12 +206,12 @@ func SendTestMail(testConf *datastore.NotifyConfEnt) error {
 	}
 	c, err := smtp.Dial(testConf.MailServer)
 	if err != nil {
-		log.Printf("SendTestMail err=%s", err)
+		log.Printf("send test mail err=%s", err)
 		return err
 	}
 	defer c.Close()
 	if err = c.StartTLS(tlsconfig); err != nil {
-		log.Printf("SendTestMail err=%s", err)
+		log.Printf("send test mail err=%s", err)
 	}
 	msv := testConf.MailServer
 	a := strings.SplitN(testConf.MailServer, ":", 2)
@@ -221,23 +221,23 @@ func SendTestMail(testConf *datastore.NotifyConfEnt) error {
 	if testConf.User != "" {
 		auth := smtp.PlainAuth("", testConf.User, testConf.Password, msv)
 		if err = c.Auth(auth); err != nil {
-			log.Printf("SendTestMail err=%s", err)
+			log.Printf("send test mail err=%s", err)
 			return err
 		}
 	}
 	if err = c.Mail(testConf.MailFrom); err != nil {
-		log.Printf("SendTestMail err=%s", err)
+		log.Printf("send test mail err=%s", err)
 		return err
 	}
 	for _, rcpt := range strings.Split(testConf.MailTo, ",") {
 		if err = c.Rcpt(rcpt); err != nil {
-			log.Printf("SendTestMail err=%s", err)
+			log.Printf("send test mail err=%s", err)
 			return err
 		}
 	}
 	w, err := c.Data()
 	if err != nil {
-		log.Printf("SendTestMail err=%s", err)
+		log.Printf("send test mail err=%s", err)
 		return err
 	}
 	defer w.Close()
@@ -379,7 +379,7 @@ func sendReport() {
 	body = append(body, "【最新24時間のログ】")
 	body = append(body, logs...)
 	if err := sendMail(fmt.Sprintf("TWSNMP定期レポート %s", time.Now().Format(time.RFC3339)), strings.Join(body, "\r\n")); err != nil {
-		log.Printf("sendMail err=%v", err)
+		log.Printf("send report mail err=%v", err)
 	} else {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",

@@ -2,7 +2,6 @@ package webapi
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -22,7 +21,6 @@ func makeTimeFilter(sd, st string, oh int) int64 {
 	var t time.Time
 	var err error
 	if t, err = time.Parse("2006-01-02T15:04 MST", fmt.Sprintf("%sT%s JST", sd, st)); err != nil {
-		log.Printf("makeTimeFilter err=%v", err)
 		t = time.Now().Add(-time.Hour * time.Duration(oh))
 	}
 	return t.UnixNano()
@@ -34,7 +32,6 @@ func makeStringFilter(f string) *regexp.Regexp {
 	}
 	r, err := regexp.Compile(f)
 	if err != nil {
-		log.Printf("makeStringFilter err=%v", err)
 		return nil
 	}
 	return r
@@ -85,7 +82,6 @@ func makePipeFilter(f string) []pipeFilterEnt {
 	for _, e := range a {
 		r, err := regexp.Compile(strings.TrimPrefix(e, "!"))
 		if err != nil {
-			log.Printf("makeSyslogMsgFilter err=%v", err)
 			return ret
 		}
 		ret = append(ret, pipeFilterEnt{

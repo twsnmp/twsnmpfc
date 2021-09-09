@@ -77,12 +77,12 @@ func saveIPs(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(i)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save ip report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(i.IP), s)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save ip report err=%v", err)
 		}
 		return true
 	})

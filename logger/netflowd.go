@@ -27,7 +27,7 @@ func netflowd(stopCh chan bool) {
 	var readSize = 2 << 16
 	var addr *net.UDPAddr
 	var err error
-	log.Printf("netflowd start")
+	log.Println("start netflowd ")
 	if addr, err = net.ResolveUDPAddr("udp", ":2055"); err != nil {
 		log.Printf("netflowd err=%v", err)
 		return
@@ -48,7 +48,7 @@ func netflowd(stopCh chan bool) {
 		select {
 		case <-stopCh:
 			{
-				log.Printf("netflowd stop")
+				log.Printf("stop netflowd")
 				return
 			}
 		default:
@@ -119,7 +119,6 @@ func logIPFIX(p *ipfix.Message) int {
 			}
 			s, err := json.Marshal(record)
 			if err != nil {
-				log.Printf("logIPFIX err=%v", err)
 				continue
 			}
 			logCh <- &datastore.LogEnt{
@@ -130,7 +129,7 @@ func logIPFIX(p *ipfix.Message) int {
 			if _, ok := record["sourceIPv4Address"]; ok {
 				defer func() {
 					if r := recover(); r != nil {
-						log.Printf("logIPFIX err=%v", r)
+						log.Printf("recover ipfix err=%v", r)
 						for k, v := range record {
 							log.Printf("%v=%v", k, v)
 						}
@@ -162,7 +161,7 @@ func logIPFIX(p *ipfix.Message) int {
 			} else if _, ok := record["sourceIPv6Address"]; ok {
 				defer func() {
 					if r := recover(); r != nil {
-						log.Printf("logIPFIX err=%v", r)
+						log.Printf("recover ipfix err=%v", r)
 						for k, v := range record {
 							log.Printf("%v=%v", k, v)
 						}
@@ -195,10 +194,10 @@ func logIPFIX(p *ipfix.Message) int {
 						)
 					}
 				} else {
-					log.Printf("unknown IPFIX record=%#v", record)
+					log.Printf("unknown ipfix record=%#v", record)
 				}
 			} else {
-				log.Printf("unknown IPFIX record=%#v", record)
+				log.Printf("unknown ipfix record=%#v", record)
 			}
 		}
 	}
@@ -238,7 +237,7 @@ func logNetflow(p *netflow5.Packet) {
 		if v, ok := record["srcAddr"]; ok && v != nil {
 			defer func() {
 				if r := recover(); r != nil {
-					log.Printf("logNetflow err=%v", r)
+					log.Printf("recover netflow err=%v", r)
 					for k, v := range record {
 						log.Printf("%v=%v", k, v)
 					}

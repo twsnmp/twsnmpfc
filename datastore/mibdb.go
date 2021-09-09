@@ -32,12 +32,12 @@ func loadMIBDB(f io.ReadCloser) {
 	if s, err := ioutil.ReadAll(f); err == nil {
 		mibdb, err := gomibdb.NewMIBDBFromStr(string(s), "")
 		if err != nil {
-			log.Printf("loadMIBDB err=%v", err)
+			log.Printf("load mibdb err=%v", err)
 			return
 		}
 		MIBDB = mibdb
 	} else {
-		log.Printf("loadMIBDB err=%v", err)
+		log.Printf("load mibdb err=%v", err)
 	}
 }
 
@@ -48,7 +48,6 @@ func loadExtMIBs(root string) {
 	filepath.Walk(root,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				log.Printf("loadExtMIBs path %q: %v\n", path, err)
 				return err
 			}
 			if info.IsDir() {
@@ -60,6 +59,7 @@ func loadExtMIBs(root string) {
 }
 
 func loadExtMIB(path string) {
+	log.Printf("load ext mib path=%s", path)
 	var nameList []string
 	var mapNameToOID = make(map[string]string)
 	for _, name := range MIBDB.GetNameList() {
@@ -90,17 +90,15 @@ func loadExtMIB(path string) {
 	for _, name := range nameList {
 		oid, ok := mapNameToOID[name]
 		if !ok {
-			log.Printf("Can not find mib name %s", name)
+			log.Printf("no mib name %s", name)
 			continue
 		}
 		a := strings.SplitN(oid, ".", 2)
 		if len(a) < 2 {
-			log.Printf("Can not split mib name=%s oid=%s", name, oid)
 			continue
 		}
 		noid, ok := mapNameToOID[a[0]]
 		if !ok {
-			log.Printf("Can not split mib name=%s oid=%s", name, a[0])
 			continue
 		}
 		mapNameToOID[name] = noid + "." + a[1]
@@ -135,7 +133,7 @@ func addToMibTree(oid, name, poid string) {
 	} else {
 		p, ok := mibTreeMAP[poid]
 		if !ok {
-			log.Printf("addToMibTree parentId=%v: not found", poid)
+			log.Printf("no parent name=%s oid=%s poid=%s", name, oid, poid)
 			return
 		}
 		p.Children = append(p.Children, n)

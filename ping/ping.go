@@ -143,6 +143,7 @@ func (p *PingEnt) sendICMP(conn *icmp.PacketConn) error {
 
 // pingBackend : ping実行時の送受信処理
 func pingBackend(ctx context.Context) {
+	log.Println("start ping backend")
 	timer := time.NewTicker(time.Millisecond * 500)
 	pingMap := make(map[int64]*PingEnt)
 	netProto := "udp4"
@@ -151,7 +152,7 @@ func pingBackend(ctx context.Context) {
 	}
 	conn, err := icmp.ListenPacket(netProto, "0.0.0.0")
 	if err != nil {
-		log.Printf("pingBackend err=%v", err)
+		log.Printf("ping err=%v", err)
 		return
 	}
 	defer conn.Close()
@@ -173,7 +174,6 @@ func pingBackend(ctx context.Context) {
 				pingMap[p.Tracker] = p
 				if err := p.sendICMP(conn); err != nil {
 					p.Error = err
-					log.Printf("sendICMP err=%v", err)
 				}
 			}
 		case <-timer.C:
@@ -192,7 +192,6 @@ func pingBackend(ctx context.Context) {
 					}
 					if err := p.sendICMP(conn); err != nil {
 						p.Error = err
-						log.Printf("sendICMP err=%v", err)
 					}
 				}
 			}
@@ -214,16 +213,15 @@ func pingBackend(ctx context.Context) {
 						continue
 					}
 				}
-				log.Printf("pingBackend err=%v", err)
 				continue
 			}
 			if tracker, tm, err := processPacket(&packet{bytes: bytes, nbytes: n, ttl: ttl}); err != nil {
-				log.Printf("pingBackend processPacket err=%v", err)
+				log.Printf("ping err=%v", err)
 			} else {
 				if p, ok := pingMap[tracker]; ok {
 					sa := strings.Split(src.String(), ":")
 					if p.Target != sa[0] {
-						log.Printf("pingBackend target=%s src=%s", p.Target, src.String())
+						log.Printf("ping target=%s src=%s", p.Target, src.String())
 						continue
 					}
 					delete(pingMap, tracker)
@@ -245,7 +243,7 @@ func processPacket(recv *packet) (int64, int64, error) {
 		return -1, -1, fmt.Errorf("error parsing icmp message: %s", err.Error())
 	}
 	if m.Type != ipv4.ICMPTypeEchoReply {
-		return -1, -1, fmt.Errorf("icmp message type != ICMPTypeEchoReply  : %v", m)
+		return -1, -1, fmt.Errorf("icmp message type error type=%v", m)
 	}
 	switch pkt := m.Body.(type) {
 	case *icmp.Echo:
@@ -257,7 +255,7 @@ func processPacket(recv *packet) (int64, int64, error) {
 		return tracker, receivedAt.Sub(timestamp).Nanoseconds(), nil
 	default:
 		// Very bad, not sure how this can happen
-		return -1, -1, fmt.Errorf("invalid ICMP echo reply; type: '%T', '%v'", pkt, pkt)
+		return -1, -1, fmt.Errorf("invalid icmp echo reply; type: '%T', '%v'", pkt, pkt)
 	}
 }
 

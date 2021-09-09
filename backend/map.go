@@ -28,6 +28,7 @@ func mapBackend(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			timer.Stop()
+			log.Println("stop map backend")
 			return
 		case <-newVersionTimer.C:
 			go checkNewVersion()
@@ -42,7 +43,6 @@ func mapBackend(ctx context.Context) {
 				return true
 			})
 			if change > 0 {
-				log.Printf("state changed node count=%d", change)
 				updateLineState()
 			}
 			i++
@@ -149,16 +149,15 @@ func checkNewVersion() {
 	url := "https://lhx98.linkclub.jp/twise.co.jp/cgi-bin/twsnmpfc.cgi?ver=" + versionNum
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Printf("checkNewVersion err=%v", err)
+		log.Printf("check new version err=%v", err)
 		return
 	}
 	defer resp.Body.Close()
 	ba, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("checkNewVersion err=%v", err)
+		log.Printf("check new version err=%v", err)
 		return
 	}
-	log.Printf("version %v", string(ba))
 	if strings.TrimSpace(string(ba)) == versionNum {
 		if versionCheckState == 0 {
 			datastore.AddEventLog(&datastore.EventLogEnt{

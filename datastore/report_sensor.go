@@ -87,12 +87,12 @@ func saveSensor(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(e)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save sensor report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(e.ID), s)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save sensor report err=%v", err)
 		}
 		return true
 	})

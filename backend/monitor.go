@@ -89,6 +89,7 @@ func monitor(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			timer.Stop()
+			log.Println("stop monitor")
 			return
 		case <-timer.C:
 			updateMonData()

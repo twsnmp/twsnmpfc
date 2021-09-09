@@ -113,8 +113,6 @@ func UpdateReportConf() {
 		}
 		if reg, err := regexp.Compile(p); err == nil {
 			allowLocalIP = reg
-		} else {
-			log.Printf("UpdateReportConf err=%v", err)
 		}
 	}
 	if !datastore.ReportConf.IncludeNoMACIP {
@@ -144,7 +142,7 @@ func reportBackend(ctx context.Context) {
 			{
 				timer.Stop()
 				datastore.SaveReport(0)
-				log.Printf("Stop reportBackend")
+				log.Printf("stop report backend")
 				return
 			}
 		case <-timer.C:
@@ -157,7 +155,7 @@ func reportBackend(ctx context.Context) {
 				datastore.SaveReport(last)
 				last = time.Now().UnixNano()
 				clearIpToNameCache()
-				log.Printf("end report process dur=%v", time.Since(st))
+				log.Printf("end report timer process dur=%v", time.Since(st))
 			}
 		case dr := <-deviceReportCh:
 			checkDeviceReport(dr)
@@ -674,7 +672,7 @@ func clearIpToNameCache() {
 		}
 		return true
 	})
-	log.Printf("ipToName cache size=%d,hit=%d,del=%d", sz, hitCache, del)
+	log.Printf("clear ip to name cache size=%d hit=%d del=%d", sz, hitCache, del)
 }
 
 func isSafeCountry(loc string) bool {
@@ -847,7 +845,7 @@ func getIPInfo(ip string) *[]AddrInfoEnt {
 		client := &rdap.Client{}
 		ri, err := client.QueryIP(ip)
 		if err != nil {
-			log.Printf("RDAP QueryIP error=%v", err)
+			log.Printf("rdap query err=%v", err)
 			ret = append(ret, AddrInfoEnt{Level: "warn", Title: "RDAP:error", Value: fmt.Sprintf("%v", err)})
 			return
 		}

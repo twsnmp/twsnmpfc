@@ -3,7 +3,6 @@ package datastore
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
@@ -126,7 +125,6 @@ func SendPollingLogToInfluxdb(pe *PollingEnt) error {
 	}
 	n := GetNode(pe.NodeID)
 	if n == nil {
-		log.Printf("SendPollingLogToInfluxdb node not found")
 		return ErrInvalidID
 	}
 	// Create a new point batch
@@ -135,7 +133,6 @@ func SendPollingLogToInfluxdb(pe *PollingEnt) error {
 		Precision: "s",
 	})
 	if err != nil {
-		log.Printf("SendPollingLogToInfluxdb err=%v", err)
 		return err
 	}
 
@@ -155,14 +152,12 @@ func SendPollingLogToInfluxdb(pe *PollingEnt) error {
 	}
 	pt, err := client.NewPoint(pe.Name, tags, fields, time.Unix(0, pe.LastTime))
 	if err != nil {
-		log.Printf("SendPollingLogToInfluxdb err=%v", err)
 		return err
 	}
 	bp.AddPoint(pt)
 
 	// Write the batch
 	if err := influxc.Write(bp); err != nil {
-		log.Printf("SendPollingLogToInfluxdb err=%v", err)
 		return err
 	}
 	return nil
@@ -176,19 +171,15 @@ func SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error {
 	}
 	n := GetNode(pe.NodeID)
 	if n == nil {
-		log.Printf("SendAIScoreToInfluxdb node not found")
 		return ErrInvalidID
 	}
 	qs := fmt.Sprintf(`DROP SERIES FROM "AIScore" WHERE "pollingID" = "%s" `, pe.ID)
 	q := client.NewQuery(qs, InfluxdbConf.DB, "")
 	if response, err := influxc.Query(q); err != nil {
-		log.Printf("SendAIScoreToInfluxdb err=%v", err)
 		return err
 	} else if response == nil {
-		log.Printf("SendAIScoreToInfluxdb err=%v resp=nil", err)
 		return err
 	} else if response.Error() != nil {
-		log.Printf("SendAIScoreToInfluxdb err=%v respError=%v", err, response.Error())
 		return err
 	}
 	// Create a new point batch
@@ -197,7 +188,6 @@ func SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error {
 		Precision: "s",
 	})
 	if err != nil {
-		log.Printf("SendAIScoreToInfluxdb err=%v", err)
 		return err
 	}
 
@@ -223,11 +213,9 @@ func SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error {
 	}
 	// Write the batch
 	if err := influxc.Write(bp); err != nil {
-		log.Printf("SendAIScoreToInfluxdb err=%v", err)
 		return err
 	}
 	return nil
-
 }
 
 func closeInfluxdb() {

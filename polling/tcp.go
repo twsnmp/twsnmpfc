@@ -8,7 +8,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"strconv"
@@ -23,7 +22,6 @@ import (
 func doPollingTCP(pe *datastore.PollingEnt) {
 	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
-		log.Printf("node not found nodeID=%s", pe.NodeID)
 		return
 	}
 	ok := false
@@ -33,7 +31,6 @@ func doPollingTCP(pe *datastore.PollingEnt) {
 		conn, err := net.DialTimeout("tcp", n.IP+":"+pe.Params, time.Duration(pe.Timeout)*time.Second)
 		endTime := time.Now().UnixNano()
 		if err != nil {
-			log.Printf("doPollingTCP err=%v", err)
 			pe.Result["error"] = fmt.Sprintf("%v", err)
 			continue
 		}
@@ -64,7 +61,6 @@ func doPollingHTTP(pe *datastore.PollingEnt) {
 		status, body, code, err = doHTTPGet(pe, url)
 		endTime := time.Now().UnixNano()
 		if err != nil {
-			log.Printf("doPollingHTTP err=%v", err)
 			pe.Result["error"] = fmt.Sprintf("%v", err)
 			continue
 		}
@@ -220,7 +216,6 @@ func doPollingTLS(pe *datastore.PollingEnt) {
 		conn, err := tls.DialWithDialer(d, "tcp", target, conf)
 		endTime := time.Now().UnixNano()
 		if err != nil {
-			log.Printf("doPollingTLS err=%v", err)
 			lr["error"] = fmt.Sprintf("%v", err)
 			continue
 		}
@@ -350,7 +345,6 @@ func autoAddTCPPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) {
 		p.NextTime = 0
 		p.State = "unknown"
 		if err := datastore.AddPolling(p); err != nil {
-			log.Printf("autoAddSnmpPolling err=%v", err)
 			return
 		}
 	}
@@ -359,7 +353,6 @@ func autoAddTCPPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) {
 func checkTCPConnect(n *datastore.NodeEnt, port string) bool {
 	conn, err := net.DialTimeout("tcp", n.IP+":"+port, time.Duration(datastore.MapConf.Timeout)*time.Second)
 	if err != nil {
-		log.Printf("checkTCPConnect err=%v", err)
 		return false
 	}
 	conn.Close()

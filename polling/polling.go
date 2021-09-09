@@ -53,7 +53,7 @@ func AutoAddPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) {
 	case "tcp", "http", "tls":
 		autoAddTCPPolling(n, pt)
 	default:
-		log.Printf("AutoAddPolling not supported type=%s", pt.Type)
+		log.Printf("polling not supported type=%s", pt.Type)
 	}
 }
 
@@ -143,7 +143,7 @@ func checkPolling() {
 	if len(list) < 1 {
 		return
 	}
-	log.Printf("checkPolling len(list)=%d NumGoroutine=%d", len(list), runtime.NumGoroutine())
+	log.Printf("check polling len=%d NumGoroutine=%d", len(list), runtime.NumGoroutine())
 	sort.Slice(list, func(i, j int) bool {
 		return list[i].NextTime < list[j].NextTime
 	})
@@ -201,12 +201,14 @@ func doPolling(pe *datastore.PollingEnt) {
 	datastore.UpdatePolling(pe)
 	if pe.LogMode == datastore.LogModeAlways || pe.LogMode == datastore.LogModeAI || (pe.LogMode == datastore.LogModeOnChange && oldState != pe.State) {
 		if err := datastore.AddPollingLog(pe); err != nil {
-			log.Printf("addPollingLog err=%v %#v", err, pe)
+			log.Printf("add polling log err=%v %#v", err, pe)
 		}
 	}
 	if datastore.InfluxdbConf.PollingLog != "" {
 		if datastore.InfluxdbConf.PollingLog == "all" || pe.LogMode != datastore.LogModeNone {
-			_ = datastore.SendPollingLogToInfluxdb(pe)
+			if err := datastore.SendPollingLogToInfluxdb(pe); err != nil {
+				log.Printf("send polling log to influxdb err=%v", err)
+			}
 		}
 	}
 }
@@ -252,7 +254,6 @@ func setPollingState(pe *datastore.PollingEnt, newState string) {
 }
 
 func setPollingError(s string, pe *datastore.PollingEnt, err error) {
-	log.Printf("%s error Polling=%s err=%v", s, pe.Name, err)
 	pe.Result["error"] = fmt.Sprintf("%v", err)
 	setPollingState(pe, "unknown")
 }

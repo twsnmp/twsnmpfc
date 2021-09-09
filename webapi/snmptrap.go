@@ -3,7 +3,6 @@ package webapi
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"regexp"
 
@@ -35,7 +34,6 @@ func postSnmpTrap(c echo.Context) error {
 	var err error
 	filter := new(snmpTrapFilter)
 	if err = c.Bind(filter); err != nil {
-		log.Printf("postSyslog err=%v", err)
 		return echo.ErrBadRequest
 	}
 	fromAddressFilter := makeStringFilter(filter.FromAddress)
@@ -47,17 +45,14 @@ func postSnmpTrap(c echo.Context) error {
 	datastore.ForEachLog(st, et, "trap", func(l *datastore.LogEnt) bool {
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
-			log.Printf("postSyslog err=%v", err)
 			return true
 		}
 		var ok bool
 		re := new(snmpTrapWebAPI)
 		if re.FromAddress, ok = sl["FromAddress"].(string); !ok {
-			log.Printf("postSyslog no FromAddress")
 			return true
 		}
 		if re.Variables, ok = sl["Variables"].(string); !ok {
-			log.Printf("postSyslog no Variables")
 			return true
 		}
 		var ent string
@@ -71,12 +66,10 @@ func postSnmpTrap(c echo.Context) error {
 		} else {
 			var gen float64
 			if gen, ok = sl["GenericTrap"].(float64); !ok {
-				log.Printf("postSyslog no GenericTrap")
 				return true
 			}
 			var spe float64
 			if spe, ok = sl["SpecificTrap"].(float64); !ok {
-				log.Printf("postSyslog no SpecificTrap")
 				return true
 			}
 			re.TrapType = fmt.Sprintf("%s:%d:%d", ent, int(gen), int(spe))

@@ -63,12 +63,12 @@ func saveDevices(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(d)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save device report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(d.ID), s)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save device report err=%v", err)
 		}
 		return true
 	})

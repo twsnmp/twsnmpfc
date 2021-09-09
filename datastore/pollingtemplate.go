@@ -56,7 +56,7 @@ func getID(t *PollingTemplateEnt) string {
 	s := t.Name + t.Type + t.Mode + t.Level + t.Params + t.Filter + t.Extractor + t.Script
 	h := sha256.New()
 	if _, err := h.Write([]byte(s)); err != nil {
-		log.Printf("getID  err=%v", err)
+		log.Printf("get id err=%v", err)
 		return ""
 	}
 	return fmt.Sprintf("%x", h.Sum(nil))

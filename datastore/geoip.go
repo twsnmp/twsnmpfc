@@ -34,7 +34,7 @@ func openGeoIP(path string) error {
 	var err error
 	geoip, err = geoip2.Open(path)
 	if err != nil {
-		log.Printf("openGeoIP err=%v", err)
+		log.Printf("open geoip err=%v", err)
 	} else {
 		md := geoip.Metadata()
 		MapConf.GeoIPInfo = fmt.Sprintf("%d.%d", md.BinaryFormatMajorVersion, md.BinaryFormatMinorVersion)
@@ -66,7 +66,6 @@ func GetLoc(sip string) string {
 		if err == nil {
 			loc = fmt.Sprintf("%s,%f,%f,%s", record.Country.IsoCode, record.Location.Latitude, record.Location.Longitude, record.City.Names["en"])
 		} else {
-			log.Printf("getLoc err=%v", err)
 			loc = "LOCAL,0,0,"
 		}
 	}

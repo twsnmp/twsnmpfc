@@ -89,22 +89,21 @@ func snmptrapd(stopCh chan bool) {
 		}
 		record["Variables"] = vbs
 		js, err := json.Marshal(record)
-		if err != nil {
-			log.Println(err)
-		}
-		logCh <- &datastore.LogEnt{
-			Time: time.Now().UnixNano(),
-			Type: "trap",
-			Log:  string(js),
+		if err == nil {
+			logCh <- &datastore.LogEnt{
+				Time: time.Now().UnixNano(),
+				Type: "trap",
+				Log:  string(js),
+			}
 		}
 	}
 	defer tl.Close()
 	go func() {
 		if err := tl.Listen("0.0.0.0:162"); err != nil {
-			log.Printf("Trap Listen err=%v", err)
+			log.Printf("snmp trap listen err=%v", err)
 		}
-		log.Printf("Trap Listen End")
+		log.Printf("close snmp trap listen")
 	}()
 	<-stopCh
-	log.Printf("Trap Listen Done")
+	log.Printf("stop snmp rrap listenner")
 }

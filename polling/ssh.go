@@ -4,7 +4,6 @@ package polling
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"strings"
 	"time"
@@ -55,7 +54,6 @@ func doPollingSSH(pe *datastore.PollingEnt) {
 	if extractor != "" {
 		grokEnt := datastore.GetGrokEnt(extractor)
 		if grokEnt == nil {
-			log.Printf("No grok pattern Polling=%s", pe.Name)
 			setPollingError("ssh", pe, fmt.Errorf("no grok pattern"))
 			return
 		}
@@ -87,12 +85,10 @@ func doPollingSSH(pe *datastore.PollingEnt) {
 func sshConnectToHost(pe *datastore.PollingEnt, port string) (*ssh.Client, *ssh.Session, error) {
 	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
-		log.Printf("node not found nodeID=%s", pe.NodeID)
 		return nil, nil, fmt.Errorf("node not found nodeID=%s", pe.NodeID)
 	}
 	signer, err := ssh.ParsePrivateKey([]byte(datastore.GetPrivateKey()))
 	if err != nil {
-		log.Printf("sshConnectToHost err=%v", err)
 		return nil, nil, fmt.Errorf("no private key for ssh")
 	}
 	sshConfig := &ssh.ClientConfig{
@@ -115,7 +111,7 @@ func sshConnectToHost(pe *datastore.PollingEnt, port string) (*ssh.Client, *ssh.
 			func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 				n.PublicKey = strings.TrimSpace(string(ssh.MarshalAuthorizedKey(key)))
 				if err := datastore.UpdateNode(n); err != nil {
-					log.Printf("sshConnectToHost err=%v", err)
+					return err
 				}
 				return nil
 			}
@@ -126,7 +122,7 @@ func sshConnectToHost(pe *datastore.PollingEnt, port string) (*ssh.Client, *ssh.
 		return nil, nil, err
 	}
 	if err := conn.SetDeadline(time.Now().Add(time.Second * time.Duration(pe.PollInt-5))); err != nil {
-		log.Printf("sshConnectToHost err=%v", err)
+		return nil, nil, err
 	}
 	c, ch, req, err := ssh.NewClientConn(conn, n.IP+":"+port, sshConfig)
 	if err != nil {

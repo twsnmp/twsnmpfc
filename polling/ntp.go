@@ -2,7 +2,6 @@ package polling
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/beevik/ntp"
@@ -20,7 +19,6 @@ func doPollingNTP(pe *datastore.PollingEnt) {
 		options := ntp.QueryOptions{Timeout: time.Duration(pe.Timeout) * time.Second}
 		r, err := ntp.QueryWithOptions(n.IP, options)
 		if err != nil {
-			log.Printf("doPollingNTP err=%v", err)
 			pe.Result["error"] = fmt.Sprintf("%v", err)
 			continue
 		}

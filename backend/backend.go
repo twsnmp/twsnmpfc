@@ -3,7 +3,6 @@ package backend
 
 import (
 	"context"
-	"log"
 )
 
 var (
@@ -14,7 +13,6 @@ var (
 )
 
 func Start(ctx context.Context, dsp, vn string) error {
-	log.Println("start backend")
 	dspath = dsp
 	versionNum = vn
 	yasumiMap = make(map[string]bool)

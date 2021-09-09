@@ -116,7 +116,6 @@ func postSyslog(c echo.Context) error {
 	r := new(syslogWebAPI)
 	filter := new(syslogFilter)
 	if err := c.Bind(filter); err != nil {
-		log.Printf("postSyslog err=%v", err)
 		return echo.ErrBadRequest
 	}
 	messageFilter := makePipeFilter(filter.Message)
@@ -138,8 +137,6 @@ func postSyslog(c echo.Context) error {
 					grokCap = fmt.Sprintf("%%{%s}", filter.Extractor)
 				}
 			}
-		} else {
-			log.Printf("no grok %s", filter.Extractor)
 		}
 	}
 	i := 0
@@ -148,31 +145,25 @@ func postSyslog(c echo.Context) error {
 	datastore.ForEachLog(st, et, "syslog", func(l *datastore.LogEnt) bool {
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
-			log.Printf("postSyslog err=%v", err)
 			return true
 		}
 		var ok bool
 		re := new(syslogWebAPILogEnt)
 		if re.Message, ok = sl["content"].(string); !ok {
-			log.Printf("postSyslog no content")
 			return true
 		}
 		var sv float64
 		if sv, ok = sl["severity"].(float64); !ok {
-			log.Printf("postSyslog no severity")
 			return true
 		}
 		var fac float64
 		if fac, ok = sl["facility"].(float64); !ok {
-			log.Printf("postSyslog no facility")
 			return true
 		}
 		if re.Tag, ok = sl["tag"].(string); !ok {
-			log.Printf("postSyslog no tag")
 			return true
 		}
 		if re.Host, ok = sl["hostname"].(string); !ok {
-			log.Printf("postSyslog no hostname")
 			return true
 		}
 		re.Time = l.Time
@@ -206,7 +197,7 @@ func postSyslog(c echo.Context) error {
 		if grokExtractor != nil {
 			values, err := grokExtractor.Parse(grokCap, re.Message)
 			if err != nil {
-				log.Printf("grock err=%v", err)
+				log.Printf("parse grok err=%v", err)
 			} else if len(values) > 0 {
 				if len(r.ExtractHeader) < 1 {
 					r.ExtractHeader = append(r.ExtractHeader, "TimeStr")

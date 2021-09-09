@@ -2,7 +2,6 @@ package webapi
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -25,12 +24,10 @@ func postCert(c echo.Context) error {
 		Port   int
 	})
 	if err := c.Bind(pc); err != nil {
-		log.Printf("postCert err=%v", err)
 		return echo.ErrBadRequest
 	}
 	id := fmt.Sprintf("%s:%d", pc.Target, pc.Port)
 	if datastore.GetCert(id) != nil {
-		log.Printf("postCert duplicate id")
 		return echo.ErrBadRequest
 	}
 	datastore.AddCert(&datastore.CertEnt{

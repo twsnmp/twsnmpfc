@@ -35,7 +35,7 @@ func LaodReportConf() error {
 			return nil
 		}
 		if err := json.Unmarshal(v, &ReportConf); err != nil {
-			log.Printf("Unmarshal mapConf from DB error=%v", err)
+			log.Printf("load report conf err=%v", err)
 			return err
 		}
 		return nil

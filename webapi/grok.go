@@ -3,7 +3,6 @@ package webapi
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"sort"
 	"strings"
@@ -29,7 +28,6 @@ func postGrok(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	if err := datastore.UpdateGrokEnt(g); err != nil {
-		log.Printf("postGrok err=%v", err)
 		return echo.ErrBadRequest
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
@@ -43,7 +41,6 @@ func postGrok(c echo.Context) error {
 func deleteGrok(c echo.Context) error {
 	id := c.Param("id")
 	if err := datastore.DeleteGrokEnt(id); err != nil {
-		log.Printf("deleteGrok err=%v", err)
 		return echo.ErrBadRequest
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
@@ -62,7 +59,6 @@ func getExportGrok(c echo.Context) error {
 	})
 	y, err := yaml.Marshal(r)
 	if err != nil {
-		log.Printf("getExportGrok err=%v", err)
 		return echo.ErrInternalServerError
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
@@ -76,33 +72,27 @@ func getExportGrok(c echo.Context) error {
 func postImportGrok(c echo.Context) error {
 	f, err := c.FormFile("file")
 	if err != nil {
-		log.Printf("postImportGrok err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if f.Size > 1024*1024*20 {
-		log.Printf("postImportGrok size over=%v", f)
 		return echo.ErrBadRequest
 	}
 	src, err := f.Open()
 	if err != nil {
-		log.Printf("postImportGrok err=%v", err)
 		return echo.ErrBadRequest
 	}
 	defer src.Close()
 	y, err := ioutil.ReadAll(src)
 	if err != nil {
-		log.Printf("postImportGrok err=%v", err)
 		return echo.ErrBadRequest
 	}
 	l := []datastore.GrokEnt{}
 	err = yaml.Unmarshal(y, &l)
 	if err != nil {
-		log.Printf("postImportGrok err=%v", err)
 		return echo.ErrBadRequest
 	}
 	for i := range l {
 		if err = datastore.UpdateGrokEnt(&l[i]); err != nil {
-			log.Printf("postImportGrok err=%v", err)
 			return echo.ErrBadRequest
 		}
 	}
@@ -142,7 +132,6 @@ func postTestGrok(c echo.Context) error {
 	for _, l := range strings.Split(gt.Data, "\n") {
 		values, err := grokExtractor.Parse("%{TEST}", l)
 		if err != nil {
-			log.Printf("grock err=%v", err)
 			continue
 		} else if len(values) > 0 {
 			if len(r.ExtractHeader) < 1 {

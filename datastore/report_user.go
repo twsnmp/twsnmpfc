@@ -74,12 +74,12 @@ func saveUsers(b *bbolt.Bucket, last int64) {
 		}
 		s, err := json.Marshal(u)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save user report err=%v", err)
 			return true
 		}
 		err = r.Put([]byte(u.ID), s)
 		if err != nil {
-			log.Printf("Save Report err=%v", err)
+			log.Printf("save user report err=%v", err)
 		}
 		return true
 	})

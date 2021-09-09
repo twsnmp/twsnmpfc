@@ -2,7 +2,6 @@ package webapi
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -57,19 +56,16 @@ type nodePosWebAPI struct {
 func postMapUpdate(c echo.Context) error {
 	list := []nodePosWebAPI{}
 	if err := c.Bind(&list); err != nil {
-		log.Printf("postNodePosUpdate err=%v", err)
 		return echo.ErrBadRequest
 	}
 	for _, nu := range list {
 		n := datastore.GetNode(nu.ID)
 		if n == nil {
-			log.Printf("postNodePosUpdate Node not found ID=%s", nu.ID)
 			return echo.ErrBadRequest
 		}
 		n.X = nu.X
 		n.Y = nu.Y
 		if err := datastore.UpdateNode(n); err != nil {
-			log.Printf("postNodePosUpdate err=%v", err)
 			return echo.ErrBadRequest
 		}
 	}
@@ -88,12 +84,10 @@ func getNodes(c echo.Context) error {
 func deleteNodes(c echo.Context) error {
 	ids := []string{}
 	if err := c.Bind(&ids); err != nil {
-		log.Printf("deleteNodes err=%v", err)
 		return echo.ErrBadRequest
 	}
 	for _, id := range ids {
 		if err := datastore.DeleteNode(id); err != nil {
-			log.Printf("deleteNodes err=%v", err)
 			return echo.ErrBadRequest
 		}
 	}
@@ -103,12 +97,10 @@ func deleteNodes(c echo.Context) error {
 func postNodeUpdate(c echo.Context) error {
 	nu := new(datastore.NodeEnt)
 	if err := c.Bind(nu); err != nil {
-		log.Printf("postNodeUpdate err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if nu.ID == "" {
 		if err := datastore.AddNode(nu); err != nil {
-			log.Printf("postNodeUpdate err=%v", err)
 			return echo.ErrBadRequest
 		}
 		from := c.QueryParam("from")
@@ -120,7 +112,6 @@ func postNodeUpdate(c echo.Context) error {
 	// ここで入力チェック
 	n := datastore.GetNode(nu.ID)
 	if n == nil {
-		log.Printf("postNodeUpdate Node not found ID=%s", nu.ID)
 		return echo.ErrBadRequest
 	}
 	n.Name = nu.Name
@@ -136,7 +127,6 @@ func postNodeUpdate(c echo.Context) error {
 	n.Type = nu.Type
 	n.AddrMode = nu.AddrMode
 	if err := datastore.UpdateNode(n); err != nil {
-		log.Printf("postNodeUpdate err=%v", err)
 		return echo.ErrBadRequest
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
@@ -152,11 +142,9 @@ func postNodeUpdate(c echo.Context) error {
 func deleteLine(c echo.Context) error {
 	l := new(datastore.LineEnt)
 	if err := c.Bind(l); err != nil {
-		log.Printf("deleteLine err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if err := datastore.DeleteLine(l.ID); err != nil {
-		log.Printf("deleteLine err=%v", err)
 		return echo.ErrBadRequest
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
@@ -171,11 +159,9 @@ func deleteLine(c echo.Context) error {
 func postLineAdd(c echo.Context) error {
 	lu := new(datastore.LineEnt)
 	if err := c.Bind(lu); err != nil {
-		log.Printf("postLineAdd err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if lu.PollingID1 == "" || lu.PollingID2 == "" {
-		log.Printf("add line polling 1 or 2 is empty")
 		return echo.ErrBadRequest
 	}
 	if p := datastore.GetPolling(lu.PollingID1); p != nil {
@@ -187,7 +173,6 @@ func postLineAdd(c echo.Context) error {
 	l := datastore.GetLine(lu.ID)
 	if l == nil {
 		if err := datastore.AddLine(lu); err != nil {
-			log.Printf("postLineAdd err=%v", err)
 			return echo.ErrBadRequest
 		}
 	} else {
@@ -201,7 +186,6 @@ func postLineAdd(c echo.Context) error {
 		l.PollingID = lu.PollingID
 		l.Width = lu.Width
 		if err := datastore.UpdateLine(l); err != nil {
-			log.Printf("postLineAdd err=%v", err)
 			return echo.ErrBadRequest
 		}
 	}
@@ -225,7 +209,6 @@ func getNodeLog(c echo.Context) error {
 	r := nodeWebAPI{}
 	r.Node = datastore.GetNode(id)
 	if r.Node == nil {
-		log.Printf("node not found")
 		return echo.ErrBadRequest
 	}
 	i := 0
@@ -247,7 +230,6 @@ func getNodePolling(c echo.Context) error {
 	r := nodeWebAPI{}
 	r.Node = datastore.GetNode(id)
 	if r.Node == nil {
-		log.Printf("node not found")
 		return echo.ErrBadRequest
 	}
 	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {

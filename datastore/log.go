@@ -206,7 +206,7 @@ func DeleteArp() {
 }
 
 func eventLogger(ctx context.Context) {
-	log.Println("Start EventLogger")
+	log.Println("start event logger")
 	timer1 := time.NewTicker(time.Minute * 2)
 	timer2 := time.NewTicker(time.Second * 5)
 	list := []*EventLogEnt{}
@@ -240,7 +240,6 @@ func saveLogList(list []*EventLogEnt) {
 	if db == nil {
 		return
 	}
-	log.Printf("saveLogList len=%d", len(list))
 	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("logs"))
 		for _, e := range list {
@@ -259,7 +258,6 @@ func saveLogList(list []*EventLogEnt) {
 
 func SaveLogBuffer(logBuffer []*LogEnt) {
 	if db == nil {
-		log.Printf("saveLogBuffer DB Not open")
 		return
 	}
 	db.Batch(func(tx *bbolt.Tx) error {

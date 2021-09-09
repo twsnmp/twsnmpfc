@@ -5,7 +5,6 @@ package polling
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"regexp"
 	"sort"
 	"strconv"
@@ -21,13 +20,11 @@ import (
 func getLogContent(l string) string {
 	sm := make(map[string]interface{})
 	if err := json.Unmarshal([]byte(l), &sm); err != nil {
-		log.Printf("getLogContent err=%v", err)
 		return ""
 	}
 	if s, ok := sm["content"]; ok {
 		return s.(string)
 	}
-	log.Println("getLogContent no content")
 	return ""
 }
 
@@ -92,7 +89,6 @@ func doPollingLog(pe *datastore.PollingEnt) {
 		} else {
 			var sl = make(map[string]interface{})
 			if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
-				log.Printf("doPollingLog err=%v", err)
 				return true
 			}
 			if len(keys) < 1 {
@@ -113,7 +109,6 @@ func doPollingLog(pe *datastore.PollingEnt) {
 		if grokExtractor != nil {
 			values, err := grokExtractor.Parse(grokCap, msg)
 			if err != nil {
-				log.Printf("grock err=%v", err)
 				return true
 			}
 			if mode == "device" {
@@ -269,7 +264,6 @@ func doPollingSyslogPri(pe *datastore.PollingEnt) bool {
 		msg := ""
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
-			log.Printf("doPollingLog err=%v", err)
 			return true
 		}
 		for k, v := range sl {

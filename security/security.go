@@ -8,7 +8,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"log"
 	"math/big"
 	"net"
 	"os"
@@ -108,13 +107,11 @@ func getRSAKeyFromPEM(p, keypass string) (*rsa.PrivateKey, error) {
 func getHostIPS() (string, string) {
 	host, err := os.Hostname()
 	if err != nil {
-		log.Printf("getCnAlt err=%v", err)
 		return "TWSNMP", "TWSNMP"
 	}
 	alts := []string{host}
 	ifs, err := net.Interfaces()
 	if err != nil {
-		log.Printf("getCnAlt err=%v", err)
 		return "TWSNMP", "TWSNMP"
 	}
 	for _, i := range ifs {

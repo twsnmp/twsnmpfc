@@ -5,7 +5,6 @@ package polling
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -61,7 +60,6 @@ func doPollingNetFlowTraffic(pe *datastore.PollingEnt) {
 	datastore.ForEachLog(st, et, pe.Type, func(l *datastore.LogEnt) bool {
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
-			log.Printf("doPollingNetFlowTraffic err=%v", err)
 			return true
 		}
 		var ok bool
@@ -76,19 +74,15 @@ func doPollingNetFlowTraffic(pe *datastore.PollingEnt) {
 		var pi int
 		if isNetFlow {
 			if sa, ok = sl["srcAddr"].(string); !ok {
-				log.Printf("doPollingNetFlowTraffic no srcAddr")
 				return true
 			}
 			if sp, ok = sl["srcPort"].(float64); !ok {
-				log.Printf("doPollingNetFlowTraffic no srcPort")
 				return true
 			}
 			if da, ok = sl["dstAddr"].(string); !ok {
-				log.Printf("doPollingNetFlowTraffic no dstAddr")
 				return true
 			}
 			if dp, ok = sl["dstPort"].(float64); !ok {
-				log.Printf("doPollingNetFlowTraffic no srcPort")
 				return true
 			}
 			pi = 0
@@ -96,39 +90,31 @@ func doPollingNetFlowTraffic(pe *datastore.PollingEnt) {
 				pi = int(v.(float64))
 			}
 			if packets, ok = sl["packets"].(float64); !ok {
-				log.Printf("doPollingNetFlowTraffic no packets")
 				return true
 			}
 			if bytes, ok = sl["bytes"].(float64); !ok {
-				log.Printf("doPollingNetFlowTraffic no bytes")
 				return true
 			}
 			if lt, ok = sl["last"].(float64); !ok {
-				log.Printf("doPollingNetFlowTraffic no srcPort")
 				return true
 			}
 			if ft, ok = sl["first"].(float64); !ok {
-				log.Printf("doPollingNetFlowTraffic no srcPort")
 				return true
 			}
 		} else {
 			if ft, ok = sl["flowStartSysUpTime"].(float64); !ok {
-				log.Printf("doPollingNetFlowTraffic no flowStartSysUpTime")
 				return true
 			}
 			if lt, ok = sl["flowEndSysUpTime"].(float64); !ok {
-				log.Printf("doPollingNetFlowTraffic no flowEndSysUpTime")
 				return true
 			}
 			if sa, ok = sl["sourceIPv4Address"].(string); !ok {
 				if sa, ok = sl["sourceIPv6Address"].(string); !ok {
-					log.Printf("doPollingNetFlowTraffic no srcAddr")
 					return true
 				}
 			}
 			if da, ok = sl["destinationIPv4Address"].(string); !ok {
 				if da, ok = sl["destinationIPv6Address"].(string); !ok {
-					log.Printf("doPollingNetFlowTraffic no dstAddr")
 					return true
 				}
 			}
@@ -145,21 +131,17 @@ func doPollingNetFlowTraffic(pe *datastore.PollingEnt) {
 				pi = 1
 			} else if pif, ok := sl["protocolIdentifier"].(float64); ok {
 				if sp, ok = sl["sourceTransportPort"].(float64); !ok {
-					log.Printf("doPollingNetFlowTraffic no sourceTransportPort")
 					return true
 				}
 				if dp, ok = sl["destinationTransportPort"].(float64); !ok {
-					log.Printf("doPollingNetFlowTraffic no destinationTransportPort")
 					return true
 				}
 				pi = int(pif)
 			}
 			if packets, ok = sl["packetDeltaCount"].(float64); !ok {
-				log.Printf("doPollingNetFlowTraffic no packetDeltaCount")
 				return true
 			}
 			if bytes, ok = sl["octetDeltaCount"].(float64); !ok {
-				log.Printf("doPollingNetFlowTraffic no octetDeltaCount")
 				return true
 			}
 		}
@@ -227,7 +209,6 @@ func doPollingNetFlowTraffic(pe *datastore.PollingEnt) {
 func makeRegexpFilter(f string) *regexp.Regexp {
 	reg, err := regexp.Compile(f)
 	if err != nil {
-		log.Printf("netflow filter err=%v", err)
 		return nil
 	}
 	return reg

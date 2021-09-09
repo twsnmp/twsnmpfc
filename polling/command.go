@@ -42,21 +42,20 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 	pe.Result["stderr"] = stderr
 	pe.Result["exitCode"] = exitStatus.Code
 	if err := vm.Set("exitCode", exitStatus.Code); err != nil {
-		log.Printf("doPollingCmd err=%v", err)
+		log.Printf("cmd polling err=%v", err)
 	}
 	if err := vm.Set("interval", pe.PollInt); err != nil {
-		log.Printf("doPollingCmd err=%v", err)
+		log.Printf("cmd polling err=%v", err)
 	}
 	if extractor != "" {
 		grokEnt := datastore.GetGrokEnt(extractor)
 		if grokEnt == nil {
-			log.Printf("No grok pattern=%s", extractor)
 			setPollingError("cmd", pe, fmt.Errorf("no grok pattern"))
 			return
 		}
 		g, _ := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
 		if err := g.AddPattern(extractor, grokEnt.Pat); err != nil {
-			log.Printf("doPollingCmd err=%v", err)
+			log.Printf("cmd polling err=%v", err)
 		}
 		cap := fmt.Sprintf("%%{%s}", extractor)
 		values, err := g.Parse(cap, string(stdout))
@@ -66,7 +65,7 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 		}
 		for k, v := range values {
 			if err := vm.Set(k, v); err != nil {
-				log.Printf("doPollingCmd err=%v", err)
+				log.Printf("cmd polling err=%v", err)
 			}
 			pe.Result[k] = v
 		}

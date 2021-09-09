@@ -162,7 +162,7 @@ func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bo
 			var e PollingLogEnt
 			err := json.Unmarshal(v, &e)
 			if err != nil {
-				log.Printf("ForEachPollingLog v=%s err=%v", v, err)
+				log.Printf("load polling log err=%v", err)
 				continue
 			}
 			if e.PollingID != pollingID {
@@ -212,7 +212,7 @@ func GetAllPollingLog(pollingID string) []PollingLogEnt {
 	_ = db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingLogs"))
 		if b == nil {
-			log.Printf("getPollingLog no Bucket getPollingLog")
+			log.Printf("no polling log bucket")
 			return nil
 		}
 		c := b.Cursor()
@@ -224,7 +224,7 @@ func GetAllPollingLog(pollingID string) []PollingLogEnt {
 			var l PollingLogEnt
 			err := json.Unmarshal(v, &l)
 			if err != nil {
-				log.Printf("getPollingLog err=%v", err)
+				log.Printf("get polling log err=%v", err)
 				continue
 			}
 			if l.PollingID != pollingID {

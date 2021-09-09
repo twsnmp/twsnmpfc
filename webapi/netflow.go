@@ -3,7 +3,6 @@ package webapi
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -45,7 +44,6 @@ func postNetFlow(c echo.Context) error {
 	r := []*netflowWebAPI{}
 	filter := new(netflowFilter)
 	if err := c.Bind(filter); err != nil {
-		log.Printf("postNetflow err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if filter.SrcDst {
@@ -71,7 +69,6 @@ func postNetFlow(c echo.Context) error {
 	datastore.ForEachLog(st, et, "netflow", func(l *datastore.LogEnt) bool {
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
-			log.Printf("postNetflow err=%v", err)
 			return true
 		}
 		var ok bool
@@ -88,23 +85,18 @@ func postNetFlow(c echo.Context) error {
 		var pi int
 		re := new(netflowWebAPI)
 		if sa, ok = sl["srcAddr"].(string); !ok {
-			log.Printf("postNetflow no srcAddr")
 			return true
 		}
 		if sp, ok = sl["srcPort"].(float64); !ok {
-			log.Printf("postNetflow no srcPort")
 			return true
 		}
 		if da, ok = sl["dstAddr"].(string); !ok {
-			log.Printf("postNetflow no dstAddr")
 			return true
 		}
 		if dp, ok = sl["dstPort"].(float64); !ok {
-			log.Printf("postNetflow no srcPort")
 			return true
 		}
 		if prot, ok = sl["protocolStr"].(string); !ok {
-			log.Printf("postNetflow no protocolStr")
 			return true
 		}
 		if v, ok := sl["protocol"]; ok {
@@ -125,23 +117,18 @@ func postNetFlow(c echo.Context) error {
 			}
 		}
 		if tf, ok = sl["tcpflagsStr"].(string); !ok {
-			log.Printf("postNetflow no tcpflagsStr")
 			return true
 		}
 		if packets, ok = sl["packets"].(float64); !ok {
-			log.Printf("postNetflow no packets")
 			return true
 		}
 		if bytes, ok = sl["bytes"].(float64); !ok {
-			log.Printf("postNetflow no bytes")
 			return true
 		}
 		if lt, ok = sl["last"].(float64); !ok {
-			log.Printf("postNetflow no srcPort")
 			return true
 		}
 		if ft, ok = sl["first"].(float64); !ok {
-			log.Printf("postNetflow no srcPort")
 			return true
 		}
 		spi := int(sp)
@@ -202,7 +189,6 @@ func postIPFIX(c echo.Context) error {
 	r := []*netflowWebAPI{}
 	filter := new(netflowFilter)
 	if err := c.Bind(filter); err != nil {
-		log.Printf("postIPFIX err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if filter.SrcDst {
@@ -228,7 +214,6 @@ func postIPFIX(c echo.Context) error {
 	datastore.ForEachLog(st, et, "ipfix", func(l *datastore.LogEnt) bool {
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
-			log.Printf("postIPFIX err=%v", err)
 			return true
 		}
 		var ok bool
@@ -244,22 +229,18 @@ func postIPFIX(c echo.Context) error {
 		var lt float64
 		re := new(netflowWebAPI)
 		if ft, ok = sl["flowStartSysUpTime"].(float64); !ok {
-			log.Printf("postIPFIX no flowStartSysUpTime")
 			return true
 		}
 		if lt, ok = sl["flowEndSysUpTime"].(float64); !ok {
-			log.Printf("postIPFIX no flowEndSysUpTime")
 			return true
 		}
 		if sa, ok = sl["sourceIPv4Address"].(string); !ok {
 			if sa, ok = sl["sourceIPv6Address"].(string); !ok {
-				log.Printf("postIPFIX no srcAddr")
 				return true
 			}
 		}
 		if da, ok = sl["destinationIPv4Address"].(string); !ok {
 			if da, ok = sl["destinationIPv6Address"].(string); !ok {
-				log.Printf("postIPFIX no dstAddr")
 				return true
 			}
 		}
@@ -278,11 +259,9 @@ func postIPFIX(c echo.Context) error {
 			dp = float64(int(icmpTypeCode) % 256)
 		} else if pi, ok = sl["protocolIdentifier"].(float64); ok {
 			if sp, ok = sl["sourceTransportPort"].(float64); !ok {
-				log.Printf("postIPFIX no sourceTransportPort")
 				return true
 			}
 			if dp, ok = sl["destinationTransportPort"].(float64); !ok {
-				log.Printf("postIPFIX no destinationTransportPort")
 				return true
 			}
 			if int(pi) == 6 {
@@ -316,15 +295,11 @@ func postIPFIX(c echo.Context) error {
 					prot = fmt.Sprintf("%d", int(pi))
 				}
 			}
-		} else {
-			log.Println("no data")
 		}
 		if packets, ok = sl["packetDeltaCount"].(float64); !ok {
-			log.Printf("postIPFIX no packetDeltaCount")
 			return true
 		}
 		if bytes, ok = sl["octetDeltaCount"].(float64); !ok {
-			log.Printf("postIPFIX no octetDeltaCount")
 			return true
 		}
 		spi := int(sp)

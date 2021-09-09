@@ -15,12 +15,10 @@ func ReportTWWifiScan(l map[string]interface{}) {
 func checkTWWifiScanReport(l map[string]interface{}) {
 	h, ok := l["hostname"].(string)
 	if !ok {
-		log.Printf("twWifiScan no hostname %v", l)
 		return
 	}
 	c, ok := l["content"].(string)
 	if !ok {
-		log.Printf("twWifiScan no content %v", l)
 		return
 	}
 	kvs := strings.Split(c, ",")
@@ -33,7 +31,6 @@ func checkTWWifiScanReport(l map[string]interface{}) {
 	}
 	t, ok := m["type"]
 	if !ok {
-		log.Printf("twWifiScan no type %v", m)
 		return
 	}
 	switch t {
@@ -44,7 +41,7 @@ func checkTWWifiScanReport(l map[string]interface{}) {
 	case "Monitor":
 		checkMonitor(h, "twWifiScan", m)
 	default:
-		log.Printf("twWifiScan unkown type %v", m)
+		log.Printf("twwifiscan unkown type=%v", t)
 	}
 }
 

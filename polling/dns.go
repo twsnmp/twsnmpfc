@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/gommon/log"
 	"github.com/robertkrimen/otto"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
@@ -31,7 +30,6 @@ func doPollingDNS(pe *datastore.PollingEnt) {
 		startTime := time.Now().UnixNano()
 		if out, err = doLookup(mode, target); err != nil || len(out) < 1 {
 			pe.Result["error"] = fmt.Sprintf("%v", err)
-			log.Printf("doLookup err=%v %s %s", err, mode, target)
 			continue
 		}
 		endTime := time.Now().UnixNano()
