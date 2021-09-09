@@ -29,5 +29,5 @@ stop_on_error = true
 # Send Interrupt signal before killing process (windows does not support this feature)
 send_interrupt = true
 # Delay after sending Interrupt signal
-kill_delay = 2000000 # ms
+kill_delay = 30000 # ms
 

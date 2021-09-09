@@ -1,7 +1,6 @@
 package report
 
 import (
-	"log"
 	"net"
 	"strings"
 	"time"
@@ -88,7 +87,6 @@ func setDevicePenalty(d *datastore.DeviceEnt) {
 	// 使用してよいローカルIP
 	if allowLocalIP != nil {
 		if !allowLocalIP.MatchString(d.IP) {
-			log.Printf("device use not allowed IP mac=%s ip=%s", d.ID, d.IP)
 			d.Penalty++
 		}
 	}

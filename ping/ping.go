@@ -145,7 +145,7 @@ func (p *PingEnt) sendICMP(conn *icmp.PacketConn) error {
 // pingBackend : ping実行時の送受信処理
 func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Println("start ping backend")
+	log.Println("start ping")
 	timer := time.NewTicker(time.Millisecond * 500)
 	pingMap := make(map[int64]*PingEnt)
 	netProto := "udp4"
@@ -165,6 +165,7 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 			for _, p := range pingMap {
 				close(p.done)
 			}
+			log.Println("stop ping")
 			return
 		case p := <-pingSendCh:
 			if p != nil {
@@ -217,9 +218,7 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 				}
 				continue
 			}
-			if tracker, tm, err := processPacket(&packet{bytes: bytes, nbytes: n, ttl: ttl}); err != nil {
-				log.Printf("ping err=%v", err)
-			} else {
+			if tracker, tm, err := processPacket(&packet{bytes: bytes, nbytes: n, ttl: ttl}); err == nil {
 				if p, ok := pingMap[tracker]; ok {
 					sa := strings.Split(src.String(), ":")
 					if p.Target != sa[0] {
