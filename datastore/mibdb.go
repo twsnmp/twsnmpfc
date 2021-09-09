@@ -143,9 +143,10 @@ func addToMibTree(oid, name, poid string) {
 
 func makeMibTreeList() {
 	oids := []string{}
+	minLen := len(".1.3.6.1")
 	for _, n := range MIBDB.GetNameList() {
 		oid := MIBDB.NameToOID(n)
-		if oid == ".0.0" {
+		if len(oid) <= minLen {
 			continue
 		}
 		oids = append(oids, oid)
