@@ -121,25 +121,6 @@
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
-          <v-list-group no-action sub-group>
-            <template #activator>
-              <v-list-item-title>AI／センサー</v-list-item-title>
-            </template>
-            <v-list-item
-              v-for="(item, i) in aiSensorMenus"
-              :key="i"
-              :to="item.to"
-              router
-              exact
-            >
-              <v-list-item-action>
-                <v-icon>{{ item.icon }}</v-icon>
-              </v-list-item-action>
-              <v-list-item-content>
-                <v-list-item-title v-text="item.title" />
-              </v-list-item-content>
-            </v-list-item>
-          </v-list-group>
         </v-list-group>
         <v-list-group no-action prepend-icon="mdi-view-list" :value="false">
           <template #activator>
@@ -282,17 +263,15 @@ export default {
           title: '自動発見',
           to: '/discover',
         },
-      ],
-      aiSensorMenus: [
-        {
-          icon: 'mdi-brain',
-          title: 'AI分析',
-          to: '/report/ailist',
-        },
         {
           icon: 'mdi-webcam',
           title: 'センサー',
           to: '/report/sensor',
+        },
+        {
+          icon: 'mdi-brain',
+          title: 'AI分析',
+          to: '/report/ailist',
         },
       ],
       deviceMenus: [
