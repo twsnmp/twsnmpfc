@@ -192,7 +192,7 @@
             label="ポーリング間隔(Sec)"
             class="align-center"
             max="3600"
-            min="30"
+            min="5"
             hide-details
           >
             <template #append>

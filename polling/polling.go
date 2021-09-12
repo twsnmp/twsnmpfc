@@ -112,7 +112,7 @@ func CheckAllPoll() {
 func pollingBackend(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	time.Sleep(time.Millisecond * 100)
-	timer := time.NewTicker(time.Second * 30)
+	timer := time.NewTicker(time.Second * 5)
 	for {
 		select {
 		case <-ctx.Done():
