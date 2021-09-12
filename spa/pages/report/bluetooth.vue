@@ -173,7 +173,7 @@
               </tr>
               <tr>
                 <td>情報</td>
-                <td>{{ selected.ExtData }}</td>
+                <td>{{ selected.Info }}</td>
               </tr>
               <tr>
                 <td>回数</td>

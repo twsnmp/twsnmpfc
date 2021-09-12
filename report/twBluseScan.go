@@ -49,20 +49,26 @@ func checkTWBlueScanReport(l map[string]interface{}) {
 	}
 }
 
-// type=Device,address=%s,name=%s,rssi=%d,addrType=%s,vendor=%s,md=%s
+// type=Device,address=%s,name=%s,rssi=%d,addrType=%s,vendor=%s,info=%s,ft=%s,lt=%s
 func checkBlueDeviceReport(h string, m map[string]string) {
 	addr, ok := m["address"]
 	if !ok {
 		return
 	}
+	lt := getTimeFromTWLog(m["ft"]) / (1000 * 1000 * 1000)
 	rssi := getNumberFromTWLog(m["rssi"])
 	id := h + ":" + addr
-	now := time.Now().Unix()
 	e := datastore.GetBlueDevice(id)
 	if e != nil {
 		e.Count++
-		e.LastTime = now
-		e.RSSI = append(e.RSSI, datastore.RSSIEnt{Value: int(rssi), Time: now})
+		e.LastTime = lt
+		if i, ok := m["info"]; ok && i != "" && i != e.Info {
+			e.Info = i
+		}
+		if v, ok := m["vendor"]; ok && v != "" && v != e.Vendor {
+			e.Vendor = v
+		}
+		e.RSSI = append(e.RSSI, datastore.RSSIEnt{Value: int(rssi), Time: lt})
 		if len(e.RSSI) > MAX_DATA_SIZE {
 			e.RSSI = e.RSSI[1:]
 		}
@@ -76,12 +82,12 @@ func checkBlueDeviceReport(h string, m map[string]string) {
 		Name:        m["name"],
 		Count:       1,
 		RSSI: []datastore.RSSIEnt{
-			{Value: int(rssi), Time: now},
+			{Value: int(rssi), Time: lt},
 		},
 		Vendor:    m["vendor"],
-		ExtData:   m["md"],
-		LastTime:  now,
-		FirstTime: now,
+		Info:      m["info"],
+		LastTime:  lt,
+		FirstTime: getTimeFromTWLog(m["ft"]) / (1000 * 1000 * 1000),
 	})
 }
 

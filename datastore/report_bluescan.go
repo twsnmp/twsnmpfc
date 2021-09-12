@@ -19,8 +19,8 @@ type BlueDeviceEnt struct {
 	Name        string
 	AddressType string
 	RSSI        []RSSIEnt
+	Info        string
 	Vendor      string
-	ExtData     string
 	Count       int64
 	FirstTime   int64
 	LastTime    int64
