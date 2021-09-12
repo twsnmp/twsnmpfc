@@ -176,11 +176,7 @@ func doPolling(pe *datastore.PollingEnt) {
 	case "ntp":
 		doPollingNTP(pe)
 	case "syslog":
-		if pe.Mode == "pri" {
-			doPollingSyslogPri(pe)
-		} else {
-			doPollingLog(pe)
-		}
+		doPollingSyslog(pe)
 	case "trap":
 		doPollingLog(pe)
 	case "netflow", "ipfix":

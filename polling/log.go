@@ -241,6 +241,17 @@ func doPollingLog(pe *datastore.PollingEnt) {
 	}
 }
 
+func doPollingSyslog(pe *datastore.PollingEnt) {
+	switch pe.Mode {
+	case "pri":
+		doPollingSyslogPri(pe)
+	case "state":
+		doPollingSyslogState(pe)
+	default:
+		doPollingLog(pe)
+	}
+}
+
 func doPollingSyslogPri(pe *datastore.PollingEnt) bool {
 	var err error
 	var regexFilter *regexp.Regexp
@@ -300,4 +311,71 @@ func getProt(p string) int {
 		return 1
 	}
 	return 0
+}
+
+func doPollingSyslogState(pe *datastore.PollingEnt) bool {
+	var err error
+	var ngFilter *regexp.Regexp
+	var okFilter *regexp.Regexp
+	if pe.Filter == "" || pe.Params == "" {
+		setPollingError("log", pe, fmt.Errorf("no polling filter"))
+		return false
+	}
+	if ngFilter, err = regexp.Compile(pe.Filter); err != nil {
+		setPollingError("log", pe, fmt.Errorf("invalid ng filter"))
+		return false
+	}
+	if okFilter, err = regexp.Compile(pe.Params); err != nil {
+		setPollingError("log", pe, fmt.Errorf("invalid ok filter"))
+		return false
+	}
+	st := time.Now().Add(-time.Second * time.Duration(pe.PollInt)).UnixNano()
+	if v, ok := pe.Result["lastTime"]; ok {
+		if vf, ok := v.(float64); ok {
+			st = int64(vf)
+		}
+	}
+	et := time.Now().UnixNano()
+	var okTime int64
+	var ngTime int64
+	datastore.ForEachLog(st, et, "syslog", func(l *datastore.LogEnt) bool {
+		var sl = make(map[string]interface{})
+		msg := ""
+		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
+			return true
+		}
+		for k, v := range sl {
+			msg += k + "=" + fmt.Sprintf("%v", v) + "\t"
+		}
+		if okFilter.Match([]byte(msg)) {
+			okTime = l.Time
+			return true
+		}
+		if ngFilter.Match([]byte(msg)) {
+			ngTime = l.Time
+			return true
+		}
+		return true
+	})
+	pe.Result["lastTime"] = et
+	if okTime == 0 {
+		if ngTime == 0 {
+			// どちらもない場合
+			if pe.State == "unknown" {
+				// 正常とする
+				setPollingState(pe, "normal")
+			}
+			// 現状維持
+			return true
+		}
+	} else {
+		if ngTime < okTime {
+			// OKが後の場合は正常（NGがない場合も含む）
+			setPollingState(pe, "normal")
+			return true
+		}
+	}
+	//それ以外はすべてNG
+	setPollingState(pe, pe.Level)
+	return true
 }
