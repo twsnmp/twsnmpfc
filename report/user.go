@@ -2,6 +2,7 @@ package report
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"time"
 
@@ -144,4 +145,39 @@ func checkUserClient(client string) bool {
 	// DNSで解決できない場合
 	name, _ := findNodeInfoFromIP(client)
 	return client == name
+}
+
+func checkOldUsers(delOld int64) {
+	ids := []string{}
+	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
+		if u.LastTime < delOld {
+			ids = append(ids, u.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("users", ids)
+		log.Printf("delete users=%d", len(ids))
+	}
+}
+
+func calcUserScore() {
+	var xs []float64
+	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
+		if u.Penalty > 100 {
+			u.Penalty = 100
+		}
+		xs = append(xs, float64(100-u.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
+		if sd != 0 {
+			u.Score = ((10 * (float64(100-u.Penalty) - m) / sd) + 50)
+		} else {
+			u.Score = 50.0
+		}
+		u.ValidScore = true
+		return true
+	})
 }

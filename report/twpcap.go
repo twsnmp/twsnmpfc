@@ -377,3 +377,105 @@ func ResetTLSFlowsScore() {
 	})
 	calcTLSFlowScore()
 }
+
+func checkOldEtherType(delOld int64) {
+	ids := []string{}
+	datastore.ForEachEtherType(func(e *datastore.EtherTypeEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("ether", ids)
+		log.Printf("delete etherType=%d", len(ids))
+	}
+}
+
+func checkOldDNSQ(delOld int64) {
+	ids := []string{}
+	datastore.ForEachDNSQ(func(e *datastore.DNSQEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("dns", ids)
+		log.Printf("delete DNSQ=%d", len(ids))
+	}
+}
+
+func checkOldRadiusFlow(safeOld, delOld int64) {
+	ids := []string{}
+	datastore.ForEachRADIUSFlows(func(i *datastore.RADIUSFlowEnt) bool {
+		if i.LastTime < safeOld {
+			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
+				ids = append(ids, i.ID)
+			}
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("radius", ids)
+		log.Printf("report delete radiusFlow=%d", len(ids))
+	}
+}
+
+func checkOldTLSFlow(safeOld, delOld int64) {
+	ids := []string{}
+	datastore.ForEachTLSFlows(func(i *datastore.TLSFlowEnt) bool {
+		if i.LastTime < safeOld {
+			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
+				ids = append(ids, i.ID)
+			}
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("tls", ids)
+		log.Printf("report delete tlsFlow=%d", len(ids))
+	}
+}
+
+func calcRADIUSFlowScore() {
+	var xs []float64
+	datastore.ForEachRADIUSFlows(func(e *datastore.RADIUSFlowEnt) bool {
+		if e.Penalty > 100 {
+			e.Penalty = 100
+		}
+		xs = append(xs, float64(100-e.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachRADIUSFlows(func(e *datastore.RADIUSFlowEnt) bool {
+		if sd != 0 {
+			e.Score = ((10 * (float64(100-e.Penalty) - m) / sd) + 50)
+		} else {
+			e.Score = 50.0
+		}
+		e.ValidScore = true
+		return true
+	})
+}
+
+func calcTLSFlowScore() {
+	var xs []float64
+	datastore.ForEachTLSFlows(func(e *datastore.TLSFlowEnt) bool {
+		if e.Penalty > 100 {
+			e.Penalty = 100
+		}
+		xs = append(xs, float64(100-e.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachTLSFlows(func(e *datastore.TLSFlowEnt) bool {
+		if sd != 0 {
+			e.Score = ((10 * (float64(100-e.Penalty) - m) / sd) + 50)
+		} else {
+			e.Score = 50.0
+		}
+		e.ValidScore = true
+		return true
+	})
+}

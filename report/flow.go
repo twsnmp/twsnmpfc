@@ -2,6 +2,7 @@ package report
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"strings"
 	"time"
@@ -369,4 +370,78 @@ func setServerPenalty(s *datastore.ServerEnt) {
 	if s.ServerName == s.Server {
 		s.Penalty++
 	}
+}
+
+func checkOldServers(safeOld, delOld int64) {
+	ids := []string{}
+	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
+		if s.LastTime < safeOld {
+			if s.LastTime < delOld || s.Score > 50.0 || s.Count < 10 {
+				ids = append(ids, s.ID)
+			}
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("servers", ids)
+		log.Printf("report delete servers=%d", len(ids))
+	}
+}
+
+func checkOldFlows(safeOld, delOld int64) {
+	ids := []string{}
+	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
+		if f.LastTime < safeOld {
+			if f.LastTime < delOld || f.Score > 50.0 || f.Count < 10 {
+				ids = append(ids, f.ID)
+			}
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("flows", ids)
+		log.Printf("report delete flows=%d", len(ids))
+	}
+}
+
+func calcServerScore() {
+	var xs []float64
+	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
+		if s.Penalty > 100 {
+			s.Penalty = 100
+		}
+		xs = append(xs, float64(100-s.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
+		if sd != 0 {
+			s.Score = ((10 * (float64(100-s.Penalty) - m) / sd) + 50)
+		} else {
+			s.Score = 50.0
+		}
+		s.ValidScore = true
+		return true
+	})
+}
+
+func calcFlowScore() {
+	var xs []float64
+	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
+		if f.Penalty > 100 {
+			f.Penalty = 100
+		}
+		xs = append(xs, float64(100-f.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
+		if sd != 0 {
+			f.Score = ((10 * (float64(100-f.Penalty) - m) / sd) + 50)
+		} else {
+			f.Score = 50.0
+		}
+		f.ValidScore = true
+		return true
+	})
 }

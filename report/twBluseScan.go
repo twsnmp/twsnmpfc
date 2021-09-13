@@ -55,7 +55,7 @@ func checkBlueDeviceReport(h string, m map[string]string) {
 	if !ok {
 		return
 	}
-	lt := getTimeFromTWLog(m["ft"]) / (1000 * 1000 * 1000)
+	lt := getTimeFromTWLog(m["ft"])
 	rssi := getNumberFromTWLog(m["rssi"])
 	id := h + ":" + addr
 	e := datastore.GetBlueDevice(id)
@@ -87,7 +87,7 @@ func checkBlueDeviceReport(h string, m map[string]string) {
 		Vendor:    m["vendor"],
 		Info:      m["info"],
 		LastTime:  lt,
-		FirstTime: getTimeFromTWLog(m["ft"]) / (1000 * 1000 * 1000),
+		FirstTime: getTimeFromTWLog(m["ft"]),
 	})
 }
 
@@ -99,11 +99,11 @@ func checkOMRONEnvReport(h string, m map[string]string) {
 	}
 	rssi := getNumberFromTWLog(m["rssi"])
 	id := h + ":" + addr
-	now := time.Now().Unix()
+	now := time.Now().UnixNano()
 	e := datastore.GetEnvMonitor(id)
 	if e != nil {
 		e.Count++
-		e.LastTime = time.Now().Unix()
+		e.LastTime = time.Now().UnixNano()
 		e.EnvData = append(e.EnvData, datastore.EnvDataEnt{
 			Time:               now,
 			RSSI:               int(rssi),
@@ -142,4 +142,34 @@ func checkOMRONEnvReport(h string, m map[string]string) {
 		LastTime:  now,
 		FirstTime: now,
 	})
+}
+
+func checkOldBlueDevice(safeOld, delOld int64) {
+	ids := []string{}
+	datastore.ForEachBludeDevice(func(e *datastore.BlueDeviceEnt) bool {
+		if e.LastTime < safeOld {
+			if e.LastTime < delOld || (e.AddressType == "LE Random(resolvable)" && e.Name == "" && e.Count < 10) {
+				ids = append(ids, e.ID)
+			}
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("blueDevice", ids)
+		log.Printf("delete blueDevice=%d", len(ids))
+	}
+}
+
+func checkOldEnvMonitor(delOld int64) {
+	ids := []string{}
+	datastore.ForEachEnvMonitor(func(e *datastore.EnvMonitorEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("envMonitor", ids)
+		log.Printf("delete envMonitor=%d", len(ids))
+	}
 }

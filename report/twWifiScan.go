@@ -53,7 +53,7 @@ func checkAPInfoReport(h string, m map[string]string) {
 	}
 	rssi := getNumberFromTWLog(m["rssi"])
 	id := h + ":" + bssid
-	now := time.Now().Unix()
+	now := time.Now().UnixNano()
 	e := datastore.GetWifiAP(id)
 	if e != nil {
 		e.Count++
@@ -84,4 +84,18 @@ func checkAPInfoReport(h string, m map[string]string) {
 		LastTime:  now,
 		FirstTime: now,
 	})
+}
+
+func checkOldWifiAP(delOld int64) {
+	ids := []string{}
+	datastore.ForEachWifiAP(func(e *datastore.WifiAPEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("wifiAP", ids)
+		log.Printf("delete wifiAP=%d", len(ids))
+	}
 }

@@ -139,3 +139,23 @@ func ResetCertScore() {
 	})
 	calcCertScore()
 }
+
+func calcCertScore() {
+	var xs []float64
+	datastore.ForEachCerts(func(e *datastore.CertEnt) bool {
+		if e.Penalty > 100 {
+			e.Penalty = 100
+		}
+		xs = append(xs, float64(100-e.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachCerts(func(e *datastore.CertEnt) bool {
+		if sd != 0 {
+			e.Score = ((10 * (float64(100-e.Penalty) - m) / sd) + 50)
+		} else {
+			e.Score = 50.0
+		}
+		return true
+	})
+}

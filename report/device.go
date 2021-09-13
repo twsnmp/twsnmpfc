@@ -1,6 +1,7 @@
 package report
 
 import (
+	"log"
 	"net"
 	"strings"
 	"time"
@@ -94,4 +95,44 @@ func setDevicePenalty(d *datastore.DeviceEnt) {
 	if !datastore.IsPrivateIP(ip) {
 		d.Penalty++
 	}
+}
+
+func checkOldDevices(safeOld, delOld int64) {
+	ids := []string{}
+	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+		if d.LastTime < safeOld {
+			if d.LastTime < delOld || (d.Score > 50.0 && d.LastTime == d.FirstTime) {
+				ids = append(ids, d.ID)
+			}
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("devices", ids)
+		log.Printf("report delete devices=%d", len(ids))
+	}
+}
+
+func calcDeviceScore() {
+	var xs []float64
+	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+		if ip := datastore.GetIPReport(d.IP); ip != nil && ip.Penalty > 0 {
+			d.Penalty++
+		}
+		if d.Penalty > 100 {
+			d.Penalty = 100
+		}
+		xs = append(xs, float64(100-d.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+		if sd != 0 {
+			d.Score = ((10 * (float64(100-d.Penalty) - m) / sd) + 50)
+		} else {
+			d.Score = 50.0
+		}
+		d.ValidScore = true
+		return true
+	})
 }

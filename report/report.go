@@ -189,155 +189,27 @@ func checkOldReport() {
 	safeOld := time.Now().Add(time.Hour * time.Duration(-1*datastore.ReportConf.RetentionTimeForSafe)).UnixNano()
 	delOld := time.Now().AddDate(0, 0, -datastore.MapConf.LogDays).UnixNano()
 	st := time.Now()
+	checkOldDevices(safeOld, delOld)
 	checkOldServers(safeOld, delOld)
 	checkOldFlows(safeOld, delOld)
-	checkOldDevices(safeOld, delOld)
 	checkOldIPReport(safeOld, delOld)
 	checkOldUsers(delOld)
 	checkOldEtherType(delOld)
 	checkOldDNSQ(delOld)
 	checkOldRadiusFlow(safeOld, delOld)
 	checkOldTLSFlow(safeOld, delOld)
+	checkOldWinEventID(delOld)
+	checkOldWinLogon(delOld)
+	checkOldWinAccount(delOld)
+	checkOldWinKerberos(delOld)
+	checkOldWinPrivilege(delOld)
+	checkOldWinProcess(delOld)
+	checkOldWinTask(delOld)
+	checkOldBlueDevice(safeOld, delOld)
+	checkOldEnvMonitor(delOld)
+	checkOldWifiAP(delOld)
 	log.Printf("check old report dur=%v", time.Since(st))
 	oldCheck = false
-}
-
-func checkOldServers(safeOld, delOld int64) {
-	ids := []string{}
-	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
-		if s.LastTime < safeOld {
-			if s.LastTime < delOld || s.Score > 50.0 || s.Count < 10 {
-				ids = append(ids, s.ID)
-			}
-		}
-		return true
-	})
-	if len(ids) > 0 {
-		datastore.DeleteReport("servers", ids)
-		log.Printf("report delete servers=%d", len(ids))
-	}
-}
-
-func checkOldFlows(safeOld, delOld int64) {
-	ids := []string{}
-	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
-		if f.LastTime < safeOld {
-			if f.LastTime < delOld || f.Score > 50.0 || f.Count < 10 {
-				ids = append(ids, f.ID)
-			}
-		}
-		return true
-	})
-	if len(ids) > 0 {
-		datastore.DeleteReport("flows", ids)
-		log.Printf("report delete flows=%d", len(ids))
-	}
-}
-
-func checkOldDevices(safeOld, delOld int64) {
-	ids := []string{}
-	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		if d.LastTime < safeOld {
-			if d.LastTime < delOld || (d.Score > 50.0 && d.LastTime == d.FirstTime) {
-				ids = append(ids, d.ID)
-			}
-		}
-		return true
-	})
-	if len(ids) > 0 {
-		datastore.DeleteReport("devices", ids)
-		log.Printf("report delete devices=%d", len(ids))
-	}
-}
-
-func checkOldIPReport(safeOld, delOld int64) {
-	ids := []string{}
-	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
-		if i.LastTime < safeOld {
-			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
-				ids = append(ids, i.IP)
-			}
-		}
-		return true
-	})
-	if len(ids) > 0 {
-		datastore.DeleteReport("ips", ids)
-		log.Printf("report delete ip=%d", len(ids))
-	}
-}
-
-func checkOldUsers(delOld int64) {
-	ids := []string{}
-	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
-		if u.LastTime < delOld {
-			ids = append(ids, u.ID)
-		}
-		return true
-	})
-	if len(ids) > 0 {
-		datastore.DeleteReport("users", ids)
-		log.Printf("delete users=%d", len(ids))
-	}
-}
-
-func checkOldEtherType(delOld int64) {
-	ids := []string{}
-	datastore.ForEachEtherType(func(e *datastore.EtherTypeEnt) bool {
-		if e.LastTime < delOld {
-			ids = append(ids, e.ID)
-		}
-		return true
-	})
-	if len(ids) > 0 {
-		datastore.DeleteReport("ether", ids)
-		log.Printf("delete etherType=%d", len(ids))
-	}
-}
-
-func checkOldDNSQ(delOld int64) {
-	ids := []string{}
-	datastore.ForEachDNSQ(func(e *datastore.DNSQEnt) bool {
-		if e.LastTime < delOld {
-			ids = append(ids, e.ID)
-		}
-		return true
-	})
-	if len(ids) > 0 {
-		datastore.DeleteReport("dns", ids)
-		log.Printf("delete DNSQ=%d", len(ids))
-	}
-}
-
-func checkOldRadiusFlow(safeOld, delOld int64) {
-	ids := []string{}
-	datastore.ForEachRADIUSFlows(func(i *datastore.RADIUSFlowEnt) bool {
-		if i.LastTime < safeOld {
-			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
-				ids = append(ids, i.ID)
-			}
-		}
-		return true
-	})
-	if len(ids) > 0 {
-		datastore.DeleteReport("radius", ids)
-		log.Printf("report delete radiusFlow=%d", len(ids))
-	}
-}
-
-func checkOldTLSFlow(safeOld, delOld int64) {
-	ids := []string{}
-	datastore.ForEachTLSFlows(func(i *datastore.TLSFlowEnt) bool {
-		if i.LastTime < safeOld {
-			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
-				ids = append(ids, i.ID)
-			}
-		}
-		return true
-	})
-	if len(ids) > 0 {
-		datastore.DeleteReport("tls", ids)
-		log.Printf("report delete tlsFlow=%d", len(ids))
-	}
 }
 
 func calcScore() {
@@ -349,176 +221,6 @@ func calcScore() {
 	calcTLSFlowScore()
 	calcRADIUSFlowScore()
 	calcCertScore()
-}
-
-func calcDeviceScore() {
-	var xs []float64
-	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		if ip := datastore.GetIPReport(d.IP); ip != nil && ip.Penalty > 0 {
-			d.Penalty++
-		}
-		if d.Penalty > 100 {
-			d.Penalty = 100
-		}
-		xs = append(xs, float64(100-d.Penalty))
-		return true
-	})
-	m, sd := getMeanSD(&xs)
-	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		if sd != 0 {
-			d.Score = ((10 * (float64(100-d.Penalty) - m) / sd) + 50)
-		} else {
-			d.Score = 50.0
-		}
-		d.ValidScore = true
-		return true
-	})
-}
-
-func calcIPReportScore() {
-	var xs []float64
-	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
-		if i.Penalty > 100 {
-			i.Penalty = 100
-		}
-		xs = append(xs, float64(100-i.Penalty))
-		return true
-	})
-	m, sd := getMeanSD(&xs)
-	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
-		if sd != 0 {
-			i.Score = ((10 * (float64(100-i.Penalty) - m) / sd) + 50)
-		} else {
-			i.Score = 50.0
-		}
-		i.ValidScore = true
-		return true
-	})
-}
-
-func calcFlowScore() {
-	var xs []float64
-	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
-		if f.Penalty > 100 {
-			f.Penalty = 100
-		}
-		xs = append(xs, float64(100-f.Penalty))
-		return true
-	})
-	m, sd := getMeanSD(&xs)
-	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
-		if sd != 0 {
-			f.Score = ((10 * (float64(100-f.Penalty) - m) / sd) + 50)
-		} else {
-			f.Score = 50.0
-		}
-		f.ValidScore = true
-		return true
-	})
-}
-
-func calcUserScore() {
-	var xs []float64
-	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
-		if u.Penalty > 100 {
-			u.Penalty = 100
-		}
-		xs = append(xs, float64(100-u.Penalty))
-		return true
-	})
-	m, sd := getMeanSD(&xs)
-	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
-		if sd != 0 {
-			u.Score = ((10 * (float64(100-u.Penalty) - m) / sd) + 50)
-		} else {
-			u.Score = 50.0
-		}
-		u.ValidScore = true
-		return true
-	})
-}
-
-func calcServerScore() {
-	var xs []float64
-	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
-		if s.Penalty > 100 {
-			s.Penalty = 100
-		}
-		xs = append(xs, float64(100-s.Penalty))
-		return true
-	})
-	m, sd := getMeanSD(&xs)
-	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
-		if sd != 0 {
-			s.Score = ((10 * (float64(100-s.Penalty) - m) / sd) + 50)
-		} else {
-			s.Score = 50.0
-		}
-		s.ValidScore = true
-		return true
-	})
-}
-
-func calcRADIUSFlowScore() {
-	var xs []float64
-	datastore.ForEachRADIUSFlows(func(e *datastore.RADIUSFlowEnt) bool {
-		if e.Penalty > 100 {
-			e.Penalty = 100
-		}
-		xs = append(xs, float64(100-e.Penalty))
-		return true
-	})
-	m, sd := getMeanSD(&xs)
-	datastore.ForEachRADIUSFlows(func(e *datastore.RADIUSFlowEnt) bool {
-		if sd != 0 {
-			e.Score = ((10 * (float64(100-e.Penalty) - m) / sd) + 50)
-		} else {
-			e.Score = 50.0
-		}
-		e.ValidScore = true
-		return true
-	})
-}
-
-func calcTLSFlowScore() {
-	var xs []float64
-	datastore.ForEachTLSFlows(func(e *datastore.TLSFlowEnt) bool {
-		if e.Penalty > 100 {
-			e.Penalty = 100
-		}
-		xs = append(xs, float64(100-e.Penalty))
-		return true
-	})
-	m, sd := getMeanSD(&xs)
-	datastore.ForEachTLSFlows(func(e *datastore.TLSFlowEnt) bool {
-		if sd != 0 {
-			e.Score = ((10 * (float64(100-e.Penalty) - m) / sd) + 50)
-		} else {
-			e.Score = 50.0
-		}
-		e.ValidScore = true
-		return true
-	})
-}
-
-func calcCertScore() {
-	var xs []float64
-	datastore.ForEachCerts(func(e *datastore.CertEnt) bool {
-		if e.Penalty > 100 {
-			e.Penalty = 100
-		}
-		xs = append(xs, float64(100-e.Penalty))
-		return true
-	})
-	m, sd := getMeanSD(&xs)
-	datastore.ForEachCerts(func(e *datastore.CertEnt) bool {
-		if sd != 0 {
-			e.Score = ((10 * (float64(100-e.Penalty) - m) / sd) + 50)
-		} else {
-			e.Score = 50.0
-		}
-		return true
-	})
 }
 
 func getMeanSD(xs *[]float64) (float64, float64) {

@@ -379,3 +379,101 @@ func checkWinTask(h string, m map[string]string) {
 		LastTime:  lt,
 	})
 }
+
+func checkOldWinEventID(delOld int64) {
+	ids := []string{}
+	datastore.ForEachWinEventID(func(e *datastore.WinEventIDEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("winEventID", ids)
+		log.Printf("delete winEventID=%d", len(ids))
+	}
+}
+
+func checkOldWinLogon(delOld int64) {
+	ids := []string{}
+	datastore.ForEachWinLogon(func(e *datastore.WinLogonEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("winLogon", ids)
+		log.Printf("delete winLogon=%d", len(ids))
+	}
+}
+
+func checkOldWinAccount(delOld int64) {
+	ids := []string{}
+	datastore.ForEachWinAccount(func(e *datastore.WinAccountEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("winAccount", ids)
+		log.Printf("delete winAccount=%d", len(ids))
+	}
+}
+
+func checkOldWinKerberos(delOld int64) {
+	ids := []string{}
+	datastore.ForEachWinKerberos(func(e *datastore.WinKerberosEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("winKerberos", ids)
+		log.Printf("delete winKerberos=%d", len(ids))
+	}
+}
+
+func checkOldWinPrivilege(delOld int64) {
+	ids := []string{}
+	datastore.ForEachWinPrivilege(func(e *datastore.WinPrivilegeEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("winPrivilege", ids)
+		log.Printf("delete winPrivilege=%d", len(ids))
+	}
+}
+
+func checkOldWinProcess(delOld int64) {
+	ids := []string{}
+	datastore.ForEachWinProcess(func(e *datastore.WinProcessEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("winProcess", ids)
+		log.Printf("delete winProcess=%d", len(ids))
+	}
+}
+
+func checkOldWinTask(delOld int64) {
+	ids := []string{}
+	datastore.ForEachWinTask(func(e *datastore.WinTaskEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("winTask", ids)
+		log.Printf("delete winTask=%d", len(ids))
+	}
+}

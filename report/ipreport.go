@@ -1,6 +1,7 @@
 package report
 
 import (
+	"log"
 	"net"
 	"strings"
 	"time"
@@ -115,4 +116,41 @@ func getMACFromIPv6Addr(s string) string {
 		return normMACAddr(mac.String())
 	}
 	return ""
+}
+
+func checkOldIPReport(safeOld, delOld int64) {
+	ids := []string{}
+	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+		if i.LastTime < safeOld {
+			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
+				ids = append(ids, i.IP)
+			}
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("ips", ids)
+		log.Printf("report delete ip=%d", len(ids))
+	}
+}
+
+func calcIPReportScore() {
+	var xs []float64
+	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+		if i.Penalty > 100 {
+			i.Penalty = 100
+		}
+		xs = append(xs, float64(100-i.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+		if sd != 0 {
+			i.Score = ((10 * (float64(100-i.Penalty) - m) / sd) + 50)
+		} else {
+			i.Score = 50.0
+		}
+		i.ValidScore = true
+		return true
+	})
 }

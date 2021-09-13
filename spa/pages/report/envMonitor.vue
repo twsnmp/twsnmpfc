@@ -320,11 +320,11 @@ export default {
     }
     this.envMonitor.forEach((e) => {
       e.First = this.$timeFormat(
-        new Date(e.FirstTime * 1000),
+        new Date(e.FirstTime / (1000 * 1000)),
         '{MM}/{dd} {HH}:{mm}:{ss}'
       )
       e.Last = this.$timeFormat(
-        new Date(e.LastTime * 1000),
+        new Date(e.LastTime / (1000 * 1000)),
         '{MM}/{dd} {HH}:{mm}:{ss}'
       )
       e.DataCount = e.EnvData.length
