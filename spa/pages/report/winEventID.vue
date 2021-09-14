@@ -64,6 +64,24 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openWinEventID3DChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>Event ID別3Dグラフ</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="eventids"
           type="csv"
@@ -176,6 +194,21 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="winEventIDDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">Windows Event ID 3Dグラフ</span>
+        </v-card-title>
+        <div id="winEventID3DChart" style="width: 1000px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="winEventIDDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -226,7 +259,7 @@ export default {
           width: '12%',
           filter: (value) => {
             if (!this.conf.eventID) return true
-            return value.includes(this.conf.eventID)
+            return value.toString(10).includes(this.conf.eventID)
           },
         },
         { text: '回数', value: 'Count', width: '10%' },
@@ -238,6 +271,7 @@ export default {
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
+      winEventIDDialog: false,
       conf: {
         level: '',
         computer: '',
@@ -311,6 +345,16 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    openWinEventID3DChart() {
+      this.winEventIDDialog = true
+      this.$nextTick(() => {
+        this.$showWinEventID3DChart(
+          'winEventID3DChart',
+          this.eventids,
+          this.conf
+        )
+      })
     },
   },
 }

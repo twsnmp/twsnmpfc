@@ -45,6 +45,7 @@ export default {
     '@/plugins/echarts/syslog.js',
     '@/plugins/echarts/twpcap.js',
     '@/plugins/echarts/sensor.js',
+    '@/plugins/echarts/winlog.js',
     '@/plugins/brain.js',
   ],
 
