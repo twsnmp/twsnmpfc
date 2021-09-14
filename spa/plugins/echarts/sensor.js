@@ -572,11 +572,26 @@ const showSensorProcChart = (div, monitor) => {
   chart.resize()
 }
 
-const showRSSITime3DChart = (div, wifi, list) => {
+const showRSSITime3DChart = (div, wifi, list, filter) => {
   const data = []
   const cat = []
   list.forEach((i) => {
     if (!i.RSSI || i.RSSI.length < 1) {
+      return
+    }
+    if (filter.address && !i.Address.includes(filter.address)) {
+      return
+    }
+    if (filter.addressType && !i.AddressType.includes(filter.addressType)) {
+      return
+    }
+    if (filter.name && !i.Name.includes(filter.name)) {
+      return
+    }
+    if (filter.host && !i.Host.includes(filter.host)) {
+      return
+    }
+    if (filter.vendor && !i.Vendor.includes(filter.vendor)) {
       return
     }
     i.RSSI.forEach((e) => {
@@ -719,12 +734,36 @@ const showRSSITime3DChart = (div, wifi, list) => {
   chart.resize()
 }
 
-const showRSSILoc3DChart = (div, wifi, list) => {
+const showRSSILoc3DChart = (div, wifi, list, filter) => {
   const data = []
   const mapx = new Map()
   const mapy = new Map()
   list.forEach((i) => {
     if (!i.RSSI || i.RSSI.length < 1) {
+      return
+    }
+    if (wifi) {
+      if (filter.bssid && !i.BSSID.includes(filter.bssid)) {
+        return
+      }
+      if (filter.ssid && !i.SSID.includes(filter.ssid)) {
+        return
+      }
+    } else {
+      if (filter.address && !i.Address.includes(filter.address)) {
+        return
+      }
+      if (filter.addressType && !i.AddressType.includes(filter.addressType)) {
+        return
+      }
+      if (filter.name && !i.Name.includes(filter.name)) {
+        return
+      }
+      if (filter.vendor && !i.Vendor.includes(filter.vendor)) {
+        return
+      }
+    }
+    if (filter.host && !i.Host.includes(filter.host)) {
       return
     }
     i.RSSI.forEach((e) => {

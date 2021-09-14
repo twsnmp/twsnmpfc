@@ -38,6 +38,10 @@
               </v-text-field>
             </td>
             <td>
+              <v-text-field v-model="conf.addressType" label="AType">
+              </v-text-field>
+            </td>
+            <td>
               <v-text-field v-model="conf.name" label="Name"></v-text-field>
             </td>
             <td>
@@ -252,9 +256,18 @@ export default {
           },
         },
         {
+          text: 'アドレスタイプ',
+          value: 'AddressType',
+          width: '12%',
+          filter: (value) => {
+            if (!this.conf.addressType) return true
+            return value.includes(this.conf.addressType)
+          },
+        },
+        {
           text: '名前',
           value: 'Name',
-          width: '15%',
+          width: '8%',
           filter: (value) => {
             if (!this.conf.name) return true
             return value.includes(this.conf.name)
@@ -263,7 +276,7 @@ export default {
         {
           text: '送信元ホスト',
           value: 'Host',
-          width: '15%',
+          width: '10%',
           filter: (value) => {
             if (!this.conf.host) return true
             return value.includes(this.conf.host)
@@ -290,6 +303,7 @@ export default {
       conf: {
         host: '',
         address: '',
+        addressType: '',
         vendor: '',
         name: '',
         sortBy: 'LastRSSI',
@@ -340,7 +354,7 @@ export default {
   methods: {
     doDelete() {
       this.$axios
-        .delete('/api/report/BleDevice/' + this.selected.ID)
+        .delete('/api/report/BlueDevice/' + this.selected.ID)
         .then((r) => {
           this.$fetch()
         })
@@ -361,13 +375,23 @@ export default {
     openRSSITime3DChart() {
       this.rssiTime3DDialog = true
       this.$nextTick(() => {
-        this.$showRSSITime3DChart('rssiTime3DChart', false, this.blueDevice)
+        this.$showRSSITime3DChart(
+          'rssiTime3DChart',
+          false,
+          this.blueDevice,
+          this.conf
+        )
       })
     },
     openRSSILoc3DChart() {
       this.rssiLoc3DDialog = true
       this.$nextTick(() => {
-        this.$showRSSILoc3DChart('rssiLoc3DChart', false, this.blueDevice)
+        this.$showRSSILoc3DChart(
+          'rssiLoc3DChart',
+          false,
+          this.blueDevice,
+          this.conf
+        )
       })
     },
   },

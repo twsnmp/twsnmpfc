@@ -11,6 +11,7 @@ export const state = () => ({
   blueDevice: {
     host: '',
     address: '',
+    addressType: '',
     vendor: '',
     name: '',
     sortBy: 'LastRSSI',

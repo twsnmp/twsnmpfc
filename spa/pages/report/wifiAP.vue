@@ -148,7 +148,7 @@
                 </td>
               </tr>
               <tr>
-                <td>センサー</td>
+                <td>送信元ホスト</td>
                 <td>{{ selected.Host }}</td>
               </tr>
               <tr>
@@ -343,13 +343,18 @@ export default {
     openRSSITime3DChart() {
       this.rssiTime3DDialog = true
       this.$nextTick(() => {
-        this.$showRSSITime3DChart('rssiTime3DChart', true, this.wifiAP)
+        this.$showRSSITime3DChart(
+          'rssiTime3DChart',
+          true,
+          this.wifiAP,
+          this.conf
+        )
       })
     },
     openRSSILoc3DChart() {
       this.rssiLoc3DDialog = true
       this.$nextTick(() => {
-        this.$showRSSILoc3DChart('rssiLoc3DChart', true, this.wifiAP)
+        this.$showRSSILoc3DChart('rssiLoc3DChart', true, this.wifiAP, this.conf)
       })
     },
   },
