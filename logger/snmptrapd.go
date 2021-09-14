@@ -80,9 +80,9 @@ func snmptrapd(stopCh chan bool) {
 			val := ""
 			switch vb.Type {
 			case gosnmp.ObjectIdentifier:
-				val = datastore.MIBDB.OIDToName(vb.Value.(string))
+				val = datastore.MIBDB.OIDToName(getSnmpString(vb.Value))
 			case gosnmp.OctetString:
-				val = vb.Value.(string)
+				val = getSnmpString(vb.Value)
 			default:
 				val = fmt.Sprintf("%d", gosnmp.ToBigInt(vb.Value).Uint64())
 			}
@@ -107,4 +107,14 @@ func snmptrapd(stopCh chan bool) {
 	}()
 	<-stopCh
 	log.Printf("stop snmp trapd")
+}
+
+func getSnmpString(i interface{}) string {
+	switch v := i.(type) {
+	case string:
+		return v
+	case []uint8:
+		return string(v)
+	}
+	return fmt.Sprintf("%v", i)
 }
