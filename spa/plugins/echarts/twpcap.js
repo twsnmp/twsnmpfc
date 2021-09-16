@@ -272,7 +272,7 @@ const showTLSFlowsChart = (div, tls, filter) => {
 const getScoreColor = (s) => {
   if (s > 66) {
     return '#1f78b4'
-  } else if (s > 50) {
+  } else if (s >= 50) {
     return '#a6cee3'
   } else if (s > 42) {
     return '#dfdf22'

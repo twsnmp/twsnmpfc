@@ -221,6 +221,8 @@ func calcScore() {
 	calcTLSFlowScore()
 	calcRADIUSFlowScore()
 	calcCertScore()
+	calcWinLogonScore()
+	calcWinKerberosScore()
 }
 
 func getMeanSD(xs *[]float64) (float64, float64) {

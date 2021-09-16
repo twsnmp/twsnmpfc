@@ -19,12 +19,19 @@
         :sort-desc="conf.sortDesc"
         :options.sync="options"
       >
+        <template #[`item.Score`]="{ item }">
+          <v-icon :color="$getScoreColor(item.Score)">{{
+            $getScoreIconName(item.Score)
+          }}</v-icon>
+          {{ item.Score.toFixed(1) }}
+        </template>
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
         <template #[`body.append`]>
           <tr>
+            <td></td>
             <td>
               <v-text-field v-model="conf.target" label="Target">
               </v-text-field>
@@ -49,6 +56,32 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openForceChart">
+              <v-list-item-icon>
+                <v-icon>mdi-lan-connect</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>力学モデル</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openScatter3DChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>３D集計</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="kerberos"
           type="csv"
@@ -141,6 +174,14 @@
                 <td>{{ selected.Failed }}</td>
               </tr>
               <tr>
+                <td>信用スコア</td>
+                <td>{{ selected.Score }}</td>
+              </tr>
+              <tr>
+                <td>ペナリティー</td>
+                <td>{{ selected.Penalty }}</td>
+              </tr>
+              <tr>
                 <td>初回日時</td>
                 <td>{{ selected.First }}</td>
               </tr>
@@ -160,6 +201,36 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="forceChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">Kerberosチケット発行状況（力学モデル）</span>
+        </v-card-title>
+        <div id="forceChart" style="width: 1000px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="forceChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="scatter3DChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">Kerberosチケット発行状況（3D集計）</span>
+        </v-card-title>
+        <div id="scatter3DChart" style="width: 1000px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="scatter3DChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -168,10 +239,11 @@ export default {
   data() {
     return {
       headers: [
+        { text: '信用スコア', value: 'Score', width: '8%' },
         {
           text: '対象',
           value: 'Target',
-          width: '15%',
+          width: '16%',
           filter: (value) => {
             if (!this.conf.target) return true
             return value.includes(this.conf.target)
@@ -180,7 +252,7 @@ export default {
         {
           text: 'コンピュータ',
           value: 'Computer',
-          width: '12%',
+          width: '14%',
           filter: (value) => {
             if (!this.conf.computer) return true
             return value.includes(this.conf.computer)
@@ -198,24 +270,24 @@ export default {
         {
           text: 'サービス',
           value: 'Service',
-          width: '13%',
+          width: '12%',
           filter: (value) => {
             if (!this.conf.service) return true
             return value.includes(this.conf.service)
           },
         },
         {
-          text: 'チケット種別',
+          text: '種別',
           value: 'TicketType',
-          width: '10%',
+          width: '8%',
           filter: (value) => {
             if (!this.conf.ticketType) return true
             return value.includes(this.conf.ticketType)
           },
         },
-        { text: '回数', value: 'Count', width: '8%' },
-        { text: '失敗', value: 'Failed', width: '8%' },
-        { text: '最終', value: 'Last', width: '14%' },
+        { text: '回数', value: 'Count', width: '5%' },
+        { text: '失敗', value: 'Failed', width: '5%' },
+        { text: '最終', value: 'Last', width: '12%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
       kerberos: [],
@@ -223,6 +295,8 @@ export default {
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
+      scatter3DChartDialog: false,
+      forceChartDialog: false,
       conf: {
         target: '',
         computer: '',
@@ -290,6 +364,22 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    openForceChart() {
+      this.forceChartDialog = true
+      this.$nextTick(() => {
+        this.$showWinKerberosForceChart('forceChart', this.kerberos, this.conf)
+      })
+    },
+    openScatter3DChart() {
+      this.scatter3DChartDialog = true
+      this.$nextTick(() => {
+        this.$showWinKerberosScatter3DChart(
+          'scatter3DChart',
+          this.kerberos,
+          this.conf
+        )
+      })
     },
   },
 }

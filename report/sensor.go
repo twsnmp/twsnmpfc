@@ -8,11 +8,6 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-var (
-	statsCount   = 0
-	monitorCount = 0
-)
-
 func UpdateFlowSensor(h, t string, r int) {
 	id := fmt.Sprintf("%s:%s:", h, t)
 	now := time.Now().UnixNano()
@@ -35,7 +30,6 @@ func UpdateFlowSensor(h, t string, r int) {
 }
 
 func checkStats(h, t string, m map[string]string) {
-	statsCount++
 	now := time.Now().UnixNano()
 	param := m["param"]
 	count := getNumberFromTWLog(m["count"])
@@ -90,7 +84,6 @@ func checkStats(h, t string, m map[string]string) {
 */
 
 func checkMonitor(h, t string, m map[string]string) {
-	monitorCount++
 	now := time.Now().UnixNano()
 	param := m["param"]
 	cpu := getFloatFromTWLog(m["cpu"])

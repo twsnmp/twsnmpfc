@@ -9,17 +9,6 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-var (
-	etherTypeCount = 0
-	ipToMacCount   = 0
-	ntpCount       = 0
-	dhcpCount      = 0
-	dnsCount       = 0
-	radiusCount    = 0
-	tlsCount       = 0
-	otherCount     = 0
-)
-
 func ReportTWPCAP(l map[string]interface{}) {
 	twpcapReportCh <- l
 }
@@ -66,12 +55,10 @@ func checkTWPCAPReport(l map[string]interface{}) {
 		checkMonitor(h, "twpcap", twpcapMap)
 	default:
 		log.Printf("twpcap unkown type=%v", t)
-		otherCount++
 	}
 }
 
 func checkIPTOMACReport(twpcap map[string]string) {
-	ipToMacCount++
 	mac, ok := twpcap["mac"]
 	if !ok {
 		return
@@ -93,7 +80,6 @@ func checkIPTOMACReport(twpcap map[string]string) {
 
 // Ethernet type report
 func checkEtherTypeReport(h string, twpcap map[string]string) {
-	etherTypeCount++
 	now := time.Now().UnixNano()
 	for k, v := range twpcap {
 		if strings.HasPrefix(k, "0x") {
@@ -145,7 +131,6 @@ func getEtherTypeName(t string) string {
 }
 
 func checkDNSReport(h string, twpcap map[string]string) {
-	dnsCount++
 	t, ok := twpcap["DNSType"]
 	if !ok {
 		return
@@ -181,7 +166,6 @@ func checkDNSReport(h string, twpcap map[string]string) {
 }
 
 func checkDHCPReport(twpcap map[string]string) {
-	dhcpCount++
 	sv, ok := twpcap["sv"]
 	if !ok {
 		return
@@ -200,7 +184,6 @@ func checkDHCPReport(twpcap map[string]string) {
 }
 
 func checkNTPReport(twpcap map[string]string) {
-	ntpCount++
 	sv, ok := twpcap["sv"]
 	if !ok {
 		return
@@ -220,7 +203,6 @@ func checkNTPReport(twpcap map[string]string) {
 }
 
 func checkRADIUSReport(twpcap map[string]string) {
-	radiusCount++
 	sv, ok := twpcap["sv"]
 	if !ok {
 		return
@@ -263,7 +245,6 @@ func checkRADIUSReport(twpcap map[string]string) {
 }
 
 func checkTLSFlowReport(twpcap map[string]string) {
-	tlsCount++
 	sv, ok := twpcap["sv"]
 	if !ok {
 		return

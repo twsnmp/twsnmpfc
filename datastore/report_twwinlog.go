@@ -53,6 +53,9 @@ type WinLogonEnt struct {
 	Failed     int64
 	LogonType  map[string]int
 	FailedCode map[string]int
+	Score      float64
+	ValidScore bool
+	Penalty    int64
 	FirstTime  int64
 	LastTime   int64
 }
@@ -120,6 +123,9 @@ type WinKerberosEnt struct {
 	Failed     int64
 	LastCert   string
 	LastStatus string
+	Score      float64
+	ValidScore bool
+	Penalty    int64
 	FirstTime  int64
 	LastTime   int64
 }

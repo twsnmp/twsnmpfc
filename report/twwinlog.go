@@ -8,17 +8,6 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-var (
-	winEventIDCount   = 0
-	winLogonCount     = 0
-	winAccountCount   = 0
-	winKerberosCount  = 0
-	winPrivilegeCount = 0
-	winProcessCount   = 0
-	winTaskCount      = 0
-	winOtherCount     = 0
-)
-
 func ReportTwWinLog(l map[string]interface{}) {
 	twWinLogCh <- l
 }
@@ -65,13 +54,11 @@ func checkTWWinLogReport(l map[string]interface{}) {
 		checkWinTask(h, m)
 	default:
 		log.Printf("twwinlog unkown type=%s", t)
-		winOtherCount++
 	}
 }
 
 // type=EventID,computer=%s,channel=%s,provider=%s,eventID=%d,total=%d,count=%d,ft=%s,lt=%s
 func checkWinEventID(h string, m map[string]string, l map[string]interface{}) {
-	winEventIDCount++
 	eventID := getNumberFromTWLog(m["eventID"])
 	if eventID < 1 {
 		return
@@ -128,7 +115,6 @@ func checkWinEventID(h string, m map[string]string, l map[string]interface{}) {
 // type=Logoff,subject=@,target=myamai@DESKTOP-T6L1D1U,computer=DESKTOP-T6L1D1U,ip=,logonType=Network,time=2021-08-19T04:46:10+09:00
 
 func checkWinLogon(m map[string]string) {
-	winLogonCount++
 	tp, ok := m["type"]
 	if !ok {
 		return
@@ -173,6 +159,7 @@ func checkWinLogon(m map[string]string) {
 				e.LogonType[logonType]++
 			}
 		}
+		setWinLogonPenalty(e)
 		return
 	}
 	e = &datastore.WinLogonEnt{
@@ -197,12 +184,42 @@ func checkWinLogon(m map[string]string) {
 		}
 		e.Logon++
 	}
+	setWinLogonPenalty(e)
 	datastore.AddWinLogon(e)
+}
+
+func setWinLogonPenalty(e *datastore.WinLogonEnt) {
+	if e.Failed > 0 {
+		e.Penalty = 1
+	}
+	if e.Count > 0 {
+		e.Penalty += (10 * e.Failed) / e.Count
+	}
+}
+
+func calcWinLogonScore() {
+	var xs []float64
+	datastore.ForEachWinLogon(func(e *datastore.WinLogonEnt) bool {
+		if e.Penalty > 100 {
+			e.Penalty = 100
+		}
+		xs = append(xs, float64(100-e.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachWinLogon(func(e *datastore.WinLogonEnt) bool {
+		if sd != 0 {
+			e.Score = ((10 * (float64(100-e.Penalty) - m) / sd) + 50)
+		} else {
+			e.Score = 50.0
+		}
+		e.ValidScore = true
+		return true
+	})
 }
 
 // type=Account,subject=%s,target=%s,computer=%s,count=%d,edit=%d,password=%d,other=%d,ft=%s,lt=%s",
 func checkWinAccount(h string, m map[string]string) {
-	winAccountCount++
 	target, ok := m["target"]
 	if !ok {
 		return
@@ -241,7 +258,6 @@ func checkWinAccount(h string, m map[string]string) {
 
 // type=Kerberos,target=%s,computer=%s,ip=%s,service=%s,ticketType=%s,count=%d,failed=%d,status=%s,cert=%s,ft=%s,lt=%s
 func checkWinKerberos(h string, m map[string]string) {
-	winKerberosCount++
 	target, ok := m["target"]
 	if !ok {
 		return
@@ -258,9 +274,10 @@ func checkWinKerberos(h string, m map[string]string) {
 		e.LastTime = lt
 		e.Count += count
 		e.Failed += failed
+		setWinKerberos(e)
 		return
 	}
-	datastore.AddWinKerberos(&datastore.WinKerberosEnt{
+	e = &datastore.WinKerberosEnt{
 		ID:         id,
 		Target:     target,
 		Computer:   m["computer"],
@@ -271,12 +288,43 @@ func checkWinKerberos(h string, m map[string]string) {
 		Failed:     failed,
 		FirstTime:  getTimeFromTWLog(m["ft"]),
 		LastTime:   lt,
+	}
+	setWinKerberos(e)
+	datastore.AddWinKerberos(e)
+}
+
+func setWinKerberos(e *datastore.WinKerberosEnt) {
+	if e.Failed > 0 {
+		e.Penalty = 1
+	}
+	if e.Count > 0 {
+		e.Penalty += (10 * e.Failed) / e.Count
+	}
+}
+
+func calcWinKerberosScore() {
+	var xs []float64
+	datastore.ForEachWinKerberos(func(e *datastore.WinKerberosEnt) bool {
+		if e.Penalty > 100 {
+			e.Penalty = 100
+		}
+		xs = append(xs, float64(100-e.Penalty))
+		return true
+	})
+	m, sd := getMeanSD(&xs)
+	datastore.ForEachWinKerberos(func(e *datastore.WinKerberosEnt) bool {
+		if sd != 0 {
+			e.Score = ((10 * (float64(100-e.Penalty) - m) / sd) + 50)
+		} else {
+			e.Score = 50.0
+		}
+		e.ValidScore = true
+		return true
 	})
 }
 
 // type=Privilege,subject=%s,computer=%s,count=%d,ft=%s,lt=%s
 func checkWinPrivilege(h string, m map[string]string) {
-	winPrivilegeCount++
 	subject, ok := m["subject"]
 	if !ok {
 		return
@@ -305,7 +353,6 @@ func checkWinPrivilege(h string, m map[string]string) {
 
 // type=Process,computer=%s,process=%s,count=%d,start=%d,exit=%d,subject=%s,status=%s,parent=%s,ft=%s,lt=%s",
 func checkWinProcess(h string, m map[string]string) {
-	winProcessCount++
 	process, ok := m["process"]
 	if !ok {
 		return
@@ -352,7 +399,6 @@ func checkWinProcess(h string, m map[string]string) {
 
 // type=Task,subject=%s,taskname=%s,computer=%s,count=%d,ft=%s,lt=%s
 func checkWinTask(h string, m map[string]string) {
-	winTaskCount++
 	taskname, ok := m["taskname"]
 	if !ok {
 		return

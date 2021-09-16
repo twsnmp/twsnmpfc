@@ -695,11 +695,7 @@ export default {
     openFlowsChart() {
       this.flowsChartDialog = true
       this.$nextTick(() => {
-        this.over = this.over = this.$showTLSFlowsChart(
-          'flowsChart',
-          this.tls,
-          this.filter
-        )
+        this.over = this.$showTLSFlowsChart('flowsChart', this.tls, this.filter)
       })
     },
     openFlows3DChart() {
