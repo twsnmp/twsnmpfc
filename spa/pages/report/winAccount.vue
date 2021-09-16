@@ -42,6 +42,24 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openForceChart">
+              <v-list-item-icon>
+                <v-icon>mdi-lan-connect</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>関係グラフ</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="account"
           type="csv"
@@ -153,6 +171,21 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="forceChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">アカウント操作関係グラフ</span>
+        </v-card-title>
+        <div id="forceChart" style="width: 1000px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="forceChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -200,6 +233,7 @@ export default {
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
+      forceChartDialog: false,
       conf: {
         subject: '',
         target: '',
@@ -265,6 +299,12 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    openForceChart() {
+      this.forceChartDialog = true
+      this.$nextTick(() => {
+        this.$showWinAccountForceChart('forceChart', this.account, this.conf)
+      })
     },
   },
 }
