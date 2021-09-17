@@ -42,6 +42,24 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openScatter3DChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>３D集計</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="privilege"
           type="csv"
@@ -137,6 +155,21 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="scatter3DChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">特権アクセス（3D集計）</span>
+        </v-card-title>
+        <div id="scatter3DChart" style="width: 1000px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="scatter3DChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -172,6 +205,7 @@ export default {
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
+      scatter3DChartDialog: false,
       conf: {
         subject: '',
         computer: '',
@@ -236,6 +270,16 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    openScatter3DChart() {
+      this.scatter3DChartDialog = true
+      this.$nextTick(() => {
+        this.$showWinPrivilegeScatter3DChart(
+          'scatter3DChart',
+          this.privilege,
+          this.conf
+        )
+      })
     },
   },
 }

@@ -55,7 +55,15 @@
                 <v-icon>mdi-lan-connect</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>関係グラフ</v-list-item-title>
+                <v-list-item-title>力学モデル</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openScatter3DChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>３D集計</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -174,12 +182,27 @@
     <v-dialog v-model="forceChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
-          <span class="headline">アカウント操作関係グラフ</span>
+          <span class="headline">アカウント（力学モデル）</span>
         </v-card-title>
         <div id="forceChart" style="width: 1000px; height: 700px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="forceChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="scatter3DChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">アカウント（3D集計）</span>
+        </v-card-title>
+        <div id="scatter3DChart" style="width: 1000px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="scatter3DChartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -234,6 +257,7 @@ export default {
       deleteError: false,
       infoDialog: false,
       forceChartDialog: false,
+      scatter3DChartDialog: false,
       conf: {
         subject: '',
         target: '',
@@ -299,6 +323,16 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    openScatter3DChart() {
+      this.scatter3DChartDialog = true
+      this.$nextTick(() => {
+        this.$showWinAccountScatter3DChart(
+          'scatter3DChart',
+          this.account,
+          this.conf
+        )
+      })
     },
     openForceChart() {
       this.forceChartDialog = true

@@ -45,64 +45,9 @@ const showWinEventID3DChart = (div, list, filter) => {
         color: ['#e31a1c', '#dfdf22', '#1f78b4'],
       },
     },
-    xAxis3D: {
-      type: 'category',
-      name: 'Computer',
-      data: catx,
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#eee',
-        fontSize: 10,
-        margin: 2,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
-    yAxis3D: {
-      type: 'category',
-      name: 'Provider+EventID',
-      data: caty,
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#ccc',
-        fontSize: 8,
-        margin: 2,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
-    zAxis3D: {
-      type: 'value',
-      name: 'Count',
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#eee',
-        fontSize: 8,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
+    xAxis3D: getAxisOption('category', 'Computer', catx),
+    yAxis3D: getAxisOption('category', 'EventID', caty),
+    zAxis3D: getAxisOption('value', 'Count', []),
     series: [
       {
         name: 'Windows EventID',
@@ -175,64 +120,9 @@ const showWinLogonScatter3DChart = (div, list, filter) => {
         color: ['#e31a1c', '#fb9a99', '#dfdf22', '#a6cee3', '#1f78b4'],
       },
     },
-    xAxis3D: {
-      type: 'category',
-      name: 'From',
-      data: catx,
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#eee',
-        fontSize: 10,
-        margin: 2,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
-    yAxis3D: {
-      type: 'category',
-      name: 'Target',
-      data: caty,
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#ccc',
-        fontSize: 8,
-        margin: 2,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
-    zAxis3D: {
-      type: 'value',
-      name: 'Count',
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#eee',
-        fontSize: 8,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
+    xAxis3D: getAxisOption('category', 'From', catx),
+    yAxis3D: getAxisOption('category', 'Target', caty),
+    zAxis3D: getAxisOption('value', 'Count', []),
     series: [
       {
         name: 'Windows Logon',
@@ -362,64 +252,9 @@ const showWinKerberosScatter3DChart = (div, list, filter) => {
         color: ['#e31a1c', '#fb9a99', '#dfdf22', '#a6cee3', '#1f78b4'],
       },
     },
-    xAxis3D: {
-      type: 'category',
-      name: 'From',
-      data: catx,
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#eee',
-        fontSize: 10,
-        margin: 2,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
-    yAxis3D: {
-      type: 'category',
-      name: 'Target',
-      data: caty,
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#ccc',
-        fontSize: 8,
-        margin: 2,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
-    zAxis3D: {
-      type: 'value',
-      name: 'Count',
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#eee',
-        fontSize: 8,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
+    xAxis3D: getAxisOption('category', 'From', catx),
+    yAxis3D: getAxisOption('category', 'Target', caty),
+    zAxis3D: getAxisOption('value', 'Count', []),
     series: [
       {
         name: 'Windows Kerberos',
@@ -441,6 +276,92 @@ const showWinKerberosScatter3DChart = (div, list, filter) => {
   chart.setOption(getScatter3DChartBaseOption(div))
   chart.setOption(options)
   chart.resize()
+}
+
+const showWinPrivilegeScatter3DChart = (div, list, filter) => {
+  const data = []
+  const mapx = new Map()
+  const mapy = new Map()
+  const number = []
+  list.forEach((e) => {
+    if (filter.computer && !e.Computer.includes(filter.computer)) {
+      return
+    }
+    if (filter.subject && !e.Subject.includes(filter.subject)) {
+      return
+    }
+    number.push(e.Count)
+    data.push([e.Computer, e.Subject, e.Count])
+    mapx.set(e.Computer, true)
+    mapy.set(e.Subject, true)
+  })
+  const catx = Array.from(mapx.keys())
+  const caty = Array.from(mapy.keys())
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    visualMap: {
+      min: ecStat.statistics.min(number),
+      max: ecStat.statistics.max(number),
+      calculable: true,
+      realtime: false,
+      dimension: 2,
+      inRange: {
+        color: [
+          '#313695',
+          '#4575b4',
+          '#74add1',
+          '#abd9e9',
+          '#e0f3f8',
+          '#ffffbf',
+          '#fee090',
+          '#fdae61',
+          '#f46d43',
+          '#d73027',
+          '#a50026',
+        ],
+      },
+    },
+    xAxis3D: getAxisOption('category', 'Computer', catx),
+    yAxis3D: getAxisOption('category', 'Subject', caty),
+    zAxis3D: getAxisOption('value', 'Count', []),
+    series: [
+      {
+        name: 'Windows Privilege',
+        type: 'scatter3D',
+        dimensions: ['Computer', 'Subject', 'Count'],
+        data,
+      },
+    ],
+  }
+  chart.setOption(getScatter3DChartBaseOption(div))
+  chart.setOption(options)
+  chart.resize()
+}
+
+const getAxisOption = (type, name, categories) => {
+  return {
+    type,
+    name,
+    data: categories,
+    nameTextStyle: {
+      color: '#eee',
+      fontSize: 12,
+      margin: 2,
+    },
+    axisLabel: {
+      color: '#eee',
+      fontSize: 10,
+      margin: 2,
+    },
+    axisLine: {
+      lineStyle: {
+        color: '#ccc',
+      },
+    },
+  }
 }
 
 const getScatter3DChartBaseOption = (div) => {
@@ -472,57 +393,9 @@ const getScatter3DChartBaseOption = (div) => {
     visualMap: {
       show: false,
     },
-    xAxis3D: {
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#eee',
-        fontSize: 10,
-        margin: 2,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
-    yAxis3D: {
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#ccc',
-        fontSize: 8,
-        margin: 2,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
-    zAxis3D: {
-      type: 'value',
-      nameTextStyle: {
-        color: '#eee',
-        fontSize: 12,
-        margin: 2,
-      },
-      axisLabel: {
-        color: '#eee',
-        fontSize: 8,
-      },
-      axisLine: {
-        lineStyle: {
-          color: '#ccc',
-        },
-      },
-    },
+    xAxis3D: {},
+    yAxis3D: {},
+    zAxis3D: {},
     grid3D: {
       axisLine: {
         lineStyle: { color: '#eee' },
@@ -597,6 +470,72 @@ const showWinKerberosForceChart = (div, list, filter) => {
   chart.resize()
 }
 
+const showWinAccountScatter3DChart = (div, list, filter) => {
+  const data = []
+  const mapx = new Map()
+  const mapy = new Map()
+  const number = []
+  list.forEach((e) => {
+    if (filter.computer && !e.Computer.includes(filter.computer)) {
+      return
+    }
+    if (filter.target && !e.Target.includes(filter.target)) {
+      return
+    }
+    if (filter.subject && !e.Subject.includes(filter.subject)) {
+      return
+    }
+    number.push(e.Count)
+    data.push([e.Subject, e.Target, e.Count, e.Computer])
+    mapx.set(e.Subject, true)
+    mapy.set(e.Target, true)
+  })
+  const catx = Array.from(mapx.keys())
+  const caty = Array.from(mapy.keys())
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    visualMap: {
+      min: ecStat.statistics.min(number),
+      max: ecStat.statistics.max(number),
+      calculable: true,
+      realtime: false,
+      dimension: 2,
+      inRange: {
+        color: [
+          '#313695',
+          '#4575b4',
+          '#74add1',
+          '#abd9e9',
+          '#e0f3f8',
+          '#ffffbf',
+          '#fee090',
+          '#fdae61',
+          '#f46d43',
+          '#d73027',
+          '#a50026',
+        ],
+      },
+    },
+    xAxis3D: getAxisOption('category', 'Subject', catx),
+    yAxis3D: getAxisOption('category', 'Target', caty),
+    zAxis3D: getAxisOption('value', 'Count', []),
+    series: [
+      {
+        name: 'Windows Account',
+        type: 'scatter3D',
+        dimensions: ['Subject', 'Target', 'Count', 'Computer'],
+        data,
+      },
+    ],
+  }
+  chart.setOption(getScatter3DChartBaseOption(div))
+  chart.setOption(options)
+  chart.resize()
+}
+
 const showWinAccountForceChart = (div, list, filter) => {
   if (chart) {
     chart.dispose()
@@ -609,12 +548,6 @@ const showWinAccountForceChart = (div, list, filter) => {
   }
   const q = {}
   const number = []
-  list.forEach((e) => {
-    number.push(e.Count)
-  })
-  q.q1 = ecStat.statistics.quantile(number, 0.25)
-  q.q2 = ecStat.statistics.quantile(number, 0.5)
-  q.q3 = ecStat.statistics.quantile(number, 0.75)
   const nodes = {}
   list.forEach((e) => {
     if (filter.computer && !e.Computer.includes(filter.computer)) {
@@ -626,6 +559,7 @@ const showWinAccountForceChart = (div, list, filter) => {
     if (filter.subject && !e.Subject.includes(filter.subject)) {
       return
     }
+    number.push(e.Count)
     const s = e.Subject ? e.Subject : 'Unknown'
     const t = e.Target
     if (!nodes[s]) {
@@ -652,8 +586,367 @@ const showWinAccountForceChart = (div, list, filter) => {
       source: s,
       target: t,
       value: 'Count=' + e.Count + ' Edit=' + e.Edit + ' Passwd=' + e.Password,
+      count: e.Count,
       lineStyle: getLineStyle(e.Count, q),
     })
+  })
+  q.q1 = ecStat.statistics.quantile(number, 0.25)
+  q.q2 = ecStat.statistics.quantile(number, 0.5)
+  q.q3 = ecStat.statistics.quantile(number, 0.75)
+  option.series[0].links.forEach((l) => {
+    l.lineStyle = getLineStyle(l.count, q)
+  })
+  for (const k in nodes) {
+    option.series[0].data.push(nodes[k])
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
+const showWinProcessScatter3DChart = (div, list, mode, filter) => {
+  const data = []
+  const mapx = new Map()
+  const mapy = new Map()
+  const dimensions = [
+    'Computer',
+    'Process',
+    'Count',
+    'Subject',
+    'Parent',
+    'Status',
+  ]
+  switch (mode) {
+    case 'subject':
+      dimensions[0] = 'Subject'
+      dimensions[3] = 'Computer'
+      break
+    case 'parent':
+      dimensions[0] = 'Parent'
+      dimensions[3] = 'Computer'
+      dimensions[4] = 'Subject'
+      break
+  }
+  list.forEach((e) => {
+    if (filter.computer && !e.Computer.includes(filter.computer)) {
+      return
+    }
+    if (filter.process && !e.Process.includes(filter.process)) {
+      return
+    }
+    if (filter.subject && !e.LastSubject.includes(filter.subject)) {
+      return
+    }
+    const status = e.LastStatus === '0x0' ? 0 : 1
+    switch (mode) {
+      case 'subject':
+        data.push([
+          e.LastSubject,
+          e.Process,
+          e.Count,
+          e.LastStatus,
+          e.Computer,
+          e.LastParent,
+          status,
+        ])
+        mapx.set(e.LastSubject, true)
+        break
+      case 'parent':
+        data.push([
+          e.LastParent,
+          e.Process,
+          e.Count,
+          e.LastStatus,
+          e.Computer,
+          e.LastSubject,
+          status,
+        ])
+        mapx.set(e.LastParent, true)
+        break
+      default:
+        data.push([
+          e.Computer,
+          e.Process,
+          e.Count,
+          e.LastStatus,
+          e.LastSubject,
+          e.LastParent,
+          status,
+        ])
+        mapx.set(e.Computer, true)
+        break
+    }
+    mapy.set(e.Process, true)
+  })
+  const catx = Array.from(mapx.keys())
+  const caty = Array.from(mapy.keys())
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    visualMap: {
+      show: false,
+      min: 0,
+      max: 1,
+      realtime: false,
+      dimension: 6,
+      inRange: {
+        color: ['#4575b4', '#a50026'],
+      },
+    },
+    xAxis3D: getAxisOption('category', dimensions[0], catx),
+    yAxis3D: getAxisOption('category', 'Process', caty),
+    zAxis3D: getAxisOption('value', 'Count', []),
+    series: [
+      {
+        name: 'Windows Process',
+        type: 'scatter3D',
+        dimensions,
+        data,
+      },
+    ],
+  }
+  chart.setOption(getScatter3DChartBaseOption(div))
+  chart.setOption(options)
+  chart.resize()
+}
+
+const showWinProcessForceChart = (div, list, mode, filter) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const categories = [
+    { name: 'Computer' },
+    { name: 'Normal Process' },
+    { name: 'Failed Process' },
+  ]
+  switch (mode) {
+    case 'subject':
+      categories[0].name = 'Subject'
+      break
+    case 'parent':
+      categories[0].name = 'Parent'
+      break
+  }
+  const option = getForceChartOption(div, categories)
+  if (!list) {
+    return false
+  }
+  const q = {}
+  const number = []
+  const nodes = {}
+  list.forEach((e) => {
+    if (filter.computer && !e.Computer.includes(filter.computer)) {
+      return
+    }
+    if (filter.process && !e.Process.includes(filter.process)) {
+      return
+    }
+    if (filter.subject && !e.LastSubject.includes(filter.subject)) {
+      return
+    }
+    number.push(e.Count)
+    let s
+    let value
+    const t = e.Process
+    switch (mode) {
+      case 'subject':
+        s = e.LastSubject
+        value =
+          'Count=' +
+          e.Count +
+          ' Compuert=' +
+          e.Computer +
+          'Parent=' +
+          e.LastParent
+        break
+      case 'parent':
+        s = e.LastParent
+        value =
+          'Count=' +
+          e.Count +
+          ' Compuert=' +
+          e.Computer +
+          'Subject=' +
+          e.LastSubject
+        break
+      default:
+        s = e.Computer
+        value =
+          'Count=' +
+          e.Count +
+          ' Subject=' +
+          e.LastSubject +
+          'Parent=' +
+          e.LastParent
+    }
+    if (!nodes[s]) {
+      nodes[s] = {
+        name: s,
+        category: 0,
+        draggable: true,
+        label: {
+          show: false,
+        },
+      }
+    }
+    if (!nodes[t]) {
+      nodes[t] = {
+        name: t,
+        category: e.LastStatus === '0x0' ? 1 : 2,
+        draggable: true,
+        label: {
+          show: false,
+        },
+      }
+    }
+    option.series[0].links.push({
+      source: s,
+      target: t,
+      value,
+      count: e.Count,
+      lineStyle: getLineStyle(e.Count, q),
+    })
+  })
+  q.q1 = ecStat.statistics.quantile(number, 0.25)
+  q.q2 = ecStat.statistics.quantile(number, 0.5)
+  q.q3 = ecStat.statistics.quantile(number, 0.75)
+  option.series[0].links.forEach((l) => {
+    l.lineStyle = getLineStyle(l.count, q)
+  })
+  for (const k in nodes) {
+    option.series[0].data.push(nodes[k])
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
+const showWinTaskScatter3DChart = (div, list, filter) => {
+  const data = []
+  const mapx = new Map()
+  const mapy = new Map()
+  const number = []
+  list.forEach((e) => {
+    if (filter.computer && !e.Computer.includes(filter.computer)) {
+      return
+    }
+    if (filter.task && !e.TaskName.includes(filter.task)) {
+      return
+    }
+    if (filter.subject && !e.Subject.includes(filter.subject)) {
+      return
+    }
+    number.push(e.Count)
+    data.push([e.Subject, e.TaskName, e.Count, e.Computer])
+    mapx.set(e.Subject, true)
+    mapy.set(e.TaskName, true)
+  })
+  const catx = Array.from(mapx.keys())
+  const caty = Array.from(mapy.keys())
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    visualMap: {
+      min: ecStat.statistics.min(number),
+      max: ecStat.statistics.max(number),
+      calculable: true,
+      realtime: false,
+      dimension: 2,
+      inRange: {
+        color: [
+          '#313695',
+          '#4575b4',
+          '#74add1',
+          '#abd9e9',
+          '#e0f3f8',
+          '#ffffbf',
+          '#fee090',
+          '#fdae61',
+          '#f46d43',
+          '#d73027',
+          '#a50026',
+        ],
+      },
+    },
+    xAxis3D: getAxisOption('category', 'Subject', catx),
+    yAxis3D: getAxisOption('category', 'Task', caty),
+    zAxis3D: getAxisOption('value', 'Count', []),
+    series: [
+      {
+        name: 'Windows Task',
+        type: 'scatter3D',
+        dimensions: ['Subject', 'Task', 'Count', 'Computer'],
+        data,
+      },
+    ],
+  }
+  chart.setOption(getScatter3DChartBaseOption(div))
+  chart.setOption(options)
+  chart.resize()
+}
+
+const showWinTaskForceChart = (div, list, filter) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const categories = [{ name: 'Subject' }, { name: 'Task' }]
+  const option = getForceChartOption(div, categories)
+  if (!list) {
+    return false
+  }
+  const q = {}
+  const number = []
+  const nodes = {}
+  list.forEach((e) => {
+    if (filter.computer && !e.Computer.includes(filter.computer)) {
+      return
+    }
+    if (filter.task && !e.TaskName.includes(filter.task)) {
+      return
+    }
+    if (filter.subject && !e.Subject.includes(filter.subject)) {
+      return
+    }
+    number.push(e.Count)
+    const s = e.Subject ? e.Subject : 'Unknown'
+    const t = e.TaskName
+    if (!nodes[s]) {
+      nodes[s] = {
+        name: s,
+        category: 0,
+        draggable: true,
+        label: {
+          show: false,
+        },
+      }
+    }
+    if (!nodes[t]) {
+      nodes[t] = {
+        name: t,
+        category: 1,
+        draggable: true,
+        label: {
+          show: false,
+        },
+      }
+    }
+    option.series[0].links.push({
+      source: s,
+      target: t,
+      value: 'Count=' + e.Count + ' Computer=' + e.Computer,
+      count: e.Count,
+      lineStyle: getLineStyle(e.Count, q),
+    })
+  })
+  q.q1 = ecStat.statistics.quantile(number, 0.25)
+  q.q2 = ecStat.statistics.quantile(number, 0.5)
+  q.q3 = ecStat.statistics.quantile(number, 0.75)
+  option.series[0].links.forEach((l) => {
+    l.lineStyle = getLineStyle(l.count, q)
   })
   for (const k in nodes) {
     option.series[0].data.push(nodes[k])
@@ -709,7 +1002,7 @@ const getForceChartOption = (div, categories) => {
         }),
       },
     ],
-    color: ['#eee', '#1f78b4'],
+    color: ['#eee', '#1f78b4', '#e31a1c'],
     animationDurationUpdate: 1500,
     animationEasingUpdate: 'quinticInOut',
     series: [
@@ -775,7 +1068,13 @@ export default (context, inject) => {
   inject('showWinEventID3DChart', showWinEventID3DChart)
   inject('showWinLogonScatter3DChart', showWinLogonScatter3DChart)
   inject('showWinLogonForceChart', showWinLogonForceChart)
+  inject('showWinAccountForceChart', showWinAccountForceChart)
+  inject('showWinAccountScatter3DChart', showWinAccountScatter3DChart)
   inject('showWinKerberosScatter3DChart', showWinKerberosScatter3DChart)
   inject('showWinKerberosForceChart', showWinKerberosForceChart)
-  inject('showWinAccountForceChart', showWinAccountForceChart)
+  inject('showWinPrivilegeScatter3DChart', showWinPrivilegeScatter3DChart)
+  inject('showWinProcessForceChart', showWinProcessForceChart)
+  inject('showWinProcessScatter3DChart', showWinProcessScatter3DChart)
+  inject('showWinTaskForceChart', showWinTaskForceChart)
+  inject('showWinTaskScatter3DChart', showWinTaskScatter3DChart)
 }

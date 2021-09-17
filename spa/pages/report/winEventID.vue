@@ -77,7 +77,7 @@
                 <v-icon>mdi-chart-bar</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>Event ID別3Dグラフ</v-list-item-title>
+                <v-list-item-title>3D集計</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -197,7 +197,7 @@
     <v-dialog v-model="winEventIDDialog" persistent max-width="1000px">
       <v-card>
         <v-card-title>
-          <span class="headline">Windows Event ID 3Dグラフ</span>
+          <span class="headline">WindowsイベントID(3D集計)</span>
         </v-card-title>
         <div id="winEventID3DChart" style="width: 1000px; height: 600px"></div>
         <v-card-actions>

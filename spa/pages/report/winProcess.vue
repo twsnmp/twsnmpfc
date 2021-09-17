@@ -20,12 +20,19 @@
         :options.sync="options"
         class="log"
       >
+        <template #[`item.LastStatus`]="{ item }">
+          <v-icon :color="item.LastStatus === '0x0' ? '#1f78b4' : '#e31a1c'">{{
+            item.LastStatus === '0x0' ? 'mdi-check-circle' : 'mdi-alert-circle'
+          }}</v-icon>
+          {{ item.LastStatus }}
+        </template>
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
         <template #[`body.append`]>
           <tr>
+            <td></td>
             <td>
               <v-text-field v-model="conf.computer" label="Computer">
               </v-text-field>
@@ -39,6 +46,32 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openForceChart">
+              <v-list-item-icon>
+                <v-icon>mdi-lan-connect</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>力学モデル</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openScatter3DChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>３D集計</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="process"
           type="csv"
@@ -154,6 +187,53 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="forceChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">プロセス（力学モデル）</span>
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="mode"
+            :items="modeList"
+            label="集計項目"
+            single-line
+            hide-details
+            @change="updateForceChart"
+          ></v-select>
+        </v-card-title>
+        <div id="forceChart" style="width: 1000px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="forceChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="scatter3DChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">プロセス（3D集計）</span>
+          <v-select
+            v-model="mode"
+            :items="modeList"
+            label="集計項目"
+            single-line
+            hide-details
+            @change="updateScatter3DChart"
+          ></v-select>
+        </v-card-title>
+        <div id="scatter3DChart" style="width: 1000px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="scatter3DChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -162,6 +242,7 @@ export default {
   data() {
     return {
       headers: [
+        { text: 'ステータス', value: 'LastStatus', width: '10%' },
         {
           text: 'コンピュータ',
           value: 'Computer',
@@ -174,16 +255,25 @@ export default {
         {
           text: 'プロセス',
           value: 'Process',
-          width: '35%',
+          width: '20%',
           filter: (value) => {
             if (!this.conf.process) return true
             return value.includes(this.conf.process)
           },
         },
-        { text: '回数', value: 'Count', width: '8%' },
-        { text: '開始', value: 'Start', width: '8%' },
-        { text: '終了', value: 'Exit', width: '8%' },
-        { text: '最終', value: 'Last', width: '16%' },
+        {
+          text: '操作者',
+          value: 'LastSubject',
+          width: '15%',
+          filter: (value) => {
+            if (!this.conf.subject) return true
+            return value.includes(this.conf.subject)
+          },
+        },
+        { text: '回数', value: 'Count', width: '6%' },
+        { text: '開始', value: 'Start', width: '6%' },
+        { text: '終了', value: 'Exit', width: '6%' },
+        { text: '最終', value: 'Last', width: '12%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
       process: [],
@@ -191,15 +281,24 @@ export default {
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
+      scatter3DChartDialog: false,
+      forceChartDialog: false,
       conf: {
         computer: '',
         process: '',
+        subject: '',
         sortBy: 'Count',
         sortDesc: false,
         page: 1,
         itemsPerPage: 15,
       },
       options: {},
+      mode: 'computer',
+      modeList: [
+        { text: 'コンピュータ', value: 'computer' },
+        { text: '操作者', value: 'subject' },
+        { text: '親プロセス', value: 'parent' },
+      ],
     }
   },
   async fetch() {
@@ -255,6 +354,34 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    updateScatter3DChart() {
+      this.$nextTick(() => {
+        this.$showWinProcessScatter3DChart(
+          'scatter3DChart',
+          this.process,
+          this.mode,
+          this.conf
+        )
+      })
+    },
+    openScatter3DChart() {
+      this.scatter3DChartDialog = true
+      this.updateScatter3DChart()
+    },
+    updateForceChart() {
+      this.$nextTick(() => {
+        this.$showWinProcessForceChart(
+          'forceChart',
+          this.process,
+          this.mode,
+          this.conf
+        )
+      })
+    },
+    openForceChart(mode) {
+      this.forceChartDialog = true
+      this.updateForceChart()
     },
   },
 }

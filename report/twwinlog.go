@@ -1,6 +1,7 @@
 package report
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"log"
 	"strings"
@@ -81,7 +82,7 @@ func checkWinEventID(h string, m map[string]string, l map[string]interface{}) {
 	channel := m["channel"]
 	provider := m["provider"]
 	lt := getTimeFromTWLog(m["lt"])
-	id := fmt.Sprintf("%s:%s:%d", computer, provider, eventID)
+	id := makeID(fmt.Sprintf("%s:%s:%d", computer, provider, eventID))
 	e := datastore.GetWinEventID(id)
 	if e != nil {
 		if e.LastTime < lt {
@@ -141,7 +142,7 @@ func checkWinLogon(m map[string]string) {
 		return
 	}
 
-	id := fmt.Sprintf("%s:%s:%s", target, m["computer"], m["ip"])
+	id := makeID(fmt.Sprintf("%s:%s:%s", target, m["computer"], m["ip"]))
 	e := datastore.GetWinLogon(id)
 	if e != nil {
 		if e.LastTime < ts {
@@ -232,7 +233,7 @@ func checkWinAccount(h string, m map[string]string) {
 	password := getNumberFromTWLog(m["password"])
 	other := getNumberFromTWLog(m["other"])
 	lt := getTimeFromTWLog(m["lt"])
-	id := fmt.Sprintf("%s:%s:%s", target, m["computer"], m["subject"])
+	id := makeID(fmt.Sprintf("%s:%s:%s", target, m["computer"], m["subject"]))
 	e := datastore.GetWinAccount(id)
 	if e != nil {
 		e.LastTime = lt
@@ -266,7 +267,7 @@ func checkWinKerberos(h string, m map[string]string) {
 	if count < 1 {
 		return
 	}
-	id := fmt.Sprintf("%s:%s:%s:%s:%s", target, m["computer"], m["ip"], m["service"], m["ticketType"])
+	id := makeID(fmt.Sprintf("%s:%s:%s:%s:%s", target, m["computer"], m["ip"], m["service"], m["ticketType"]))
 	failed := getNumberFromTWLog(m["failed"])
 	lt := getTimeFromTWLog(m["lt"])
 	e := datastore.GetWinKerberos(id)
@@ -333,7 +334,7 @@ func checkWinPrivilege(h string, m map[string]string) {
 	if count < 1 {
 		return
 	}
-	id := fmt.Sprintf("%s:%s", subject, m["computer"])
+	id := makeID(fmt.Sprintf("%s:%s", subject, m["computer"]))
 	lt := getTimeFromTWLog(m["lt"])
 	e := datastore.GetWinPrivilege(id)
 	if e != nil {
@@ -361,7 +362,7 @@ func checkWinProcess(h string, m map[string]string) {
 	if count < 1 {
 		return
 	}
-	id := fmt.Sprintf("%s:%s", process, m["computer"])
+	id := makeID(fmt.Sprintf("%s:%s", process, m["computer"]))
 	start := getNumberFromTWLog(m["start"])
 	exit := getNumberFromTWLog(m["exit"])
 	lt := getTimeFromTWLog(m["lt"])
@@ -407,7 +408,7 @@ func checkWinTask(h string, m map[string]string) {
 	if count < 1 {
 		return
 	}
-	id := fmt.Sprintf("%s:%s:%s", taskname, m["computer"], m["subject"])
+	id := makeID(fmt.Sprintf("%s:%s:%s", taskname, m["computer"], m["subject"]))
 	lt := getTimeFromTWLog(m["lt"])
 	e := datastore.GetWinTask(id)
 	if e != nil {
@@ -522,4 +523,8 @@ func checkOldWinTask(delOld int64) {
 		datastore.DeleteReport("winTask", ids)
 		log.Printf("delete winTask=%d", len(ids))
 	}
+}
+
+func makeID(s string) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(s)))
 }

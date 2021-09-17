@@ -38,6 +38,32 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="openForceChart">
+              <v-list-item-icon>
+                <v-icon>mdi-lan-connect</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>力学モデル</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="openScatter3DChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>３D集計</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <download-excel
           :data="task"
           type="csv"
@@ -107,7 +133,7 @@
               </tr>
               <tr>
                 <td>タスク</td>
-                <td>{{ selected.Task }}</td>
+                <td>{{ selected.TaskName }}</td>
               </tr>
               <tr>
                 <td>関連アカウント</td>
@@ -132,6 +158,36 @@
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="infoDialog = false">
             <v-icon>mdi-close</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="forceChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">タスク（力学モデル）</span>
+        </v-card-title>
+        <div id="forceChart" style="width: 1000px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="forceChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="scatter3DChartDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">タスク（3D集計）</span>
+        </v-card-title>
+        <div id="scatter3DChart" style="width: 1000px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="scatter3DChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
         </v-card-actions>
@@ -181,6 +237,8 @@ export default {
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
+      forceChartDialog: false,
+      scatter3DChartDialog: false,
       conf: {
         computer: '',
         task: '',
@@ -246,6 +304,18 @@ export default {
     openInfoDialog(item) {
       this.selected = item
       this.infoDialog = true
+    },
+    openScatter3DChart() {
+      this.scatter3DChartDialog = true
+      this.$nextTick(() => {
+        this.$showWinTaskScatter3DChart('scatter3DChart', this.task, this.conf)
+      })
+    },
+    openForceChart() {
+      this.forceChartDialog = true
+      this.$nextTick(() => {
+        this.$showWinTaskForceChart('forceChart', this.task, this.conf)
+      })
     },
   },
 }

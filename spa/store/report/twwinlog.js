@@ -51,6 +51,7 @@ export const state = () => ({
   winProcess: {
     process: '',
     computer: '',
+    subject: '',
     sortBy: 'Count',
     sortDesc: true,
     page: 1,
