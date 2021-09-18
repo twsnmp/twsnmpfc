@@ -25,10 +25,12 @@
 - レポート（デバイス、ユーザー、サーバー、フロー、IPアドレス）
 - AI分析
 - ログ、ポーリング結果の分析機能(FFT,ヒストグラム、クラスター)
-- TWPCAP連携のレポート（EtherType,TLS,RADIUS,DNS問い合わせ）
 - サーバー証明書レポート（発行者、期限、検証状態）
-- センサーレポート（NetFlow,IPFIX,TWPCAP,TWWINLOH）
-- TWWINLOG連携レポート（イベントID、ログオン、アカウント操作...）
+- センサーレポート（NetFlow,IPFIX,TWPCAP,TWWINLOG,twBlueScan,twWifiScan）
+- twpcap連携レポート（EtherType,TLS,RADIUS,DNS問い合わせ）
+- twWinLog連携レポート（イベントID、ログオン、アカウント操作...）
+- twBlueScan連携レポート（デバイス、オムロン環境センサー）
+- twWifiScan連携レポート（アクセスポイント）
 
 ![2021-04-10_11-56-00](https://user-images.githubusercontent.com/5225950/114256371-cc61db80-99f3-11eb-8631-c1917554ce26.png)
 
