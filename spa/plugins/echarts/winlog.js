@@ -611,9 +611,10 @@ const showWinProcessScatter3DChart = (div, list, mode, filter) => {
     'Computer',
     'Process',
     'Count',
+    'Status',
     'Subject',
     'Parent',
-    'Status',
+    'Color',
   ]
   switch (mode) {
     case 'subject':
@@ -636,7 +637,7 @@ const showWinProcessScatter3DChart = (div, list, mode, filter) => {
     if (filter.subject && !e.LastSubject.includes(filter.subject)) {
       return
     }
-    const status = e.LastStatus === '0x0' ? 0 : 1
+    const color = e.LastStatus === '0x0' ? 0 : 1
     switch (mode) {
       case 'subject':
         data.push([
@@ -646,7 +647,7 @@ const showWinProcessScatter3DChart = (div, list, mode, filter) => {
           e.LastStatus,
           e.Computer,
           e.LastParent,
-          status,
+          color,
         ])
         mapx.set(e.LastSubject, true)
         break
@@ -658,7 +659,7 @@ const showWinProcessScatter3DChart = (div, list, mode, filter) => {
           e.LastStatus,
           e.Computer,
           e.LastSubject,
-          status,
+          color,
         ])
         mapx.set(e.LastParent, true)
         break
@@ -670,7 +671,7 @@ const showWinProcessScatter3DChart = (div, list, mode, filter) => {
           e.LastStatus,
           e.LastSubject,
           e.LastParent,
-          status,
+          color,
         ])
         mapx.set(e.Computer, true)
         break
