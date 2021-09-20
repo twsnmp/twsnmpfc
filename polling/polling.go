@@ -110,12 +110,14 @@ func CheckAllPoll() {
 
 // pollingBackend :  ポーリングのバックグランド処理
 func pollingBackend(ctx context.Context, wg *sync.WaitGroup) {
+	log.Println("start polling")
 	defer wg.Done()
 	time.Sleep(time.Millisecond * 100)
 	timer := time.NewTicker(time.Second * 5)
 	for {
 		select {
 		case <-ctx.Done():
+			log.Println("stop polling")
 			return
 		case <-timer.C:
 			checkPolling()

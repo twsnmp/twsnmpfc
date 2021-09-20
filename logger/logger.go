@@ -46,9 +46,6 @@ func logger(ctx context.Context, wg *sync.WaitGroup) {
 			{
 				timer1.Stop()
 				timer2.Stop()
-				if len(logBuffer) > 0 {
-					datastore.SaveLogBuffer(logBuffer)
-				}
 				if syslogdRunning {
 					close(stopSyslogd)
 				}
@@ -60,6 +57,9 @@ func logger(ctx context.Context, wg *sync.WaitGroup) {
 				}
 				if arpWatchRunning {
 					close(stopArpWatch)
+				}
+				if len(logBuffer) > 0 {
+					datastore.SaveLogBuffer(logBuffer)
 				}
 				log.Printf("stop logger")
 				return
