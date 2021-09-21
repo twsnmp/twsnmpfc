@@ -20,6 +20,7 @@ type NotifyConfEnt struct {
 	Report             bool
 	CheckUpdate        bool
 	NotifyRepair       bool
+	NotifyLowScore     bool
 }
 
 func SaveNotifyConf() error {

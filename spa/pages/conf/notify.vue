@@ -85,6 +85,12 @@
             dense
           ></v-switch>
           <v-switch
+            v-if="notify.Report"
+            v-model="notify.NotifyLowScore"
+            label="信用スコア下位リストも送信"
+            dense
+          ></v-switch>
+          <v-switch
             v-model="notify.CheckUpdate"
             label="更新版を確認する"
             dense
@@ -127,6 +133,7 @@ export default {
         Report: false,
         CheckUpdate: false,
         NotifyRepair: false,
+        NotifyLowScore: false,
       },
       error: false,
       saved: false,

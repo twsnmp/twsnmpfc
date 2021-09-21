@@ -114,7 +114,7 @@ func checkNotify(lastLog string) string {
 			body = append(body, fmt.Sprintf("%s,%s,%s,%s,%s", l.Level, ts, l.Type, l.NodeName, l.Event))
 		}
 		if len(body) > 0 {
-			err := sendMail(datastore.NotifyConf.Subject, strings.Join(body, "\r\n"))
+			err := sendMail(datastore.NotifyConf.Subject+"(障害)", strings.Join(body, "\r\n"))
 			r := ""
 			if err != nil {
 				log.Printf("send mail err=%v", err)
@@ -312,7 +312,6 @@ func encodeSubject(subject string) string {
 
 func sendReport() {
 	body := []string{}
-	logs := []string{}
 	body = append(body, "【現在のマップ情報】")
 	body = append(body, getMapInfo()...)
 	body = append(body, "")
@@ -322,68 +321,51 @@ func sendReport() {
 	body = append(body, "【システムリソース情報】(Min/Mean/Max)")
 	body = append(body, getResInfo()...)
 	body = append(body, "")
-	list := []*datastore.EventLogEnt{}
-	datastore.ForEachLastEventLog("", func(l *datastore.EventLogEnt) bool {
-		list = append(list, l)
-		return true
-	})
-	high := 0
-	low := 0
-	warn := 0
-	normal := 0
-	other := 0
-	if len(list) > 0 {
-		ti := time.Now().Add(time.Duration(-24) * time.Hour).UnixNano()
-		for _, l := range list {
-			if ti > l.Time {
-				continue
-			}
-			switch l.Level {
-			case "high":
-				high++
-			case "low":
-				low++
-			case "warn":
-				warn++
-			case "normal", "repair":
-				normal++
-			default:
-				other++
-			}
-			ts := time.Unix(0, l.Time).Local().Format(time.RFC3339Nano)
-			logs = append(logs, fmt.Sprintf("%s,%s,%s,%s,%s", l.Level, ts, l.Type, l.NodeName, l.Event))
-		}
-	}
-	n, b := getDeviceReport()
-	body = append(body, "【信用スコアが下位10%のデバイス】")
-	body = append(body, b...)
+	logSum, logs := getLastEventLog()
+	body = append(body, "【最新24時間のログ集計】")
+	body = append(body, logSum...)
 	body = append(body, "")
+	body = append(body, "【センサー情報】")
+	body = append(body, getSensorInfo()...)
+	body = append(body, "")
+	nd, bd := getDeviceReport()
 	body = append(body, "【48時間以内に新しく発見したデバイス】")
-	body = append(body, n...)
+	body = append(body, nd...)
 	body = append(body, "")
-	n, b = getUserReport()
-	body = append(body, "【信用スコアが下位10%のユーザーID】")
-	body = append(body, b...)
-	body = append(body, "")
+	nu, bu := getUserReport()
 	body = append(body, "【48時間以内に新しく発見したユーザーID】")
-	body = append(body, n...)
+	body = append(body, nu...)
 	body = append(body, "")
-	n, b = getIPReport()
-	body = append(body, "【信用スコアが下位10%のIPアドレス】")
-	body = append(body, b...)
-	body = append(body, "")
+	nip, bip := getIPReport()
 	body = append(body, "【24時間以内に新しく発見したIPアドレス】")
-	body = append(body, n...)
+	body = append(body, nip...)
+	body = append(body, "")
+	body = append(body, "【24時間以内に新しく発見したWifi AP】")
+	body = append(body, getWifiAPReport()...)
+	body = append(body, "")
+	body = append(body, "【24時間以内に新しく発見したBluetooth デバイス】")
+	body = append(body, getBlueDevcieReport()...)
 	body = append(body, "")
 	body = append(body, "【AI分析情報】")
 	body = append(body, getAIInfo()...)
 	body = append(body, "")
-	body = append(body, "【24時間以内の状態別ログ件数】")
-	body = append(body, fmt.Sprintf("重度=%d,軽度=%d,注意=%d,正常=%d,その他=%d", high, low, warn, normal, other))
-	body = append(body, "")
-	body = append(body, "【最新24時間のログ】")
+	body = append(body, "【最新24時間の障害ログ】")
 	body = append(body, logs...)
-	if err := sendMail(fmt.Sprintf("TWSNMP定期レポート %s", time.Now().Format(time.RFC3339)), strings.Join(body, "\r\n")); err != nil {
+
+	if datastore.NotifyConf.NotifyLowScore {
+		body = append(body, "")
+		body = append(body, "【信用スコアが下位10%のデバイス】")
+		body = append(body, bd...)
+		body = append(body, "")
+		body = append(body, "【信用スコアが下位10%のユーザーID】")
+		body = append(body, bu...)
+		body = append(body, "")
+		body = append(body, "【信用スコアが下位1%のIPアドレス】")
+		body = append(body, bip...)
+	}
+
+	subject := fmt.Sprintf("%s(定期レポート) at %s", datastore.NotifyConf.Subject, time.Now().Format(time.RFC3339))
+	if err := sendMail(subject, strings.Join(body, "\r\n")); err != nil {
 		log.Printf("send report mail err=%v", err)
 	} else {
 		datastore.AddEventLog(&datastore.EventLogEnt{
@@ -392,6 +374,43 @@ func sendReport() {
 			Event: "定期レポートメール送信",
 		})
 	}
+}
+
+func getLastEventLog() ([]string, []string) {
+	sum := []string{}
+	logs := []string{}
+	high := 0
+	low := 0
+	warn := 0
+	normal := 0
+	other := 0
+	st := time.Now().Add(time.Duration(-24) * time.Hour).UnixNano()
+	datastore.ForEachLastEventLog("", func(l *datastore.EventLogEnt) bool {
+		if l.Time < st {
+			return false
+		}
+		switch l.Level {
+		case "high":
+			high++
+		case "low":
+			low++
+		case "warn":
+			warn++
+			return true
+		case "normal", "repair":
+			normal++
+			return true
+		default:
+			other++
+			return true
+		}
+		ts := time.Unix(0, l.Time).Local().Format(time.RFC3339Nano)
+		logs = append(logs, fmt.Sprintf("%s,%s,%s,%s,%s", l.Level, ts, l.Type, l.NodeName, l.Event))
+		return true
+	})
+	sum = append(sum,
+		fmt.Sprintf("重度=%d,軽度=%d,注意=%d,正常=%d,その他=%d", high, low, warn, normal, other))
+	return sum, logs
 }
 
 func getMapInfo() []string {
@@ -429,7 +448,8 @@ func getMapInfo() []string {
 		state = "正常"
 	}
 	return []string{
-		fmt.Sprintf("MAP状態=%s", state),
+		fmt.Sprintf("マップ名=%s", datastore.MapConf.MapName),
+		fmt.Sprintf("マップ状態=%s", state),
 		fmt.Sprintf("重度=%d,軽度=%d,注意=%d,復帰=%d,正常=%d,不明=%d", high, low, warn, repair, normal, unknown),
 	}
 }
@@ -498,7 +518,7 @@ func getIPReport() ([]string, []string) {
 			t := time.Unix(0, i.FirstTime)
 			retNew = append(retNew, fmt.Sprintf("%s,%s,%.2f,%s,%s,%s", i.IP, i.Name, i.Score, i.MAC, i.Loc, t.Format(time.RFC3339)))
 		}
-		if i.ValidScore && i.Score < 37.5 {
+		if i.ValidScore && i.Score < 26.5 {
 			t := time.Unix(0, i.FirstTime)
 			retBad = append(retBad, fmt.Sprintf("%s,%s,%.2f,%s,%s,%s", i.IP, i.Name, i.Score, i.MAC, i.Loc, t.Format(time.RFC3339)))
 		}
@@ -597,6 +617,50 @@ func getAIInfo() []string {
 				p.Name,
 				len(air.ScoreData),
 			))
+		return true
+	})
+	return ret
+}
+
+func getSensorInfo() []string {
+	ret := []string{}
+	ret = append(ret, "State,Host,Type,Params,total,Last Time")
+	datastore.ForEachSensors(func(s *datastore.SensorEnt) bool {
+		t := time.Unix(0, s.LastTime)
+		ret = append(ret, fmt.Sprintf("%s,%s,%s,%s,%d,%s",
+			s.State, s.Host, s.Type, s.Param, s.Total, t.Format(time.RFC3339)))
+		return true
+	})
+	return ret
+}
+
+func getWifiAPReport() []string {
+	st := time.Now().Add(time.Duration(-24) * time.Hour).UnixNano()
+	ret := []string{}
+	ret = append(ret, "RSSI,BSSID,SSID,Host,Channel,Count,First Time")
+	datastore.ForEachWifiAP(func(a *datastore.WifiAPEnt) bool {
+		if a.FirstTime < st {
+			return true
+		}
+		t := time.Unix(0, a.FirstTime)
+		ret = append(ret, fmt.Sprintf("%d,%s,%s,%s,%s,%d,%s",
+			a.RSSI, a.BSSID, a.SSID, a.Host, a.Channel, a.Count, t.Format(time.RFC3339)))
+		return true
+	})
+	return ret
+}
+
+func getBlueDevcieReport() []string {
+	st := time.Now().Add(time.Duration(-24) * time.Hour).UnixNano()
+	ret := []string{}
+	ret = append(ret, "RSSI,Address,Name,Host,Address Type,Vendor,Count,Time")
+	datastore.ForEachBludeDevice(func(b *datastore.BlueDeviceEnt) bool {
+		if b.FirstTime < st {
+			return true
+		}
+		t := time.Unix(0, b.FirstTime)
+		ret = append(ret, fmt.Sprintf("%d,%s,%s,%s,%s,%s,%d,%s",
+			b.RSSI, b.Address, b.Name, b.Host, b.AddressType, b.Vendor, b.Count, t.Format(time.RFC3339)))
 		return true
 	})
 	return ret

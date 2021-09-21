@@ -22,6 +22,7 @@ func getNotifyConf(c echo.Context) error {
 	r.Report = datastore.NotifyConf.Report
 	r.CheckUpdate = datastore.NotifyConf.CheckUpdate
 	r.NotifyRepair = datastore.NotifyConf.NotifyRepair
+	r.NotifyLowScore = datastore.NotifyConf.NotifyLowScore
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -41,6 +42,7 @@ func postNotifyConf(c echo.Context) error {
 	datastore.NotifyConf.Report = nc.Report
 	datastore.NotifyConf.CheckUpdate = nc.CheckUpdate
 	datastore.NotifyConf.NotifyRepair = nc.NotifyRepair
+	datastore.NotifyConf.NotifyLowScore = nc.NotifyLowScore
 	if nc.Password != "" {
 		datastore.NotifyConf.Password = nc.Password
 	}
