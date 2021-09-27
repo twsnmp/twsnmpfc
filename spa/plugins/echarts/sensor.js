@@ -1135,6 +1135,15 @@ const getEnvLevel = (v, type) => {
         return 3
       }
       return 4
+    case 'Battery':
+      if (v > 50) {
+        return 3
+      } else if (v > 30) {
+        return 2
+      } else if (v > 10) {
+        return 1
+      }
+      return 0
     default:
       return 0
   }
@@ -1156,6 +1165,8 @@ const getEnvName = (type) => {
       return '総揮発性有機化合物(ppb)'
     case 'ECo2':
       return '二酸化炭素濃度(ppm)'
+    case 'Battery':
+      return '電池残量(%)'
     default:
       return 0
   }

@@ -55,6 +55,7 @@ type EnvDataEnt struct {
 	Sound              float64
 	ETVOC              float64
 	ECo2               float64
+	Battery            int
 }
 
 type EnvMonitorEnt struct {

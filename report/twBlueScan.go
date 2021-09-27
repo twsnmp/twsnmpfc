@@ -40,12 +40,14 @@ func checkTWBlueScanReport(l map[string]interface{}) {
 		checkBlueDeviceReport(h, m)
 	case "OMRONEnv":
 		checkOMRONEnvReport(h, m)
+	case "SwitchBotEnv":
+		checkSwitchBotEnvReport(h, m)
 	case "Stats":
 		checkStats(h, "twBlueScan", m)
 	case "Monitor":
 		checkMonitor(h, "twBlueScan", m)
 	default:
-		log.Printf("twbluescan unkown type=%v", t)
+		log.Printf("twbluescan unkown type=%v m=%v", t, m)
 	}
 }
 
@@ -137,6 +139,51 @@ func checkOMRONEnvReport(h string, m map[string]string) {
 				Sound:              getFloatFromTWLog(m["sound"]),
 				ETVOC:              getFloatFromTWLog(m["eTVOC"]),
 				ECo2:               getFloatFromTWLog(m["eCO2"]),
+			},
+		},
+		LastTime:  now,
+		FirstTime: now,
+	})
+}
+
+// type=SwitchBotEnv,address=%s,name=%s,rssi=%d,temp=%.02f,hum=%.02f,bat=%d
+func checkSwitchBotEnvReport(h string, m map[string]string) {
+	addr, ok := m["address"]
+	if !ok {
+		return
+	}
+	rssi := getNumberFromTWLog(m["rssi"])
+	id := h + ":" + addr
+	now := time.Now().UnixNano()
+	e := datastore.GetEnvMonitor(id)
+	if e != nil {
+		e.Count++
+		e.LastTime = time.Now().UnixNano()
+		e.EnvData = append(e.EnvData, datastore.EnvDataEnt{
+			Time:     now,
+			RSSI:     int(rssi),
+			Temp:     getFloatFromTWLog(m["temp"]),
+			Humidity: getFloatFromTWLog(m["hum"]),
+			Battery:  int(getNumberFromTWLog(m["bat"])),
+		})
+		if len(e.EnvData) > MAX_DATA_SIZE {
+			e.EnvData = e.EnvData[1:]
+		}
+		return
+	}
+	datastore.AddEnvMonitor(&datastore.EnvMonitorEnt{
+		ID:      id,
+		Host:    h,
+		Address: addr,
+		Name:    m["name"],
+		Count:   1,
+		EnvData: []datastore.EnvDataEnt{
+			{
+				Time:     now,
+				RSSI:     int(rssi),
+				Temp:     getFloatFromTWLog(m["temp"]),
+				Humidity: getFloatFromTWLog(m["hum"]),
+				Battery:  int(getNumberFromTWLog(m["bat"])),
 			},
 		},
 		LastTime:  now,

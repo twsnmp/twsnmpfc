@@ -125,6 +125,16 @@
               </v-list-item-content>
             </v-list-item>
           </v-list>
+          <v-list>
+            <v-list-item @click="openEnv3DChart('Battery')">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>電池</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
         </v-menu>
         <download-excel
           :data="envMonitor"
