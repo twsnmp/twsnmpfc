@@ -56,82 +56,22 @@
             </v-btn>
           </template>
           <v-list>
-            <v-list-item @click="openEnv3DChart('Temp')">
+            <v-list-item @click="openEnv3DChart">
               <v-list-item-icon>
-                <v-icon>mdi-chart-bar</v-icon>
+                <v-icon>mdi-chart-scatter-plot</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>気温</v-list-item-title>
+                <v-list-item-title>時系列3D</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
           <v-list>
-            <v-list-item @click="openEnv3DChart('Humidity')">
+            <v-list-item @click="openEnv2DChart">
               <v-list-item-icon>
-                <v-icon>mdi-chart-bar</v-icon>
+                <v-icon>mdi-chart-line</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>湿度</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
-          <v-list>
-            <v-list-item @click="openEnv3DChart('Illuminance')">
-              <v-list-item-icon>
-                <v-icon>mdi-chart-bar</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>照度</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
-          <v-list>
-            <v-list-item @click="openEnv3DChart('BarometricPressure')">
-              <v-list-item-icon>
-                <v-icon>mdi-chart-bar</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>気圧</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
-          <v-list>
-            <v-list-item @click="openEnv3DChart('Sound')">
-              <v-list-item-icon>
-                <v-icon>mdi-chart-bar</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>騒音</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
-          <v-list>
-            <v-list-item @click="openEnv3DChart('ETVOC')">
-              <v-list-item-icon>
-                <v-icon>mdi-chart-bar</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>総揮発性有機化合物</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
-          <v-list>
-            <v-list-item @click="openEnv3DChart('ECo2')">
-              <v-list-item-icon>
-                <v-icon>mdi-chart-bar</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>二酸化炭素濃度</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
-          <v-list>
-            <v-list-item @click="openEnv3DChart('Battery')">
-              <v-list-item-icon>
-                <v-icon>mdi-chart-bar</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>電池</v-list-item-title>
+                <v-list-item-title>時系列2D</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -252,11 +192,44 @@
       <v-card>
         <v-card-title>
           <span class="headline">{{ chartTitle }}</span>
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="selectedType"
+            :items="$envTypeList"
+            label="項目"
+            single-line
+            hide-details
+            @change="change3DType"
+          ></v-select>
         </v-card-title>
         <div id="env3DChart" style="width: 1000px; height: 600px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="env3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="env2DDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">{{ chartTitle }}</span>
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="selectedType"
+            :items="$envTypeList"
+            label="項目"
+            single-line
+            hide-details
+            @change="change2DType"
+          ></v-select>
+        </v-card-title>
+        <div id="env2DChart" style="width: 1000px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="env2DDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -320,7 +293,9 @@ export default {
       },
       options: {},
       env3DDialog: false,
+      env2DDialog: false,
       chartTitle: '',
+      selectedType: 'Temp',
     }
   },
   async fetch() {
@@ -382,11 +357,30 @@ export default {
       this.selected = item
       this.infoDialog = true
     },
-    openEnv3DChart(type) {
-      this.chartTitle = this.$getEnvName(type)
+    openEnv3DChart() {
       this.env3DDialog = true
+      this.change3DType()
+    },
+    change3DType() {
+      if (!this.selectedType) {
+        this.selectedType = 'Temp'
+      }
+      this.chartTitle = this.$getEnvName(this.selectedType)
       this.$nextTick(() => {
-        this.$showEnv3DChart('env3DChart', type, this.envMonitor)
+        this.$showEnv3DChart('env3DChart', this.selectedType, this.envMonitor)
+      })
+    },
+    openEnv2DChart() {
+      this.env2DDialog = true
+      this.change2DType()
+    },
+    change2DType() {
+      if (!this.selectedType) {
+        this.selectedType = 'Temp'
+      }
+      this.chartTitle = this.$getEnvName(this.selectedType)
+      this.$nextTick(() => {
+        this.$showEnv2DChart('env2DChart', this.selectedType, this.envMonitor)
       })
     },
   },

@@ -1060,6 +1060,125 @@ const showEnv3DChart = (div, type, list) => {
   chart.resize()
 }
 
+const showEnv2DChart = (div, type, list) => {
+  const cat = []
+  const series = []
+  list.forEach((i) => {
+    if (!i.EnvData || i.EnvData.length < 1) {
+      return
+    }
+    const data = []
+    i.EnvData.forEach((e) => {
+      const t = new Date(e.Time / (1000 * 1000))
+      const name = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
+      data.push({ name, value: [t, e[type]] })
+    })
+    series.push({
+      name: i.ID,
+      type: 'line',
+      large: true,
+      symbol: 'none',
+      data,
+    })
+    cat.push(i.ID)
+  })
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}],
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    grid: {
+      left: '10%',
+      right: '5%',
+      top: 60,
+      buttom: 0,
+    },
+    legend: {
+      data: cat,
+      textStyle: {
+        color: '#ccc',
+        fontSize: 10,
+      },
+    },
+    xAxis: {
+      type: 'time',
+      name: '日時',
+      axisLabel: {
+        color: '#ccc',
+        fontSize: '8px',
+        formatter: (value, index) => {
+          const date = new Date(value)
+          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+        },
+      },
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      splitLine: {
+        show: false,
+      },
+    },
+    yAxis: {
+      type: 'value',
+      name: getEnvUnit(type),
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+    },
+    series,
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 const getEnvLevel = (v, type) => {
   switch (type) {
     case 'Temp':
@@ -1149,27 +1268,33 @@ const getEnvLevel = (v, type) => {
   }
 }
 
+const envTypeList = [
+  { value: 'Temp', text: '気温(℃)', unit: '℃' },
+  { value: 'Humidity', text: '湿度(%)', unit: '%' },
+  { value: 'Illuminance', text: '照度(lx)', unit: 'lx' },
+  { value: 'BarometricPressure', text: '気圧(hpa)', unit: 'hpa' },
+  { value: 'Sound', text: '騒音(dB)' },
+  { value: 'ETVOC', text: '総揮発性有機化合物(ppb)', unit: 'ppb' },
+  { value: 'ECo2', text: '二酸化炭素濃度(ppm)', unit: 'ppm' },
+  { value: 'Battery', text: '電池残量(%)', unit: '%' },
+]
+
 const getEnvName = (type) => {
-  switch (type) {
-    case 'Temp':
-      return '気温(℃)'
-    case 'Humidity':
-      return '湿度(%)'
-    case 'Illuminance':
-      return '照度(lx)'
-    case 'BarometricPressure':
-      return '気圧(hpa)'
-    case 'Sound':
-      return '騒音(dB)'
-    case 'ETVOC':
-      return '総揮発性有機化合物(ppb)'
-    case 'ECo2':
-      return '二酸化炭素濃度(ppm)'
-    case 'Battery':
-      return '電池残量(%)'
-    default:
-      return 0
+  for (let i = 0; i < envTypeList.length; i++) {
+    if (type === envTypeList[i].value) {
+      return envTypeList[i].text
+    }
   }
+  return 'Invalid type=' + type
+}
+
+const getEnvUnit = (type) => {
+  for (let i = 0; i < envTypeList.length; i++) {
+    if (type === envTypeList[i].value) {
+      return envTypeList[i].unit
+    }
+  }
+  return 'Invalid type=' + type
 }
 
 export default (context, inject) => {
@@ -1180,5 +1305,7 @@ export default (context, inject) => {
   inject('showRSSITime3DChart', showRSSITime3DChart)
   inject('showRSSILoc3DChart', showRSSILoc3DChart)
   inject('showEnv3DChart', showEnv3DChart)
+  inject('showEnv2DChart', showEnv2DChart)
   inject('getEnvName', getEnvName)
+  inject('envTypeList', envTypeList)
 }
