@@ -195,7 +195,7 @@ func checkOldBlueDevice(safeOld, delOld int64) {
 	ids := []string{}
 	datastore.ForEachBludeDevice(func(e *datastore.BlueDeviceEnt) bool {
 		if e.LastTime < safeOld {
-			if e.LastTime < delOld || (e.AddressType == "LE Random(resolvable)" && e.Name == "" && e.Count < 10) {
+			if e.LastTime < delOld || (strings.HasPrefix(e.AddressType, "LE Random(") && e.Name == "" && e.Count < 120) {
 				ids = append(ids, e.ID)
 			}
 		}
