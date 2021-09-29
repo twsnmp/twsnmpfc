@@ -65,10 +65,6 @@
           <v-icon>mdi-cached</v-icon>
           再検索
         </v-btn>
-        <v-btn color="normal" dark to="/map">
-          <v-icon>mdi-lan</v-icon>
-          マップ
-        </v-btn>
       </v-card-actions>
     </v-card>
     <v-dialog v-model="filterDialog" persistent max-width="500px">
