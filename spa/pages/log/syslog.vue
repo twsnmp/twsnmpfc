@@ -136,14 +136,6 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        <v-btn color="info" @click="aiAssistDialog = true">
-          <v-icon>mdi-brain</v-icon>
-          AIアシスト
-        </v-btn>
-        <v-btn color="normal" dark @click="$fetch()">
-          <v-icon>mdi-cached</v-icon>
-          再検索
-        </v-btn>
         <v-btn
           v-if="extractDatas.length > 0"
           color="primary"
@@ -151,6 +143,14 @@
         >
           <v-icon>mdi-view-list</v-icon>
           抽出情報
+        </v-btn>
+        <v-btn color="info" @click="aiAssistDialog = true">
+          <v-icon>mdi-brain</v-icon>
+          AIアシスト
+        </v-btn>
+        <v-btn color="normal" dark @click="$fetch()">
+          <v-icon>mdi-cached</v-icon>
+          再検索
         </v-btn>
       </v-card-actions>
     </v-card>

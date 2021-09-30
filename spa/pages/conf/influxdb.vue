@@ -87,9 +87,6 @@
 
 <script>
 export default {
-  async fetch() {
-    this.influxdb = await this.$axios.$get('/api/conf/influxdb')
-  },
   data() {
     return {
       influxdb: {
@@ -120,6 +117,9 @@ export default {
       initInfluxdbDialog: false,
       initInfluxdbError: false,
     }
+  },
+  async fetch() {
+    this.influxdb = await this.$axios.$get('/api/conf/influxdb')
   },
   methods: {
     submit() {

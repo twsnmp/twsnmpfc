@@ -259,9 +259,14 @@ export default {
           to: '/pollings',
         },
         {
-          icon: 'mdi-file-find',
+          icon: 'mdi-telescope',
           title: '自動発見',
           to: '/discover',
+        },
+        {
+          icon: 'mdi-card-search',
+          title: 'アドレス分析',
+          to: '/report/address',
         },
         {
           icon: 'mdi-webcam',
@@ -387,7 +392,7 @@ export default {
       logMenus: [
         {
           icon: 'mdi-calendar-check',
-          title: 'Event Log',
+          title: 'イベントログ',
           to: '/log/eventlog',
         },
         {
