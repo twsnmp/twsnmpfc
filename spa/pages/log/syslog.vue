@@ -710,14 +710,14 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="aiAssistDialog" persistent max-width="1050px">
+    <v-dialog v-model="aiAssistDialog" persistent max-width="1200px">
       <v-card style="width: 100%">
         <v-card-title> AIアシスト分析 </v-card-title>
         <v-card-text>
           <div
             v-if="hasAIErrorChart"
             id="aiAssist"
-            style="width: 1000px; height: 200px"
+            style="width: 1200px; height: 200px"
           ></div>
           <v-data-table
             v-model="selectedAILogs"
@@ -1009,18 +1009,18 @@ export default {
       selectedAILogs: [],
       AIClass: '',
       aiAssistHeaders: [
-        { text: '状態', value: 'Level', width: '15%' },
-        { text: '教育', value: 'AIClass', width: '10%' },
+        { text: '状態', value: 'Level', width: '13%' },
+        { text: '教育', value: 'AIClass', width: '8%' },
         {
           text: 'AI回答',
           value: 'AIResult',
-          width: '10%',
+          width: '8%',
           filter: (value) => {
             if (!this.hasAIResult) return true
             return value && value !== ''
           },
         },
-        { text: '日時', value: 'TimeStr', width: '15%' },
+        { text: '日時', value: 'TimeStr', width: '13%' },
         {
           text: 'ホスト名',
           value: 'Host',
@@ -1042,7 +1042,7 @@ export default {
         {
           text: 'メッセージ',
           value: 'Message',
-          width: '30%',
+          width: '40%',
           filter: (value) => {
             if (!this.msg) return true
             return value.includes(this.msg)

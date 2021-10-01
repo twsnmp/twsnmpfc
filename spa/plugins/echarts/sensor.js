@@ -1067,6 +1067,14 @@ const showEnv2DChart = (div, type, list) => {
     if (!i.EnvData || i.EnvData.length < 1) {
       return
     }
+    if (
+      i.Name !== 'Rbt' &&
+      type !== 'Temp' &&
+      type !== 'Humidity' &&
+      type !== 'Battery'
+    ) {
+      return
+    }
     const data = []
     i.EnvData.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
@@ -1109,7 +1117,7 @@ const showEnv2DChart = (div, type, list) => {
         saveAsImage: { name: 'twsnmp_' + div },
       },
     },
-    dataZoom: [{}],
+    dataZoom: [{}, {}],
     tooltip: {
       trigger: 'axis',
       axisPointer: {
