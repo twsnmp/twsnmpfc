@@ -393,21 +393,29 @@
         <v-card-title>
           クラスター分析
           <v-spacer></v-spacer>
-          <v-select
-            v-model="clusterType"
-            :items="clusterTypeList"
-            label="分類方法"
-            single-line
-            hide-details
-            @change="updateCluster"
-          ></v-select>
-          <v-text-field
-            v-model="cluster"
-            label="クラスター数"
-            @change="updateCluster"
-          ></v-text-field>
         </v-card-title>
-        <div id="cluster" style="width: 900px; height: 400px"></div>
+        <v-card-text>
+          <v-row>
+            <v-col>
+              <v-select
+                v-model="clusterType"
+                :items="clusterTypeList"
+                label="分類方法"
+                single-line
+                hide-details
+                @change="updateCluster"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="cluster"
+                label="クラスター数"
+                @change="updateCluster"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <div id="cluster" style="width: 900px; height: 400px"></div>
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="clusterDialog = false">
