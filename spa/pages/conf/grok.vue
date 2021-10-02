@@ -28,6 +28,16 @@
           <v-icon small @click="deleteGrok(item)"> mdi-delete </v-icon>
           <v-icon small @click="copyGrok(item)"> mdi-content-copy </v-icon>
         </template>
+        <template #[`body.append`]>
+          <tr>
+            <td>
+              <v-text-field v-model="filter.id" label="id"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="filter.name" label="name"></v-text-field>
+            </td>
+          </tr>
+        </template>
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -196,8 +206,24 @@ export default {
   data() {
     return {
       headers: [
-        { text: 'ID', value: 'ID', width: '15%' },
-        { text: '名前', value: 'Name', width: '20%' },
+        {
+          text: 'ID',
+          value: 'ID',
+          width: '15%',
+          filter: (value) => {
+            if (!this.filter.id) return true
+            return value.includes(this.filter.id)
+          },
+        },
+        {
+          text: '名前',
+          value: 'Name',
+          width: '20%',
+          filter: (value) => {
+            if (!this.filter.name) return true
+            return value.includes(this.filter.name)
+          },
+        },
         { text: '説明', value: 'Descr', width: '50%' },
         { text: '操作', value: 'actions', width: '15%' },
       ],
@@ -231,6 +257,10 @@ export default {
           /^[_0-9a-zA-Z]+$/.test(v) ||
           '半角英数字と_（アンダーバー）が使用できます。',
       ],
+      filter: {
+        id: '',
+        name: '',
+      },
     }
   },
   async fetch() {
