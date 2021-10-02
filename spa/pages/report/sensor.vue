@@ -79,7 +79,7 @@
         <v-card-title>
           <span class="headline">センサー削除</span>
         </v-card-title>
-        <v-card-text> {{ selected.Name }}を削除しますか？ </v-card-text>
+        <v-card-text> 選択したセンサーを削除しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="error" @click="doDelete">

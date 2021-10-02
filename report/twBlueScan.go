@@ -59,7 +59,7 @@ func checkBlueDeviceReport(h string, m map[string]string) {
 	}
 	lt := getTimeFromTWLog(m["ft"])
 	rssi := getNumberFromTWLog(m["rssi"])
-	id := h + ":" + addr
+	id := makeID(h + ":" + addr)
 	e := datastore.GetBlueDevice(id)
 	if e != nil {
 		e.Count++
@@ -100,7 +100,7 @@ func checkOMRONEnvReport(h string, m map[string]string) {
 		return
 	}
 	rssi := getNumberFromTWLog(m["rssi"])
-	id := h + ":" + addr
+	id := makeID(h + ":" + addr)
 	now := time.Now().UnixNano()
 	e := datastore.GetEnvMonitor(id)
 	if e != nil {
@@ -153,7 +153,7 @@ func checkSwitchBotEnvReport(h string, m map[string]string) {
 		return
 	}
 	rssi := getNumberFromTWLog(m["rssi"])
-	id := h + ":" + addr
+	id := makeID(h + ":" + addr)
 	now := time.Now().UnixNano()
 	e := datastore.GetEnvMonitor(id)
 	if e != nil {

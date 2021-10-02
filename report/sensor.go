@@ -39,7 +39,7 @@ func checkStats(h, t string, m map[string]string) {
 	}
 	total := getNumberFromTWLog(m["total"])
 	ps := getFloatFromTWLog(m["ps"])
-	id := h + ":" + t + ":" + param
+	id := makeID(h + ":" + t + ":" + param)
 	e := datastore.GetSensor(id)
 	if e != nil {
 		e.Total += count
@@ -94,7 +94,7 @@ func checkMonitor(h, t string, m map[string]string) {
 	sent := getNumberFromTWLog(m["sent"])
 	recv := getNumberFromTWLog(m["recv"])
 	proc := getNumberFromTWLog(m["process"])
-	id := h + ":" + t + ":" + param
+	id := makeID(h + ":" + t + ":" + param)
 	e := datastore.GetSensor(id)
 	if e != nil {
 		e.Monitors = append(e.Monitors, datastore.SensorMonitorEnt{
