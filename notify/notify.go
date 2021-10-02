@@ -315,7 +315,7 @@ func sendReport() {
 	body = append(body, "【現在のマップ情報】")
 	body = append(body, getMapInfo()...)
 	body = append(body, "")
-	body = append(body, "【データベース情報】")
+	body = append(body, "【データストア情報】")
 	body = append(body, getDBInfo()...)
 	body = append(body, "")
 	body = append(body, "【システムリソース情報】(Min/Mean/Max)")

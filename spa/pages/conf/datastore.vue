@@ -98,7 +98,7 @@
     <v-dialog v-model="dbStatsChartDialog" persistent max-width="1020px">
       <v-card>
         <v-card-title>
-          <span class="headline"> データベース統計 </span>
+          <span class="headline"> データストア統計 </span>
         </v-card-title>
         <div id="dbStatsChart" style="width: 1000px; height: 400px"></div>
         <v-card-actions>

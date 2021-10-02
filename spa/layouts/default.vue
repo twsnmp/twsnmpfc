@@ -417,7 +417,7 @@ export default {
         },
         {
           icon: 'mdi-check-network',
-          title: 'ARP Log',
+          title: 'ARPログ',
           to: '/log/arp',
         },
       ],

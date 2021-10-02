@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
       <v-card-title>
-        ARP Log
+        ARPログ
         <v-spacer></v-spacer>
       </v-card-title>
       <div id="logCountChart" style="width: 100%; height: 200px"></div>
