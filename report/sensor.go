@@ -122,6 +122,7 @@ func setSensorState() {
 	high := time.Now().Add(-24 * time.Hour).UnixNano()
 	now := time.Now().UnixNano()
 	datastore.ForEachSensors(func(s *datastore.SensorEnt) bool {
+		oldState := s.State
 		if s.LastTime < high {
 			s.State = "high"
 		} else if s.LastTime < low {
@@ -130,6 +131,15 @@ func setSensorState() {
 			s.State = "warn"
 		} else {
 			s.State = "normal"
+		}
+		if oldState != s.State {
+			datastore.AddEventLog(&datastore.EventLogEnt{
+				Type:     "sensor",
+				Level:    s.State,
+				NodeID:   "",
+				NodeName: s.Host,
+				Event:    "センサー状態変化:" + s.Host + "," + s.Type + "," + s.Param,
+			})
 		}
 		if s.Type == "netflow" || s.Type == "ipfix" {
 			count := s.Total
