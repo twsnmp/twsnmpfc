@@ -243,7 +243,7 @@ export default {
   methods: {
     copyGrok(item) {
       this.selected = item
-      this.selected.ID += '-Copy'
+      this.selected.ID += '_Copy'
       this.editDialog = true
     },
     editGrok(item) {
