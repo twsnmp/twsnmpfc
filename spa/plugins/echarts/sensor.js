@@ -594,16 +594,17 @@ const showRSSITime3DChart = (div, wifi, list, filter) => {
     if (filter.vendor && !i.Vendor.includes(filter.vendor)) {
       return
     }
+    const id = i.Host + ':' + (wifi ? i.BSSID : i.Address)
     i.RSSI.forEach((e) => {
       data.push([
-        i.ID,
+        id,
         e.Time / (1000 * 1000),
         e.Value,
         getRSSILevel(e.Value),
         wifi ? i.SSID : i.Name,
       ])
     })
-    cat.push(i.ID)
+    cat.push(id)
   })
   if (chart) {
     chart.dispose()
@@ -926,16 +927,17 @@ const showEnv3DChart = (div, type, list) => {
     if (!i.EnvData || i.EnvData.length < 1) {
       return
     }
+    const id = i.Host + ':' + i.Address
     i.EnvData.forEach((e) => {
       data.push([
-        i.ID,
+        id,
         e.Time / (1000 * 1000),
         e[type],
         getEnvLevel(e[type], type),
         i.Name,
       ])
     })
-    cat.push(i.ID)
+    cat.push(id)
   })
   if (chart) {
     chart.dispose()
@@ -1081,14 +1083,15 @@ const showEnv2DChart = (div, type, list) => {
       const name = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
       data.push({ name, value: [t, e[type]] })
     })
+    const id = i.Host + ':' + i.Address
     series.push({
-      name: i.ID,
+      name: id,
       type: 'line',
       large: true,
       symbol: 'none',
       data,
     })
-    cat.push(i.ID)
+    cat.push(id)
   })
   if (chart) {
     chart.dispose()
