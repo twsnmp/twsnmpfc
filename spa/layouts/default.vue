@@ -66,7 +66,26 @@
           </v-list-group>
           <v-list-group no-action sub-group>
             <template #activator>
-              <v-list-item-title>通信フロー</v-list-item-title>
+              <v-list-item-title>TLS通信分析</v-list-item-title>
+            </template>
+            <v-list-item
+              v-for="(item, i) in tlsMenus"
+              :key="i"
+              :to="item.to"
+              router
+              exact
+            >
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title v-text="item.title" />
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
+          <v-list-group no-action sub-group>
+            <template #activator>
+              <v-list-item-title>NetFlow分析</v-list-item-title>
             </template>
             <v-list-item
               v-for="(item, i) in flowMenus"
@@ -291,14 +310,14 @@ export default {
           to: '/report/bluetooth',
         },
         {
-          icon: 'mdi-temperature-celsius',
-          title: '環境センサー',
-          to: '/report/envMonitor',
-        },
-        {
           icon: 'mdi-wifi',
           title: 'Wifi AP',
           to: '/report/wifiAP',
+        },
+        {
+          icon: 'mdi-temperature-celsius',
+          title: '環境センサー',
+          to: '/report/envMonitor',
         },
       ],
       userMenus: [
@@ -306,6 +325,18 @@ export default {
           icon: 'mdi-account-check',
           title: 'ユーザー',
           to: '/report/users',
+        },
+      ],
+      tlsMenus: [
+        {
+          icon: 'mdi-certificate',
+          title: 'サーバー証明書',
+          to: '/report/cert',
+        },
+        {
+          icon: 'mdi-swap-horizontal',
+          title: 'TLS通信',
+          to: '/report/tls',
         },
       ],
       flowMenus: [
@@ -323,11 +354,6 @@ export default {
           icon: 'mdi-format-list-bulleted-type',
           title: 'IPアドレス',
           to: '/report/ipreport',
-        },
-        {
-          icon: 'mdi-certificate',
-          title: 'サーバー証明書',
-          to: '/report/cert',
         },
       ],
       twpcapMenus: [

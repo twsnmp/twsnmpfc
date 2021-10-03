@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
       <v-card-title>
-        デバイス
+        LANデバイス
         <v-spacer></v-spacer>
       </v-card-title>
       <v-data-table
@@ -120,10 +120,10 @@
     <v-dialog v-model="deleteDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
-          <span class="headline">デバイス削除</span>
+          <span class="headline">LANデバイス削除</span>
         </v-card-title>
         <v-card-text>
-          デバイス{{ selectedDevice.Name }}を削除しますか？
+          LANデバイス{{ selectedDevice.Name }}を削除しますか？
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -143,7 +143,7 @@
         <v-card-title>
           <span class="headline">信用度再計算</span>
         </v-card-title>
-        <v-card-text> デバイスレポートの信用度を再計算しますか？ </v-card-text>
+        <v-card-text> レポートの信用度を再計算しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="error" @click="doReset">
@@ -175,7 +175,7 @@
     <v-dialog v-model="infoDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
-          <span class="headline">デバイス情報</span>
+          <span class="headline">LANデバイス情報</span>
         </v-card-title>
         <v-simple-table dense>
           <template #default>
