@@ -84,10 +84,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="blueDevice"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Bluetooth_Device_List.csv"
-          header="TWSNMP FC Bluetooth Device List"
+          header="TWSNMP FCで作成したBluetoothデバイスリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -96,10 +96,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="blueDevice"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Bluetooth_Device_List.xls"
-          header="TWSNMP FC Bluetooth Device List"
+          header="TWSNMP FCで作成したBluetoothデバイスリスト"
+          worksheet="Bluetoothデバイス"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -393,6 +394,27 @@ export default {
           this.conf
         )
       })
+    },
+    makeExports() {
+      const exports = []
+      this.blueDevice.forEach((d) => {
+        if (!this.$filterBluetoothDev(d, this.conf)) {
+          return
+        }
+        exports.push({
+          アドレス: d.Address,
+          アドレス種別: d.AddressType,
+          名前: d.Name,
+          送信元ホスト: d.Host,
+          ベンダー: d.Vendor,
+          信号レベル: d.LastRSSI,
+          情報: d.Info,
+          回数: d.Count,
+          初回日時: d.First,
+          最終日時: d.Last,
+        })
+      })
+      return exports
     },
   },
 }

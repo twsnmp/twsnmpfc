@@ -579,19 +579,11 @@ const showRSSITime3DChart = (div, wifi, list, filter) => {
     if (!i.RSSI || i.RSSI.length < 1) {
       return
     }
-    if (filter.address && !i.Address.includes(filter.address)) {
-      return
-    }
-    if (filter.addressType && !i.AddressType.includes(filter.addressType)) {
-      return
-    }
-    if (filter.name && !i.Name.includes(filter.name)) {
-      return
-    }
-    if (filter.host && !i.Host.includes(filter.host)) {
-      return
-    }
-    if (filter.vendor && !i.Vendor.includes(filter.vendor)) {
+    if (wifi) {
+      if (!filterWifiAP(i, filter)) {
+        return
+      }
+    } else if (!filterBluetoothDev(i, filter)) {
       return
     }
     const id = i.Host + ':' + (wifi ? i.BSSID : i.Address)
@@ -744,27 +736,10 @@ const showRSSILoc3DChart = (div, wifi, list, filter) => {
       return
     }
     if (wifi) {
-      if (filter.bssid && !i.BSSID.includes(filter.bssid)) {
+      if (!filterWifiAP(i, filter)) {
         return
       }
-      if (filter.ssid && !i.SSID.includes(filter.ssid)) {
-        return
-      }
-    } else {
-      if (filter.address && !i.Address.includes(filter.address)) {
-        return
-      }
-      if (filter.addressType && !i.AddressType.includes(filter.addressType)) {
-        return
-      }
-      if (filter.name && !i.Name.includes(filter.name)) {
-        return
-      }
-      if (filter.vendor && !i.Vendor.includes(filter.vendor)) {
-        return
-      }
-    }
-    if (filter.host && !i.Host.includes(filter.host)) {
+    } else if (!filterBluetoothDev(i, filter)) {
       return
     }
     i.RSSI.forEach((e) => {
@@ -905,6 +880,38 @@ const showRSSILoc3DChart = (div, wifi, list, filter) => {
   }
   chart.setOption(options)
   chart.resize()
+}
+
+const filterBluetoothDev = (i, filter) => {
+  if (filter.address && !i.Address.includes(filter.address)) {
+    return false
+  }
+  if (filter.addressType && !i.AddressType.includes(filter.addressType)) {
+    return false
+  }
+  if (filter.name && !i.Name.includes(filter.name)) {
+    return false
+  }
+  if (filter.vendor && !i.Vendor.includes(filter.vendor)) {
+    return false
+  }
+  if (filter.host && !i.Host.includes(filter.host)) {
+    return false
+  }
+  return true
+}
+
+const filterWifiAP = (i, filter) => {
+  if (filter.bssid && !i.BSSID.includes(filter.bssid)) {
+    return false
+  }
+  if (filter.ssid && !i.SSID.includes(filter.ssid)) {
+    return false
+  }
+  if (filter.host && !i.Host.includes(filter.host)) {
+    return false
+  }
+  return true
 }
 
 const getRSSILevel = (rssi) => {
@@ -1319,4 +1326,6 @@ export default (context, inject) => {
   inject('showEnv2DChart', showEnv2DChart)
   inject('getEnvName', getEnvName)
   inject('envTypeList', envTypeList)
+  inject('filterBluetoothDev', filterBluetoothDev)
+  inject('filterWifiAP', filterWifiAP)
 }
