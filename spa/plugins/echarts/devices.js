@@ -2,7 +2,7 @@ import * as echarts from 'echarts'
 import { getScoreIndex } from '~/plugins/echarts/utils.js'
 
 let chart
-const showVendorChart = (div, devices) => {
+const showVendorChart = (div, devices, filter) => {
   if (chart) {
     chart.dispose()
   }
@@ -120,6 +120,9 @@ const showVendorChart = (div, devices) => {
   }
   const data = {}
   devices.forEach((d) => {
+    if (!filterDevice(d, filter)) {
+      return
+    }
     if (!data[d.Vendor]) {
       data[d.Vendor] = [0, 0, 0, 0, 0, 0]
     }
@@ -145,6 +148,26 @@ const showVendorChart = (div, devices) => {
   chart.resize()
 }
 
+const filterDevice = (d, filter) => {
+  if (filter.mac && !d.ID.includes(filter.mac)) {
+    return false
+  }
+  if (filter.name && !d.Name.includes(filter.name)) {
+    return false
+  }
+  if (filter.ip && !d.IP.includes(filter.ip)) {
+    return false
+  }
+  if (filter.vendor && !d.Vendor.includes(filter.vendor)) {
+    return false
+  }
+  if (filter.excludeVM && d.IP.includes('VMware')) {
+    return false
+  }
+  return true
+}
+
 export default (context, inject) => {
   inject('showVendorChart', showVendorChart)
+  inject('filterDevice', filterDevice)
 }

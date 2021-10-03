@@ -84,10 +84,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="devices"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Device_List.csv"
-          header="TWSNMP FC Device List"
+          header="TWSNMPで作成したLANデバイスリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -96,10 +96,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="devices"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Device_List.xls"
-          header="TWSNMP FC Device List"
+          header="TWSNMPで作成したLANデバイスリスト"
+          worksheet="デバイス"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -444,7 +445,7 @@ export default {
     openVendorChart() {
       this.vendorDialog = true
       this.$nextTick(() => {
-        this.$showVendorChart('vendorChart', this.devices)
+        this.$showVendorChart('vendorChart', this.devices, this.conf)
       })
     },
     openInfoDialog(item) {
@@ -487,6 +488,25 @@ export default {
         .catch((e) => {
           this.addNodeError = true
         })
+    },
+    makeExports() {
+      const exports = []
+      this.devices.forEach((d) => {
+        if (!this.$filterDevice(d, this.conf)) {
+          return
+        }
+        exports.push({
+          名前: d.Name,
+          MACアドレス: d.ID,
+          IPアドレス: d.IP,
+          ベンダー: d.Vendor,
+          信用スコア: d.Score,
+          ペナリティー: d.Penalty,
+          初回日時: d.First,
+          最終日時: d.Last,
+        })
+      })
+      return exports
     },
   },
 }
