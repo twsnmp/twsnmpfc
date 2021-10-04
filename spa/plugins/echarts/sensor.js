@@ -927,11 +927,14 @@ const getRSSILevel = (rssi) => {
   return 0
 }
 
-const showEnv3DChart = (div, type, list) => {
+const showEnv3DChart = (div, type, list, filter) => {
   const data = []
   const cat = []
   list.forEach((i) => {
     if (!i.EnvData || i.EnvData.length < 1) {
+      return
+    }
+    if (!filterEnvMon(i, filter)) {
       return
     }
     const id = i.Host + ':' + i.Address
@@ -1060,6 +1063,7 @@ const showEnv3DChart = (div, type, list) => {
       {
         name: 'Env Data',
         type: 'scatter3D',
+        symbolSize: 4,
         dimensions: ['Host:Address', 'Time', type, 'Level', 'Name'],
         data,
       },
@@ -1069,7 +1073,7 @@ const showEnv3DChart = (div, type, list) => {
   chart.resize()
 }
 
-const showEnv2DChart = (div, type, list) => {
+const showEnv2DChart = (div, type, list, filter) => {
   const cat = []
   const series = []
   list.forEach((i) => {
@@ -1082,6 +1086,9 @@ const showEnv2DChart = (div, type, list) => {
       type !== 'Humidity' &&
       type !== 'Battery'
     ) {
+      return
+    }
+    if (!filterEnvMon(i, filter)) {
       return
     }
     const data = []
@@ -1286,6 +1293,19 @@ const getEnvLevel = (v, type) => {
   }
 }
 
+const filterEnvMon = (i, filter) => {
+  if (filter.address && !i.Address.includes(filter.address)) {
+    return false
+  }
+  if (filter.name && !i.Name.includes(filter.name)) {
+    return false
+  }
+  if (filter.host && !i.Host.includes(filter.host)) {
+    return false
+  }
+  return true
+}
+
 const envTypeList = [
   { value: 'Temp', text: '気温(℃)', unit: '℃' },
   { value: 'Humidity', text: '湿度(%)', unit: '%' },
@@ -1328,4 +1348,5 @@ export default (context, inject) => {
   inject('envTypeList', envTypeList)
   inject('filterBluetoothDev', filterBluetoothDev)
   inject('filterWifiAP', filterWifiAP)
+  inject('filterEnvMon', filterEnvMon)
 }

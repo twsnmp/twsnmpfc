@@ -77,10 +77,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="envMonitor"
+          :fetch="makeSensorExports"
           type="csv"
           name="TWSNMP_FC_Env_Monitor_List.csv"
-          header="TWSNMP FC Env Monitor List"
+          header="TWSNMP FCで作成した環境センサーリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -89,10 +89,10 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="envMonitor"
+          :fetch="makeSensorExports"
           type="xls"
           name="TWSNMP_FC_Env_Monitor_List.xls"
-          header="TWSNMP FC Env Monitor List"
+          header="TWSNMP FCで作成した環境センサーリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -157,7 +157,7 @@
                 <td>{{ selected.Name }}</td>
               </tr>
               <tr>
-                <td>受信ホスト</td>
+                <td>送信元ホスト</td>
                 <td>{{ selected.Host }}</td>
               </tr>
               <tr>
@@ -181,6 +181,30 @@
         </v-simple-table>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <download-excel
+            :fetch="makeDataExports"
+            type="csv"
+            name="TWSNMP_FC_Env_Data_List.csv"
+            :header="makeDataHeader"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :fetch="makeDataExports"
+            type="xls"
+            name="TWSNMP_FC_Env_Data_List.xls"
+            :header="makeDataHeader"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-microsoft-excel</v-icon>
+              Excel
+            </v-btn>
+          </download-excel>
           <v-btn color="normal" dark @click="infoDialog = false">
             <v-icon>mdi-close</v-icon>
             閉じる
@@ -264,7 +288,7 @@ export default {
           },
         },
         {
-          text: '受信ホスト',
+          text: '送信元ホスト',
           value: 'Host',
           width: '15%',
           filter: (value) => {
@@ -367,7 +391,12 @@ export default {
       }
       this.chartTitle = this.$getEnvName(this.selectedType)
       this.$nextTick(() => {
-        this.$showEnv3DChart('env3DChart', this.selectedType, this.envMonitor)
+        this.$showEnv3DChart(
+          'env3DChart',
+          this.selectedType,
+          this.envMonitor,
+          this.conf
+        )
       })
     },
     openEnv2DChart() {
@@ -380,8 +409,57 @@ export default {
       }
       this.chartTitle = this.$getEnvName(this.selectedType)
       this.$nextTick(() => {
-        this.$showEnv2DChart('env2DChart', this.selectedType, this.envMonitor)
+        this.$showEnv2DChart(
+          'env2DChart',
+          this.selectedType,
+          this.envMonitor,
+          this.conf
+        )
       })
+    },
+    makeSensorExports() {
+      const exports = []
+      this.wifiAP.forEach((d) => {
+        if (!this.$filterEnvMon(d, this.conf)) {
+          return
+        }
+        exports.push({
+          アドレス: d.Addess,
+          名前: d.Name,
+          送信元ホスト: d.Host,
+          信号レベル: d.LastRSSI,
+          データ数: d.DataCount,
+          回数: d.Count,
+          初回日時: d.First,
+          最終日時: d.Last,
+        })
+      })
+      return exports
+    },
+    makeDataExports() {
+      const exports = []
+      this.selected.EnvData.forEach((d) => {
+        exports.push({
+          記録日時: this.$timeFormat(
+            new Date(d.Time / (1000 * 1000)),
+            '{MM}/{dd} {HH}:{mm}:{ss}'
+          ),
+          気温: d.Temp,
+          湿度: d.Humidity,
+          照度: d.Illuminance,
+          気圧: d.BarometricPressure,
+          騒音: d.Sound,
+          総揮発性有機化合物: d.ETVOC,
+          二酸化炭素濃度: d.ECo2,
+          電池残量: d.Battery,
+        })
+      })
+      return exports
+    },
+    makeDataHeader() {
+      return (
+        'TWSNMP FCで作成した環境センサー(' + this.selected.Address + ')のデータ'
+      )
     },
   },
 }
