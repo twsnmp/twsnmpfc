@@ -15,6 +15,7 @@ type WifiAPEnt struct {
 	SSID      string
 	RSSI      []RSSIEnt
 	Channel   string
+	Vendor    string
 	Info      string
 	Count     int
 	Change    int

@@ -60,6 +60,9 @@ func checkAPInfoReport(h string, m map[string]string) {
 		if e.SSID != m["ssid"] || e.Channel != m["Channel"] || e.Info != m["info"] {
 			e.Change++
 		}
+		if e.Vendor == "" {
+			e.Vendor = datastore.FindVendor(bssid)
+		}
 		e.SSID = m["ssid"]
 		e.Channel = m["Channel"]
 		e.Info = m["info"]
@@ -71,10 +74,11 @@ func checkAPInfoReport(h string, m map[string]string) {
 		return
 	}
 	datastore.AddWifiAP(&datastore.WifiAPEnt{
-		ID:    id,
-		Host:  h,
-		BSSID: bssid,
-		Count: 1,
+		ID:     id,
+		Host:   h,
+		BSSID:  bssid,
+		Vendor: datastore.FindVendor(bssid),
+		Count:  1,
 		RSSI: []datastore.RSSIEnt{
 			{Value: int(rssi), Time: now},
 		},

@@ -76,10 +76,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="wifiAP"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Wifi_AP_List.csv"
-          header="TWSNMP FC Wifi AP List"
+          header="TWSNMP FCで作成したWifiアクセスポイントリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -88,10 +88,10 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="wifiAP"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Wifi_AP_List.xls"
-          header="TWSNMP FC Wifi AP List"
+          header="TWSNMP FCで作成したWifiアクセスポイントリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -164,12 +164,20 @@
                 <td>{{ selected.Channel }}</td>
               </tr>
               <tr>
+                <td>ベンダー</td>
+                <td>{{ selected.Vendor }}</td>
+              </tr>
+              <tr>
                 <td>情報</td>
                 <td>{{ selected.Info }}</td>
               </tr>
               <tr>
                 <td>回数</td>
                 <td>{{ selected.Count }}</td>
+              </tr>
+              <tr>
+                <td>変化数</td>
+                <td>{{ selected.Change }}</td>
               </tr>
               <tr>
                 <td>RSSI測定数</td>
@@ -356,6 +364,27 @@ export default {
       this.$nextTick(() => {
         this.$showRSSILoc3DChart('rssiLoc3DChart', true, this.wifiAP, this.conf)
       })
+    },
+    makeExports() {
+      const exports = []
+      this.wifiAP.forEach((d) => {
+        if (!this.$filterWifiAP(d, this.conf)) {
+          return
+        }
+        exports.push({
+          SSID: d.SSID,
+          BSSID: d.BSSID,
+          送信元ホスト: d.Host,
+          チャネル: d.Channel,
+          信号レベル: d.LastRSSI,
+          ベンダー: d.Vendor,
+          情報: d.Info,
+          回数: d.Count,
+          初回日時: d.First,
+          最終日時: d.Last,
+        })
+      })
+      return exports
     },
   },
 }
