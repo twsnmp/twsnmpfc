@@ -67,10 +67,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="users"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_User_List.csv"
-          header="TWSNMP FC User List"
+          header="TWSNMP FCで作成したユーザーリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -79,10 +79,10 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="users"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_User_List.xls"
-          header="TWSNMP FC User List"
+          header="TWSNMP FCで作成したユーザーリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -140,12 +140,12 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="usersChartDialog" persistent max-width="800px">
+    <v-dialog v-model="usersChartDialog" persistent max-width="1000px">
       <v-card>
         <v-card-title>
           <span class="headline">サーバー別</span>
         </v-card-title>
-        <div id="usersChart" style="width: 800px; height: 400px"></div>
+        <div id="usersChart" style="width: 1000px; height: 600px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="usersChartDialog = false">
@@ -385,7 +385,7 @@ export default {
     openUserChart() {
       this.usersChartDialog = true
       this.$nextTick(() => {
-        this.$showUsersChart('usersChart', this.users)
+        this.$showUsersChart('usersChart', this.users, this.conf)
       })
     },
     openInfoDialog(item) {
@@ -412,6 +412,28 @@ export default {
         })
       }
       this.infoDialog = true
+    },
+    makeExports() {
+      const exports = []
+      this.users.forEach((u) => {
+        if (!this.$filterUser(u, this.conf)) {
+          return
+        }
+        exports.push({
+          ユーザーID: u.UserID,
+          サーバー名: u.ServerName,
+          サーバーIP: u.Server,
+          クライアント数: u.Client,
+          ログイン回数: u.Total,
+          成功回数: u.Ok,
+          成功率: u.Rate,
+          信用スコア: u.Score,
+          ペナリティー: u.Penalty,
+          初回日時: u.First,
+          最終日時: u.Last,
+        })
+      })
+      return exports
     },
     formatCount(n) {
       return numeral(n).format('0,0')

@@ -2,7 +2,7 @@ import * as echarts from 'echarts'
 import { getScoreIndex } from '~/plugins/echarts/utils.js'
 
 let chart
-const showUsersChart = (div, users) => {
+const showUsersChart = (div, users, filter) => {
   if (chart) {
     chart.dispose()
   }
@@ -122,12 +122,16 @@ const showUsersChart = (div, users) => {
   }
   const data = {}
   users.forEach((u) => {
-    if (!data[u.Server]) {
-      data[u.Server] = [0, 0, 0, 0, 0, 0]
+    if (!filterUser(u, filter)) {
+      return
     }
-    data[u.Server][0]++
+    const id = u.ServerName + '(' + u.Server + ')'
+    if (!data[id]) {
+      data[id] = [0, 0, 0, 0, 0, 0]
+    }
+    data[id][0]++
     const si = getScoreIndex(u.Score)
-    data[u.Server][si]++
+    data[id][si]++
   })
   const keys = Object.keys(data)
   keys.sort(function (a, b) {
@@ -147,6 +151,17 @@ const showUsersChart = (div, users) => {
   chart.resize()
 }
 
+const filterUser = (u, filter) => {
+  if (filter.user && !u.UserID.includes(filter.user)) {
+    return false
+  }
+  if (filter.server && !u.ServerName.includes(filter.server)) {
+    return false
+  }
+  return true
+}
+
 export default (context, inject) => {
   inject('showUsersChart', showUsersChart)
+  inject('filterUser', filterUser)
 }
