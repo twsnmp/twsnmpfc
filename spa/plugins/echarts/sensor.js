@@ -712,6 +712,7 @@ const showRSSITime3DChart = (div, wifi, list, filter) => {
       {
         name: wifi ? 'Wifi AP' : 'Bluetooth Device',
         type: 'scatter3D',
+        symbolSize: 4,
         dimensions: [
           wifi ? 'Host:BSSID' : 'Host:Address',
           'Time',
@@ -867,6 +868,7 @@ const showRSSILoc3DChart = (div, wifi, list, filter) => {
       {
         name: wifi ? 'Wifi AP' : 'Bluetooth Device',
         type: 'scatter3D',
+        symbolSize: 4,
         dimensions: [
           'Host',
           wifi ? 'BSSID' : 'Address',

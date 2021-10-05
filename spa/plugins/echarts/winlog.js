@@ -52,6 +52,7 @@ const showWinEventID3DChart = (div, list, filter) => {
       {
         name: 'Windows EventID',
         type: 'scatter3D',
+        symbolSize: 6,
         dimensions: [
           'Computer',
           'Provider+EventID',
@@ -127,6 +128,7 @@ const showWinLogonScatter3DChart = (div, list, filter) => {
       {
         name: 'Windows Logon',
         type: 'scatter3D',
+        symbolSize: 6,
         dimensions: ['From', 'Target', 'Count', 'Color', 'Score', 'Computer'],
         data,
       },
@@ -259,6 +261,7 @@ const showWinKerberosScatter3DChart = (div, list, filter) => {
       {
         name: 'Windows Kerberos',
         type: 'scatter3D',
+        symbolSize: 6,
         dimensions: [
           'From',
           'Target',
@@ -331,6 +334,7 @@ const showWinPrivilegeScatter3DChart = (div, list, filter) => {
       {
         name: 'Windows Privilege',
         type: 'scatter3D',
+        symbolSize: 6,
         dimensions: ['Computer', 'Subject', 'Count'],
         data,
       },
@@ -526,6 +530,7 @@ const showWinAccountScatter3DChart = (div, list, filter) => {
       {
         name: 'Windows Account',
         type: 'scatter3D',
+        symbolSize: 6,
         dimensions: ['Subject', 'Target', 'Count', 'Computer'],
         data,
       },
@@ -702,6 +707,7 @@ const showWinProcessScatter3DChart = (div, list, mode, filter) => {
       {
         name: 'Windows Process',
         type: 'scatter3D',
+        symbolSize: 6,
         dimensions,
         data,
       },
@@ -879,6 +885,7 @@ const showWinTaskScatter3DChart = (div, list, filter) => {
       {
         name: 'Windows Task',
         type: 'scatter3D',
+        symbolSize: 6,
         dimensions: ['Subject', 'Task', 'Count', 'Computer'],
         data,
       },

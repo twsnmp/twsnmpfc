@@ -1126,6 +1126,7 @@ const showNetFlowService3D = (div, logs, type) => {
       {
         name: 'サービス別通信量',
         type: 'scatter3D',
+        symbolSize: 4,
         dimensions: dim,
         data,
       },
@@ -1337,6 +1338,7 @@ const showNetFlowSender3D = (div, logs, type) => {
       {
         name: '送信元別通信量',
         type: 'scatter3D',
+        symbolSize: 4,
         dimensions: dim,
         data,
       },
@@ -1553,6 +1555,7 @@ const showNetFlowIPFlow3D = (div, logs, type) => {
       {
         name: 'IPペアー別通信量',
         type: 'scatter3D',
+        symbolSize: 4,
         dimensions: dim,
         data,
       },
@@ -1883,6 +1886,7 @@ const showNetFlowFFT3D = (div, fftMap, fftType) => {
       {
         name: 'NetFlow FFT分析',
         type: 'scatter3D',
+        symbolSize: 4,
         dimensions: [
           'Host',
           freq ? '周波数' : '周期',

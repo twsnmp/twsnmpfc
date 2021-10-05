@@ -499,6 +499,7 @@ const showSyslogHost3D = (div, logs) => {
       {
         name: 'ホスト別ログ件数',
         type: 'scatter3D',
+        symbolSize: 4,
         dimensions: ['Host', 'Time', 'Priority', 'Level'],
         data,
       },
@@ -871,6 +872,7 @@ const showSyslogExtract3D = (div, extractDatas, xType, zType, colorType) => {
       {
         name: '抽出情報の項目別集計',
         type: 'scatter3D',
+        symbolSize: 4,
         dimensions: [xType, 'Time', zType, colorType],
         data,
       },
@@ -1182,6 +1184,7 @@ const showSyslogFFT3D = (div, fftMap, fftType) => {
       {
         name: 'Syslog FFT分析',
         type: 'scatter3D',
+        symbolSize: 4,
         dimensions: [
           'Host',
           freq ? '周波数' : '周期',
