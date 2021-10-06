@@ -64,6 +64,24 @@
                 <v-list-item-title>サーバー別</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="showGraph">
+              <v-list-item-icon>
+                <v-icon>mdi-graphql</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>グラフ分析</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="openUser3DChart">
+              <v-list-item-icon>
+                <v-icon>mdi-home-map-marker</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>3Dグラフ</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <download-excel
@@ -261,6 +279,45 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="graphDialog" persistent max-width="1050px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          ユーザーグラフ分析
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="graphType"
+            :items="graphTypeList"
+            label="表示タイプ"
+            single-line
+            hide-details
+            @change="updateGraph"
+          ></v-select>
+        </v-card-title>
+        <div id="graph" style="width: 1000px; height: 750px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="graphDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="user3DDialog" persistent max-width="1000px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ログイン状況 3Dグラフ</span>
+        </v-card-title>
+        <div id="user3DChart" style="width: 1000px; height: 600px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="user3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -313,6 +370,14 @@ export default {
         itemsPerPage: 15,
       },
       options: {},
+      graphDialog: false,
+      graphType: 'force',
+      graphTypeList: [
+        { text: '力学モデル', value: 'force' },
+        { text: '円形', value: 'circular' },
+        { text: '３D', value: 'gl' },
+      ],
+      user3DDialog: false,
     }
   },
   async fetch() {
@@ -434,6 +499,21 @@ export default {
         })
       })
       return exports
+    },
+    showGraph() {
+      this.graphDialog = true
+      this.$nextTick(() => {
+        this.updateGraph()
+      })
+    },
+    updateGraph() {
+      this.$showUserGraph('graph', this.users, this.graphType, this.conf)
+    },
+    openUser3DChart() {
+      this.user3DDialog = true
+      this.$nextTick(() => {
+        this.$showUser3DChart('user3DChart', this.users, this.conf)
+      })
     },
     formatCount(n) {
       return numeral(n).format('0,0')
