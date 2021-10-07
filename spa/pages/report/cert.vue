@@ -25,6 +25,7 @@
         </template>
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
+          <v-icon small @click="openEditDialog(item)"> mdi-pencil </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
         <template #[`body.append`]>
@@ -49,11 +50,15 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-btn color="primary" dark @click="openEditDialog(false)">
+          <v-icon>mdi-plus</v-icon>
+          追加
+        </v-btn>
         <download-excel
           :data="certs"
           type="csv"
           name="TWSNMP_FC_Cert_List.csv"
-          header="TWSNMP FC Cert List"
+          header="TWSNMP FCで作成したサーバー証明書リスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -65,7 +70,7 @@
           :data="certs"
           type="xls"
           name="TWSNMP_FC_Cert_List.xls"
-          header="TWSNMP FC Cert List"
+          header="TWSNMP FCで作成したサーバー証明書リスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -73,10 +78,6 @@
             Excel
           </v-btn>
         </download-excel>
-        <v-btn color="primary" dark @click="addDialog = true">
-          <v-icon>mdi-plus</v-icon>
-          追加
-        </v-btn>
         <v-btn color="error" dark @click="resetDialog = true">
           <v-icon>mdi-calculator</v-icon>
           再計算
@@ -163,7 +164,7 @@
               </tr>
               <tr>
                 <td>検証済み</td>
-                <td>{{ selected.Verify }}</td>
+                <td>{{ selected.VerifyStr }}</td>
               </tr>
               <tr>
                 <td>信用スコア</td>
@@ -201,25 +202,25 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="addDialog" persistent max-width="500px">
+    <v-dialog v-model="editDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
-          <span class="headline">サーバー追加</span>
+          <span class="headline">対象サーバー編集</span>
         </v-card-title>
-        <v-alert v-model="addError" color="error" dense dismissible>
-          対象サーバーを追加できません。
+        <v-alert v-model="editError" color="error" dense dismissible>
+          対象サーバーを保存できません。
         </v-alert>
         <v-card-text>
-          <v-text-field v-model="add.Target" label="ターゲット"></v-text-field>
-          <v-text-field v-model="add.Port" label="ポート番号"></v-text-field>
+          <v-text-field v-model="edit.Target" label="ターゲット"></v-text-field>
+          <v-text-field v-model="edit.Port" label="ポート番号"></v-text-field>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" dark @click="doAdd">
+          <v-btn color="primary" dark @click="doSave">
             <v-icon>mdi-content-save</v-icon>
-            追加
+            保存
           </v-btn>
-          <v-btn color="normal" dark @click="addDialog = false">
+          <v-btn color="normal" dark @click="editDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -238,17 +239,17 @@ export default {
         {
           text: 'ターゲット',
           value: 'Target',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.target) return true
             return value.includes(this.conf.target)
           },
         },
-        { text: 'ポート', value: 'Port', width: '5%' },
+        { text: 'ポート', value: 'Port', width: '7%' },
         {
           text: '証明内容',
           value: 'Subject',
-          width: '18%',
+          width: '20%',
           filter: (value) => {
             if (!this.conf.subject) return true
             return value.includes(this.conf.subject)
@@ -257,14 +258,14 @@ export default {
         {
           text: '発行者',
           value: 'Issuer',
-          width: '17%',
+          width: '20%',
           filter: (value) => {
             if (!this.conf.issuer) return true
             return value.includes(this.conf.issuer)
           },
         },
-        { text: '検証', value: 'Verify', width: '5%' },
-        { text: '期限', value: 'NotAfterDate', width: '15%' },
+        { text: '検証', value: 'VerifyStr', width: '8%' },
+        { text: '期限', value: 'NotAfterDate', width: '10%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
       certs: [],
@@ -274,9 +275,9 @@ export default {
       deleteError: false,
       resetDialog: false,
       resetError: false,
-      add: { Target: '', Port: 443 },
-      addDialog: false,
-      addError: false,
+      edit: { Target: '', Port: 443, ID: '' },
+      editDialog: false,
+      editError: false,
       conf: {
         target: '',
         subject: '',
@@ -316,6 +317,7 @@ export default {
         c.NotAfterDate = ''
         c.NotBeforeDate = ''
       }
+      c.VerifyStr = c.Verify ? 'はい' : 'いいえ'
     })
     if (this.conf.page > 1) {
       this.options.page = this.conf.page
@@ -368,21 +370,56 @@ export default {
       this.selected = item
       this.infoDialog = true
     },
-    openAddDialog() {
-      this.addDialog = true
+    openEditDialog(item) {
+      if (item) {
+        this.edit.Target = item.Target
+        this.edit.Port = item.Port
+        this.edit.ID = item.ID
+      } else {
+        this.edit.Target = ''
+        this.edit.Port = 443
+        this.edit.ID = ''
+      }
+      this.editDialog = true
     },
-    doAdd() {
+    doSave() {
       const url = '/api/report/cert'
-      this.add.Port *= 1
+      this.edit.Port *= 1
       this.$axios
-        .post(url, this.add)
+        .post(url, this.edit)
         .then(() => {
-          this.addDialog = false
+          this.editDialog = false
           this.$fetch()
         })
         .catch((e) => {
-          this.addError = true
+          this.editError = true
         })
+    },
+    makeExports() {
+      const exports = []
+      this.certs.forEach((c) => {
+        if (this.conf.target && !c.Target.includes(this.conf.target)) {
+          return
+        }
+        if (this.conf.subject && !c.Subject.includes(this.conf.subject)) {
+          return
+        }
+        if (this.conf.issuer && !c.Isser.includes(this.conf.issuer)) {
+          return
+        }
+        exports.push({
+          ターゲット: c.Target,
+          ポート番号: c.Port,
+          証明内容: c.Subject,
+          発行者: c.Isser,
+          検証済: c.VerifyStr,
+          開始日時: c.NotBefore,
+          終了日時: c.NotAfterDate,
+          初回日時: c.First,
+          最終日時: c.Last,
+        })
+      })
+      return exports
     },
   },
 }

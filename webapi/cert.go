@@ -20,6 +20,7 @@ func getCert(c echo.Context) error {
 
 func postCert(c echo.Context) error {
 	pc := new(struct {
+		ID     string
 		Target string
 		Port   int
 	})
@@ -29,6 +30,10 @@ func postCert(c echo.Context) error {
 	id := fmt.Sprintf("%s:%d", pc.Target, pc.Port)
 	if datastore.GetCert(id) != nil {
 		return echo.ErrBadRequest
+	}
+	if pc.ID != "" {
+		// 更新は元の情報を削除して新規追加する
+		datastore.DeleteReport("cert", []string{pc.ID})
 	}
 	datastore.AddCert(&datastore.CertEnt{
 		ID:     id,

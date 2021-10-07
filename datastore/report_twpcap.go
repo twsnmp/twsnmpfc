@@ -279,23 +279,3 @@ func saveTLS(b *bbolt.Bucket, last int64) {
 		return true
 	})
 }
-
-func saveCert(b *bbolt.Bucket, last int64) {
-	r := b.Bucket([]byte("cert"))
-	certs.Range(func(k, v interface{}) bool {
-		e := v.(*CertEnt)
-		if e.UpdateTime < last {
-			return true
-		}
-		s, err := json.Marshal(e)
-		if err != nil {
-			log.Printf("save cert report err=%v", err)
-			return true
-		}
-		err = r.Put([]byte(e.ID), s)
-		if err != nil {
-			log.Printf("save cert report err=%v", err)
-		}
-		return true
-	})
-}

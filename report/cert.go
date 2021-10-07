@@ -31,8 +31,8 @@ func setCertPenalty(c *datastore.CertEnt) {
 	if c.Error != "" {
 		c.Penalty++
 	}
-	if c.LastTime == 0 {
-		c.Penalty++
+	if c.Subject == "" {
+		c.Penalty += 4
 		return
 	}
 	if !c.Verify {
@@ -66,6 +66,10 @@ func getCert(c *datastore.CertEnt) {
 	d := &net.Dialer{
 		Timeout: time.Duration(datastore.MapConf.Timeout) * time.Second,
 	}
+	if c.FirstTime == 0 {
+		c.FirstTime = time.Now().UnixNano()
+	}
+	c.LastTime = time.Now().UnixNano()
 	for i := 0; i <= datastore.MapConf.Retry; i++ {
 		conn, err := tls.DialWithDialer(d, "tcp", target, conf)
 		if err != nil {
@@ -89,10 +93,6 @@ func getCert(c *datastore.CertEnt) {
 				c.NotAfter = cert.NotAfter.Unix()
 				c.NotBefore = cert.NotBefore.Unix()
 				c.Verify = !conf.InsecureSkipVerify
-				if c.FirstTime == 0 {
-					c.FirstTime = time.Now().UnixNano()
-				}
-				c.LastTime = time.Now().UnixNano()
 			} else {
 				c.Error = "no cert"
 			}
@@ -103,6 +103,8 @@ func getCert(c *datastore.CertEnt) {
 		setCertPenalty(c)
 		return
 	}
+	c.UpdateTime = time.Now().UnixNano()
+	setCertPenalty(c)
 }
 
 // getServerCert : サーバー証明書を取得する
