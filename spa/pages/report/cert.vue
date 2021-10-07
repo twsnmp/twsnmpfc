@@ -55,7 +55,7 @@
           追加
         </v-btn>
         <download-excel
-          :data="certs"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Cert_List.csv"
           header="TWSNMP FCで作成したサーバー証明書リスト"
@@ -67,7 +67,7 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="certs"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Cert_List.xls"
           header="TWSNMP FCで作成したサーバー証明書リスト"
@@ -404,17 +404,20 @@ export default {
         if (this.conf.subject && !c.Subject.includes(this.conf.subject)) {
           return
         }
-        if (this.conf.issuer && !c.Isser.includes(this.conf.issuer)) {
+        if (this.conf.issuer && !c.Issuer.includes(this.conf.issuer)) {
           return
         }
         exports.push({
           ターゲット: c.Target,
           ポート番号: c.Port,
           証明内容: c.Subject,
-          発行者: c.Isser,
+          発行者: c.Issuer,
+          シリアル番号: c.SerialNumber,
           検証済: c.VerifyStr,
-          開始日時: c.NotBefore,
-          終了日時: c.NotAfterDate,
+          エラー: c.Error,
+          信用スコア: c.Score,
+          開始日: c.NotBeforeDate,
+          終了日: c.NotAfterDate,
           初回日時: c.First,
           最終日時: c.Last,
         })
