@@ -3,7 +3,7 @@ import WorldData from 'world-map-geojson'
 import { getScoreIndex } from '~/plugins/echarts/utils.js'
 
 let chart
-const showServerMapChart = (div, servers, filter) => {
+const showServerMapChart = (div, servers) => {
   if (chart) {
     chart.dispose()
   }
@@ -95,9 +95,6 @@ const showServerMapChart = (div, servers, filter) => {
   const locMap = {}
   servers.forEach((s) => {
     if (locMap.length > 10000) {
-      return
-    }
-    if (!filterServer(s, filter)) {
       return
     }
     const loc = s.Loc

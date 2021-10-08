@@ -2,7 +2,7 @@ import * as echarts from 'echarts'
 import { getScoreIndex } from '~/plugins/echarts/utils.js'
 
 let chart
-const showVendorChart = (div, devices, filter) => {
+const showVendorChart = (div, list) => {
   if (chart) {
     chart.dispose()
   }
@@ -115,14 +115,11 @@ const showVendorChart = (div, devices, filter) => {
       },
     ],
   }
-  if (!devices) {
+  if (!list) {
     return
   }
   const data = {}
-  devices.forEach((d) => {
-    if (!filterDevice(d, filter)) {
-      return
-    }
+  list.forEach((d) => {
     if (!data[d.Vendor]) {
       data[d.Vendor] = [0, 0, 0, 0, 0, 0]
     }

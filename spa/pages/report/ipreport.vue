@@ -114,10 +114,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="ips"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_IP_List.csv"
-          header="TWSNMP FC IP List"
+          header="TWSNMP FCで作成したIPアドレスリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -126,10 +126,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="ips"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_IP_List.xls"
-          header="TWSNMP FC IP List"
+          header="TWSNMP FCで作成したIPアドレスリスト"
+          worksheet="IPアドレス"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -561,19 +562,29 @@ export default {
     openVendorChart() {
       this.vendorDialog = true
       this.$nextTick(() => {
-        this.$showVendorChart('vendorChart', this.ips)
+        this.$showVendorChart('vendorChart', this.getFilterList())
       })
+    },
+    getFilterList() {
+      const list = []
+      this.ips.forEach((ip) => {
+        if (!this.filterIP(ip, this.conf)) {
+          return
+        }
+        list.push(ip)
+      })
+      return list
     },
     openMapChart() {
       this.mapChartDialog = true
       this.$nextTick(() => {
-        this.$showServerMapChart('mapChart', this.ips)
+        this.$showServerMapChart('mapChart', this.getFilterList())
       })
     },
     openCountryChart() {
       this.countryChartDialog = true
       this.$nextTick(() => {
-        this.$showCountryChart('countryChart', this.ips)
+        this.$showCountryChart('countryChart', this.getFilterList())
       })
     },
     openInfoDialog(item) {
@@ -630,6 +641,64 @@ export default {
           this.copyError = true
         }
       )
+    },
+    makeExports() {
+      const exports = []
+      this.ips.forEach((ip) => {
+        if (!this.filterIP(ip, this.conf)) {
+          return
+        }
+        exports.push({
+          IPアドレス: ip.IP,
+          名前: ip.Name,
+          位置: ip.LocInfo,
+          MACアドレス: ip.MAC,
+          ベンダー: ip.Vendor,
+          検知回数: ip.Count,
+          MACアドレス変化回数: ip.Change,
+          信用スコア: ip.Score,
+          ペナリティー: ip.Penalty,
+          初回日時: ip.First,
+          最終日時: ip.Last,
+        })
+      })
+      return exports
+    },
+    filterIP(ip, filter) {
+      if (filter.excludeFlag) {
+        if (filter.mac && ip.MAC.includes(filter.mac)) {
+          return false
+        }
+        if (filter.name && ip.Name.includes(filter.name)) {
+          return false
+        }
+        if (filter.country && ip.Country.includes(filter.country)) {
+          return false
+        }
+        if (filter.ip && ip.IP.includes(filter.ip)) {
+          return false
+        }
+        if (filter.vendor && ip.Vendor.includes(filter.vendor)) {
+          return false
+        }
+      } else {
+        if (filter.mac && !ip.MAC.includes(filter.mac)) {
+          return false
+        }
+        if (filter.name && !ip.Name.includes(filter.name)) {
+          return false
+        }
+        if (filter.ip && !ip.IP.includes(filter.ip)) {
+          return false
+        }
+        if (filter.vendor && !ip.Vendor.includes(filter.vendor)) {
+          return false
+        }
+        if (filter.country && !ip.Country.includes(filter.country)) {
+          return false
+        }
+      }
+      return true
     },
   },
 }

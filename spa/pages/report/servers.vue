@@ -570,21 +570,24 @@ export default {
     openMapChart() {
       this.mapChartDialog = true
       this.$nextTick(() => {
-        this.$showServerMapChart('mapChart', this.servers, this.conf)
+        this.$showServerMapChart('mapChart', this.getFilterList())
       })
     },
     openCountryChart() {
       this.countryChartDialog = true
       this.$nextTick(() => {
-        const list = []
-        this.servers.forEach((s) => {
-          if (!this.$filterServer(s, this.conf)) {
-            return
-          }
-          list.push(s)
-        })
-        this.$showCountryChart('countryChart', list)
+        this.$showCountryChart('countryChart', this.getFilterList())
       })
+    },
+    getFilterList() {
+      const list = []
+      this.servers.forEach((s) => {
+        if (!this.$filterServer(s, this.conf)) {
+          return
+        }
+        list.push(s)
+      })
+      return list
     },
     formatCount(n) {
       return numeral(n).format('0,0')

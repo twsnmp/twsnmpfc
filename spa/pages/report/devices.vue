@@ -445,7 +445,14 @@ export default {
     openVendorChart() {
       this.vendorDialog = true
       this.$nextTick(() => {
-        this.$showVendorChart('vendorChart', this.devices, this.conf)
+        const list = []
+        this.devices.forEach((d) => {
+          if (!this.$filterDevice(d, this.conf)) {
+            return
+          }
+          list.push(d)
+        })
+        this.$showVendorChart('vendorChart', list)
       })
     },
     openInfoDialog(item) {
