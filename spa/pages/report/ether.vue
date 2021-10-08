@@ -4,18 +4,10 @@
       <v-card-title>
         Ethernetフレームタイプ
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
       </v-card-title>
       <v-data-table
         :headers="headers"
         :items="etherType"
-        :search="search"
         :items-per-page="15"
         :sort-by="['Host', 'Count']"
         :sort-desc="[false, true]"
@@ -29,6 +21,19 @@
         </template>
         <template #[`item.Count`]="{ item }">
           {{ formatCount(item.Count) }}
+        </template>
+        <template #[`body.append`]>
+          <tr>
+            <td>
+              <v-text-field v-model="conf.host" label="Host"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="conf.name" label="Name"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="conf.type" label="Type"></v-text-field>
+            </td>
+          </tr>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -52,10 +57,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="etherType"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_EtherType_List.csv"
-          header="TWSNMP FC EtherType List"
+          header="TWSNMP FCで作成したイーサネットタイプリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -64,10 +69,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="etherType"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_EtherType_List.xls"
-          header="TWSNMP FC EtherType List"
+          header="TWSNMP FCで作成したイーサネットタイプリスト"
+          worksheet="イーサネットタイプ"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -104,15 +110,43 @@ import * as numeral from 'numeral'
 export default {
   data() {
     return {
-      search: '',
       headers: [
-        { text: 'ホスト', value: 'Host', width: '20%' },
-        { text: '名前', value: 'Name', width: '15%' },
-        { text: 'タイプ', value: 'Type', width: '15%' },
+        {
+          text: 'ホスト',
+          value: 'Host',
+          width: '20%',
+          filter: (value) => {
+            if (!this.conf.host) return true
+            return value.includes(this.conf.host)
+          },
+        },
+        {
+          text: '名前',
+          value: 'Name',
+          width: '15%',
+          filter: (value) => {
+            if (!this.conf.name) return true
+            return value.includes(this.conf.name)
+          },
+        },
+        {
+          text: 'タイプ',
+          value: 'Type',
+          width: '15%',
+          filter: (value) => {
+            if (!this.conf.type) return true
+            return value.includes(this.conf.type)
+          },
+        },
         { text: '回数', value: 'Count', width: '10%' },
         { text: '初回', value: 'First', width: '20%' },
         { text: '最終', value: 'Last', width: '20%' },
       ],
+      conf: {
+        host: '',
+        name: '',
+        type: '',
+      },
       etherType: [],
       etherTypeChartDialog: false,
     }
@@ -137,11 +171,47 @@ export default {
     openEtherTypeChart() {
       this.etherTypeChartDialog = true
       this.$nextTick(() => {
-        this.$showEtherTypeChart('etherTypeChart', this.etherType)
+        const list = []
+        this.etherType.forEach((e) => {
+          if (!this.filterEther(e)) {
+            return
+          }
+          list.push(e)
+        })
+        this.$showEtherTypeChart('etherTypeChart', list)
       })
+    },
+    filterEther(e) {
+      if (this.conf.host && !e.Host.includes(this.conf.host)) {
+        return false
+      }
+      if (this.conf.name && !e.Name.includes(this.conf.name)) {
+        return false
+      }
+      if (this.conf.type && !e.Type.includes(this.conf.type)) {
+        return false
+      }
+      return true
     },
     formatCount(n) {
       return numeral(n).format('0,0')
+    },
+    makeExports() {
+      const exports = []
+      this.etherType.forEach((e) => {
+        if (!this.filterEther(e)) {
+          return
+        }
+        exports.push({
+          ホスト: e.Host,
+          名前: e.Name,
+          タイプ: e.Type,
+          回数: e.Count,
+          初回日時: e.First,
+          最終日時: e.Last,
+        })
+      })
+      return exports
     },
   },
 }
