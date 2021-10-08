@@ -158,7 +158,7 @@ const filterDevice = (d, filter) => {
   if (filter.vendor && !d.Vendor.includes(filter.vendor)) {
     return false
   }
-  if (filter.excludeVM && d.IP.includes('VMware')) {
+  if (filter.excludeVM && d.Vendor.includes('VMware')) {
     return false
   }
   return true
