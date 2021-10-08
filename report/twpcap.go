@@ -312,11 +312,23 @@ func setTLSFlowPenalty(f *datastore.TLSFlowEnt) {
 	if !isSafeCountry(f.ServerLoc) {
 		f.Penalty++
 	}
-	if strings.Contains(f.Version, "1.0") || strings.Contains(f.Version, "1.1") || strings.Contains(f.Version, "SSL") {
+	if !isSafeCountry(f.ClientLoc) {
 		f.Penalty++
+	}
+	if strings.Contains(f.Version, "1.2") {
+		f.Penalty++
+	} else if strings.Contains(f.Version, "1.1") {
+		f.Penalty += 2
+	} else if strings.Contains(f.Version, "1.0") {
+		f.Penalty += 3
+	} else if strings.Contains(f.Version, "SSL") {
+		f.Penalty += 4
 	}
 	// DNSで解決できない場合
 	if f.ServerName == f.Server {
+		f.Penalty++
+	}
+	if f.ClientName == f.Client {
 		f.Penalty++
 	}
 }
