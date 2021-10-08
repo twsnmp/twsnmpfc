@@ -71,6 +71,7 @@
           type="xls"
           name="TWSNMP_FC_Cert_List.xls"
           header="TWSNMP FCで作成したサーバー証明書リスト"
+          worksheet="サーバー証明書"
           class="v-btn"
         >
           <v-btn color="primary" dark>

@@ -105,7 +105,7 @@
                 <v-icon>mdi-lan-connect</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>力学モデル</v-list-item-title>
+                <v-list-item-title>グラフ分析</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="openFlows3DChart">
@@ -143,10 +143,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="tls"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_TLS_List.csv"
-          header="TWSNMP FC TLS List"
+          header="TWSNMP FCで作成したTLS通信リスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -155,10 +155,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="tls"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_TLS_List.xls"
-          header="TWSNMP FC TLS List"
+          header="TWSNMP FCで作成したTLS通信リスト"
+          worksheet="TLS通信"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -319,7 +320,16 @@
     <v-dialog v-model="flowsChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
-          <span class="headline">TLS通信フロー（力学モデル）</span>
+          TLS通信フロー（グラフ分析）
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="graphType"
+            :items="graphTypeList"
+            label="表示タイプ"
+            single-line
+            hide-details
+            @change="updateFlowsChart"
+          ></v-select>
         </v-card-title>
         <v-alert v-model="over" color="error" dense dismissible>
           対象のTLS通信フローの数が多すぎます。フィルターしてください。
@@ -327,14 +337,6 @@
         <div id="flowsChart" style="width: 1000px; height: 700px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="filterDialog = true">
-            <v-icon>mdi-magnify</v-icon>
-            フィルター
-          </v-btn>
-          <v-btn v-if="hasFilter" color="normal" @click="clearFilter">
-            <v-icon>mdi-cancel</v-icon>
-            フィルター解除
-          </v-btn>
           <v-btn color="normal" @click="flowsChartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
@@ -377,51 +379,6 @@
           <v-btn color="normal" @click="countryChartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="filterDialog" persistent max-width="500px">
-      <v-card>
-        <v-card-title>
-          <span class="headline">表示条件</span>
-        </v-card-title>
-        <v-card-text>
-          <v-autocomplete
-            v-model="filter.Client"
-            :items="clientList"
-            label="クライアント"
-          ></v-autocomplete>
-          <v-autocomplete
-            v-model="filter.Server"
-            :items="serverList"
-            label="サーバー"
-          ></v-autocomplete>
-          <v-autocomplete
-            v-model="filter.Service"
-            :items="serviceList"
-            label="サービス"
-          ></v-autocomplete>
-          <v-autocomplete
-            v-model="filter.Version"
-            :items="versionList"
-            label="Version"
-          ></v-autocomplete>
-          <v-autocomplete
-            v-model="filter.Cipher"
-            :items="cipherList"
-            label="暗号スイート"
-          ></v-autocomplete>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" dark @click="doFilter">
-            <v-icon>mdi-magnify</v-icon>
-            適用
-          </v-btn>
-          <v-btn color="normal" dark @click="filterDialog = false">
-            <v-icon>mdi-cancel</v-icon>
-            キャンセル
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -557,26 +514,18 @@ export default {
       flowsChartDialog: false,
       flows3DChartDialog: false,
       countryChartDialog: false,
-      filterDialog: false,
-      filter: {
-        Client: '',
-        Server: '',
-        Service: '',
-        Version: '',
-        Cipher: '',
-      },
       over: false,
-      clientList: [],
-      serverList: [],
-      serviceList: [],
-      versionList: [],
-      cipherList: [],
       versionChartDialog: false,
       cipherChartDialog: false,
       countryChartMode: 'server',
       CSList: [
         { text: 'サーバー', value: 'server' },
         { text: 'クライアント', value: 'client' },
+      ],
+      graphType: 'force',
+      graphTypeList: [
+        { text: '力学モデル', value: 'force' },
+        { text: '円形', value: 'circular' },
       ],
     }
   },
@@ -585,11 +534,6 @@ export default {
     if (!this.tls) {
       return
     }
-    const svMap = new Map()
-    const clMap = new Map()
-    const svcMap = new Map()
-    const verMap = new Map()
-    const csMap = new Map()
     this.tls.forEach((t) => {
       t.First = this.$timeFormat(
         new Date(t.FirstTime / (1000 * 1000)),
@@ -607,44 +551,11 @@ export default {
       t.ServerLatLong = loc.LatLong
       t.ServerLocInfo = loc.LocInfo
       t.SCountry = loc.Country
-      svMap.set(t.Server, t.ServerName)
-      clMap.set(t.Client, t.ClientName)
-      svcMap.set(t.Service, true)
-      verMap.set(t.Version, true)
-      csMap.set(t.Cipher, true)
     })
-    this.clientList = []
-    clMap.forEach((v, k) => {
-      this.clientList.push({
-        text: v,
-        value: k,
-      })
-    })
-    this.serverList = []
-    svMap.forEach((v, k) => {
-      this.serverList.push({
-        text: v,
-        value: k,
-      })
-    })
-    this.serviceList = Array.from(svcMap.keys())
-    this.versionList = Array.from(verMap.keys())
-    this.cipherList = Array.from(csMap.keys())
     if (this.conf.page > 1) {
       this.options.page = this.conf.page
       this.conf.page = 1
     }
-  },
-  computed: {
-    hasFilter() {
-      return (
-        this.filter.Service ||
-        this.filter.Version ||
-        this.filter.Client ||
-        this.filter.Server ||
-        this.filter.Cipher
-      )
-    },
   },
   created() {
     const c = this.$store.state.report.tls.conf
@@ -695,13 +606,21 @@ export default {
     openFlowsChart() {
       this.flowsChartDialog = true
       this.$nextTick(() => {
-        this.over = this.$showTLSFlowsChart('flowsChart', this.tls, this.filter)
+        this.updateFlowsChart()
       })
+    },
+    updateFlowsChart() {
+      this.over = this.$showTLSFlowsChart(
+        'flowsChart',
+        this.tls,
+        this.conf,
+        this.graphType
+      )
     },
     openFlows3DChart() {
       this.flows3DChartDialog = true
       this.$nextTick(() => {
-        this.$showTLSFlows3DChart('flows3DChart', this.tls)
+        this.$showTLSFlows3DChart('flows3DChart', this.tls, this.conf)
       })
     },
     openCountryChart() {
@@ -712,6 +631,9 @@ export default {
       const list = []
       if (this.countryChartMode === 'client') {
         this.tls.forEach((t) => {
+          if (!this.$filterTLSFlow(t, this.conf)) {
+            return
+          }
           list.push({
             Score: t.Score,
             Loc: t.ClientLoc,
@@ -720,6 +642,9 @@ export default {
         })
       } else {
         this.tls.forEach((t) => {
+          if (!this.$filterTLSFlow(t, this.conf)) {
+            return
+          }
           list.push({
             Score: t.Score,
             Loc: t.ServerLoc,
@@ -734,28 +659,14 @@ export default {
     openVersionChart() {
       this.versionChartDialog = true
       this.$nextTick(() => {
-        this.$showTLSVersionPieChart('versionChart', this.tls)
+        this.$showTLSVersionPieChart('versionChart', this.tls, this.conf)
       })
     },
     openCipherChart() {
       this.cipherChartDialog = true
       this.$nextTick(() => {
-        this.$showTLSCipherChart('cipherChart', this.tls)
+        this.$showTLSCipherChart('cipherChart', this.tls, this.conf)
       })
-    },
-    doFilter() {
-      this.filterDialog = false
-      this.openFlowsChart()
-    },
-    clearFilter() {
-      this.filter = {
-        Service: '',
-        Client: '',
-        Server: '',
-        Version: '',
-        Cipher: '',
-      }
-      this.openFlowsChart()
     },
     formatCount(n) {
       return numeral(n).format('0,0')
@@ -763,6 +674,30 @@ export default {
     showGoogleMap(latLong) {
       const url = `https://www.google.com/maps/search/?api=1&query=${latLong}`
       window.open(url, '_blank')
+    },
+    makeExports() {
+      const exports = []
+      this.tls.forEach((f) => {
+        if (!this.$filterTLSFlow(f, this.conf)) {
+          return
+        }
+        exports.push({
+          クライアント名: f.ClientName,
+          クライアントIP: f.Client,
+          クライアント位置: f.ClientLocInfo,
+          サーバー名: f.ServerName,
+          サーバーIP: f.Server,
+          サーバー位置: f.ServerLocInfo,
+          TLSバージョン: f.Version,
+          暗号スイート: f.Cipher,
+          記録回数: f.Count,
+          信用スコア: f.Score,
+          ペナリティー: f.Penalty,
+          初回日時: f.First,
+          最終日時: f.Last,
+        })
+      })
+      return exports
     },
   },
 }

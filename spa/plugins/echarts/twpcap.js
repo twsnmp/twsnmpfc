@@ -118,7 +118,7 @@ const showEtherTypeChart = (div, etherType) => {
   chart.resize()
 }
 
-const showTLSFlowsChart = (div, tls, filter) => {
+const showTLSFlowsChart = (div, tls, filter, layout) => {
   if (chart) {
     chart.dispose()
   }
@@ -186,7 +186,7 @@ const showTLSFlowsChart = (div, tls, filter) => {
     series: [
       {
         type: 'graph',
-        layout: 'force',
+        layout: layout || 'force',
         symbolSize: 6,
         categories,
         roam: true,
@@ -212,19 +212,7 @@ const showTLSFlowsChart = (div, tls, filter) => {
       over = true
       return
     }
-    if (filter.Service && f.Service !== filter.Service) {
-      return
-    }
-    if (filter.Client && f.Client !== filter.Client) {
-      return
-    }
-    if (filter.Server && f.Server !== filter.Server) {
-      return
-    }
-    if (filter.Version && f.Version !== filter.Version) {
-      return
-    }
-    if (filter.Cipher && f.Cipher !== filter.Cipher) {
+    if (!filterTLSFlow(f, filter)) {
       return
     }
     const c = `${f.ClientName}(${f.Client})`
@@ -269,6 +257,31 @@ const showTLSFlowsChart = (div, tls, filter) => {
   return over
 }
 
+const filterTLSFlow = (f, filter) => {
+  if (filter.client && !f.ClientName.includes(filter.client)) {
+    return false
+  }
+  if (filter.ccountry && !f.CCountry.includes(filter.ccountry)) {
+    return false
+  }
+  if (filter.server && !f.ServerName.includes(filter.server)) {
+    return false
+  }
+  if (filter.scountry && !f.SCountry.includes(filter.scountry)) {
+    return false
+  }
+  if (filter.service && !f.Service.includes(filter.service)) {
+    return false
+  }
+  if (filter.version && !f.Version.includes(filter.version)) {
+    return false
+  }
+  if (filter.cipher && !f.Cipher.includes(filter.cipher)) {
+    return false
+  }
+  return true
+}
+
 const getScoreColor = (s) => {
   if (s > 66) {
     return '#1f78b4'
@@ -305,7 +318,7 @@ const getLocCategory = (l) => {
   return 5
 }
 
-const showTLSFlows3DChart = (div, tls) => {
+const showTLSFlows3DChart = (div, tls, filter) => {
   if (chart) {
     chart.dispose()
   }
@@ -407,6 +420,9 @@ const showTLSFlows3DChart = (div, tls) => {
     if (count > 20000) {
       return
     }
+    if (!filterTLSFlow(f, filter)) {
+      return
+    }
     if (!f.ServerLatLong && !f.ClientLatLong) {
       return
     }
@@ -434,7 +450,7 @@ const getLatLong = (loc) => {
   return [a[1], a[0]]
 }
 
-const showTLSVersionPieChart = (div, tls) => {
+const showTLSVersionPieChart = (div, tls, filter) => {
   if (chart) {
     chart.dispose()
   }
@@ -488,6 +504,9 @@ const showTLSVersionPieChart = (div, tls) => {
   }
   const verMap = new Map()
   tls.forEach((t) => {
+    if (!filterTLSFlow(t, filter)) {
+      return
+    }
     if (!verMap.has(t.Version)) {
       verMap.set(t.Version, { count: 0 })
     }
@@ -507,7 +526,7 @@ const showTLSVersionPieChart = (div, tls) => {
   chart.resize()
 }
 
-const showTLSCipherChart = (div, tls) => {
+const showTLSCipherChart = (div, tls, filter) => {
   if (chart) {
     chart.dispose()
   }
@@ -625,6 +644,9 @@ const showTLSCipherChart = (div, tls) => {
   }
   const csMap = new Map()
   tls.forEach((t) => {
+    if (!filterTLSFlow(t, filter)) {
+      return
+    }
     if (!csMap.has(t.Cipher)) {
       csMap.set(t.Cipher, [0, 0, 0, 0, 0, 0])
     }
@@ -1039,4 +1061,5 @@ export default (context, inject) => {
   inject('showDNSChart', showDNSChart)
   inject('showRADIUSFlowsChart', showRADIUSFlowsChart)
   inject('showRADIUSBarChart', showRADIUSBarChart)
+  inject('filterTLSFlow', filterTLSFlow)
 }
