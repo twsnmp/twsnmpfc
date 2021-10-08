@@ -93,7 +93,7 @@
                 <v-icon>mdi-lan-connect</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>力学モデル</v-list-item-title>
+                <v-list-item-title>グラフ分析</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="openFlows3DChart">
@@ -123,10 +123,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="flows"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Flow_List.csv"
-          header="TWSNMP FC Flow List"
+          header="TWSNMP FCで作成した通信フローリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -135,10 +135,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="flows"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Flow_List.xls"
-          header="TWSNMP FC Flow List"
+          header="TWSNMP FCで作成した通信フローリスト"
+          worksheet="通信フロー"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -197,7 +198,16 @@
     <v-dialog v-model="flowsChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
-          <span class="headline">通信フロー（力学モデル）</span>
+          通信フロー（グラフ分析）
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="graphType"
+            :items="graphTypeList"
+            label="表示タイプ"
+            single-line
+            hide-details
+            @change="updateFlowsChart"
+          ></v-select>
         </v-card-title>
         <v-alert v-model="over" color="error" dense dismissible>
           対象の通信フローが多すぎます。フィルターしてください。
@@ -205,14 +215,6 @@
         <div id="flowsChart" style="width: 1000px; height: 700px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="filterDialog = true">
-            <v-icon>mdi-magnify</v-icon>
-            フィルター
-          </v-btn>
-          <v-btn v-if="hasFilter" color="normal" @click="clearFilter">
-            <v-icon>mdi-cancel</v-icon>
-            フィルター解除
-          </v-btn>
           <v-btn color="normal" @click="flowsChartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
@@ -388,51 +390,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="filterDialog" persistent max-width="500px">
-      <v-card>
-        <v-card-title>
-          <span class="headline">表示条件</span>
-        </v-card-title>
-        <v-card-text>
-          <v-select
-            v-model="filter.Service"
-            :items="filterServiceList"
-            label="サービス"
-          ></v-select>
-          <v-text-field
-            v-model="filter.ServiceReg"
-            label="サービス(正規表現)"
-          ></v-text-field>
-          <v-text-field
-            v-model="filter.ClientName"
-            label="クライアント名(正規表現)"
-          ></v-text-field>
-          <v-text-field
-            v-model="filter.ClientIP"
-            label="クライアントIP"
-          ></v-text-field>
-          <v-text-field
-            v-model="filter.ServerName"
-            label="サーバー名(正規表現)"
-          ></v-text-field>
-          <v-text-field
-            v-model="filter.ServerIP"
-            label="サーバーIP"
-          ></v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" dark @click="doFilter">
-            <v-icon>mdi-magnify</v-icon>
-            適用
-          </v-btn>
-          <v-btn color="normal" dark @click="filterDialog = false">
-            <v-icon>mdi-cancel</v-icon>
-            キャンセル
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
     <v-dialog v-model="unknownPortDialog" persistent max-width="950px">
       <v-card>
         <v-card-title>
@@ -534,46 +491,7 @@ export default {
       flowsChartDialog: false,
       flows3DChartDialog: false,
       countryChartDialog: false,
-      filterDialog: false,
       over: false,
-      filter: {
-        Service: '',
-        ServiceReg: '',
-        ClientName: '',
-        ClientIP: '',
-        ServerName: '',
-        ServerIP: '',
-      },
-      filterServiceList: [
-        { text: 'DNS', value: 'domain/udp' },
-        { text: 'DNS(TCP)', value: 'domain/tcp' },
-        { text: 'DHCP', value: 'bootps/udp' },
-        { text: 'TELNET', value: 'telnet/tcp' },
-        { text: 'SSH', value: 'ssh/tcp' },
-        { text: 'HTTP', value: 'http/tcp' },
-        { text: 'HTTPS', value: 'https/tcp' },
-        { text: 'FTP', value: 'ftp/tcp' },
-        { text: 'LDAP', value: 'ldap/tcp' },
-        { text: 'LDAPS', value: 'ldaps/tcp' },
-        { text: 'CIFS', value: 'microsoft-ds/tcp' },
-        { text: 'NFS', value: 'nfsd/tcp' },
-        { text: 'NETBIOS', value: 'netbios-dgm/udp' },
-        { text: 'RDP', value: 'ms-wbt-server/tcp' },
-        { text: 'VNC', value: 'rfb/tcp' },
-        { text: 'NTP', value: 'ntp/udp' },
-        { text: 'SYSLOG', value: 'syslog/udp' },
-        { text: 'RADIUS', value: 'radius/udp' },
-        { text: 'SNMP', value: 'snmp/udp' },
-        { text: 'ICMP到達不能', value: '3/icmp' },
-        { text: 'ICMP非推奨', value: '-1/icmp' },
-        { text: 'PING', value: '8/icmp' },
-        { text: 'ICMPリダイレクト', value: '5/icmp' },
-        { text: 'APPLE-APN', value: 'apple-apn/tcp' },
-        { text: 'ADNDOID', value: 'android/tcp' },
-        { text: 'WINDOWS UPDATE', value: 'wudo/tcp' },
-        { text: '不明(TCP)', value: 'other/tcp' },
-        { text: '不明(UDP)', value: 'other/tcp' },
-      ],
       unkownPortsHeaders: [
         { text: '名前', value: 'Name', width: '60%' },
         { text: '回数', value: 'Count', width: '40%' },
@@ -592,6 +510,11 @@ export default {
         itemsPerPage: 15,
       },
       options: {},
+      graphType: 'force',
+      graphTypeList: [
+        { text: '力学モデル', value: 'force' },
+        { text: '円形', value: 'circular' },
+      ],
     }
   },
   async fetch() {
@@ -624,18 +547,6 @@ export default {
       this.options.page = this.conf.page
       this.conf.page = 1
     }
-  },
-  computed: {
-    hasFilter() {
-      return (
-        this.filter.Service ||
-        this.filter.ServiceReg ||
-        this.filter.ClientName ||
-        this.filter.ClientIP ||
-        this.filter.ServerName ||
-        this.filter.ServerIP
-      )
-    },
   },
   created() {
     const c = this.$store.state.report.flows.conf
@@ -709,42 +620,35 @@ export default {
     openFlowsChart() {
       this.flowsChartDialog = true
       this.$nextTick(() => {
-        this.over = this.$showFlowsChart('flowsChart', this.flows, this.filter)
+        this.updateFlowsChart()
       })
+    },
+    updateFlowsChart() {
+      this.over = this.$showFlowsChart(
+        'flowsChart',
+        this.flows,
+        this.conf,
+        this.graphType
+      )
     },
     openFlows3DChart() {
       this.flows3DChartDialog = true
       this.$nextTick(() => {
-        this.$showFlows3DChart('flows3DChart', this.flows)
+        this.$showFlows3DChart('flows3DChart', this.flows, this.conf)
       })
     },
     openCountryChart() {
       this.countryChartDialog = true
       this.$nextTick(() => {
-        this.$showCountryChart('countryChart', this.flows)
+        const list = []
+        this.flows.forEach((f) => {
+          if (!this.$filterFlow(f, this.conf)) {
+            return
+          }
+          list.push(f)
+        })
+        this.$showCountryChart('countryChart', list)
       })
-    },
-    openFilterDialog() {
-      this.flowsChartDialog = false
-      this.filterDialog = true
-    },
-    doFilter() {
-      this.flowsChartDialog = true
-      this.filterDialog = false
-      this.$nextTick(() => {
-        this.over = this.$showFlowsChart('flowsChart', this.flows, this.filter)
-      })
-    },
-    clearFilter() {
-      this.filter = {
-        Service: '',
-        ServiceReg: '',
-        ClientName: '',
-        ClientIP: '',
-        ServerName: '',
-        ServerIP: '',
-      }
-      this.doFilter()
     },
     formatCount(n) {
       return numeral(n).format('0,0')
@@ -766,6 +670,31 @@ export default {
         .catch((e) => {
           this.unknownPortError = true
         })
+    },
+    makeExports() {
+      const exports = []
+      this.flows.forEach((f) => {
+        if (!this.$filterFlow(f, this.conf)) {
+          return
+        }
+        exports.push({
+          クライアント名: f.ClientName,
+          クライアントIP: f.Client,
+          クライアント位置: f.ClientLocInfo,
+          サーバー名: f.ServerName,
+          サーバーIP: f.Server,
+          サーバー位置: f.ServerLocInfo,
+          記録回数: f.Count,
+          通信量: f.Bytes,
+          サービス: f.ServiceInfo,
+          サービス数: f.ServiceCount,
+          信用スコア: f.Score,
+          ペナリティー: f.Penalty,
+          初回日時: f.First,
+          最終日時: f.Last,
+        })
+      })
+      return exports
     },
   },
 }

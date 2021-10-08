@@ -37,7 +37,6 @@ export default {
     '@/plugins/echarts/users.js',
     '@/plugins/echarts/servers.js',
     '@/plugins/echarts/flows.js',
-    '@/plugins/echarts/flows3d.js',
     '@/plugins/echarts/servicepie.js',
     '@/plugins/echarts/ai.js',
     '@/plugins/echarts/monitor.js',
