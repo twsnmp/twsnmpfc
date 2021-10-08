@@ -81,10 +81,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="dnsq"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_DNSQ_List.csv"
-          header="TWSNMP FC DNS Query List"
+          header="TWSNMP FCで作成したDNS問い合わせリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -93,10 +93,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="dnsq"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_DNSQ_List.xls"
-          header="TWSNMP FC DNS Query List"
+          header="TWSNMP FCで作成したDNS問い合わせリスト"
+          worksheet="DNS問い合わせ"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -272,11 +273,52 @@ export default {
           return
       }
       this.$nextTick(() => {
-        this.$showDNSChart(type + 'Chart', this.dnsq)
+        const list = []
+        this.dnsq.forEach((d) => {
+          if (!this.filterDNS(d)) {
+            return
+          }
+          list.push(d)
+        })
+        this.$showDNSChart(type + 'Chart', list)
       })
+    },
+    filterDNS(d) {
+      if (this.conf.host && !d.Host.includes(this.conf.host)) {
+        return false
+      }
+      if (this.conf.server && !d.Server.includes(this.conf.server)) {
+        return false
+      }
+      if (this.conf.type && !d.Type.includes(this.conf.type)) {
+        return false
+      }
+      if (this.conf.name && !d.Name.includes(this.conf.name)) {
+        return false
+      }
+      return true
     },
     formatCount(n) {
       return numeral(n).format('0,0')
+    },
+    makeExports() {
+      const exports = []
+      this.dnsq.forEach((d) => {
+        if (!this.filterDNS(d)) {
+          return
+        }
+        exports.push({
+          ホスト: d.Host,
+          サーバー: d.Host,
+          タイプ: d.Type,
+          名前: d.Name,
+          回数: d.Count,
+          変化: d.Change,
+          初回日時: d.First,
+          最終日時: d.Last,
+        })
+      })
+      return exports
     },
   },
 }
