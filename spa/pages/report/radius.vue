@@ -90,7 +90,7 @@
                 <v-icon>mdi-lan-connect</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>力学モデル</v-list-item-title>
+                <v-list-item-title>グラフ分析</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="openRADIUSBarChart('Client')">
@@ -120,10 +120,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="radius"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_RADIUS_List.csv"
-          header="TWSNMP FC RADIUS List"
+          header="TWSNMP FCで作成したRADIUS通信リスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -132,10 +132,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="radius"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_RADIUS_List.xls"
-          header="TWSNMP FC RADIUS List"
+          header="TWSNMP FCで作成したRADIUS通信リスト"
+          worksheet="RADIUS通信"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -224,6 +225,30 @@
                 <td>{{ selected.Server }}</td>
               </tr>
               <tr>
+                <td>回数</td>
+                <td>{{ formatCount(selected.Count) }}</td>
+              </tr>
+              <tr>
+                <td>成功率</td>
+                <td>{{ selected.Rate }}</td>
+              </tr>
+              <tr>
+                <td>Request</td>
+                <td>{{ selected.Request }}</td>
+              </tr>
+              <tr>
+                <td>Challenge</td>
+                <td>{{ selected.Challenge }}</td>
+              </tr>
+              <tr>
+                <td>Accept</td>
+                <td>{{ selected.Accept }}</td>
+              </tr>
+              <tr>
+                <td>Reject</td>
+                <td>{{ selected.Reject }}</td>
+              </tr>
+              <tr>
                 <td>信用スコア</td>
                 <td>{{ selected.Score }}</td>
               </tr>
@@ -238,10 +263,6 @@
               <tr>
                 <td>最終日時</td>
                 <td>{{ selected.Last }}</td>
-              </tr>
-              <tr>
-                <td>記録回数</td>
-                <td>{{ formatCount(selected.Count) }}</td>
               </tr>
             </tbody>
           </template>
@@ -262,7 +283,16 @@
     <v-dialog v-model="flowsChartDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
-          <span class="headline">RADIUS通信フロー（力学モデル）</span>
+          RADIUS通信グラフ分析
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="graphType"
+            :items="graphTypeList"
+            label="表示タイプ"
+            single-line
+            hide-details
+            @change="updateFlowsChart"
+          ></v-select>
         </v-card-title>
         <div id="flowsChart" style="width: 1000px; height: 700px"></div>
         <v-card-actions>
@@ -298,11 +328,11 @@ export default {
   data() {
     return {
       headers: [
-        { text: '信用スコア', value: 'Score', width: '15%' },
+        { text: '信用スコア', value: 'Score', width: '10%' },
         {
           text: 'クライアント',
           value: 'ClientName',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.client) return true
             return value.includes(this.conf.client)
@@ -311,19 +341,20 @@ export default {
         {
           text: 'サーバー',
           value: 'ServerName',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.server) return true
             return value.includes(this.conf.server)
           },
         },
-        { text: '回数', value: 'Count', width: '5%' },
-        { text: 'Request', value: 'Request', width: '5%' },
-        { text: 'Challenge', value: 'Challenge', width: '5%' },
-        { text: 'Accept', value: 'Accept', width: '5%' },
-        { text: 'Reject', value: 'Reject', width: '5%' },
-        { text: '最終', value: 'Last', width: '15%' },
-        { text: '操作', value: 'actions', width: '5%' },
+        { text: '回数', value: 'Count', width: '8%' },
+        { text: '成功率', value: 'Rate', width: '8%' },
+        { text: 'Request', value: 'Request', width: '6%' },
+        { text: 'Challenge', value: 'Challenge', width: '6%' },
+        { text: 'Accept', value: 'Accept', width: '6%' },
+        { text: 'Reject', value: 'Reject', width: '6%' },
+        { text: '最終', value: 'Last', width: '12%' },
+        { text: '操作', value: 'actions', width: '10%' },
       ],
       radius: [],
       conf: {
@@ -348,6 +379,11 @@ export default {
       flowsChartDialog: false,
       barChartDialog: false,
       barChartTitle: '',
+      graphType: 'force',
+      graphTypeList: [
+        { text: '力学モデル', value: 'force' },
+        { text: '円形', value: 'circular' },
+      ],
     }
   },
   async fetch() {
@@ -364,6 +400,8 @@ export default {
         new Date(r.LastTime / (1000 * 1000)),
         '{MM}/{dd} {HH}:{mm}:{ss}'
       )
+      const t = r.Accept * 1 + r.Reject * 1
+      r.Rate = t ? (100.0 * r.Accept) / t : 0.0
     })
     if (this.conf.page > 1) {
       this.options.page = this.conf.page
@@ -419,8 +457,15 @@ export default {
     openRADIUSFlowsChart() {
       this.flowsChartDialog = true
       this.$nextTick(() => {
-        this.$showRADIUSFlowsChart('flowsChart', this.radius)
+        this.updateFlowsChart()
       })
+    },
+    updateFlowsChart() {
+      this.$showRADIUSFlowsChart(
+        'flowsChart',
+        this.getFilterList(),
+        this.graphType
+      )
     },
     openRADIUSBarChart(type) {
       switch (type) {
@@ -438,11 +483,53 @@ export default {
       }
       this.barChartDialog = true
       this.$nextTick(() => {
-        this.$showRADIUSBarChart('barChart', type, this.radius)
+        this.$showRADIUSBarChart('barChart', type, this.getFilterList())
       })
     },
     formatCount(n) {
       return numeral(n).format('0,0')
+    },
+    getFilterList() {
+      const list = []
+      this.radius.forEach((r) => {
+        if (!this.filterRADIUS(r)) {
+          return
+        }
+        list.push(r)
+      })
+      return list
+    },
+    filterRADIUS(r) {
+      if (this.conf.client && !r.ClientName.includes(this.conf.client)) {
+        return false
+      }
+      if (this.conf.server && !r.ServerName.includes(this.conf.server)) {
+        return false
+      }
+      return true
+    },
+    makeExports() {
+      const exports = []
+      this.radius.forEach((r) => {
+        if (!this.filterRADIUS(r)) {
+          return
+        }
+        exports.push({
+          クライアント名: r.ClientName,
+          クライアントIP: r.Client,
+          サーバー名: r.ServerName,
+          サーバーIP: r.Server,
+          回数: r.Count,
+          成功率: r.Rate,
+          Request: r.Request,
+          Challenge: r.Challenge,
+          Accept: r.Accept,
+          Reject: r.Reject,
+          初回日時: r.First,
+          最終日時: r.Last,
+        })
+      })
+      return exports
     },
   },
 }

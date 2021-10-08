@@ -799,11 +799,13 @@ const showDNSChart = (div, dns) => {
   chart.resize()
 }
 
-const showRADIUSFlowsChart = (div, radius) => {
+const showRADIUSFlowsChart = (div, radius, layout) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
+  const categories = [{ name: 'サーバー' }, { name: 'クライアント' }]
+
   const option = {
     backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
       {
@@ -829,22 +831,29 @@ const showRADIUSFlowsChart = (div, radius) => {
         saveAsImage: { name: 'twsnmp_' + div },
       },
     },
-    tooltip: {
-      trigger: 'item',
-      formatter: (params) => {
-        return params.name + '<br/>' + params.value
+    color: ['#eee', '#1f78b4'],
+    tooltip: {},
+    legend: [
+      {
+        orient: 'vertical',
+        top: 50,
+        right: 20,
+        textStyle: {
+          fontSize: 10,
+          color: '#ccc',
+        },
+        data: categories.map(function (a) {
+          return a.name
+        }),
       },
-      textStyle: {
-        fontSize: 10,
-      },
-      position: 'right',
-    },
+    ],
     animationDurationUpdate: 1500,
     animationEasingUpdate: 'quinticInOut',
     series: [
       {
         type: 'graph',
-        layout: 'force',
+        layout: layout || 'force',
+        categories,
         symbolSize: 6,
         edgeSymbol: ['circle', 'arrow'],
         edgeSymbolSize: [2, 8],
@@ -874,7 +883,9 @@ const showRADIUSFlowsChart = (div, radius) => {
     if (!nodes[s]) {
       nodes[s] = {
         name: s,
+        category: 0,
         draggable: true,
+        symbolSize: 8,
         value: f.Count,
         label: {
           show: false,
@@ -886,6 +897,7 @@ const showRADIUSFlowsChart = (div, radius) => {
     if (!nodes[c]) {
       nodes[c] = {
         name: c,
+        category: 1,
         draggable: true,
         value: f.Count,
         label: {
