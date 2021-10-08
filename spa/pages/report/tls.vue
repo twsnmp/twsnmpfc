@@ -218,7 +218,7 @@
     <v-dialog v-model="infoDialog" persistent max-width="950px">
       <v-card>
         <v-card-title>
-          <span class="headline">フロー情報</span>
+          <span class="headline">TLS通信フロー情報</span>
         </v-card-title>
         <v-simple-table dense>
           <template #default>
