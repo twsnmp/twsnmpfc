@@ -3,7 +3,7 @@ import WorldData from 'world-map-geojson'
 import { getScoreIndex } from '~/plugins/echarts/utils.js'
 
 let chart
-const showServerMapChart = (div, servers) => {
+const showServerMapChart = (div, servers, filter) => {
   if (chart) {
     chart.dispose()
   }
@@ -95,6 +95,9 @@ const showServerMapChart = (div, servers) => {
   const locMap = {}
   servers.forEach((s) => {
     if (locMap.length > 10000) {
+      return
+    }
+    if (!filterServer(s, filter)) {
       return
     }
     const loc = s.Loc
@@ -269,7 +272,21 @@ const showCountryChart = (div, list) => {
   chart.resize()
 }
 
+const filterServer = (s, filter) => {
+  if (filter.name && !s.ServerName.includes(filter.name)) {
+    return false
+  }
+  if (filter.country && !s.Country.includes(filter.country)) {
+    return false
+  }
+  if (filter.service && !s.ServiceInfo.includes(filter.service)) {
+    return false
+  }
+  return true
+}
+
 export default (context, inject) => {
   inject('showServerMapChart', showServerMapChart)
   inject('showCountryChart', showCountryChart)
+  inject('filterServer', filterServer)
 }

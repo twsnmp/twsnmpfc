@@ -97,10 +97,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="servers"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Server_List.csv"
-          header="TWSNMP FC Server List"
+          header="TWSNMP FCで作成したサーバーリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -109,10 +109,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="servers"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Server_List.xls"
-          header="TWSNMP FC Server List"
+          header="TWSNMP FCで作成したサーバーリスト"
+          worksheet="サーバー"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -569,13 +570,20 @@ export default {
     openMapChart() {
       this.mapChartDialog = true
       this.$nextTick(() => {
-        this.$showServerMapChart('mapChart', this.servers)
+        this.$showServerMapChart('mapChart', this.servers, this.conf)
       })
     },
     openCountryChart() {
       this.countryChartDialog = true
       this.$nextTick(() => {
-        this.$showCountryChart('countryChart', this.servers)
+        const list = []
+        this.servers.forEach((s) => {
+          if (!this.$filterServer(s, this.conf)) {
+            return
+          }
+          list.push(s)
+        })
+        this.$showCountryChart('countryChart', list)
       })
     },
     formatCount(n) {
@@ -624,6 +632,30 @@ export default {
         .catch((e) => {
           this.addNodeError = true
         })
+    },
+    makeExports() {
+      const exports = []
+      this.servers.forEach((d) => {
+        if (!this.$filterServer(d, this.conf)) {
+          return
+        }
+        exports.push({
+          名前: d.ServerName,
+          IPアドレス: d.Server,
+          位置: d.LocInfo,
+          記録回数: d.Count,
+          通信量: d.Bytes,
+          サービス: d.ServiceInfo,
+          NTP情報: d.NTPInfo,
+          DHCP情報: d.DHCPInfo,
+          TLS情報: d.TLSInfo,
+          信用スコア: d.Score,
+          ペナリティー: d.Penalty,
+          初回日時: d.First,
+          最終日時: d.Last,
+        })
+      })
+      return exports
     },
   },
 }
