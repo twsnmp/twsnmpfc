@@ -83,10 +83,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="eventids"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Windows_EventID_List.csv"
-          header="TWSNMP FC Windows Event ID List"
+          header="TWSNMP FCで作成したWindowsイベントIDリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -95,10 +95,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="eventids"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Windows_EventID_List.xls"
-          header="TWSNMP FC Windows Event ID"
+          header="TWSNMP FCで作成したWindowsイベントIDリスト"
+          worksheet="WindowsイベントID"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -355,6 +356,25 @@ export default {
           this.conf
         )
       })
+    },
+    makeExports() {
+      const exports = []
+      this.eventids.forEach((e) => {
+        if (!this.$filterWinEventID(e, this.conf)) {
+          return
+        }
+        exports.push({
+          レベル: this.$getStateName(e.Level),
+          コンピュータ: e.Computer,
+          チャネル: e.Channel,
+          プロバイダー: e.Provider,
+          イベントID: e.EventID,
+          回数: e.Count,
+          初回日時: e.First,
+          最終日時: e.Last,
+        })
+      })
+      return exports
     },
   },
 }

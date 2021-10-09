@@ -9,19 +9,7 @@ const showWinEventID3DChart = (div, list, filter) => {
   const mapx = new Map()
   const mapy = new Map()
   list.forEach((e) => {
-    if (filter.computer && !e.Computer.includes(filter.computer)) {
-      return
-    }
-    if (filter.provider && !e.Provider.includes(filter.provider)) {
-      return
-    }
-    if (filter.eventID && !e.EventID.toString(10).includes(filter.eventID)) {
-      return
-    }
-    if (filter.channel && !e.Channel.includes(filter.channel)) {
-      return
-    }
-    if (filter.level && e.Level !== filter.level) {
+    if (!filterWinEventID(e, filter)) {
       return
     }
     const id = e.Provider + ':' + e.EventID
@@ -67,6 +55,25 @@ const showWinEventID3DChart = (div, list, filter) => {
   chart.setOption(getScatter3DChartBaseOption(div))
   chart.setOption(options)
   chart.resize()
+}
+
+const filterWinEventID = (e, filter) => {
+  if (filter.computer && !e.Computer.includes(filter.computer)) {
+    return false
+  }
+  if (filter.provider && !e.Provider.includes(filter.provider)) {
+    return false
+  }
+  if (filter.eventID && !e.EventID.toString(10).includes(filter.eventID)) {
+    return false
+  }
+  if (filter.channel && !e.Channel.includes(filter.channel)) {
+    return false
+  }
+  if (filter.level && e.Level !== filter.level) {
+    return false
+  }
+  return true
 }
 
 const getWinEventLevel = (l) => {
@@ -1085,4 +1092,5 @@ export default (context, inject) => {
   inject('showWinProcessScatter3DChart', showWinProcessScatter3DChart)
   inject('showWinTaskForceChart', showWinTaskForceChart)
   inject('showWinTaskScatter3DChart', showWinTaskScatter3DChart)
+  inject('filterWinEventID', filterWinEventID)
 }
