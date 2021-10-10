@@ -1,21 +1,10 @@
 <template>
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
-      <v-card-title>
-        AI分析
-        <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
-      </v-card-title>
+      <v-card-title> AI分析 </v-card-title>
       <v-data-table
         :headers="headers"
         :items="ai"
-        :search="search"
         :items-per-page="15"
         sort-by="Score"
         sort-desc
@@ -47,14 +36,27 @@
           </v-icon>
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
         </template>
+        <template #[`body.append`]>
+          <tr>
+            <td></td>
+            <td>
+              <v-text-field v-model="filter.node" label="Node"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="filter.polling" label="Polling">
+              </v-text-field>
+            </td>
+            <td colspan="6"></td>
+          </tr>
+        </template>
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
         <download-excel
-          :data="ai"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_AI_List.csv"
-          header="TWSNMP FC AI List"
+          header="TWSNMP FCのAI分析リスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -63,10 +65,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="ai"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_AI_List.xls"
-          header="TWSNMP FC AI List"
+          header="TWSNMP FCのAI分析リスト"
+          worksheet="AI分析"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -113,8 +116,24 @@ export default {
       search: '',
       headers: [
         { text: '異常スコア', value: 'Score', width: '15%' },
-        { text: 'ノード', value: 'NodeName', width: '20%' },
-        { text: 'ポーリング', value: 'PollingName', width: '30%' },
+        {
+          text: 'ノード',
+          value: 'NodeName',
+          width: '20%',
+          filter: (value) => {
+            if (!this.filter.node) return true
+            return value.includes(this.filter.node)
+          },
+        },
+        {
+          text: 'ポーリング',
+          value: 'PollingName',
+          width: '30%',
+          filter: (value) => {
+            if (!this.filter.polling) return true
+            return value.includes(this.filter.polling)
+          },
+        },
         { text: 'データ数', value: 'Count', width: '10%' },
         { text: '日時', value: 'Last', width: '15%' },
         { text: '操作', value: 'actions', width: '10%' },
@@ -123,6 +142,10 @@ export default {
       selected: {},
       deleteDialog: false,
       deleteError: false,
+      filter: {
+        node: '',
+        polling: '',
+      },
     }
   },
   async fetch() {
@@ -160,6 +183,31 @@ export default {
     },
     formatBytes(n) {
       return numeral(n).format('0.000b')
+    },
+    makeExports() {
+      const exports = []
+      this.ai.forEach((e) => {
+        if (!this.filterAI(e)) {
+          return
+        }
+        exports.push({
+          異常スコア: e.Score,
+          ノード: e.NodeName,
+          ポーリング: e.PollingName,
+          データ数: e.Count,
+          最終分析日時: e.Last,
+        })
+      })
+      return exports
+    },
+    filterAI(e) {
+      if (this.filter.node && !e.NodeName.includes(this.filter.node)) {
+        return false
+      }
+      if (this.filter.polling && !e.PollingName.includes(this.filter.polling)) {
+        return false
+      }
+      return true
     },
   },
 }

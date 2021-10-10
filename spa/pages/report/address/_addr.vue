@@ -39,10 +39,10 @@
           地図
         </v-btn>
         <download-excel
-          :data="info"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Addr_Info.csv"
-          header="TWSNMP FC Address Info"
+          header="TWSNMP FCによるアドレス調査結果"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -51,10 +51,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="info"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Addr_Info.xls"
-          header="TWSNMP FC Address Info"
+          header="TWSNMP FCによるアドレス調査結果"
+          worksheet="調査結果"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -112,6 +113,17 @@ export default {
       }
       const url = `https://www.google.com/maps/search/?api=1&query=${this.latLong}`
       window.open(url, '_blank')
+    },
+    makeExports() {
+      const exports = []
+      this.info.forEach((e) => {
+        exports.push({
+          状態: this.$getStateName(e.Level),
+          項目: e.Title,
+          値: e.Value,
+        })
+      })
+      return exports
     },
   },
 }

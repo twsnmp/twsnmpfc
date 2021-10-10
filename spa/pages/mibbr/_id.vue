@@ -57,10 +57,10 @@
           取得
         </v-btn>
         <download-excel
-          :data="items"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_MIB.csv"
-          header="TWSNMP FC MIB"
+          :header="exportHeader"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -69,10 +69,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="items"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_MIB.xls"
-          header="TWSNMP FC MIB"
+          :header="exportHeader"
+          worksheet="MIB"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -88,9 +89,7 @@
     </v-card>
     <v-dialog v-model="mibTreeDialog" persistent width="600px">
       <v-card max-height="90%">
-        <v-card-title>
-          <span class="headline">MIBツリー</span>
-        </v-card-title>
+        <v-card-title> MIBツリー </v-card-title>
         <v-card-text>
           <v-text-field
             v-model="mibget.Name"
@@ -160,6 +159,7 @@ export default {
       history: [],
       options: {},
       tableMode: false,
+      exportHeader: '',
     }
   },
   async fetch() {
@@ -185,6 +185,12 @@ export default {
   },
   methods: {
     doMIBGet() {
+      this.exportHeader =
+        'TWSNMP FCで' +
+        this.node.Name +
+        'から取得した' +
+        this.mibget.Name +
+        'のMIB情報'
       this.mibTreeDialog = false
       this.headers = []
       this.items = []
@@ -217,7 +223,7 @@ export default {
       this.tableMode = false
       this.conf.search = ''
       this.headers = [
-        { text: 'Index', value: 'Index' },
+        { text: 'インデックス', value: 'Index' },
         {
           text: '名前',
           value: 'Name',
@@ -302,6 +308,33 @@ export default {
         }
       }
       return null
+    },
+    makeExports() {
+      const exports = []
+      this.items.forEach((e) => {
+        if (this.tableMode) {
+          if (this.conf.search) {
+            const s = Object.values(e).join(' ')
+            if (!s.includes(this.conf.search)) {
+              return
+            }
+          }
+          exports.push(e)
+        } else {
+          if (this.conf.name && !e.Name.includes(this.conf.name)) {
+            return
+          }
+          if (this.conf.value && !e.Value.includes(this.conf.value)) {
+            return
+          }
+          exports.push({
+            インデックス: e.Index,
+            名前: e.Name,
+            値: e.Value,
+          })
+        }
+      })
+      return exports
     },
   },
 }

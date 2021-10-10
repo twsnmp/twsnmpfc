@@ -109,10 +109,10 @@
           一括削除
         </v-btn>
         <download-excel
-          :data="pollings"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Polling_List.csv"
-          header="TWSNMP FC Polling List"
+          header="TWSNMP FCのポーリングリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -121,10 +121,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="pollings"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Polling_List.xls"
-          header="TWSNMP FC Polling List"
+          header="TWSNMP FCのポーリングリスト"
+          worksheet="ポーリング"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -140,9 +141,7 @@
     </v-card>
     <v-dialog v-model="editDialog" persistent max-width="500px">
       <v-card>
-        <v-card-title>
-          <span class="headline">ポーリング設定</span>
-        </v-card-title>
+        <v-card-title> ポーリング設定 </v-card-title>
         <v-card-text>
           <v-select
             v-if="editIndex === -1"
@@ -727,6 +726,40 @@ export default {
       this.editPolling.Extractor = this.selectedTemplate[0].Extractor
       this.editPolling.Script = this.selectedTemplate[0].Script
       this.templateDialog = false
+    },
+    makeExports() {
+      const exports = []
+      this.pollings.forEach((e) => {
+        if (!this.filterPolling(e)) {
+          return
+        }
+        exports.push({
+          ノード: e.NodeName,
+          名前: e.Name,
+          種別: e.Type,
+          モード: e.Mode,
+          ログ: this.$getLogModeName(e.LogMode),
+          レベル: this.$getStateName(e.Level),
+          状態: this.$getStateName(e.State),
+          最終実施日時: e.TimeStr,
+        })
+      })
+      return exports
+    },
+    filterPolling(e) {
+      if (this.conf.state && this.conf.state !== e.State) {
+        return false
+      }
+      if (this.conf.polltype && this.conf.Type !== e.polltype) {
+        return false
+      }
+      if (this.conf.name && !e.Name.includes(this.conf.name)) {
+        return false
+      }
+      if (this.conf.node && !e.NodeName.includes(this.conf.node)) {
+        return false
+      }
+      return true
     },
   },
 }

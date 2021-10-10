@@ -45,10 +45,10 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <download-excel
-          :data="sensors"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Sensor_List.csv"
-          header="TWSNMP FC Sensor List"
+          header="TWSNMP FCのセンサーリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -57,10 +57,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="sensors"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Sensor_List.xls"
-          header="TWSNMP FC Sensor List"
+          header="TWSNMP FCのセンサーリスト"
+          worksheet="センサー"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -382,6 +383,35 @@ export default {
     },
     formatCount(n) {
       return numeral(n).format('0,0')
+    },
+    makeExports() {
+      const exports = []
+      this.sensors.forEach((e) => {
+        if (!this.filterSensor(e)) {
+          return
+        }
+        exports.push({
+          送信元: e.Host,
+          種別: e.Type,
+          パラメータ: e.Param,
+          回数: e.Total,
+          送信数: e.Send,
+          統計履歴数: e.StatsLen,
+          リソースモニタ数: e.MonitorLen,
+          初回日時: e.First,
+          最終日時: e.Last,
+        })
+      })
+      return exports
+    },
+    filterSensor(e) {
+      if (this.filter.host && !e.Host.includes(this.filter.host)) {
+        return false
+      }
+      if (this.filter.type && !e.Type.includes(this.filter.type)) {
+        return false
+      }
+      return true
     },
   },
 }
