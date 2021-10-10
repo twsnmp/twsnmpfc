@@ -65,10 +65,10 @@
           すべて再確認
         </v-btn>
         <download-excel
-          :data="nodes"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Node_List.csv"
-          header="TWSNMP FC Node List"
+          header="TWSNMP FCで管理するノードリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -77,10 +77,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="nodes"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Node_List.xls"
-          header="TWSNMP FC Node List"
+          header="TWSNMP FCで管理するノードリスト"
+          worksheet="ノード"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -96,9 +97,7 @@
     </v-card>
     <v-dialog v-model="editDialog" persistent max-width="500px">
       <v-card>
-        <v-card-title>
-          <span class="headline">ノード設定</span>
-        </v-card-title>
+        <v-card-title> ノード設定 </v-card-title>
         <v-card-text>
           <v-text-field v-model="editNode.Name" label="名前"></v-text-field>
           <v-text-field v-model="editNode.IP" label="IPアドレス"></v-text-field>
@@ -316,6 +315,37 @@ export default {
       this.$nextTick(() => {
         this.$fetch()
       })
+    },
+    makeExports() {
+      const exports = []
+      this.nodes.forEach((e) => {
+        if (!this.filterNode(e)) {
+          return
+        }
+        exports.push({
+          名前: e.Name,
+          IPアドレス: e.IP,
+          MACアドレス: e.MAC,
+          状態: this.$getStateName(e.State),
+          説明: e.Descr,
+        })
+      })
+      return exports
+    },
+    filterNode(e) {
+      if (this.conf.state && this.conf.state !== e.State) {
+        return false
+      }
+      if (this.conf.name && !e.Name.includes(this.conf.name)) {
+        return false
+      }
+      if (this.conf.ip && !e.IP.includes(this.conf.ip)) {
+        return false
+      }
+      if (this.conf.descr && !e.Descr.includes(this.conf.descr)) {
+        return false
+      }
+      return true
     },
   },
 }
