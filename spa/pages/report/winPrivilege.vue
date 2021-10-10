@@ -55,16 +55,16 @@
                 <v-icon>mdi-chart-scatter-plot</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>３D集計</v-list-item-title>
+                <v-list-item-title>３Dグラフ</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
         </v-menu>
         <download-excel
-          :data="privilege"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Windows_Privilege_List.csv"
-          header="TWSNMP FC Windows Privilege List"
+          header="TWSNMP FCで作成したWindows特権アクセスリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -73,10 +73,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="privilege"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Windows_Privilege_List.xls"
-          header="TWSNMP FC Windows Privilege List"
+          header="TWSNMP FCで作成したWindows特権アクセスリスト"
+          worksheet="Windows特権アクセス"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -280,6 +281,22 @@ export default {
           this.conf
         )
       })
+    },
+    makeExports() {
+      const exports = []
+      this.privilege.forEach((e) => {
+        if (!this.$filterWinPrivilege(e, this.conf)) {
+          return
+        }
+        exports.push({
+          関連アカウント: e.Subject,
+          コンピュータ: e.Computer,
+          回数: e.Count,
+          初回日時: e.First,
+          最終日時: e.Last,
+        })
+      })
+      return exports
     },
   },
 }

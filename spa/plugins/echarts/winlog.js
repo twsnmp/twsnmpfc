@@ -33,20 +33,20 @@ const showWinEventID3DChart = (div, list, filter) => {
         color: ['#e31a1c', '#dfdf22', '#1f78b4'],
       },
     },
-    xAxis3D: getAxisOption('category', 'Computer', catx),
-    yAxis3D: getAxisOption('category', 'EventID', caty),
-    zAxis3D: getAxisOption('value', 'Count', []),
+    xAxis3D: getAxisOption('category', 'コンピュータ', catx),
+    yAxis3D: getAxisOption('category', 'イベントID', caty),
+    zAxis3D: getAxisOption('value', '回数', []),
     series: [
       {
         name: 'Windows EventID',
         type: 'scatter3D',
         symbolSize: 6,
         dimensions: [
-          'Computer',
-          'Provider+EventID',
-          'Count',
-          'Level',
-          'Chaneel',
+          'コンピュータ',
+          'イベントID',
+          '回数',
+          'レベル',
+          'チャネル',
         ],
         data,
       },
@@ -100,7 +100,7 @@ const showWinLogonScatter3DChart = (div, list, filter) => {
     if (filter.ip && !e.IP.includes(filter.ip)) {
       return
     }
-    const from = e.IP ? e.IP : 'Local'
+    const from = e.IP ? e.IP : 'ローカル'
     data.push([
       from,
       e.Target,
@@ -128,15 +128,22 @@ const showWinLogonScatter3DChart = (div, list, filter) => {
         color: ['#e31a1c', '#fb9a99', '#dfdf22', '#a6cee3', '#1f78b4'],
       },
     },
-    xAxis3D: getAxisOption('category', 'From', catx),
-    yAxis3D: getAxisOption('category', 'Target', caty),
-    zAxis3D: getAxisOption('value', 'Count', []),
+    xAxis3D: getAxisOption('category', '接続元', catx),
+    yAxis3D: getAxisOption('category', '対象', caty),
+    zAxis3D: getAxisOption('value', '回数', []),
     series: [
       {
         name: 'Windows Logon',
         type: 'scatter3D',
         symbolSize: 6,
-        dimensions: ['From', 'Target', 'Count', 'Color', 'Score', 'Computer'],
+        dimensions: [
+          '接続元',
+          '対象',
+          '回数',
+          '色',
+          '信用スコア',
+          'コンピュータ',
+        ],
         data,
       },
     ],
@@ -146,31 +153,19 @@ const showWinLogonScatter3DChart = (div, list, filter) => {
   chart.resize()
 }
 
-const showWinLogonForceChart = (div, list, filter) => {
+const showWinLogonGraph = (div, list, filter, layout) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
-  const categories = [{ name: 'From' }, { name: 'Target' }]
-  const option = getForceChartOption(div, categories)
+  const categories = [{ name: '操作元' }, { name: '対象' }]
+  const option = getGraphChartOption(div, categories, layout)
   if (!list) {
     return false
   }
   const nodes = {}
   list.forEach((e) => {
-    if (filter.computer && !e.Computer.includes(filter.computer)) {
-      return
-    }
-    if (filter.target && !e.Target.includes(filter.target)) {
-      return
-    }
-    if (filter.ip && !e.IP.includes(filter.ip)) {
-      return
-    }
-    if (filter.service && !e.Service.includes(filter.service)) {
-      return
-    }
-    if (filter.ticketType && !e.TicketType.includes(filter.ticketType)) {
+    if (!filterWinLogon(e, filter)) {
       return
     }
     const f = e.IP ? e.IP : 'Local'
@@ -211,27 +206,34 @@ const showWinLogonForceChart = (div, list, filter) => {
   chart.resize()
 }
 
+const filterWinLogon = (e, filter) => {
+  if (filter.computer && !e.Computer.includes(filter.computer)) {
+    return false
+  }
+  if (filter.target && !e.Target.includes(filter.target)) {
+    return false
+  }
+  if (filter.ip && !e.IP.includes(filter.ip)) {
+    return false
+  }
+  if (filter.service && !e.Service.includes(filter.service)) {
+    return false
+  }
+  if (filter.ticketType && !e.TicketType.includes(filter.ticketType)) {
+    return false
+  }
+  return true
+}
+
 const showWinKerberosScatter3DChart = (div, list, filter) => {
   const data = []
   const mapx = new Map()
   const mapy = new Map()
   list.forEach((e) => {
-    if (filter.computer && !e.Computer.includes(filter.computer)) {
+    if (!filterWinKerberos(e, filter)) {
       return
     }
-    if (filter.target && !e.Target.includes(filter.target)) {
-      return
-    }
-    if (filter.ip && !e.IP.includes(filter.ip)) {
-      return
-    }
-    if (filter.service && !e.Service.includes(filter.service)) {
-      return
-    }
-    if (filter.ticketType && !e.TicketType.includes(filter.ticketType)) {
-      return
-    }
-    const from = e.IP ? e.IP : 'Local'
+    const from = e.IP ? e.IP : 'ローカル'
     data.push([
       from,
       e.Target,
@@ -261,23 +263,23 @@ const showWinKerberosScatter3DChart = (div, list, filter) => {
         color: ['#e31a1c', '#fb9a99', '#dfdf22', '#a6cee3', '#1f78b4'],
       },
     },
-    xAxis3D: getAxisOption('category', 'From', catx),
-    yAxis3D: getAxisOption('category', 'Target', caty),
-    zAxis3D: getAxisOption('value', 'Count', []),
+    xAxis3D: getAxisOption('category', '操作元', catx),
+    yAxis3D: getAxisOption('category', '対象', caty),
+    zAxis3D: getAxisOption('value', '回数', []),
     series: [
       {
         name: 'Windows Kerberos',
         type: 'scatter3D',
         symbolSize: 6,
         dimensions: [
-          'From',
-          'Target',
-          'Count',
-          'Color',
-          'Score',
-          'Computer',
-          'TicketType',
-          'Service',
+          '操作元',
+          '対象',
+          '回数',
+          '色',
+          '信用スコア',
+          'コンピュータ',
+          'チケット種別',
+          'サービス',
         ],
         data,
       },
@@ -288,16 +290,32 @@ const showWinKerberosScatter3DChart = (div, list, filter) => {
   chart.resize()
 }
 
+const filterWinKerberos = (e, filter) => {
+  if (filter.computer && !e.Computer.includes(filter.computer)) {
+    return false
+  }
+  if (filter.target && !e.Target.includes(filter.target)) {
+    return false
+  }
+  if (filter.ip && !e.IP.includes(filter.ip)) {
+    return false
+  }
+  if (filter.service && !e.Service.includes(filter.service)) {
+    return false
+  }
+  if (filter.ticketType && !e.TicketType.includes(filter.ticketType)) {
+    return false
+  }
+  return true
+}
+
 const showWinPrivilegeScatter3DChart = (div, list, filter) => {
   const data = []
   const mapx = new Map()
   const mapy = new Map()
   const number = []
   list.forEach((e) => {
-    if (filter.computer && !e.Computer.includes(filter.computer)) {
-      return
-    }
-    if (filter.subject && !e.Subject.includes(filter.subject)) {
+    if (!filterWinPrivilege(e, filter)) {
       return
     }
     number.push(e.Count)
@@ -334,15 +352,15 @@ const showWinPrivilegeScatter3DChart = (div, list, filter) => {
         ],
       },
     },
-    xAxis3D: getAxisOption('category', 'Computer', catx),
-    yAxis3D: getAxisOption('category', 'Subject', caty),
-    zAxis3D: getAxisOption('value', 'Count', []),
+    xAxis3D: getAxisOption('category', 'コンピュータ', catx),
+    yAxis3D: getAxisOption('category', '関連アカウント', caty),
+    zAxis3D: getAxisOption('value', '回数', []),
     series: [
       {
-        name: 'Windows Privilege',
+        name: 'Windows特権アクセス',
         type: 'scatter3D',
         symbolSize: 6,
-        dimensions: ['Computer', 'Subject', 'Count'],
+        dimensions: ['コンピュータ', '操作アカウント', '回数'],
         data,
       },
     ],
@@ -350,6 +368,16 @@ const showWinPrivilegeScatter3DChart = (div, list, filter) => {
   chart.setOption(getScatter3DChartBaseOption(div))
   chart.setOption(options)
   chart.resize()
+}
+
+const filterWinPrivilege = (e, filter) => {
+  if (filter.computer && !e.Computer.includes(filter.computer)) {
+    return false
+  }
+  if (filter.subject && !e.Subject.includes(filter.subject)) {
+    return false
+  }
+  return true
 }
 
 const getAxisOption = (type, name, categories) => {
@@ -421,28 +449,22 @@ const getScatter3DChartBaseOption = (div) => {
   }
 }
 
-const showWinKerberosForceChart = (div, list, filter) => {
+const showWinKerberosGraph = (div, list, filter, layout) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
-  const categories = [{ name: 'From' }, { name: 'Target' }]
-  const option = getForceChartOption(div, categories)
+  const categories = [{ name: '操作元' }, { name: '対象' }]
+  const option = getGraphChartOption(div, categories, layout)
   if (!list) {
     return false
   }
   const nodes = {}
   list.forEach((e) => {
-    if (filter.computer && !e.Computer.includes(filter.computer)) {
+    if (!filterWinKerberos(e, filter)) {
       return
     }
-    if (filter.target && !e.Target.includes(filter.target)) {
-      return
-    }
-    if (filter.ip && !e.IP.includes(filter.ip)) {
-      return
-    }
-    const f = e.IP ? e.IP : 'Local'
+    const f = e.IP ? e.IP : 'ローカル'
     const t = e.Target
     if (!nodes[f]) {
       nodes[f] = {
@@ -487,13 +509,7 @@ const showWinAccountScatter3DChart = (div, list, filter) => {
   const mapy = new Map()
   const number = []
   list.forEach((e) => {
-    if (filter.computer && !e.Computer.includes(filter.computer)) {
-      return
-    }
-    if (filter.target && !e.Target.includes(filter.target)) {
-      return
-    }
-    if (filter.subject && !e.Subject.includes(filter.subject)) {
+    if (!filterWinAccount(e, filter)) {
       return
     }
     number.push(e.Count)
@@ -530,15 +546,20 @@ const showWinAccountScatter3DChart = (div, list, filter) => {
         ],
       },
     },
-    xAxis3D: getAxisOption('category', 'Subject', catx),
-    yAxis3D: getAxisOption('category', 'Target', caty),
-    zAxis3D: getAxisOption('value', 'Count', []),
+    xAxis3D: getAxisOption('category', '関連アカウント', catx),
+    yAxis3D: getAxisOption('category', '対象アカウント', caty),
+    zAxis3D: getAxisOption('value', '回数', []),
     series: [
       {
         name: 'Windows Account',
         type: 'scatter3D',
         symbolSize: 6,
-        dimensions: ['Subject', 'Target', 'Count', 'Computer'],
+        dimensions: [
+          '関連アカウント',
+          '対象アカウント',
+          '回数',
+          'コンピュータ',
+        ],
         data,
       },
     ],
@@ -548,13 +569,13 @@ const showWinAccountScatter3DChart = (div, list, filter) => {
   chart.resize()
 }
 
-const showWinAccountForceChart = (div, list, filter) => {
+const showWinAccountGraph = (div, list, filter, layout) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
-  const categories = [{ name: 'Subject' }, { name: 'Target' }]
-  const option = getForceChartOption(div, categories)
+  const categories = [{ name: '関連アカウント' }, { name: '対象アカウント' }]
+  const option = getGraphChartOption(div, categories, layout)
   if (!list) {
     return false
   }
@@ -562,17 +583,11 @@ const showWinAccountForceChart = (div, list, filter) => {
   const number = []
   const nodes = {}
   list.forEach((e) => {
-    if (filter.computer && !e.Computer.includes(filter.computer)) {
-      return
-    }
-    if (filter.target && !e.Target.includes(filter.target)) {
-      return
-    }
-    if (filter.subject && !e.Subject.includes(filter.subject)) {
+    if (!filterWinAccount(e, filter)) {
       return
     }
     number.push(e.Count)
-    const s = e.Subject ? e.Subject : 'Unknown'
+    const s = e.Subject ? e.Subject : '不明'
     const t = e.Target
     if (!nodes[s]) {
       nodes[s] = {
@@ -597,7 +612,8 @@ const showWinAccountForceChart = (div, list, filter) => {
     option.series[0].links.push({
       source: s,
       target: t,
-      value: 'Count=' + e.Count + ' Edit=' + e.Edit + ' Passwd=' + e.Password,
+      value:
+        '回数=' + e.Count + ' 編集=' + e.Edit + ' パスワード=' + e.Password,
       count: e.Count,
       lineStyle: getLineStyle(e.Count, q),
     })
@@ -615,38 +631,45 @@ const showWinAccountForceChart = (div, list, filter) => {
   chart.resize()
 }
 
+const filterWinAccount = (e, filter) => {
+  if (filter.computer && !e.Computer.includes(filter.computer)) {
+    return false
+  }
+  if (filter.target && !e.Target.includes(filter.target)) {
+    return false
+  }
+  if (filter.subject && !e.Subject.includes(filter.subject)) {
+    return false
+  }
+  return true
+}
+
 const showWinProcessScatter3DChart = (div, list, mode, filter) => {
   const data = []
   const mapx = new Map()
   const mapy = new Map()
   const dimensions = [
-    'Computer',
-    'Process',
-    'Count',
-    'Status',
-    'Subject',
-    'Parent',
-    'Color',
+    'コンピュータ',
+    'プロセス',
+    '回数',
+    'ステータス',
+    '関連アカウント',
+    '親プロセス',
+    '色',
   ]
   switch (mode) {
     case 'subject':
-      dimensions[0] = 'Subject'
-      dimensions[3] = 'Computer'
+      dimensions[0] = '関連アクアンと'
+      dimensions[3] = 'コンピュータ'
       break
     case 'parent':
-      dimensions[0] = 'Parent'
-      dimensions[3] = 'Computer'
-      dimensions[4] = 'Subject'
+      dimensions[0] = '親プロセス'
+      dimensions[3] = 'コンピュータ'
+      dimensions[4] = '関連アカウント'
       break
   }
   list.forEach((e) => {
-    if (filter.computer && !e.Computer.includes(filter.computer)) {
-      return
-    }
-    if (filter.process && !e.Process.includes(filter.process)) {
-      return
-    }
-    if (filter.subject && !e.LastSubject.includes(filter.subject)) {
+    if (!filterWinProcess(e, filter)) {
       return
     }
     const color = e.LastStatus === '0x0' ? 0 : 1
@@ -708,8 +731,8 @@ const showWinProcessScatter3DChart = (div, list, mode, filter) => {
       },
     },
     xAxis3D: getAxisOption('category', dimensions[0], catx),
-    yAxis3D: getAxisOption('category', 'Process', caty),
-    zAxis3D: getAxisOption('value', 'Count', []),
+    yAxis3D: getAxisOption('category', 'プロセス', caty),
+    zAxis3D: getAxisOption('value', '回数', []),
     series: [
       {
         name: 'Windows Process',
@@ -725,25 +748,25 @@ const showWinProcessScatter3DChart = (div, list, mode, filter) => {
   chart.resize()
 }
 
-const showWinProcessForceChart = (div, list, mode, filter) => {
+const showWinProcessGraph = (div, list, mode, filter, layout) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
   const categories = [
-    { name: 'Computer' },
-    { name: 'Normal Process' },
-    { name: 'Failed Process' },
+    { name: 'コンピュータ' },
+    { name: '正常終了' },
+    { name: '異常終了' },
   ]
   switch (mode) {
     case 'subject':
-      categories[0].name = 'Subject'
+      categories[0].name = '関連アカウント'
       break
     case 'parent':
-      categories[0].name = 'Parent'
+      categories[0].name = '親プロセス'
       break
   }
-  const option = getForceChartOption(div, categories)
+  const option = getGraphChartOption(div, categories, layout)
   if (!list) {
     return false
   }
@@ -751,13 +774,7 @@ const showWinProcessForceChart = (div, list, mode, filter) => {
   const number = []
   const nodes = {}
   list.forEach((e) => {
-    if (filter.computer && !e.Computer.includes(filter.computer)) {
-      return
-    }
-    if (filter.process && !e.Process.includes(filter.process)) {
-      return
-    }
-    if (filter.subject && !e.LastSubject.includes(filter.subject)) {
+    if (!filterWinProcess(e, filter)) {
       return
     }
     number.push(e.Count)
@@ -768,31 +785,31 @@ const showWinProcessForceChart = (div, list, mode, filter) => {
       case 'subject':
         s = e.LastSubject
         value =
-          'Count=' +
+          '回数=' +
           e.Count +
-          ' Compuert=' +
+          ' コンピュータ=' +
           e.Computer +
-          'Parent=' +
+          '親プロセス=' +
           e.LastParent
         break
       case 'parent':
         s = e.LastParent
         value =
-          'Count=' +
+          '回数=' +
           e.Count +
-          ' Compuert=' +
+          ' コンピュータ=' +
           e.Computer +
-          'Subject=' +
+          '関連アカウント=' +
           e.LastSubject
         break
       default:
         s = e.Computer
         value =
-          'Count=' +
+          '回数=' +
           e.Count +
-          ' Subject=' +
+          ' 関連アカウント=' +
           e.LastSubject +
-          'Parent=' +
+          '親プロセス=' +
           e.LastParent
     }
     if (!nodes[s]) {
@@ -836,19 +853,26 @@ const showWinProcessForceChart = (div, list, mode, filter) => {
   chart.resize()
 }
 
+const filterWinProcess = (e, filter) => {
+  if (filter.computer && !e.Computer.includes(filter.computer)) {
+    return false
+  }
+  if (filter.process && !e.Process.includes(filter.process)) {
+    return false
+  }
+  if (filter.subject && !e.LastSubject.includes(filter.subject)) {
+    return false
+  }
+  return true
+}
+
 const showWinTaskScatter3DChart = (div, list, filter) => {
   const data = []
   const mapx = new Map()
   const mapy = new Map()
   const number = []
   list.forEach((e) => {
-    if (filter.computer && !e.Computer.includes(filter.computer)) {
-      return
-    }
-    if (filter.task && !e.TaskName.includes(filter.task)) {
-      return
-    }
-    if (filter.subject && !e.Subject.includes(filter.subject)) {
+    if (!filterWinTask(e, filter)) {
       return
     }
     number.push(e.Count)
@@ -885,9 +909,9 @@ const showWinTaskScatter3DChart = (div, list, filter) => {
         ],
       },
     },
-    xAxis3D: getAxisOption('category', 'Subject', catx),
-    yAxis3D: getAxisOption('category', 'Task', caty),
-    zAxis3D: getAxisOption('value', 'Count', []),
+    xAxis3D: getAxisOption('category', '関連アカウント', catx),
+    yAxis3D: getAxisOption('category', 'タスク', caty),
+    zAxis3D: getAxisOption('value', '回数', []),
     series: [
       {
         name: 'Windows Task',
@@ -903,13 +927,13 @@ const showWinTaskScatter3DChart = (div, list, filter) => {
   chart.resize()
 }
 
-const showWinTaskForceChart = (div, list, filter) => {
+const showWinTaskGraph = (div, list, filter, layout) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
-  const categories = [{ name: 'Subject' }, { name: 'Task' }]
-  const option = getForceChartOption(div, categories)
+  const categories = [{ name: '関連アカウント' }, { name: 'タスク' }]
+  const option = getGraphChartOption(div, categories, layout)
   if (!list) {
     return false
   }
@@ -970,7 +994,20 @@ const showWinTaskForceChart = (div, list, filter) => {
   chart.resize()
 }
 
-const getForceChartOption = (div, categories) => {
+const filterWinTask = (e, filter) => {
+  if (filter.computer && !e.Computer.includes(filter.computer)) {
+    return false
+  }
+  if (filter.task && !e.TaskName.includes(filter.task)) {
+    return false
+  }
+  if (filter.subject && !e.Subject.includes(filter.subject)) {
+    return false
+  }
+  return true
+}
+
+const getGraphChartOption = (div, categories, layout) => {
   return {
     backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
       {
@@ -1023,7 +1060,7 @@ const getForceChartOption = (div, categories) => {
     series: [
       {
         type: 'graph',
-        layout: 'force',
+        layout: layout || 'force',
         symbolSize: 6,
         categories,
         roam: true,
@@ -1082,15 +1119,21 @@ const getScoreIndex = (s) => {
 export default (context, inject) => {
   inject('showWinEventID3DChart', showWinEventID3DChart)
   inject('showWinLogonScatter3DChart', showWinLogonScatter3DChart)
-  inject('showWinLogonForceChart', showWinLogonForceChart)
-  inject('showWinAccountForceChart', showWinAccountForceChart)
+  inject('showWinLogonGraph', showWinLogonGraph)
+  inject('showWinAccountGraph', showWinAccountGraph)
   inject('showWinAccountScatter3DChart', showWinAccountScatter3DChart)
   inject('showWinKerberosScatter3DChart', showWinKerberosScatter3DChart)
-  inject('showWinKerberosForceChart', showWinKerberosForceChart)
+  inject('showWinKerberosGraph', showWinKerberosGraph)
   inject('showWinPrivilegeScatter3DChart', showWinPrivilegeScatter3DChart)
-  inject('showWinProcessForceChart', showWinProcessForceChart)
+  inject('showWinProcessGraph', showWinProcessGraph)
   inject('showWinProcessScatter3DChart', showWinProcessScatter3DChart)
-  inject('showWinTaskForceChart', showWinTaskForceChart)
+  inject('showWinTaskGraph', showWinTaskGraph)
   inject('showWinTaskScatter3DChart', showWinTaskScatter3DChart)
   inject('filterWinEventID', filterWinEventID)
+  inject('filterWinLogon', filterWinLogon)
+  inject('filterWinAccount', filterWinAccount)
+  inject('filterWinKerberos', filterWinKerberos)
+  inject('filterWinPrivilege', filterWinPrivilege)
+  inject('filterWinProcess', filterWinProcess)
+  inject('filterWinTask', filterWinTask)
 }

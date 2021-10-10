@@ -57,12 +57,12 @@
             </v-btn>
           </template>
           <v-list>
-            <v-list-item @click="openForceChart">
+            <v-list-item @click="openGraph">
               <v-list-item-icon>
                 <v-icon>mdi-lan-connect</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>力学モデル</v-list-item-title>
+                <v-list-item-title>グラフ分析</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="openScatter3DChart">
@@ -76,10 +76,10 @@
           </v-list>
         </v-menu>
         <download-excel
-          :data="logon"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Windows_Logon_List.csv"
-          header="TWSNMP FC Windows Logon List"
+          header="TWSNMP FCで作成したWindowsログオン状況リスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -88,10 +88,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="logon"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Windows_Logon_List.xls"
-          header="TWSNMP FC Windows Logon List"
+          header="TWSNMP FCで作成したWindowsログオン状況リスト"
+          worksheet="Windowsログオン状況"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -126,9 +127,7 @@
     </v-dialog>
     <v-dialog v-model="infoDialog" persistent max-width="800px">
       <v-card>
-        <v-card-title>
-          <span class="headline">ログオン情報</span>
-        </v-card-title>
+        <v-card-title> ログオン状況 </v-card-title>
         <v-simple-table dense>
           <template #default>
             <thead>
@@ -194,15 +193,24 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="forceChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="graphDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
-          <span class="headline">ログオン状況（力学モデル）</span>
+          ログオン状況（グラフ分析）
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="graphType"
+            :items="graphTypeList"
+            label="表示タイプ"
+            single-line
+            hide-details
+            @change="updateGraph"
+          ></v-select>
         </v-card-title>
-        <div id="forceChart" style="width: 1000px; height: 700px"></div>
+        <div id="graphChart" style="width: 1000px; height: 700px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="normal" @click="forceChartDialog = false">
+          <v-btn color="normal" @click="graphDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -273,7 +281,7 @@ export default {
       deleteError: false,
       infoDialog: false,
       scatter3DChartDialog: false,
-      forceChartDialog: false,
+      graphDialog: false,
       conf: {
         target: '',
         computer: '',
@@ -284,6 +292,11 @@ export default {
         itemsPerPage: 15,
       },
       options: {},
+      graphType: 'force',
+      graphTypeList: [
+        { text: '力学モデル', value: 'force' },
+        { text: '円形', value: 'circular' },
+      ],
     }
   },
   async fetch() {
@@ -340,11 +353,19 @@ export default {
       this.selected = item
       this.infoDialog = true
     },
-    openForceChart() {
-      this.forceChartDialog = true
+    openGraph() {
+      this.graphDialog = true
       this.$nextTick(() => {
-        this.$showWinLogonForceChart('forceChart', this.logon, this.conf)
+        this.updateGraph()
       })
+    },
+    updateGraph() {
+      this.$showWinLogonGraph(
+        'graphChart',
+        this.logon,
+        this.conf,
+        this.graphType
+      )
     },
     openScatter3DChart() {
       this.scatter3DChartDialog = true
@@ -355,6 +376,28 @@ export default {
           this.conf
         )
       })
+    },
+    makeExports() {
+      const exports = []
+      this.logon.forEach((e) => {
+        if (!this.$filterWinLogon(e, this.conf)) {
+          return
+        }
+        exports.push({
+          ログオン先: e.Target,
+          コンピュータ: e.Computer,
+          接続元: e.IP,
+          回数: e.Count,
+          ログオン: e.Logon,
+          ログオフ: e.Logoff,
+          失敗: e.Failed,
+          信用スコア: e.Score,
+          ペナリティー: e.Penalty,
+          初回日時: e.First,
+          最終日時: e.Last,
+        })
+      })
+      return exports
     },
   },
 }
