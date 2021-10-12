@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
       <v-card-title>
-        NetFlow
+        {{ title }}
         <v-spacer></v-spacer>
       </v-card-title>
       <div id="logCountChart" style="width: 100%; height: 200px"></div>
@@ -621,7 +621,7 @@
     <v-dialog v-model="fftDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
-          <span class="headline"> NetFlow - FFT分析 </span>
+          <span class="headline"> {{ title }} - FFT分析 </span>
         </v-card-title>
         <v-card-text>
           <v-row>
@@ -660,7 +660,7 @@
     <v-dialog v-model="fft3DDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
-          <span class="headline"> NetFlow - FFT分析(3D) </span>
+          {{ title }} - FFT分析(3D)
           <v-spacer></v-spacer>
           <v-select
             v-model="fftType"
@@ -839,15 +839,28 @@ export default {
         { text: '周波数(Hz)', value: 'hz' },
       ],
       fft3DDialog: false,
+      type: 'netflow',
     }
   },
   async fetch() {
-    this.logs = await this.$axios.$post('/api/log/netflow', this.filter)
+    this.logs = await this.$axios.$post('/api/log/' + this.type, this.filter)
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
     })
     this.$showLogCountChart(this.logs)
+  },
+  computed: {
+    title() {
+      return this.type === 'netflow' ? 'NetFlow' : 'IPFIX'
+    },
+  },
+  created() {
+    this.type = this.$route.params.type || 'netflow'
+    const c = this.$store.state.log.logs.neflow
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
   },
   mounted() {
     this.$makeLogCountChart('logCountChart')

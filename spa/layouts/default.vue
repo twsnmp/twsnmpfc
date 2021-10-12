@@ -434,12 +434,12 @@ export default {
         {
           icon: 'mdi-swap-horizontal',
           title: 'NetFlow',
-          to: '/log/netflow',
+          to: '/log/netflow/netflow',
         },
         {
           icon: 'mdi-swap-horizontal',
           title: 'IPFIX',
-          to: '/log/ipfix',
+          to: '/log/netflow/ipfix',
         },
         {
           icon: 'mdi-check-network',
