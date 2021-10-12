@@ -9,8 +9,10 @@
       <v-data-table
         :headers="headers"
         :items="logs"
-        sort-by="TimeStr"
-        sort-desc
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
@@ -20,16 +22,19 @@
           <tr>
             <td></td>
             <td>
-              <v-text-field v-model="src" label="src"></v-text-field>
+              <v-text-field v-model="conf.src" label="src"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="dst" label="dst"></v-text-field>
+              <v-text-field v-model="conf.dst" label="dst"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="prot" label="prot"></v-text-field>
+              <v-text-field v-model="conf.prot" label="prot"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="tcpflag" label="tcp flag"></v-text-field>
+              <v-text-field
+                v-model="conf.tcpflag"
+                label="tcp flag"
+              ></v-text-field>
             </td>
             <td colspan="3"></td>
           </tr>
@@ -42,10 +47,10 @@
           検索条件
         </v-btn>
         <download-excel
-          :data="logs"
+          :fetch="makeLogExports"
           type="csv"
-          name="TWSNMP_FC_NetFlow.csv"
-          header="TWSNMP FC NetFlow"
+          :name="'TWSNMP_FC_' + title + '.csv'"
+          :header="'TWSNMP FCの' + title + 'ログ'"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -54,10 +59,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="logs"
+          :fetch="makeLogExports"
           type="xls"
-          name="TWSNMP_FC_NetFlow.xls"
-          header="TWSNMP FC NetFlow"
+          :name="'TWSNMP_FC_' + title + '.xls'"
+          :header="'TWSNMP FCの' + title + 'ログ'"
+          :worksheet="title + 'ログ'"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -375,7 +381,7 @@
             label="集計項目"
             single-line
             hide-details
-            @change="selectHistogramType"
+            @change="updateHistogram"
           ></v-select>
         </v-card-title>
         <div id="histogram" style="width: 900px; height: 400px"></div>
@@ -393,27 +399,24 @@
         <v-card-title>
           クラスター分析
           <v-spacer></v-spacer>
+          <v-select
+            v-model="clusterType"
+            :items="clusterTypeList"
+            label="分類方法"
+            single-line
+            hide-details
+            dense
+            @change="updateCluster"
+          ></v-select>
+          <v-spacer></v-spacer>
+          <v-text-field
+            v-model="cluster"
+            label="クラスター数"
+            dense
+            @change="updateCluster"
+          ></v-text-field>
         </v-card-title>
         <v-card-text>
-          <v-row>
-            <v-col>
-              <v-select
-                v-model="clusterType"
-                :items="clusterTypeList"
-                label="分類方法"
-                single-line
-                hide-details
-                @change="updateCluster"
-              ></v-select>
-            </v-col>
-            <v-col>
-              <v-text-field
-                v-model="cluster"
-                label="クラスター数"
-                @change="updateCluster"
-              ></v-text-field>
-            </v-col>
-          </v-row>
           <div id="cluster" style="width: 900px; height: 400px"></div>
         </v-card-text>
         <v-card-actions>
@@ -588,10 +591,10 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <download-excel
-            :data="topList"
+            :fetch="makeTopExports"
             type="csv"
-            name="TWSNMP_FC_NetFlow_TopList.csv"
-            header="TWSNMP FC NetFlow Top List"
+            :name="'TWSNMP_FC_' + title + '_TopList.csv'"
+            :header="'TWSNMP FCの' + title + '上位リスト'"
             class="v-btn"
           >
             <v-btn color="primary" dark>
@@ -600,10 +603,11 @@
             </v-btn>
           </download-excel>
           <download-excel
-            :data="topList"
+            :fetch="makeTopExports"
             type="xls"
-            name="TWSNMP_FC_NetFlow_ToList.xls"
-            header="TWSNMP FC NetFlow To List"
+            :name="'TWSNMP_FC_' + title + '_TopList.xls'"
+            :header="'TWSNMP FCの' + title + '上位リスト'"
+            :worksheet="title + '上位リスト'"
             class="v-btn"
           >
             <v-btn color="primary" dark>
@@ -621,31 +625,27 @@
     <v-dialog v-model="fftDialog" persistent max-width="1050px">
       <v-card>
         <v-card-title>
-          <span class="headline"> {{ title }} - FFT分析 </span>
+          {{ title }} - FFT分析
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="fftType"
+            :items="fftTypeList"
+            label="周波数/周期"
+            single-line
+            hide-details
+            @change="updateFFT"
+          ></v-select>
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="fftSrc"
+            :items="fftSrcList"
+            label="送信元"
+            single-line
+            hide-details
+            @change="updateFFT"
+          ></v-select>
         </v-card-title>
         <v-card-text>
-          <v-row>
-            <v-col>
-              <v-select
-                v-model="fftType"
-                :items="fftTypeList"
-                label="周波数/周期"
-                single-line
-                hide-details
-                @change="updateFFT"
-              ></v-select>
-            </v-col>
-            <v-col>
-              <v-select
-                v-model="fftSrc"
-                :items="fftSrcList"
-                label="送信元"
-                single-line
-                hide-details
-                @change="updateFFT"
-              ></v-select>
-            </v-col>
-          </v-row>
           <div id="FFTChart" style="width: 1000px; height: 500px"></div>
         </v-card-text>
         <v-card-actions>
@@ -719,8 +719,8 @@ export default {
           value: 'Src',
           width: '20%',
           filter: (value) => {
-            if (!this.src) return true
-            return value.includes(this.src)
+            if (!this.conf.src) return true
+            return value.includes(this.conf.src)
           },
         },
         {
@@ -728,8 +728,8 @@ export default {
           value: 'Dst',
           width: '20%',
           filter: (value) => {
-            if (!this.dst) return true
-            return value.includes(this.dst)
+            if (!this.conf.dst) return true
+            return value.includes(this.conf.dst)
           },
         },
         {
@@ -737,8 +737,8 @@ export default {
           value: 'Protocol',
           width: '10%',
           filter: (value) => {
-            if (!this.prot) return true
-            return value.includes(this.prot)
+            if (!this.conf.prot) return true
+            return value.includes(this.conf.prot)
           },
         },
         {
@@ -746,8 +746,8 @@ export default {
           value: 'TCPFlags',
           width: '10%',
           filter: (value) => {
-            if (!this.tcpflag) return true
-            return value.includes(this.tcpflag)
+            if (!this.conf.tcpflag) return true
+            return value.includes(this.conf.tcpflag)
           },
         },
         { text: 'パケット数', value: 'Packets', width: '5%' },
@@ -755,10 +755,17 @@ export default {
         { text: '期間(Sec)', value: 'Duration', width: '10%' },
       ],
       logs: [],
-      src: '',
-      dst: '',
-      prot: '',
-      tcpflag: '',
+      conf: {
+        src: '',
+        dst: '',
+        prot: '',
+        tcpflag: '',
+        sortBy: 'TimeStr',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
       histogramDialog: false,
       histogramType: 'size',
       histogramTypeList: [
@@ -840,6 +847,7 @@ export default {
       ],
       fft3DDialog: false,
       type: 'netflow',
+      title: 'NetFlow',
     }
   },
   async fetch() {
@@ -848,16 +856,16 @@ export default {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
     })
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
     this.$showLogCountChart(this.logs)
-  },
-  computed: {
-    title() {
-      return this.type === 'netflow' ? 'NetFlow' : 'IPFIX'
-    },
   },
   created() {
     this.type = this.$route.params.type || 'netflow'
-    const c = this.$store.state.log.logs.neflow
+    this.title = this.type === 'netflow' ? 'NetFlow' : 'IPFIX'
+    const c = this.$store.state.log.logs.netflow
     if (c && c.sortBy) {
       Object.assign(this.conf, c)
     }
@@ -869,6 +877,11 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.$resizeLogCountChart)
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('log/logs/setNetFlow', this.conf)
   },
   methods: {
     doFilter() {
@@ -884,27 +897,26 @@ export default {
     showHistogram() {
       this.histogramDialog = true
       this.$nextTick(() => {
-        this.$showNetFlowHistogram('histogram', this.logs, this.histogramType)
+        this.updateHistogram()
       })
     },
-    selectHistogramType() {
-      this.$showNetFlowHistogram('histogram', this.logs, this.histogramType)
+    updateHistogram() {
+      this.$showNetFlowHistogram(
+        'histogram',
+        this.getFilteredLog(),
+        this.histogramType
+      )
     },
     showCluster() {
       this.clusterDialog = true
       this.$nextTick(() => {
-        this.$showNetFlowCluster(
-          'cluster',
-          this.logs,
-          this.clusterType,
-          this.cluster * 1
-        )
+        this.updateCluster()
       })
     },
     updateCluster() {
       this.$showNetFlowCluster(
         'cluster',
-        this.logs,
+        this.getFilteredLog(),
         this.clusterType,
         this.cluster * 1
       )
@@ -912,50 +924,66 @@ export default {
     showTraffic() {
       this.trafficDialog = true
       this.$nextTick(() => {
-        this.$showNetFlowTraffic('traffic', this.logs, this.trafficType)
+        this.updateTraffic()
       })
     },
     updateTraffic() {
-      this.$showNetFlowTraffic('traffic', this.logs, this.trafficType)
+      this.$showNetFlowTraffic(
+        'traffic',
+        this.getFilteredLog(),
+        this.trafficType
+      )
     },
     showGraph() {
       this.graphDialog = true
       this.$nextTick(() => {
-        this.$showNetFlowGraph('graph', this.logs, this.graphType)
+        this.updateGraph()
       })
     },
     updateGraph() {
-      this.$showNetFlowGraph('graph', this.logs, this.graphType)
+      this.$showNetFlowGraph('graph', this.getFilteredLog(), this.graphType)
     },
     showService3D() {
       this.service3DDialog = true
       this.$nextTick(() => {
-        this.$showNetFlowService3D('service3d', this.logs, this.service3DType)
+        this.updateService3D()
       })
     },
     updateService3D() {
-      this.$showNetFlowService3D('service3d', this.logs, this.service3DType)
+      this.$showNetFlowService3D(
+        'service3d',
+        this.getFilteredLog(),
+        this.service3DType
+      )
     },
     showSender3D() {
       this.sender3DDialog = true
       this.$nextTick(() => {
-        this.$showNetFlowSender3D('sender3d', this.logs, this.sender3DType)
+        this.updateSender3D()
       })
     },
     updateSender3D() {
-      this.$showNetFlowSender3D('sender3d', this.logs, this.sender3DType)
+      this.$showNetFlowSender3D(
+        'sender3d',
+        this.getFilteredLog(),
+        this.sender3DType
+      )
     },
     showIPFlow3D() {
       this.ipFlow3DDialog = true
       this.$nextTick(() => {
-        this.$showNetFlowIPFlow3D('ipflow3d', this.logs, this.ipFlow3DType)
+        this.updateIPFlow3D()
       })
     },
     updateIPFlow3D() {
-      this.$showNetFlowIPFlow3D('ipflow3d', this.logs, this.ipFlow3DType)
+      this.$showNetFlowIPFlow3D(
+        'ipflow3d',
+        this.getFilteredLog,
+        this.ipFlow3DType
+      )
     },
     showSender() {
-      this.topList = this.$getNetFlowSenderList(this.logs)
+      this.topList = this.$getNetFlowSenderList(this.getFilteredLog())
       this.topListDialog = true
       this.topListTitle = '送信元別の通信量'
       this.$nextTick(() => {
@@ -963,7 +991,7 @@ export default {
       })
     },
     showService() {
-      this.topList = this.$getNetFlowServiceList(this.logs)
+      this.topList = this.$getNetFlowServiceList(this.getFilteredLog())
       this.topListDialog = true
       this.topListTitle = 'サービス別通信量'
       this.$nextTick(() => {
@@ -971,7 +999,7 @@ export default {
       })
     },
     showIPFlow() {
-      this.topList = this.$getNetFlowIPFlowList(this.logs)
+      this.topList = this.$getNetFlowIPFlowList(this.getFilteredLog())
       this.topListDialog = true
       this.topListTitle = 'IPフロー別通信量'
       this.$nextTick(() => {
@@ -990,7 +1018,7 @@ export default {
     updateFFT() {
       this.fftDialog = true
       if (!this.fftMap) {
-        this.fftMap = this.$getNetFlowFFTMap(this.logs)
+        this.fftMap = this.$getNetFlowFFTMap(this.getFilteredLog())
         this.fftSrcList = []
         this.fftMap.forEach((e) => {
           this.fftSrcList.push({ text: e.Name, value: e.Name })
@@ -1004,7 +1032,7 @@ export default {
     updateFFT3D() {
       this.fft3DDialog = true
       if (!this.fftMap) {
-        this.fftMap = this.$getNetFlowFFTMap(this.logs)
+        this.fftMap = this.$getNetFlowFFTMap(this.getFilteredLog())
         this.fftSrcList = []
         this.fftMap.forEach((e) => {
           this.fftSrcList.push({ text: e.Name, value: e.Name })
@@ -1014,6 +1042,70 @@ export default {
       this.$nextTick(() => {
         this.$showNetFlowFFT3D('FFTChart3D', this.fftMap, this.fftType)
       })
+    },
+    makeLogExports() {
+      const exports = []
+      this.logs.forEach((e) => {
+        if (!this.filterLog(e)) {
+          return
+        }
+        exports.push({
+          受信日時: e.TimeStr,
+          送信元: e.Src,
+          宛先: e.Dst,
+          プロトコル: e.Protocol,
+          TCPフラグ: e.TCPFlags,
+          パケット数: e.Packets,
+          バイト数: e.Bytes,
+          期間: e.Duration,
+        })
+      })
+      return exports
+    },
+    getFilteredLog() {
+      const ret = []
+      if (!this.logs) {
+        return ret
+      }
+      this.logs.forEach((e) => {
+        if (!this.filterLog(e)) {
+          return
+        }
+        ret.push(e)
+      })
+      return ret
+    },
+    filterLog(e) {
+      if (this.conf.src && !e.Src.includes(this.conf.src)) {
+        return false
+      }
+      if (this.conf.dst && !e.Dst.includes(this.conf.dst)) {
+        return false
+      }
+      if (this.conf.prot && !e.Protocol.includes(this.conf.prot)) {
+        return false
+      }
+      if (this.conf.tcpflag && !e.TCPFlags.includes(this.conf.tcpflag)) {
+        return false
+      }
+      return true
+    },
+    makeTopExports() {
+      const exports = []
+      this.topList.forEach((e) => {
+        if (this.topListName && !e.Name.includes(this.topListName)) {
+          return
+        }
+        exports.push({
+          名前: e.Name,
+          パケット: e.Packets,
+          バイト: e.Bytes,
+          期間: e.Duration,
+          毎秒バイト数: e.bps,
+          毎秒パケット数: e.pps,
+        })
+      })
+      return exports
     },
   },
 }

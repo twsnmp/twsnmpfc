@@ -19,6 +19,16 @@ export const state = () => ({
     page: 1,
     itemsPerPage: 15,
   },
+  netflow: {
+    src: '',
+    dst: '',
+    prot: '',
+    tcpflag: '',
+    sortBy: 'TimeStr',
+    sortDesc: false,
+    page: 1,
+    itemsPerPage: 15,
+  },
   trapLog: {
     src: '',
     traptype: '',
@@ -49,6 +59,9 @@ export const mutations = {
   },
   setSyslog(state, c) {
     state.syslog = c
+  },
+  setNetFlow(state, c) {
+    state.netflow = c
   },
   setTrapLog(state, c) {
     state.trapLog = c

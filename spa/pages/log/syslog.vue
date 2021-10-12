@@ -1468,7 +1468,7 @@ export default {
     makeExtractTopExports() {
       const exports = []
       this.extractTopList.forEach((e) => {
-        if (this.extractTopName && !e.Name.includes(this.this.extractTopName)) {
+        if (this.extractTopName && !e.Name.includes(this.extractTopName)) {
           return
         }
         exports.push({
