@@ -9,9 +9,11 @@
       <v-data-table
         :headers="headers"
         :items="logs"
-        sort-by="TimeStr"
-        sort-desc
         dense
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"
@@ -20,13 +22,15 @@
           <tr>
             <td></td>
             <td>
-              <v-text-field v-model="src" label="src"></v-text-field>
+              <v-text-field v-model="conf.src" label="src"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="traptype" label="trap type"></v-text-field>
+              <v-text-field v-model="conf.traptype" label="trap type">
+              </v-text-field>
             </td>
             <td>
-              <v-text-field v-model="varbind" label="var bind"></v-text-field>
+              <v-text-field v-model="conf.varbind" label="var bind">
+              </v-text-field>
             </td>
           </tr>
         </template>
@@ -38,10 +42,10 @@
           検索条件
         </v-btn>
         <download-excel
-          :data="logs"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_SNMP_TRAP.csv"
-          header="TWSNMP FC SNMP TRAP"
+          header="TWSNMP FCのSNMP TRAPログ"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -50,10 +54,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="logs"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_SNMP_TRAP.xls"
-          header="TWSNMP FC SNMP TRAP"
+          header="TWSNMP FCのSNMP TRAPログ"
+          worksheet="SNMP TRAPログ"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -242,8 +247,8 @@ export default {
           value: 'FromAddress',
           width: '15%',
           filter: (value) => {
-            if (!this.src) return true
-            return value.includes(this.src)
+            if (!this.conf.src) return true
+            return value.includes(this.conf.src)
           },
         },
         {
@@ -251,8 +256,8 @@ export default {
           value: 'TrapType',
           width: '25%',
           filter: (value) => {
-            if (!this.traptype) return true
-            return value.includes(this.traptype)
+            if (!this.conf.traptype) return true
+            return value.includes(this.conf.traptype)
           },
         },
         {
@@ -260,15 +265,22 @@ export default {
           value: 'Variables',
           width: '40%',
           filter: (value) => {
-            if (!this.varbind) return true
-            return value.includes(this.varbind)
+            if (!this.conf.varbind) return true
+            return value.includes(this.conf.varbind)
           },
         },
       ],
       logs: [],
-      src: '',
-      traptype: '',
-      varbind: '',
+      conf: {
+        src: '',
+        traptype: '',
+        varbind: '',
+        sortBy: 'TimeStr',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
     }
   },
   async fetch() {
@@ -278,6 +290,16 @@ export default {
       e.TimeStr = this.$timeFormat(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}.{SSS}')
     })
     this.$showLogCountChart(this.logs)
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
+  },
+  created() {
+    const c = this.$store.state.log.logs.trapLog
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
   },
   mounted() {
     this.$makeLogCountChart('logCountChart')
@@ -286,6 +308,11 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.$resizeLogCountChart)
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('log/logs/setTrapLog', this.conf)
   },
   methods: {
     doFilter() {
@@ -297,6 +324,33 @@ export default {
       }
       this.filterDialog = false
       this.$fetch()
+    },
+    makeExports() {
+      const exports = []
+      this.logs.forEach((e) => {
+        if (!this.filterLog(e)) {
+          return
+        }
+        exports.push({
+          受信日時: e.TimeStr,
+          送信元: e.FromAddress,
+          TRAP種別: e.TrapType,
+          付帯MIB値: e.Variables,
+        })
+      })
+      return exports
+    },
+    filterLog(e) {
+      if (this.conf.src && !e.FromAddress.includes(this.conf.src)) {
+        return false
+      }
+      if (this.conf.traptype && !e.TrapType.includes(this.conf.traptype)) {
+        return false
+      }
+      if (this.conf.varbind && !e.Variables.includes(this.conf.varbind)) {
+        return false
+      }
+      return true
     },
   },
 }

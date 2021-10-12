@@ -9,8 +9,10 @@
       <v-data-table
         :headers="headers"
         :items="logs"
-        sort-by="TimeStr"
-        sort-desc
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
@@ -25,27 +27,26 @@
         <template #[`body.append`]>
           <tr>
             <td>
-              <v-select v-model="state" :items="stateList" label="state">
+              <v-select v-model="conf.state" :items="stateList" label="state">
               </v-select>
             </td>
             <td></td>
             <td>
-              <v-text-field v-model="ip" label="ip"></v-text-field>
+              <v-text-field v-model="conf.ip" label="ip"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="mac" label="mac"></v-text-field>
+              <v-text-field v-model="conf.mac" label="mac"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="vendor" label="vendor"></v-text-field>
+              <v-text-field v-model="conf.vendor" label="vendor"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="oldmac" label="old mac"></v-text-field>
+              <v-text-field v-model="conf.oldmac" label="old mac">
+              </v-text-field>
             </td>
             <td>
-              <v-text-field
-                v-model="oldvendor"
-                label="old vendor"
-              ></v-text-field>
+              <v-text-field v-model="conf.oldvendor" label="old vendor">
+              </v-text-field>
             </td>
           </tr>
         </template>
@@ -57,10 +58,10 @@
           検索条件
         </v-btn>
         <download-excel
-          :data="logs"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_ARP_Log.csv"
-          header="TWSNMP FC ARP Log"
+          header="TWSNMP FCのARPログ"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -69,10 +70,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="logs"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_ARP_Log.xls"
-          header="TWSNMP FC ARP Log"
+          header="TWSNMP FCのARPログ"
+          worksheet="ARPログ"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -254,8 +256,8 @@ export default {
           value: 'State',
           width: '10%',
           filter: (value) => {
-            if (!this.state) return true
-            return this.state === value
+            if (!this.conf.state) return true
+            return this.conf.state === value
           },
         },
         { text: '記録日時', value: 'TimeStr', width: '15%' },
@@ -264,8 +266,8 @@ export default {
           value: 'IP',
           width: '15%',
           filter: (value) => {
-            if (!this.ip) return true
-            return value.includes(this.ip)
+            if (!this.conf.ip) return true
+            return value.includes(this.conf.ip)
           },
           sort: (a, b) => {
             return this.$cmpIP(a, b)
@@ -276,8 +278,8 @@ export default {
           value: 'MAC',
           width: '15%',
           filter: (value) => {
-            if (!this.mac) return true
-            return value.includes(this.mac)
+            if (!this.conf.mac) return true
+            return value.includes(this.conf.mac)
           },
         },
         {
@@ -285,8 +287,8 @@ export default {
           value: 'Vendor',
           width: '15%',
           filter: (value) => {
-            if (!this.vendor) return true
-            return value.includes(this.vendor)
+            if (!this.conf.vendor) return true
+            return value.includes(this.conf.vendor)
           },
         },
         {
@@ -294,8 +296,8 @@ export default {
           value: 'OldMAC',
           width: '15%',
           filter: (value) => {
-            if (!this.oldmac) return true
-            return value.includes(this.oldmac)
+            if (!this.conf.oldmac) return true
+            return value.includes(this.conf.oldmac)
           },
         },
         {
@@ -303,18 +305,25 @@ export default {
           value: 'OldVendor',
           width: '15%',
           filter: (value) => {
-            if (!this.oldvendor) return true
-            return value.includes(this.oldvendor)
+            if (!this.conf.oldvendor) return true
+            return value.includes(this.conf.oldvendor)
           },
         },
       ],
       logs: [],
-      state: '',
-      ip: '',
-      mac: '',
-      vendor: '',
-      oldmac: '',
-      oldvendor: '',
+      conf: {
+        state: '',
+        ip: '',
+        mac: '',
+        vendor: '',
+        oldmac: '',
+        oldvendor: '',
+        sortBy: 'TimeStr',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
       stateList: [
         { text: '', value: '' },
         { text: '新規', value: 'New' },
@@ -328,7 +337,17 @@ export default {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
     })
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
     this.$showLogCountChart(this.logs)
+  },
+  created() {
+    const c = this.$store.state.log.logs.arpLog
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
   },
   mounted() {
     this.$makeLogCountChart('logCountChart')
@@ -337,6 +356,11 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.$resizeLogCountChart)
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('log/logs/setArpLog', this.conf)
   },
   methods: {
     doFilter() {
@@ -348,6 +372,45 @@ export default {
       }
       this.filterDialog = false
       this.$fetch()
+    },
+    makeExports() {
+      const exports = []
+      this.logs.forEach((e) => {
+        if (!this.filterLog(e)) {
+          return
+        }
+        exports.push({
+          状態: this.$getStateName(e.State),
+          記録日時: e.TimeStr,
+          IPアドレス: e.IP,
+          MACアドレス: e.MAC,
+          ベンダー: e.Vendor,
+          前MACアドレス: e.OldMAC,
+          前ベンダー: e.OldVendor,
+        })
+      })
+      return exports
+    },
+    filterLog(e) {
+      if (this.conf.state && e.State !== this.conf.state) {
+        return false
+      }
+      if (this.conf.ip && !e.IP.includes(this.conf.ip)) {
+        return false
+      }
+      if (this.conf.mac && !e.MAC.includes(this.conf.mac)) {
+        return false
+      }
+      if (this.conf.vendor && !e.Vendor.includes(this.conf.vendor)) {
+        return false
+      }
+      if (this.conf.oldmac && !e.OldMAC.includes(this.conf.oldmac)) {
+        return false
+      }
+      if (this.conf.oldvendor && !e.OldVendor.includes(this.conf.oldvendor)) {
+        return false
+      }
+      return true
     },
   },
 }

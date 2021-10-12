@@ -9,9 +9,11 @@
       <v-data-table
         :headers="headers"
         :items="logs"
-        sort-by="TimeStr"
-        sort-desc
         dense
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"
@@ -28,16 +30,16 @@
             <td></td>
             <td></td>
             <td>
-              <v-text-field v-model="pri" label="pri"></v-text-field>
+              <v-text-field v-model="conf.pri" label="pri"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="host" label="host"></v-text-field>
+              <v-text-field v-model="conf.host" label="host"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="tag" label="tag"></v-text-field>
+              <v-text-field v-model="conf.tag" label="tag"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="msg" label="message"></v-text-field>
+              <v-text-field v-model="conf.msg" label="message"></v-text-field>
             </td>
           </tr>
         </template>
@@ -55,10 +57,10 @@
           検索条件
         </v-btn>
         <download-excel
-          :data="logs"
+          :fetch="makeSyslogExports"
           type="csv"
           name="TWSNMP_FC_Syslog.csv"
-          header="TWSNMP FC Syslog"
+          header="TWSNMP FCのSyslog"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -67,10 +69,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="logs"
+          :fetch="makeSyslogExports"
           type="xls"
           name="TWSNMP_FC_Sysog.xls"
-          header="TWSNMP FC Syslog"
+          header="TWSNMP FCのSyslog"
+          worksheet="Syslog"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -338,10 +341,10 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <download-excel
-            :data="extractDatas"
+            :fetch="makeExtractExports"
             type="csv"
             name="TWSNMP_FC_Syslog_Extract.csv"
-            header="TWSNMP FC Syslog Extract"
+            header="TWSNMP FCでSyslogから抽出した情報"
             class="v-btn"
           >
             <v-btn color="primary" dark>
@@ -350,10 +353,11 @@
             </v-btn>
           </download-excel>
           <download-excel
-            :data="extractDatas"
+            :fetch="makeExtractExports"
             type="xls"
             name="TWSNMP_FC_Sysog_Extract.xls"
-            header="TWSNMP FC Syslog Extract"
+            header="TWSNMP FCでSyslogから抽出した情報"
+            worksheet="Syslogから抽出"
             class="v-btn"
           >
             <v-btn color="primary" dark>
@@ -516,10 +520,10 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <download-excel
-            :data="hostList"
+            :fetch="makeHostExports"
             type="csv"
             name="TWSNMP_FC_Syslog_Host_List.csv"
-            header="TWSNMP FC Syslog Host List"
+            header="TWSNMP FCへSyslogを送信するホストリスト"
             class="v-btn"
           >
             <v-btn color="primary" dark>
@@ -528,10 +532,11 @@
             </v-btn>
           </download-excel>
           <download-excel
-            :data="hostList"
+            :fetch="makeHostExports"
             type="xls"
             name="TWSNMP_FC_Syslog_Host_List.xls"
-            header="TWSNMP FC Syslog Host List"
+            header="TWSNMP FCへSyslogを送信するホストリスト"
+            worksheet="Syslog送信ホスト"
             class="v-btn"
           >
             <v-btn color="primary" dark>
@@ -680,10 +685,10 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <download-excel
-            :data="extractTopList"
+            :fetch="makeExtractTopExports"
             type="csv"
             name="TWSNMP_FC_Syslog_Extract_Top_List.csv"
-            header="TWSNMP FC Syslog ExtractTop List"
+            header="TWSNMP FC Syslogで抽出したデータの上位リスト"
             class="v-btn"
           >
             <v-btn color="primary" dark>
@@ -692,10 +697,11 @@
             </v-btn>
           </download-excel>
           <download-excel
-            :data="extractTopList"
+            :fetch="makeExtractTopExports"
             type="xls"
             name="TWSNMP_FC_Syslog_Extract_Top.xls"
-            header="TWSNMP FC Syslog Extract Top List"
+            header="TWSNMP FC Syslogで抽出したデータの上位リスト"
+            worksheet="Syslog抽出データ上位"
             class="v-btn"
           >
             <v-btn color="primary" dark>
@@ -743,19 +749,28 @@
                 <td></td>
                 <td colspan="3">
                   <v-switch
-                    v-model="hasAIResult"
+                    v-model="aiFilter.hasAIResult"
                     label="結果があるもの"
                   ></v-switch>
                 </td>
                 <td></td>
                 <td>
-                  <v-text-field v-model="host" label="host"></v-text-field>
+                  <v-text-field
+                    v-model="aiFilter.host"
+                    label="Host"
+                  ></v-text-field>
                 </td>
                 <td>
-                  <v-text-field v-model="tag" label="tag"></v-text-field>
+                  <v-text-field
+                    v-model="aiFilter.tag"
+                    label="Tag"
+                  ></v-text-field>
                 </td>
                 <td>
-                  <v-text-field v-model="msg" label="message"></v-text-field>
+                  <v-text-field
+                    v-model="aiFilter.msg"
+                    label="Message"
+                  ></v-text-field>
                 </td>
               </tr>
             </template>
@@ -903,8 +918,8 @@ export default {
           value: 'Type',
           width: '10%',
           filter: (value) => {
-            if (!this.pri) return true
-            return value.includes(this.pri)
+            if (!this.conf.pri) return true
+            return value.includes(this.conf.pri)
           },
         },
         {
@@ -912,8 +927,8 @@ export default {
           value: 'Host',
           width: '10%',
           filter: (value) => {
-            if (!this.host) return true
-            return value.includes(this.host)
+            if (!this.conf.host) return true
+            return value.includes(this.conf.host)
           },
         },
         {
@@ -921,8 +936,8 @@ export default {
           value: 'Tag',
           width: '10%',
           filter: (value) => {
-            if (!this.tag) return true
-            return value.includes(this.tag)
+            if (!this.conf.tag) return true
+            return value.includes(this.conf.tag)
           },
         },
         {
@@ -930,8 +945,8 @@ export default {
           value: 'Message',
           width: '45%',
           filter: (value) => {
-            if (!this.msg) return true
-            return value.includes(this.msg)
+            if (!this.conf.msg) return true
+            return value.includes(this.conf.msg)
           },
         },
       ],
@@ -941,10 +956,17 @@ export default {
       extractDatas: [],
       extractHeader: [],
       filterExtractorList: [],
-      pri: '',
-      host: '',
-      tag: '',
-      msg: '',
+      conf: {
+        pri: '',
+        host: '',
+        tag: '',
+        msg: '',
+        sortBy: 'TimeStr',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
       histogramDialog: false,
       histogramType: 'Severity',
       histogramTypeList: [
@@ -1002,7 +1024,12 @@ export default {
         { text: '総数', value: 'Total', width: '30%' },
       ],
       aiAssistDialog: false,
-      hasAIResult: false,
+      aiFilter: {
+        host: '',
+        tag: '',
+        msg: '',
+        hasAIResult: false,
+      },
       hasAIErrorChart: false,
       aiProcessing: false,
       setAIClassDialog: false,
@@ -1016,7 +1043,7 @@ export default {
           value: 'AIResult',
           width: '8%',
           filter: (value) => {
-            if (!this.hasAIResult) return true
+            if (!this.aiFilter.hasAIResult) return true
             return value && value !== ''
           },
         },
@@ -1026,8 +1053,8 @@ export default {
           value: 'Host',
           width: '10%',
           filter: (value) => {
-            if (!this.host) return true
-            return value.includes(this.host)
+            if (!this.aiFilter.host) return true
+            return value.includes(this.aiFilter.host)
           },
         },
         {
@@ -1035,8 +1062,8 @@ export default {
           value: 'Tag',
           width: '10%',
           filter: (value) => {
-            if (!this.tag) return true
-            return value.includes(this.tag)
+            if (!this.aiFilter.tag) return true
+            return value.includes(this.aiFilter.tag)
           },
         },
         {
@@ -1044,8 +1071,8 @@ export default {
           value: 'Message',
           width: '40%',
           filter: (value) => {
-            if (!this.msg) return true
-            return value.includes(this.msg)
+            if (!this.aiFilter.msg) return true
+            return value.includes(this.aiFilter.msg)
           },
         },
       ],
@@ -1078,6 +1105,10 @@ export default {
       e.AIResult = ''
       e.ID = id++
     })
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
     this.$showLogLevelChart(this.logs)
     if (this.filterExtractorList.length < 1) {
       const groks = await this.$axios.$get('/api/conf/grok')
@@ -1144,6 +1175,12 @@ export default {
       return this.selectedAILogs.length > 0
     },
   },
+  created() {
+    const c = this.$store.state.log.logs.syslog
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
+  },
   mounted() {
     this.$makeLogLevelChart('logCountChart')
     this.$showLogLevelChart(this.logs)
@@ -1151,6 +1188,11 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.$resizeLogLevelChart)
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('log/logs/setSyslog', this.conf)
   },
   methods: {
     doFilter() {
@@ -1166,29 +1208,37 @@ export default {
     showHistogram() {
       this.histogramDialog = true
       this.$nextTick(() => {
-        this.$showSyslogHistogram('histogram', this.logs, this.histogramType)
+        this.updateHistogram()
       })
     },
     updateHistogram() {
-      this.$showSyslogHistogram('histogram', this.logs, this.histogramType)
+      this.$showSyslogHistogram(
+        'histogram',
+        this.getFilteredSyslog(),
+        this.histogramType
+      )
     },
     showCluster() {
       this.clusterDialog = true
       this.$nextTick(() => {
-        this.$showSyslogCluster('cluster', this.logs, this.cluster * 1)
+        this.updateCluster()
       })
     },
     updateCluster() {
-      this.$showSyslogCluster('cluster', this.logs, this.cluster * 1)
+      this.$showSyslogCluster(
+        'cluster',
+        this.getFilteredSyslog(),
+        this.cluster * 1
+      )
     },
     showHost3D() {
       this.host3DDialog = true
       this.$nextTick(() => {
-        this.$showSyslogHost3D('host3d', this.logs)
+        this.$showSyslogHost3D('host3d', this.getFilteredSyslog())
       })
     },
     showHost() {
-      this.hostList = this.$getSyslogHostList(this.logs)
+      this.hostList = this.$getSyslogHostList(this.getFilteredSyslog())
       this.hostListDialog = true
       this.$nextTick(() => {
         this.$showSyslogHost('hostList', this.hostList)
@@ -1203,35 +1253,26 @@ export default {
       }
       this.extractHistogramDialog = true
       this.$nextTick(() => {
-        this.$showSyslogExtractHistogram(
-          'histogram',
-          this.extractDatas,
-          this.extractHistogramType
-        )
+        this.updateExtractHistogram()
       })
     },
     updateExtractHistogram() {
       this.$showSyslogExtractHistogram(
         'histogram',
-        this.extractDatas,
+        this.getFilteredExtractData(),
         this.extractHistogramType
       )
     },
     showExtractCluster() {
       this.extractClusterDialog = true
       this.$nextTick(() => {
-        this.$showSyslogExtractCluster(
-          'cluster',
-          this.extractDatas,
-          this.numExtractTypeList,
-          this.cluster * 1
-        )
+        this.updateExtractCluster()
       })
     },
     updateExtractCluster() {
       this.$showSyslogExtractCluster(
         'cluster',
-        this.extractDatas,
+        this.getFilteredExtractData(),
         this.numExtractTypeList,
         this.cluster * 1
       )
@@ -1251,19 +1292,13 @@ export default {
       }
       this.extract3DDialog = true
       this.$nextTick(() => {
-        this.$showSyslogExtract3D(
-          'extract3d',
-          this.extractDatas,
-          this.extract3DTypeX,
-          this.extract3DTypeZ,
-          this.extract3DTypeColor
-        )
+        this.updateExtract3D()
       })
     },
     updateExtract3D() {
       this.$showSyslogExtract3D(
         'extract3d',
-        this.extractDatas,
+        this.getFilteredExtractData(),
         this.extract3DTypeX,
         this.extract3DTypeZ,
         this.extract3DTypeColor
@@ -1273,18 +1308,14 @@ export default {
       if (this.extractTopListType === '') {
         this.extractTopListType = this.strExtractTypeList[0].value
       }
-      this.extractTopList = this.$getSyslogExtractTopList(
-        this.extractDatas,
-        this.extractTopListType
-      )
       this.extractTopListDialog = true
       this.$nextTick(() => {
-        this.$showSyslogExtractTopList('extractTopList', this.extractTopList)
+        this.updateExtractTopList()
       })
     },
     updateExtractTopList() {
       this.extractTopList = this.$getSyslogExtractTopList(
-        this.extractDatas,
+        this.getFilteredExtractData(),
         this.extractTopListType
       )
       this.$showSyslogExtractTopList('extractTopList', this.extractTopList)
@@ -1292,8 +1323,8 @@ export default {
     doAIAssist() {
       this.hasAIErrorChart = false
       this.aiProcessing = true
-      this.$syslogAIAssist(this.logs).then(() => {
-        this.hasAIResult = true
+      this.$syslogAIAssist(this.getFilteredSyslog()).then(() => {
+        this.aiFilter.hasAIResult = true
         this.aiProcessing = false
         this.hasAIErrorChart = true
         this.$nextTick(() => {
@@ -1313,7 +1344,7 @@ export default {
     updateFFT() {
       this.fftDialog = true
       if (!this.fftMap) {
-        this.fftMap = this.$getSyslogFFTMap(this.logs)
+        this.fftMap = this.$getSyslogFFTMap(this.getFilteredSyslog())
         this.fftHostList = []
         this.fftMap.forEach((e) => {
           this.fftHostList.push({ text: e.Name, value: e.Name })
@@ -1327,7 +1358,7 @@ export default {
     updateFFT3D() {
       this.fft3DDialog = true
       if (!this.fftMap) {
-        this.fftMap = this.$getSyslogFFTMap(this.logs)
+        this.fftMap = this.$getSyslogFFTMap(this.getFilteredSyslog())
         this.fftHostList = []
         this.fftMap.forEach((e) => {
           this.fftHostList.push({ text: e.Name, value: e.Name })
@@ -1359,6 +1390,111 @@ export default {
           this.copyError = true
         }
       )
+    },
+    makeSyslogExports() {
+      const exports = []
+      this.logs.forEach((e) => {
+        if (!this.filterSyslog(e)) {
+          return
+        }
+        exports.push({
+          状態: this.$getStateName(e.Level),
+          記録日時: e.TimeStr,
+          種別: e.Type,
+          ホスト名: e.Host,
+          タグ: e.Tag,
+          メッセージ: e.Message,
+        })
+      })
+      return exports
+    },
+    getFilteredSyslog() {
+      const ret = []
+      if (!this.logs) {
+        return ret
+      }
+      this.logs.forEach((e) => {
+        if (!this.filterSyslog(e)) {
+          return
+        }
+        ret.push(e)
+      })
+      return ret
+    },
+    filterSyslog(e) {
+      if (this.conf.pri && !e.Type.includes(this.conf.pri)) {
+        return false
+      }
+      if (this.conf.host && !e.Host.includes(this.conf.host)) {
+        return false
+      }
+      if (this.conf.tag && !e.Tag.includes(this.conf.tag)) {
+        return false
+      }
+      if (this.conf.msg && !e.Message.includes(this.conf.msg)) {
+        return false
+      }
+      return true
+    },
+    makeExtractExports() {
+      const exports = []
+      this.extractDatas.forEach((e) => {
+        if (!this.filterExtract(e)) {
+          return
+        }
+        exports.push(e)
+      })
+      return exports
+    },
+    filterExtract(e) {
+      if (this.searchExtract) {
+        const s = Object.values(e).join(' ')
+        if (s.includes(this.searchExtract)) {
+          return false
+        }
+      }
+      return true
+    },
+    getFilteredExtractData() {
+      const ret = []
+      this.extractDatas.forEach((e) => {
+        if (!this.filterExtract(e)) {
+          return
+        }
+        ret.push(e)
+      })
+      return ret
+    },
+    makeExtractTopExports() {
+      const exports = []
+      this.extractTopList.forEach((e) => {
+        if (this.extractTopName && !e.Name.includes(this.this.extractTopName)) {
+          return
+        }
+        exports.push({
+          項目名: e.Name,
+          総数: e.Total,
+        })
+      })
+      return exports
+    },
+    makeHostExports() {
+      const exports = []
+      this.hostList.forEach((e) => {
+        if (this.hostName && !e.Name.includes(this.hostName)) {
+          return
+        }
+        exports.push({
+          ホスト名: e.Name,
+          総数: e.Total,
+          重度: e.High,
+          軽度: e.Low,
+          注意: e.Warn,
+          情報: e.Info,
+          デバッグ: e.Debug,
+        })
+      })
+      return exports
     },
   },
 }

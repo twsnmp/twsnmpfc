@@ -9,9 +9,11 @@
       <v-data-table
         :headers="headers"
         :items="logs"
-        sort-by="TimeStr"
-        sort-desc
         dense
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"
@@ -25,18 +27,18 @@
         <template #[`body.append`]>
           <tr>
             <td>
-              <v-select v-model="level" :items="levelList" label="Level">
+              <v-select v-model="conf.level" :items="levelList" label="Level">
               </v-select>
             </td>
             <td></td>
             <td>
-              <v-text-field v-model="logtype" label="type"></v-text-field>
+              <v-text-field v-model="conf.logtype" label="type"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="node" label="node"></v-text-field>
+              <v-text-field v-model="conf.node" label="node"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="msg" label="event"></v-text-field>
+              <v-text-field v-model="conf.event" label="event"></v-text-field>
             </td>
           </tr>
         </template>
@@ -48,10 +50,10 @@
           検索条件
         </v-btn>
         <download-excel
-          :data="logs"
+          :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Event_Log.csv"
-          header="TWSNMP FC Event Log"
+          header="TWSNMP FCのイベントログ"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -60,10 +62,11 @@
           </v-btn>
         </download-excel>
         <download-excel
-          :data="logs"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Event_Log.xls"
-          header="TWSNMP FC Event Log"
+          header="TWSNMP FCのイベントログ"
+          worksheet="イベントログ"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -260,8 +263,8 @@ export default {
           value: 'Level',
           width: '10%',
           filter: (value) => {
-            if (!this.level) return true
-            return this.level === value
+            if (!this.conf.level) return true
+            return this.conf.level === value
           },
         },
         { text: '発生日時', value: 'TimeStr', width: '15%' },
@@ -270,8 +273,8 @@ export default {
           value: 'Type',
           width: '10%',
           filter: (value) => {
-            if (!this.logtype) return true
-            return value.includes(this.logtype)
+            if (!this.conf.logtype) return true
+            return value.includes(this.conf.logtype)
           },
         },
         {
@@ -279,8 +282,8 @@ export default {
           value: 'NodeName',
           width: '15%',
           filter: (value) => {
-            if (!this.node) return true
-            return value.includes(this.node)
+            if (!this.conf.node) return true
+            return value.includes(this.conf.node)
           },
         },
         {
@@ -288,16 +291,23 @@ export default {
           value: 'Event',
           width: '50%',
           filter: (value) => {
-            if (!this.msg) return true
-            return value.includes(this.msg)
+            if (!this.conf.event) return true
+            return value.includes(this.conf.event)
           },
         },
       ],
       logs: [],
-      level: '',
-      logtype: '',
-      node: '',
-      msg: '',
+      conf: {
+        level: '',
+        logtype: '',
+        node: '',
+        event: '',
+        sortBy: 'TimeStr',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
       levelList: [
         { text: '', value: '' },
         { text: '重度', value: 'high' },
@@ -318,7 +328,17 @@ export default {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
     })
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
     this.$showLogLevelChart(this.logs)
+  },
+  created() {
+    const c = this.$store.state.log.logs.eventLog
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
   },
   mounted() {
     this.$makeLogLevelChart('logCountChart')
@@ -327,6 +347,11 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.$resizeLogLevelChart)
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('log/logs/setEventLog', this.conf)
   },
   methods: {
     doFilter() {
@@ -338,6 +363,37 @@ export default {
       }
       this.filterDialog = false
       this.$fetch()
+    },
+    makeExports() {
+      const exports = []
+      this.logs.forEach((e) => {
+        if (!this.filterLog(e)) {
+          return
+        }
+        exports.push({
+          状態: this.$getStateName(e.Level),
+          記録日時: e.TimeStr,
+          種別: e.Type,
+          関連ノード: e.NodeName,
+          イベント: e.Event,
+        })
+      })
+      return exports
+    },
+    filterLog(e) {
+      if (this.conf.level && e.Level !== this.conf.level) {
+        return false
+      }
+      if (this.conf.logtype && !e.Type.includes(this.conf.logtype)) {
+        return false
+      }
+      if (this.conf.node && !e.NodeName.includes(this.conf.node)) {
+        return false
+      }
+      if (this.conf.event && !e.Event.includes(this.conf.event)) {
+        return false
+      }
+      return true
     },
   },
 }
