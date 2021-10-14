@@ -61,6 +61,9 @@
           <v-btn v-if="isAuthenticated" color="primary" to="/map">
             マップ
           </v-btn>
+          <v-btn v-if="isAuthenticated" color="info" @click="checkUpdate">
+            更新版の確認
+          </v-btn>
           <v-btn
             v-if="isAuthenticated"
             color="error"
@@ -105,6 +108,29 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="checkUpdateDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">更新版の確認</span>
+        </v-card-title>
+        <v-alert v-model="checkUpdateError" color="error" dense dismissible>
+          更新版の確認に失敗しました。
+        </v-alert>
+        <v-alert v-model="hasNewVersion" color="error" dense dismissible>
+          新しいバージョン{{ newVersion }}があります。
+        </v-alert>
+        <v-alert v-model="noNewVersion" color="info" dense dismissible>
+          お使いのバージョンは最新です。
+        </v-alert>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="checkUpdateDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -116,12 +142,6 @@ export default {
   components: {
     Logo,
   },
-  async fetch() {
-    const r = await this.$axios.$get('/version')
-    if (r && r.Version) {
-      this.version = r.Version
-    }
-  },
   data() {
     return {
       version: '',
@@ -132,6 +152,17 @@ export default {
         Msg: '',
         IncludeSysInfo: false,
       },
+      checkUpdateDialog: false,
+      checkUpdateError: false,
+      hasNewVersion: false,
+      noNewVersion: false,
+      newVersion: '',
+    }
+  },
+  async fetch() {
+    const r = await this.$axios.$get('/version')
+    if (r && r.Version) {
+      this.version = r.Version
     }
   },
   computed: {
@@ -150,6 +181,30 @@ export default {
         })
         .catch((e) => {
           this.feedbackError = true
+        })
+    },
+    checkUpdate() {
+      this.checkUpdateDialog = true
+      this.hasNewVersion = false
+      this.noNewVersion = false
+      this.$axios
+        .get('/api/checkupdate')
+        .then((r) => {
+          if (r && r.data && r.data.Version) {
+            this.newVersion = r.data.Version
+            if (r.data.HasNew) {
+              this.hasNewVersion = true
+              this.noNewVersion = false
+            } else {
+              this.hasNewVersion = true
+              this.noNewVersion = false
+            }
+          } else {
+            this.checkUpdateError = true
+          }
+        })
+        .catch((e) => {
+          this.checkUpdateError = true
         })
     },
   },

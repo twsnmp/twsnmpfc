@@ -77,6 +77,7 @@ func setup(p *WebAPI) {
 	r := e.Group("/api")
 	r.Use(middleware.JWT([]byte(p.Password)))
 	r.POST("/feedback", postFeedback)
+	r.GET("/checkupdate", getCheckUpdate)
 	r.GET("/me", getMe)
 	r.GET("/conf/map", getMapConf)
 	r.POST("/conf/map", postMapConf)
