@@ -11,7 +11,7 @@ import (
 func TestPing(t *testing.T) {
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
-	Start(ctx, wg)
+	Start(ctx, wg, "")
 	defer cancel()
 	time.Sleep(time.Second * 1)
 	ip := ""

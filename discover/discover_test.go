@@ -24,7 +24,7 @@ func getTmpDBFile() (string, error) {
 
 func TestDiscover(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	ping.Start(ctx, &sync.WaitGroup{})
+	ping.Start(ctx, &sync.WaitGroup{}, "")
 	defer cancel()
 	time.Sleep(time.Second * 1)
 	statikFS, err := fs.New()

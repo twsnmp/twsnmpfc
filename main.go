@@ -40,6 +40,7 @@ var local bool
 var cpuprofile string
 var memprofile string
 var restore string
+var pingMode string
 
 var version = "vx.x.x"
 var commit = ""
@@ -51,6 +52,7 @@ func init() {
 	flag.StringVar(&host, "host", "", "Host Name for TLS Cert")
 	flag.StringVar(&restore, "restore", "", "Restore DB file name")
 	flag.StringVar(&ip, "ip", "", "IP Address for TLS Cert")
+	flag.StringVar(&pingMode, "ping", "", "ping mode icmp or udp")
 	flag.BoolVar(&tls, "tls", false, "Use TLS")
 	flag.BoolVar(&local, "local", false, "Local only")
 	flag.StringVar(&cpuprofile, "cpuprofile", "", "write cpu profile to `file`")
@@ -119,7 +121,7 @@ func main() {
 		Level: "info",
 		Event: "TWSNMP FC起動",
 	})
-	if err = ping.Start(ctx, wg); err != nil {
+	if err = ping.Start(ctx, wg, pingMode); err != nil {
 		log.Fatalf("start ping err=%v", err)
 	}
 	if err = report.Start(ctx, wg); err != nil {

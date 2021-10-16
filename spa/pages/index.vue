@@ -116,10 +116,10 @@
         <v-alert v-model="checkUpdateError" color="error" dense dismissible>
           更新版の確認に失敗しました。
         </v-alert>
-        <v-alert v-model="hasNewVersion" color="error" dense dismissible>
+        <v-alert v-if="hasNewVersion" color="error" dense dismissible>
           新しいバージョン{{ newVersion }}があります。
         </v-alert>
-        <v-alert v-model="noNewVersion" color="info" dense dismissible>
+        <v-alert v-else color="info" dense dismissible>
           お使いのバージョンは最新です。
         </v-alert>
         <v-card-actions>
@@ -155,7 +155,6 @@ export default {
       checkUpdateDialog: false,
       checkUpdateError: false,
       hasNewVersion: false,
-      noNewVersion: false,
       newVersion: '',
     }
   },
@@ -186,19 +185,12 @@ export default {
     checkUpdate() {
       this.checkUpdateDialog = true
       this.hasNewVersion = false
-      this.noNewVersion = false
       this.$axios
         .get('/api/checkupdate')
         .then((r) => {
           if (r && r.data && r.data.Version) {
             this.newVersion = r.data.Version
-            if (r.data.HasNew) {
-              this.hasNewVersion = true
-              this.noNewVersion = false
-            } else {
-              this.hasNewVersion = true
-              this.noNewVersion = false
-            }
+            this.hasNewVersion = r.data.HasNew
           } else {
             this.checkUpdateError = true
           }

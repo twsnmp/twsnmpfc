@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -112,29 +111,5 @@ func getCheckUpdate(c echo.Context) error {
 		return echo.ErrInternalServerError
 	}
 	sv := strings.TrimSpace(string(ba))
-	return c.JSON(http.StatusOK, map[string]interface{}{"Version": sv, "HasNew": hasNewVerson(api.Version, sv)})
-}
-
-func hasNewVerson(mv, sv string) bool {
-	mv = strings.ReplaceAll(mv, "v", "")
-	mv = strings.ReplaceAll(mv, "x", "0")
-	sv = strings.ReplaceAll(sv, "v", "")
-	mva := strings.Split(mv, ".")
-	sva := strings.Split(sv, ".")
-	for i := 0; i < len(mva) && i < len(sva); i++ {
-		sn, err := strconv.ParseInt(sva[i], 10, 64)
-		if err != nil {
-			log.Println(err)
-			return false
-		}
-		mn, err := strconv.ParseInt(mva[i], 10, 64)
-		if err != nil {
-			log.Println(err)
-			return false
-		}
-		if sn > mn {
-			return true
-		}
-	}
-	return false
+	return c.JSON(http.StatusOK, map[string]interface{}{"Version": sv, "HasNew": backend.CmpVersion(api.Version, sv) < 0})
 }

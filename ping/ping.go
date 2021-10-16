@@ -39,6 +39,7 @@ var (
 	pingSendCh chan *PingEnt
 	randGen    *rand.Rand
 	pingMutex  sync.Mutex
+	pingMode   = ""
 )
 
 type PingEnt struct {
@@ -64,7 +65,16 @@ type packet struct {
 	ttl    int
 }
 
-func Start(ctx context.Context, wg *sync.WaitGroup) error {
+func Start(ctx context.Context, wg *sync.WaitGroup, mode string) error {
+	if mode == "" {
+		if runtime.GOOS == "darwin" {
+			mode = "udp"
+		} else {
+			mode = "icmp"
+		}
+	}
+	pingMode = mode
+	log.Printf("ping mode=%s", pingMode)
 	pingSendCh = make(chan *PingEnt, 100)
 	randGen = rand.New(rand.NewSource(time.Now().UnixNano()))
 	wg.Add(1)
@@ -104,7 +114,7 @@ func newPingEnt(ip string, timeout, retry, size int) *PingEnt {
 func (p *PingEnt) sendICMP(conn *icmp.PacketConn) error {
 	p.lastSend = time.Now().Unix()
 	var dst net.Addr = p.ipaddr
-	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+	if pingMode == "udp" {
 		dst = &net.UDPAddr{IP: p.ipaddr.IP, Zone: p.ipaddr.Zone}
 	}
 	t := append(timeToBytes(time.Now()), intToBytes(p.Tracker)...)
@@ -148,13 +158,13 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 	log.Println("start ping")
 	timer := time.NewTicker(time.Millisecond * 500)
 	pingMap := make(map[int64]*PingEnt)
-	netProto := "udp4"
-	if runtime.GOOS == "windows" {
-		netProto = "ip4:icmp"
+	netProto := "ip4:icmp"
+	if pingMode == "udp" {
+		netProto = "udp4"
 	}
 	conn, err := icmp.ListenPacket(netProto, "0.0.0.0")
 	if err != nil {
-		log.Printf("ping err=%v", err)
+		log.Fatalf("ping listen err=%v", err)
 		return
 	}
 	defer conn.Close()
@@ -195,6 +205,7 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 					}
 					if err := p.sendICMP(conn); err != nil {
 						p.Error = err
+						log.Printf("ping send err=%v", err)
 					}
 				}
 			}

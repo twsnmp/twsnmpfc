@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -160,7 +161,7 @@ func checkNewVersion() {
 		log.Printf("check new version err=%v", err)
 		return
 	}
-	if strings.TrimSpace(string(ba)) == versionNum {
+	if CmpVersion(versionNum, strings.TrimSpace(string(ba))) >= 0 {
 		if versionCheckState == 0 {
 			datastore.AddEventLog(&datastore.EventLogEnt{
 				Type:  "system",
@@ -177,4 +178,32 @@ func checkNewVersion() {
 		Event: "TWSNMPの新しいバージョンがあります。",
 	})
 	versionCheckState = 2
+}
+
+func CmpVersion(mv, sv string) int {
+	mv = strings.ReplaceAll(mv, "(", " ")
+	mv = strings.ReplaceAll(mv, "v", "")
+	mv = strings.ReplaceAll(mv, "x", "0")
+	sv = strings.ReplaceAll(sv, "v", "")
+	mva := strings.Split(mv, ".")
+	sva := strings.Split(sv, ".")
+	for i := 0; i < len(mva) && i < len(sva) && i < 3; i++ {
+		sn, err := strconv.ParseInt(sva[i], 10, 64)
+		if err != nil {
+			log.Println(err)
+			return 0
+		}
+		mn, err := strconv.ParseInt(mva[i], 10, 64)
+		if err != nil {
+			log.Println(err)
+			return 0
+		}
+		if sn > mn {
+			return -1
+		}
+		if sn < mn {
+			return 1
+		}
+	}
+	return 0
 }
