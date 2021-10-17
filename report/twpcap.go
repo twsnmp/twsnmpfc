@@ -105,6 +105,7 @@ func checkEtherTypeReport(h string, twpcap map[string]string) {
 }
 
 var etherTypeMap = map[string]string{
+	"0x0000": "LLC",
 	"0x0800": "IPv4",
 	"0x0806": "ARP",
 	"0x0842": "WakeOnLAN",
@@ -114,13 +115,21 @@ var etherTypeMap = map[string]string{
 	"0x88cc": "LLDP",
 	"0x8100": "VLAN",
 	"0x9100": "VLAN DT",
-	"0x8847": "MPLS U",
-	"0x8848": "MPLS M",
-	"0x8863": "PPPoE DS",
-	"0x8864": "PPPoE SS",
+	"0x8847": "MPLS Unicat",
+	"0x8848": "MPLS Multicast",
+	"0x8863": "PPPoE Discovery",
+	"0x8864": "PPPoE Session",
 	"0x888e": "802.1X",
 	"0x88a2": "ATAoE",
-	"0x9000": "EConfTest",
+	"0x9000": "Ethernet Conf Test",
+	"0x87d2": "Aironet DDP",
+	"0x890d": "802.11MP",
+	"0x2000": "Cisco Discovery",
+	"0x01a2": "Nortel Discovery",
+	"0x6558": "Transparent Ethernet Bridging",
+	"0x880b": "PPP",
+	"0x88be": "ERSPAN",
+	"0x88a8": "QinQ",
 }
 
 func getEtherTypeName(t string) string {
