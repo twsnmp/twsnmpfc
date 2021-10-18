@@ -4,6 +4,7 @@ export const state = () => ({
     server: '',
     type: '',
     name: '',
+    client: '',
     sortBy: 'Count',
     sortDesc: false,
     page: 1,

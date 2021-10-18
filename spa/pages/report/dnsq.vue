@@ -20,6 +20,9 @@
         <template #[`item.Name`]="{ item }">
           {{ item.Name }}
         </template>
+        <template #[`item.Type`]="{ item }">
+          {{ $getDNSTypeName(item.Type) }}
+        </template>
         <template #[`item.Count`]="{ item }">
           {{ formatCount(item.Count) }}
         </template>
@@ -35,13 +38,20 @@
               <v-text-field v-model="conf.server" label="server"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="conf.type" label="type"></v-text-field>
+              <v-select v-model="conf.type" :items="$dnsTypeList" label="Type">
+              </v-select>
             </td>
             <td>
               <v-text-field v-model="conf.name" label="name"></v-text-field>
             </td>
-            <td colspan="4"></td>
+            <td colspan="2"></td>
+            <td>
+              <v-text-field v-model="conf.client" label="Client"></v-text-field>
+            </td>
           </tr>
+        </template>
+        <template #[`item.actions`]="{ item }">
+          <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -111,6 +121,68 @@
         </v-btn>
       </v-card-actions>
     </v-card>
+    <v-dialog v-model="infoDialog" persistent max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">DNS問い合わせ情報</span>
+        </v-card-title>
+        <v-simple-table dense>
+          <template #default>
+            <thead>
+              <tr>
+                <th class="text-left">項目</th>
+                <th class="text-left">値</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>センサーホスト</td>
+                <td>{{ selected.Host }}</td>
+              </tr>
+              <tr>
+                <td>DNSサーバー</td>
+                <td>{{ selected.Server }}</td>
+              </tr>
+              <tr>
+                <td>問い合わせ内容</td>
+                <td>{{ selected.Name }}</td>
+              </tr>
+              <tr>
+                <td>回数</td>
+                <td>{{ selected.Count }}</td>
+              </tr>
+              <tr>
+                <td>変化数</td>
+                <td>{{ selected.Change }}</td>
+              </tr>
+              <tr>
+                <td>最後のクライアントのIPアドレス</td>
+                <td>{{ selected.LastClient }}</td>
+              </tr>
+              <tr>
+                <td>最後のクライアントのMACアドレス</td>
+                <td>{{ selected.LastMAC }}</td>
+              </tr>
+              <tr>
+                <td>初回日時</td>
+                <td>{{ selected.First }}</td>
+              </tr>
+              <tr>
+                <td>最終日時</td>
+                <td>{{ selected.Last }}</td>
+              </tr>
+            </tbody>
+          </template>
+        </v-simple-table>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="infoDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="nameChartDialog" persistent max-width="950px">
       <v-card>
         <v-card-title>
@@ -164,7 +236,6 @@ import * as numeral from 'numeral'
 export default {
   data() {
     return {
-      search: '',
       headers: [
         {
           text: 'ホスト',
@@ -178,7 +249,7 @@ export default {
         {
           text: 'サーバー',
           value: 'Server',
-          width: '20%',
+          width: '10%',
           filter: (value) => {
             if (!this.conf.server) return true
             return value.includes(this.conf.server)
@@ -190,7 +261,7 @@ export default {
           width: '10%',
           filter: (value) => {
             if (!this.conf.type) return true
-            return value.includes(this.conf.type)
+            return value === this.conf.type
           },
         },
         {
@@ -204,8 +275,17 @@ export default {
         },
         { text: '回数', value: 'Count', width: '8%' },
         { text: '変化', value: 'Change', width: '8%' },
-        { text: '初回', value: 'First', width: '12%' },
+        {
+          text: 'クライアント',
+          value: 'LastClient',
+          width: '12%',
+          filter: (value) => {
+            if (!this.conf.client) return true
+            return value.includes(this.conf.client)
+          },
+        },
         { text: '最終', value: 'Last', width: '12%' },
+        { text: '操作', value: 'actions', width: '10%' },
       ],
       dnsq: [],
       conf: {
@@ -213,6 +293,7 @@ export default {
         server: '',
         type: '',
         name: '',
+        client: '',
         sortBy: 'Count',
         sortDesc: false,
         page: 1,
@@ -222,6 +303,8 @@ export default {
       nameChartDialog: false,
       typeChartDialog: false,
       serverChartDialog: false,
+      selected: {},
+      infoDialog: false,
     }
   },
   async fetch() {
@@ -258,6 +341,10 @@ export default {
     this.$store.commit('report/dnsq/setConf', this.conf)
   },
   methods: {
+    openInfoDialog(item) {
+      this.selected = item
+      this.infoDialog = true
+    },
     openDNSChart(type) {
       switch (type) {
         case 'server':
@@ -290,10 +377,13 @@ export default {
       if (this.conf.server && !d.Server.includes(this.conf.server)) {
         return false
       }
-      if (this.conf.type && !d.Type.includes(this.conf.type)) {
+      if (this.conf.type && d.Type !== this.conf.type) {
         return false
       }
       if (this.conf.name && !d.Name.includes(this.conf.name)) {
+        return false
+      }
+      if (this.conf.client && !d.LastClient.includes(this.conf.client)) {
         return false
       }
       return true
@@ -314,6 +404,8 @@ export default {
           名前: d.Name,
           回数: d.Count,
           変化: d.Change,
+          最後のクライアント: d.LastClient,
+          最後のMACアドレス: d.LastMAC,
           初回日時: d.First,
           最終日時: d.Last,
         })

@@ -18,19 +18,18 @@ type EtherTypeEnt struct {
 }
 
 type DNSQEnt struct {
-	ID           string // ID Host:Server:Type:Name
-	Host         string
-	Server       string
-	Type         string
-	Name         string
-	Count        int64
-	Change       int64
-	ServerName   string
-	ServerNodeID string
-	ServerLoc    string
-	FirstTime    int64
-	LastTime     int64
-	UpdateTime   int64
+	ID         string // ID Hash(Host:Server:Type:Name)
+	Host       string
+	Server     string
+	Type       string
+	Name       string
+	Count      int64
+	Change     int64
+	LastClient string
+	LastMAC    string
+	FirstTime  int64
+	LastTime   int64
+	UpdateTime int64
 }
 
 type RADIUSFlowEnt struct {

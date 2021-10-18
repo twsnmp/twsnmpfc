@@ -152,25 +152,29 @@ func checkDNSReport(h string, twpcap map[string]string) {
 	if !ok {
 		return
 	}
-	id := h + ":" + sv + ":" + t + ":" + n
+	id := makeID(h + ":" + sv + ":" + t + ":" + n)
 	e := datastore.GetDNSQ(id)
 	if e != nil {
 		e.Count = getNumberFromTWLog(twpcap["count"])
 		e.Change = getNumberFromTWLog(twpcap["change"])
+		e.LastClient = twpcap["lcl"]
+		e.LastMAC = twpcap["lMAC"]
 		e.LastTime = getTimeFromTWLog(twpcap["lt"])
 		e.FirstTime = getTimeFromTWLog(twpcap["ft"])
 		return
 	}
 	datastore.AddDNSQ(&datastore.DNSQEnt{
-		ID:        id,
-		Host:      h,
-		Type:      t,
-		Server:    sv,
-		Name:      n,
-		Count:     getNumberFromTWLog(twpcap["count"]),
-		Change:    getNumberFromTWLog(twpcap["change"]),
-		LastTime:  getTimeFromTWLog(twpcap["lt"]),
-		FirstTime: getTimeFromTWLog(twpcap["ft"]),
+		ID:         id,
+		Host:       h,
+		Type:       t,
+		Server:     sv,
+		Name:       n,
+		Count:      getNumberFromTWLog(twpcap["count"]),
+		Change:     getNumberFromTWLog(twpcap["change"]),
+		LastClient: twpcap["lcl"],
+		LastMAC:    twpcap["lMAC"],
+		LastTime:   getTimeFromTWLog(twpcap["lt"]),
+		FirstTime:  getTimeFromTWLog(twpcap["ft"]),
 	})
 }
 

@@ -791,12 +791,43 @@ const showDNSChart = (div, dns) => {
     i = 49
   }
   for (; i >= 0; i--) {
-    option.yAxis.data.push(keys[i])
+    option.yAxis.data.push(getDNSTypeName(keys[i]))
     option.series[0].data.push(m.get(keys[i])[0])
     option.series[1].data.push(m.get(keys[i])[1])
   }
   chart.setOption(option)
   chart.resize()
+}
+
+const dnsTypeList = [
+  { text: '', value: '' },
+  { text: 'IPv4', value: 'A' },
+  { text: 'IPv6', value: 'AAAA' },
+  { text: 'ホスト名', value: 'PTR' },
+  { text: 'DNSサーバー', value: 'NS' },
+  { text: 'メールサーバー', value: 'MX' },
+  { text: 'テキスト', value: 'TXT' },
+  { text: 'エイリアス', value: 'CNAME' },
+  { text: 'ゾーン', value: 'SOA' },
+  { text: 'ホスト情報', value: 'HINFO' },
+  { text: '不明', value: 'Unknown' },
+]
+
+const dnsTypeMap = new Map()
+
+const getDNSTypeName = (t) => {
+  if (dnsTypeMap.has(t)) {
+    return dnsTypeMap.get(t)
+  }
+  let n = t
+  for (let i = 0; i < dnsTypeList.length; i++) {
+    if (dnsTypeList[i].value === t) {
+      n = dnsTypeList[i].text
+      break
+    }
+  }
+  dnsTypeMap.set(t, n)
+  return n
 }
 
 const showRADIUSFlowsChart = (div, radius, layout) => {
@@ -1074,4 +1105,6 @@ export default (context, inject) => {
   inject('showRADIUSFlowsChart', showRADIUSFlowsChart)
   inject('showRADIUSBarChart', showRADIUSBarChart)
   inject('filterTLSFlow', filterTLSFlow)
+  inject('dnsTypeList', dnsTypeList)
+  inject('getDNSTypeName', getDNSTypeName)
 }
