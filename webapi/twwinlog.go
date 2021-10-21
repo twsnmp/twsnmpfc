@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/report"
 )
 
 func getWinEventID(c echo.Context) error {
@@ -42,6 +43,16 @@ func deleteWinLogon(c echo.Context) error {
 	} else {
 		datastore.DeleteReport("winLogon", []string{id})
 	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func resetWinLogon(c echo.Context) error {
+	report.ResetWinLogonScore()
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "Windowsログオンレポートの信用スコアを再計算しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

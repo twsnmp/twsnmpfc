@@ -13,6 +13,14 @@ func ReportTwWinLog(l map[string]interface{}) {
 	twWinLogCh <- l
 }
 
+func ResetWinLogonScore() {
+	datastore.ForEachWinLogon(func(e *datastore.WinLogonEnt) bool {
+		setWinLogonPenalty(e)
+		return true
+	})
+	calcWinLogonScore()
+}
+
 func checkTWWinLogReport(l map[string]interface{}) {
 	h, ok := l["hostname"].(string)
 	if !ok {

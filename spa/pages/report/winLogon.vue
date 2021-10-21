@@ -100,6 +100,10 @@
             Excel
           </v-btn>
         </download-excel>
+        <v-btn color="error" dark @click="resetDialog = true">
+          <v-icon>mdi-calculator</v-icon>
+          再計算
+        </v-btn>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           更新
@@ -119,6 +123,25 @@
             削除
           </v-btn>
           <v-btn color="normal" @click="deleteDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="resetDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">信用スコア再計算</span>
+        </v-card-title>
+        <v-card-text> 信用スコアを再計算しますか？ </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="doReset">
+            <v-icon>mdi-calculator</v-icon>
+            実行
+          </v-btn>
+          <v-btn color="normal" @click="resetDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -164,6 +187,40 @@
               <tr>
                 <td>失敗回数</td>
                 <td>{{ selected.Failed }}</td>
+              </tr>
+              <tr>
+                <td>ログオン種別</td>
+                <td>
+                  <v-virtual-scroll
+                    height="80"
+                    item-height="20"
+                    :items="selected.LogonTypeList"
+                  >
+                    <template #default="{ item }">
+                      <v-list-item>
+                        <v-list-item-title>{{ item.title }}</v-list-item-title>
+                        {{ formatCount(item.value) }}
+                      </v-list-item>
+                    </template>
+                  </v-virtual-scroll>
+                </td>
+              </tr>
+              <tr>
+                <td>失敗理由</td>
+                <td>
+                  <v-virtual-scroll
+                    height="80"
+                    item-height="20"
+                    :items="selected.FailedCodeList"
+                  >
+                    <template #default="{ item }">
+                      <v-list-item>
+                        <v-list-item-title>{{ item.title }}</v-list-item-title>
+                        {{ formatCount(item.value) }}
+                      </v-list-item>
+                    </template>
+                  </v-virtual-scroll>
+                </td>
               </tr>
               <tr>
                 <td>信用スコア</td>
@@ -236,6 +293,7 @@
 </template>
 
 <script>
+import * as numeral from 'numeral'
 export default {
   data() {
     return {
@@ -280,14 +338,16 @@ export default {
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
+      resetDialog: false,
+      resetError: false,
       scatter3DChartDialog: false,
       graphDialog: false,
       conf: {
         target: '',
         computer: '',
         ip: '',
-        sortBy: 'Count',
-        sortDesc: false,
+        sortBy: 'Score',
+        sortDesc: true,
         page: 1,
         itemsPerPage: 15,
       },
@@ -345,13 +405,50 @@ export default {
         })
       this.deleteDialog = false
     },
+    doReset() {
+      this.$axios
+        .post('/api/report/WinLogon/reset', {})
+        .then((r) => {
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.resetError = true
+          this.$fetch()
+        })
+      this.resetDialog = false
+    },
     openDeleteDialog(item) {
       this.selected = item
       this.deleteDialog = true
     },
     openInfoDialog(item) {
       this.selected = item
+      if (!this.selected.LogonTypeList) {
+        this.selected.LogonTypeList = this.mapToItemList(
+          this.selected.LogonType
+        )
+      }
+      if (!this.selected.FailedCodeList) {
+        this.selected.FailedCodeList = this.mapToItemList(
+          this.selected.FailedCode
+        )
+      }
       this.infoDialog = true
+    },
+    mapToItemList(m) {
+      const l = []
+      Object.keys(m).forEach((k) => {
+        l.push({
+          title: k,
+          value: m[k],
+        })
+      })
+      l.sort((a, b) => {
+        if (a.value > b.value) return -1
+        if (a.value < b.value) return 1
+        return 0
+      })
+      return l
     },
     openGraph() {
       this.graphDialog = true
@@ -398,6 +495,9 @@ export default {
         })
       })
       return exports
+    },
+    formatCount(n) {
+      return numeral(n).format('0,0')
     },
   },
 }

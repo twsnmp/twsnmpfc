@@ -129,7 +129,7 @@ const showWinLogonScatter3DChart = (div, list, filter) => {
       },
     },
     xAxis3D: getAxisOption('category', '接続元', catx),
-    yAxis3D: getAxisOption('category', '対象', caty),
+    yAxis3D: getAxisOption('category', 'ログイン先', caty),
     zAxis3D: getAxisOption('value', '回数', []),
     series: [
       {
@@ -138,7 +138,7 @@ const showWinLogonScatter3DChart = (div, list, filter) => {
         symbolSize: 6,
         dimensions: [
           '接続元',
-          '対象',
+          'ログオン先',
           '回数',
           '色',
           '信用スコア',
@@ -158,7 +158,7 @@ const showWinLogonGraph = (div, list, filter, layout) => {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
-  const categories = [{ name: '操作元' }, { name: '対象' }]
+  const categories = [{ name: '接続元' }, { name: 'ログオン先' }]
   const option = getGraphChartOption(div, categories, layout)
   if (!list) {
     return false
