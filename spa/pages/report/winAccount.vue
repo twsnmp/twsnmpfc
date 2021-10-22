@@ -133,7 +133,7 @@
             </thead>
             <tbody>
               <tr>
-                <td>操作したアカウント</td>
+                <td>操作アカウント</td>
                 <td>{{ selected.Subject }}</td>
               </tr>
               <tr>
@@ -228,9 +228,9 @@ export default {
     return {
       headers: [
         {
-          text: '操作したアカウント',
+          text: '操作アカウント',
           value: 'Subject',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.subject) return true
             return value.includes(this.conf.subject)
@@ -239,7 +239,7 @@ export default {
         {
           text: '対象アカウント',
           value: 'Target',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.target) return true
             return value.includes(this.conf.target)

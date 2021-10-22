@@ -137,7 +137,7 @@
                 <td>{{ selected.TaskName }}</td>
               </tr>
               <tr>
-                <td>関連アカウント</td>
+                <td>操作アカウント</td>
                 <td>{{ selected.Subject }}</td>
               </tr>
               <tr>
@@ -228,7 +228,7 @@ export default {
           },
         },
         {
-          text: '関連アカウント',
+          text: '操作アカウント',
           value: 'Subject',
           width: '20%',
           filter: (value) => {
@@ -342,7 +342,7 @@ export default {
         exports.push({
           コンピュータ: e.Computer,
           タスク名: e.TaskName,
-          関連アカウント: e.Subject,
+          操作アカウント: e.Subject,
           回数: e.Count,
           初回日時: e.First,
           最終日時: e.Last,

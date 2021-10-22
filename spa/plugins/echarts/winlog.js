@@ -353,7 +353,7 @@ const showWinPrivilegeScatter3DChart = (div, list, filter) => {
       },
     },
     xAxis3D: getAxisOption('category', 'コンピュータ', catx),
-    yAxis3D: getAxisOption('category', '関連アカウント', caty),
+    yAxis3D: getAxisOption('category', '操作アカウント', caty),
     zAxis3D: getAxisOption('value', '回数', []),
     series: [
       {
@@ -546,7 +546,7 @@ const showWinAccountScatter3DChart = (div, list, filter) => {
         ],
       },
     },
-    xAxis3D: getAxisOption('category', '関連アカウント', catx),
+    xAxis3D: getAxisOption('category', '操作アカウント', catx),
     yAxis3D: getAxisOption('category', '対象アカウント', caty),
     zAxis3D: getAxisOption('value', '回数', []),
     series: [
@@ -555,7 +555,7 @@ const showWinAccountScatter3DChart = (div, list, filter) => {
         type: 'scatter3D',
         symbolSize: 6,
         dimensions: [
-          '関連アカウント',
+          '操作アカウント',
           '対象アカウント',
           '回数',
           'コンピュータ',
@@ -574,7 +574,7 @@ const showWinAccountGraph = (div, list, filter, layout) => {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
-  const categories = [{ name: '関連アカウント' }, { name: '対象アカウント' }]
+  const categories = [{ name: '操作アカウント' }, { name: '対象アカウント' }]
   const option = getGraphChartOption(div, categories, layout)
   if (!list) {
     return false
@@ -653,7 +653,7 @@ const showWinProcessScatter3DChart = (div, list, mode, filter) => {
     'プロセス',
     '回数',
     'ステータス',
-    '関連アカウント',
+    '操作アカウント',
     '親プロセス',
     '色',
   ]
@@ -665,7 +665,7 @@ const showWinProcessScatter3DChart = (div, list, mode, filter) => {
     case 'parent':
       dimensions[0] = '親プロセス'
       dimensions[3] = 'コンピュータ'
-      dimensions[4] = '関連アカウント'
+      dimensions[4] = '操作アカウント'
       break
   }
   list.forEach((e) => {
@@ -760,7 +760,7 @@ const showWinProcessGraph = (div, list, mode, filter, layout) => {
   ]
   switch (mode) {
     case 'subject':
-      categories[0].name = '関連アカウント'
+      categories[0].name = '操作アカウント'
       break
     case 'parent':
       categories[0].name = '親プロセス'
@@ -799,7 +799,7 @@ const showWinProcessGraph = (div, list, mode, filter, layout) => {
           e.Count +
           ' コンピュータ=' +
           e.Computer +
-          '関連アカウント=' +
+          '操作アカウント=' +
           e.LastSubject
         break
       default:
@@ -807,7 +807,7 @@ const showWinProcessGraph = (div, list, mode, filter, layout) => {
         value =
           '回数=' +
           e.Count +
-          ' 関連アカウント=' +
+          ' 操作アカウント=' +
           e.LastSubject +
           '親プロセス=' +
           e.LastParent
@@ -909,7 +909,7 @@ const showWinTaskScatter3DChart = (div, list, filter) => {
         ],
       },
     },
-    xAxis3D: getAxisOption('category', '関連アカウント', catx),
+    xAxis3D: getAxisOption('category', '操作アカウント', catx),
     yAxis3D: getAxisOption('category', 'タスク', caty),
     zAxis3D: getAxisOption('value', '回数', []),
     series: [
@@ -932,7 +932,7 @@ const showWinTaskGraph = (div, list, filter, layout) => {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
-  const categories = [{ name: '関連アカウント' }, { name: 'タスク' }]
+  const categories = [{ name: '操作アカウント' }, { name: 'タスク' }]
   const option = getGraphChartOption(div, categories, layout)
   if (!list) {
     return false

@@ -161,7 +161,7 @@
                 <td>{{ selected.LastParent }}</td>
               </tr>
               <tr>
-                <td>関連アカウント</td>
+                <td>操作アカウント</td>
                 <td>{{ selected.LastSubject }}</td>
               </tr>
               <tr>
@@ -413,7 +413,7 @@ export default {
           起動: e.Start,
           停止: e.Exit,
           親プロセス: e.LastParent,
-          関連アカウント: e.LastSubject,
+          操作アカウント: e.LastSubject,
           最終ステータス: e.LastStatus,
           初回日時: e.First,
           最終日時: e.Last,

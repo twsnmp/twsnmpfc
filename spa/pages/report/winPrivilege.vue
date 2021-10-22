@@ -125,7 +125,7 @@
             </thead>
             <tbody>
               <tr>
-                <td>関連アカウント</td>
+                <td>操作アカウント</td>
                 <td>{{ selected.Subject }}</td>
               </tr>
               <tr>
@@ -180,7 +180,7 @@ export default {
     return {
       headers: [
         {
-          text: '関連アカウント',
+          text: '操作アカウント',
           value: 'Subject',
           width: '35%',
           filter: (value) => {
@@ -289,7 +289,7 @@ export default {
           return
         }
         exports.push({
-          関連アカウント: e.Subject,
+          操作アカウント: e.Subject,
           コンピュータ: e.Computer,
           回数: e.Count,
           初回日時: e.First,
