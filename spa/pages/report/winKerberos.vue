@@ -107,6 +107,10 @@
             Excel
           </v-btn>
         </download-excel>
+        <v-btn color="error" dark @click="resetDialog = true">
+          <v-icon>mdi-calculator</v-icon>
+          再計算
+        </v-btn>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           更新
@@ -155,7 +159,7 @@
                 <td>{{ selected.Computer }}</td>
               </tr>
               <tr>
-                <td>IP</td>
+                <td>要求元IPアドレス</td>
                 <td>{{ selected.IP }}</td>
               </tr>
               <tr>
@@ -173,6 +177,14 @@
               <tr>
                 <td>失敗</td>
                 <td>{{ selected.Failed }}</td>
+              </tr>
+              <tr>
+                <td>最後の発行ステータス</td>
+                <td>{{ selected.LastStatus }}</td>
+              </tr>
+              <tr>
+                <td>最後に利用した証明書</td>
+                <td>{{ selected.LastCert }}</td>
               </tr>
               <tr>
                 <td>信用スコア</td>
@@ -198,6 +210,25 @@
           <v-btn color="normal" dark @click="infoDialog = false">
             <v-icon>mdi-close</v-icon>
             閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="resetDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">信用スコア再計算</span>
+        </v-card-title>
+        <v-card-text> 信用スコアを再計算しますか？ </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="doReset">
+            <v-icon>mdi-calculator</v-icon>
+            実行
+          </v-btn>
+          <v-btn color="normal" @click="resetDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -247,11 +278,11 @@ export default {
   data() {
     return {
       headers: [
-        { text: '信用スコア', value: 'Score', width: '8%' },
+        { text: '信用スコア', value: 'Score', width: '10%' },
         {
           text: '対象',
           value: 'Target',
-          width: '16%',
+          width: '14%',
           filter: (value) => {
             if (!this.conf.target) return true
             return value.includes(this.conf.target)
@@ -260,14 +291,14 @@ export default {
         {
           text: 'コンピュータ',
           value: 'Computer',
-          width: '14%',
+          width: '12%',
           filter: (value) => {
             if (!this.conf.computer) return true
             return value.includes(this.conf.computer)
           },
         },
         {
-          text: '要求元IP',
+          text: '要求元',
           value: 'IP',
           width: '10%',
           filter: (value) => {
@@ -278,12 +309,13 @@ export default {
         {
           text: 'サービス',
           value: 'Service',
-          width: '12%',
+          width: '10%',
           filter: (value) => {
             if (!this.conf.service) return true
             return value.includes(this.conf.service)
           },
         },
+        // 56
         {
           text: '種別',
           value: 'TicketType',
@@ -293,16 +325,18 @@ export default {
             return value.includes(this.conf.ticketType)
           },
         },
-        { text: '回数', value: 'Count', width: '5%' },
-        { text: '失敗', value: 'Failed', width: '5%' },
+        { text: '回数', value: 'Count', width: '8%' },
+        { text: '失敗', value: 'Failed', width: '8%' },
         { text: '最終', value: 'Last', width: '12%' },
-        { text: '操作', value: 'actions', width: '10%' },
+        { text: '操作', value: 'actions', width: '8%' },
       ],
       kerberos: [],
       selected: {},
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
+      resetDialog: false,
+      resetError: false,
       scatter3DChartDialog: false,
       graphDialog: false,
       conf: {
@@ -369,6 +403,18 @@ export default {
           this.$fetch()
         })
       this.deleteDialog = false
+    },
+    doReset() {
+      this.$axios
+        .post('/api/report/WinKerberos/reset', {})
+        .then((r) => {
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.resetError = true
+          this.$fetch()
+        })
+      this.resetDialog = false
     },
     openDeleteDialog(item) {
       this.selected = item

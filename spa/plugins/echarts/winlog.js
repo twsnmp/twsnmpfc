@@ -263,8 +263,8 @@ const showWinKerberosScatter3DChart = (div, list, filter) => {
         color: ['#e31a1c', '#fb9a99', '#dfdf22', '#a6cee3', '#1f78b4'],
       },
     },
-    xAxis3D: getAxisOption('category', '操作元', catx),
-    yAxis3D: getAxisOption('category', '対象', caty),
+    xAxis3D: getAxisOption('category', 'チケット要求元', catx),
+    yAxis3D: getAxisOption('category', 'チケット対象', caty),
     zAxis3D: getAxisOption('value', '回数', []),
     series: [
       {
@@ -454,7 +454,7 @@ const showWinKerberosGraph = (div, list, filter, layout) => {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
-  const categories = [{ name: '操作元' }, { name: '対象' }]
+  const categories = [{ name: 'チケット要求元' }, { name: 'チケット対象' }]
   const option = getGraphChartOption(div, categories, layout)
   if (!list) {
     return false

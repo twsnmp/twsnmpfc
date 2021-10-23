@@ -94,6 +94,16 @@ func deleteWinKerberos(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
+func resetWinKerberos(c echo.Context) error {
+	report.ResetWinKerberosScore()
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "Windows Kerberosレポートの信用スコアを再計算しました",
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
 func getWinPrivilege(c echo.Context) error {
 	r := []*datastore.WinPrivilegeEnt{}
 	datastore.ForEachWinPrivilege(func(e *datastore.WinPrivilegeEnt) bool {

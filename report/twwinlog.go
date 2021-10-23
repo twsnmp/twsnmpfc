@@ -21,6 +21,14 @@ func ResetWinLogonScore() {
 	calcWinLogonScore()
 }
 
+func ResetWinKerberosScore() {
+	datastore.ForEachWinKerberos(func(e *datastore.WinKerberosEnt) bool {
+		setWinKerberosPenalty(e)
+		return true
+	})
+	calcWinKerberosScore()
+}
+
 func checkTWWinLogReport(l map[string]interface{}) {
 	h, ok := l["hostname"].(string)
 	if !ok {
@@ -283,7 +291,7 @@ func checkWinKerberos(h string, m map[string]string) {
 		e.LastTime = lt
 		e.Count += count
 		e.Failed += failed
-		setWinKerberos(e)
+		setWinKerberosPenalty(e)
 		return
 	}
 	e = &datastore.WinKerberosEnt{
@@ -298,11 +306,11 @@ func checkWinKerberos(h string, m map[string]string) {
 		FirstTime:  getTimeFromTWLog(m["ft"]),
 		LastTime:   lt,
 	}
-	setWinKerberos(e)
+	setWinKerberosPenalty(e)
 	datastore.AddWinKerberos(e)
 }
 
-func setWinKerberos(e *datastore.WinKerberosEnt) {
+func setWinKerberosPenalty(e *datastore.WinKerberosEnt) {
 	if e.Failed > 0 {
 		e.Penalty = 1
 	}
