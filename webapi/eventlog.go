@@ -2,6 +2,7 @@ package webapi
 
 import (
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -79,6 +80,10 @@ func postLastEventLogs(c echo.Context) error {
 		r = append(r, l)
 		i++
 		return i <= datastore.MapConf.LogDispSize
+	})
+	//逆順にソートする
+	sort.Slice(r, func(i, j int) bool {
+		return r[i].Time > r[j].Time
 	})
 	return c.JSON(http.StatusOK, r)
 }
