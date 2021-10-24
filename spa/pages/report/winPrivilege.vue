@@ -30,10 +30,6 @@
               </v-text-field>
             </td>
             <td>
-              <v-text-field v-model="conf.target" label="Target">
-              </v-text-field>
-            </td>
-            <td>
               <v-text-field v-model="conf.computer" label="Computer">
               </v-text-field>
             </td>
@@ -125,7 +121,7 @@
             </thead>
             <tbody>
               <tr>
-                <td>操作アカウント</td>
+                <td>対象アカウント</td>
                 <td>{{ selected.Subject }}</td>
               </tr>
               <tr>
@@ -180,7 +176,7 @@ export default {
     return {
       headers: [
         {
-          text: '操作アカウント',
+          text: '対象アカウント',
           value: 'Subject',
           width: '35%',
           filter: (value) => {

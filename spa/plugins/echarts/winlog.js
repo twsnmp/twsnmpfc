@@ -353,14 +353,14 @@ const showWinPrivilegeScatter3DChart = (div, list, filter) => {
       },
     },
     xAxis3D: getAxisOption('category', 'コンピュータ', catx),
-    yAxis3D: getAxisOption('category', '操作アカウント', caty),
+    yAxis3D: getAxisOption('category', '対象アカウント', caty),
     zAxis3D: getAxisOption('value', '回数', []),
     series: [
       {
         name: 'Windows特権アクセス',
         type: 'scatter3D',
         symbolSize: 6,
-        dimensions: ['コンピュータ', '操作アカウント', '回数'],
+        dimensions: ['コンピュータ', '対象アカウント', '回数'],
         data,
       },
     ],
@@ -659,7 +659,7 @@ const showWinProcessScatter3DChart = (div, list, mode, filter) => {
   ]
   switch (mode) {
     case 'subject':
-      dimensions[0] = '関連アクアンと'
+      dimensions[0] = '操作アカウント'
       dimensions[3] = 'コンピュータ'
       break
     case 'parent':
@@ -978,7 +978,6 @@ const showWinTaskGraph = (div, list, filter, layout) => {
       target: t,
       value: 'Count=' + e.Count + ' Computer=' + e.Computer,
       count: e.Count,
-      lineStyle: getLineStyle(e.Count, q),
     })
   })
   q.q1 = ecStat.statistics.quantile(number, 0.25)

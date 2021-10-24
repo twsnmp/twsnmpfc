@@ -266,14 +266,14 @@ export default {
         {
           text: 'プロセス',
           value: 'Process',
-          width: '20%',
+          width: '22%',
           filter: (value) => {
             if (!this.conf.process) return true
             return value.includes(this.conf.process)
           },
         },
         {
-          text: '操作者',
+          text: '操作アカウント',
           value: 'LastSubject',
           width: '15%',
           filter: (value) => {
@@ -281,9 +281,8 @@ export default {
             return value.includes(this.conf.subject)
           },
         },
-        { text: '回数', value: 'Count', width: '6%' },
-        { text: '開始', value: 'Start', width: '6%' },
-        { text: '終了', value: 'Exit', width: '6%' },
+        { text: '開始', value: 'Start', width: '8%' },
+        { text: '終了', value: 'Exit', width: '8%' },
         { text: '最終', value: 'Last', width: '12%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
@@ -307,7 +306,7 @@ export default {
       mode: 'computer',
       modeList: [
         { text: 'コンピュータ', value: 'computer' },
-        { text: '操作者', value: 'subject' },
+        { text: '操作アカウント', value: 'subject' },
         { text: '親プロセス', value: 'parent' },
       ],
       graphType: 'force',

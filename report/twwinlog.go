@@ -408,7 +408,7 @@ func checkWinProcess(h string, m map[string]string) {
 		Exit:        exit,
 		LastSubject: m["subject"],
 		LastParent:  m["parent"],
-		LastStatus:  m["subject"],
+		LastStatus:  m["status"],
 		FirstTime:   getTimeFromTWLog(m["ft"]),
 		LastTime:    lt,
 	})
