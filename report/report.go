@@ -137,13 +137,13 @@ func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
 	go checkOldReport()
 	calcScore()
 	checkCerts()
-	last := int64(0)
+	last := time.Now().UnixNano()
 	for {
 		select {
 		case <-ctx.Done():
 			{
 				timer.Stop()
-				datastore.SaveReport(0)
+				datastore.SaveReport(last)
 				log.Printf("stop report")
 				return
 			}
