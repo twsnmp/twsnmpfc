@@ -56,15 +56,7 @@ func snmptrapd(stopCh chan bool) {
 	default:
 		// SNMPv2c
 		tl.Params.Version = gosnmp.Version2c
-		tl.Params.SecurityModel = gosnmp.UserSecurityModel
-		tl.Params.MsgFlags = gosnmp.NoAuthNoPriv
-		tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
-			UserName:                 datastore.MapConf.SnmpUser,
-			AuthenticationProtocol:   gosnmp.SHA,
-			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
-			PrivacyProtocol:          gosnmp.AES,
-			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
-		}
+		tl.Params.Community = datastore.MapConf.Community
 	}
 	tl.OnNewTrap = func(s *gosnmp.SnmpPacket, u *net.UDPAddr) {
 		var record = make(map[string]interface{})
