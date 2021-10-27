@@ -14,6 +14,7 @@ let backImage = {
   Width:0,
   Height: 0,
   Path: '',
+  Color: 23,
   Image: null,
 }
 
@@ -92,7 +93,7 @@ const mapMain = (p5) => {
       return
     }
     mapRedraw = false
-    p5.background(23)
+    p5.background(backImage.Color || 23)
     if(backImage.Image){
       if(backImage.Width){
         p5.image(backImage.Image,backImage.X,backImage.Y,backImage.Width,backImage.Height);

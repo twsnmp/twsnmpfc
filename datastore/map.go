@@ -15,6 +15,7 @@ type backImage struct {
 	Y      int
 	Width  int
 	Height int
+	Color  string
 }
 
 // MapConfEnt :  マップ設定

@@ -116,13 +116,14 @@ func postBackImage(c echo.Context) error {
 	datastore.MapConf.BackImage.Y = y
 	datastore.MapConf.BackImage.Width = w
 	datastore.MapConf.BackImage.Height = h
+	datastore.MapConf.BackImage.Color = c.FormValue("Color")
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",
 		Level: "info",
-		Event: "マップの背景画像を更新しました",
+		Event: "マップの背景を更新しました",
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

@@ -184,7 +184,7 @@
           <v-spacer></v-spacer>
           <v-btn color="primary" dark @click="backImageDialog = true">
             <v-icon>mdi-image</v-icon>
-            背景画像
+            背景設定
           </v-btn>
           <v-btn color="primary" dark @click="geoipDialog = true">
             <v-icon>mdi-database-marker</v-icon>
@@ -200,10 +200,10 @@
     <v-dialog v-model="backImageDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
-          <span class="headline">背景画像設定</span>
+          <span class="headline">背景設定</span>
         </v-card-title>
         <v-alert v-model="backImageError" color="error" dense dismissible>
-          背景画像設定の保存に失敗しました
+          背景設定の保存に失敗しました
         </v-alert>
         <v-card-text>
           <v-text-field
@@ -247,6 +247,7 @@
               ></v-text-field>
             </v-col>
           </v-row>
+          <v-color-picker v-model="backImage.Color"></v-color-picker>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -317,6 +318,7 @@ export default {
         MapName: '',
         BackImage: {
           Path: '',
+          Color: '#171717',
         },
         UserID: '',
         Password: '',
@@ -342,6 +344,7 @@ export default {
         Height: 0,
         Path: '',
         File: null,
+        Color: '#171717',
       },
       error: false,
       saved: false,
@@ -356,6 +359,9 @@ export default {
   async fetch() {
     this.mapconf = await this.$axios.$get('/api/conf/map')
     this.backImage = this.mapconf.BackImage
+    if (!this.backImage.Color) {
+      this.backImage.Color = '#171717'
+    }
   },
   methods: {
     submit() {
@@ -378,6 +384,7 @@ export default {
       const formData = new FormData()
       formData.append('X', this.backImage.X)
       formData.append('Y', this.backImage.Y)
+      formData.append('Color', this.backImage.Color)
       formData.append('Width', this.backImage.Width)
       formData.append('Height', this.backImage.Height)
       formData.append('file', this.backImage.File)
