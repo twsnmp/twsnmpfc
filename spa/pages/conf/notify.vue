@@ -147,6 +147,7 @@ export default {
   },
   methods: {
     submit() {
+      this.clearMsg()
       this.$axios
         .post('/api/conf/notify', this.notify)
         .then((r) => {
@@ -157,6 +158,7 @@ export default {
         })
     },
     test() {
+      this.clearMsg()
       this.$axios
         .post('/api/notify/test', this.notify)
         .then((r) => {
@@ -165,6 +167,12 @@ export default {
         .catch((e) => {
           this.failed = true
         })
+    },
+    clearMsg() {
+      this.saved = false
+      this.error = false
+      this.sent = false
+      this.failed = false
     },
   },
 }

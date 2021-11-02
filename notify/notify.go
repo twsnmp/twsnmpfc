@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"net"
 	"net/smtp"
 	"strings"
 	"sync"
@@ -148,25 +149,38 @@ func sendMail(subject, body string) error {
 	if datastore.NotifyConf.MailServer == "" || datastore.NotifyConf.MailFrom == "" || datastore.NotifyConf.MailTo == "" {
 		return nil
 	}
+	host, _, err := net.SplitHostPort(datastore.NotifyConf.MailServer)
+	if err != nil {
+		host = datastore.NotifyConf.MailServer
+	}
 	tlsconfig := &tls.Config{
-		ServerName:         datastore.NotifyConf.MailServer,
+		ServerName:         host,
 		InsecureSkipVerify: datastore.NotifyConf.InsecureSkipVerify,
 	}
-	c, err := smtp.Dial(datastore.NotifyConf.MailServer)
-	if err != nil {
-		return err
+	var c *smtp.Client
+	if strings.HasSuffix(datastore.NotifyConf.MailServer, ":465") {
+		conn, err := tls.Dial("tcp", datastore.NotifyConf.MailServer, tlsconfig)
+		if err != nil {
+			log.Printf("send mail err=%v", err)
+			return err
+		}
+		c, err = smtp.NewClient(conn, host)
+		if err != nil {
+			log.Printf("send mail err=%v", err)
+			return err
+		}
+	} else {
+		c, err = smtp.Dial(datastore.NotifyConf.MailServer)
+		if err != nil {
+			return err
+		}
+		if err = c.StartTLS(tlsconfig); err != nil {
+			log.Printf("send mail err=%s", err)
+		}
 	}
 	defer c.Close()
-	if err = c.StartTLS(tlsconfig); err != nil {
-		log.Printf("send mail err=%s", err)
-	}
-	msv := datastore.NotifyConf.MailServer
-	a := strings.SplitN(datastore.NotifyConf.MailServer, ":", 2)
-	if len(a) == 2 {
-		msv = a[0]
-	}
 	if datastore.NotifyConf.User != "" {
-		auth := smtp.PlainAuth("", datastore.NotifyConf.User, datastore.NotifyConf.Password, msv)
+		auth := smtp.PlainAuth("", datastore.NotifyConf.User, datastore.NotifyConf.Password, host)
 		if err = c.Auth(auth); err != nil {
 			log.Printf("send mail err=%s", err)
 			return err
@@ -205,26 +219,39 @@ func convNewline(str, nlcode string) string {
 }
 
 func SendTestMail(testConf *datastore.NotifyConfEnt) error {
+	host, _, err := net.SplitHostPort(testConf.MailServer)
+	if err != nil {
+		host = testConf.MailServer
+	}
 	tlsconfig := &tls.Config{
-		ServerName:         testConf.MailServer,
+		ServerName:         host,
 		InsecureSkipVerify: testConf.InsecureSkipVerify,
 	}
-	c, err := smtp.Dial(testConf.MailServer)
-	if err != nil {
-		log.Printf("send test mail err=%s", err)
-		return err
+	var c *smtp.Client
+	if strings.HasSuffix(testConf.MailServer, ":465") {
+		conn, err := tls.Dial("tcp", testConf.MailServer, tlsconfig)
+		if err != nil {
+			log.Printf("send test mail err=%v", err)
+			return err
+		}
+		c, err = smtp.NewClient(conn, host)
+		if err != nil {
+			log.Printf("send test mail err=%v", err)
+			return err
+		}
+	} else {
+		c, err = smtp.Dial(testConf.MailServer)
+		if err != nil {
+			log.Printf("send test mail err=%s", err)
+			return err
+		}
+		if err = c.StartTLS(tlsconfig); err != nil {
+			log.Printf("send test mail err=%s", err)
+		}
 	}
 	defer c.Close()
-	if err = c.StartTLS(tlsconfig); err != nil {
-		log.Printf("send test mail err=%s", err)
-	}
-	msv := testConf.MailServer
-	a := strings.SplitN(testConf.MailServer, ":", 2)
-	if len(a) == 2 {
-		msv = a[0]
-	}
 	if testConf.User != "" {
-		auth := smtp.PlainAuth("", testConf.User, testConf.Password, msv)
+		auth := smtp.PlainAuth("", testConf.User, testConf.Password, host)
 		if err = c.Auth(auth); err != nil {
 			log.Printf("send test mail err=%s", err)
 			return err

@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -63,6 +64,11 @@ func postNotifyTest(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	if err := notify.SendTestMail(nc); err != nil {
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "user",
+			Level: "warn",
+			Event: fmt.Sprintf("試験メールの送信に失敗しました err=%v", err),
+		})
 		return echo.ErrBadRequest
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
