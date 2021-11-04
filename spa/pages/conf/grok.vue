@@ -355,6 +355,7 @@ export default {
       })
     },
     exportGrok() {
+      this.exportError = false
       this.$axios
         .get('/api/export/grok', {
           responseType: 'blob',
@@ -381,6 +382,7 @@ export default {
     importGrok() {
       const formData = new FormData()
       formData.append('file', this.grokFile)
+      this.importError = false
       this.$axios
         .$post('/api/import/grok', formData, {
           headers: {
@@ -397,6 +399,7 @@ export default {
         })
     },
     doDeleteGrok() {
+      this.deleteError = false
       this.$axios
         .delete('/api/conf/grok/' + this.selected.ID)
         .then(() => {

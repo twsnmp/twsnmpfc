@@ -195,6 +195,7 @@ export default {
       this.headers = []
       this.items = []
       this.wait = true
+      this.error = false
       this.$axios
         .post('/api/mibbr', this.mibget)
         .then((r) => {

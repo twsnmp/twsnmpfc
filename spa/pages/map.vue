@@ -562,16 +562,23 @@ export default {
       this.lineDialog = true
     },
     doDeleteNode() {
-      this.$axios.post('/api/nodes/delete', this.deleteNodes).then(() => {
-        this.$fetch()
-      })
-      this.deleteDialog = false
+      this.deleteError = false
+      this.$axios
+        .post('/api/nodes/delete', this.deleteNodes)
+        .then(() => {
+          this.$fetch()
+          this.deleteDialog = false
+        })
+        .catch((e) => {
+          this.deleteError = true
+        })
     },
     doUpdateNode() {
       let url = '/api/node/update'
       if (this.copyFrom && this.copyPolling) {
         url += '?from=' + this.copyFrom
       }
+      this.editNodeError = false
       this.$axios
         .post(url, this.editNode)
         .then(() => {
@@ -580,7 +587,6 @@ export default {
         })
         .catch((e) => {
           this.editNodeError = true
-          this.$fetch()
         })
     },
     addNode() {
@@ -637,6 +643,7 @@ export default {
       window.open(url, '_blank')
     },
     addLine() {
+      this.lineError = false
       this.$axios
         .post('/api/line/add', this.editLine)
         .then(() => {
@@ -645,10 +652,10 @@ export default {
         })
         .catch((e) => {
           this.lineError = true
-          this.$fetch()
         })
     },
     deleteLine() {
+      this.lineError = false
       this.$axios
         .post('/api/line/delete', this.editLine)
         .then(() => {
@@ -657,7 +664,6 @@ export default {
         })
         .catch((e) => {
           this.lineError = true
-          this.$fetch()
         })
     },
     checkPolling(all) {

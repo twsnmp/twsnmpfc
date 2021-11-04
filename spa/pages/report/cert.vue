@@ -94,6 +94,9 @@
         <v-card-title>
           <span class="headline">サーバー証明書削除</span>
         </v-card-title>
+        <v-alert v-model="deleteError" color="error" dense dismissible>
+          対象サーバーを削除できません
+        </v-alert>
         <v-card-text> 選択したサーバー証明書を削除しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -113,6 +116,9 @@
         <v-card-title>
           <span class="headline">信用度再計算</span>
         </v-card-title>
+        <v-alert v-model="resetError" color="error" dense dismissible>
+          信用スコアの再計算ができません
+        </v-alert>
         <v-card-text> サーバー証明書の信用度を再計算しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -209,7 +215,7 @@
           <span class="headline">対象サーバー編集</span>
         </v-card-title>
         <v-alert v-model="editError" color="error" dense dismissible>
-          対象サーバーを保存できません。
+          対象サーバーを保存できません
         </v-alert>
         <v-card-text>
           <v-text-field v-model="edit.Target" label="ターゲット"></v-text-field>
@@ -340,28 +346,28 @@ export default {
   },
   methods: {
     doDelete() {
+      this.deleteError = false
       this.$axios
         .delete('/api/report/cert/' + this.selected.ID)
         .then((r) => {
           this.$fetch()
+          this.deleteDialog = false
         })
         .catch((e) => {
           this.deleteError = true
-          this.$fetch()
         })
-      this.deleteDialog = false
     },
     doReset() {
+      this.resetError = false
       this.$axios
         .post('/api/report/cert/reset', {})
         .then((r) => {
           this.$fetch()
+          this.resetDialog = false
         })
         .catch((e) => {
           this.resetError = true
-          this.$fetch()
         })
-      this.resetDialog = false
     },
     openDeleteDialog(item) {
       this.selected = item
@@ -386,6 +392,7 @@ export default {
     doSave() {
       const url = '/api/report/cert'
       this.edit.Port *= 1
+      this.editError = false
       this.$axios
         .post(url, this.edit)
         .then(() => {

@@ -122,6 +122,9 @@
         <v-card-title>
           <span class="headline">レポート削除</span>
         </v-card-title>
+        <v-alert v-model="deleteError" color="error" dense dismissible>
+          Kerberos情報を削除できません
+        </v-alert>
         <v-card-text> 選択した項目を削除しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -219,6 +222,9 @@
         <v-card-title>
           <span class="headline">信用スコア再計算</span>
         </v-card-title>
+        <v-alert v-model="resetError" color="error" dense dismissible>
+          信用スコアを再計算できません
+        </v-alert>
         <v-card-text> 信用スコアを再計算しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -393,28 +399,28 @@ export default {
   },
   methods: {
     doDelete() {
+      this.deleteError = false
       this.$axios
         .delete('/api/report/WinKerberos/' + this.selected.ID)
         .then((r) => {
           this.$fetch()
+          this.deleteDialog = false
         })
         .catch((e) => {
           this.deleteError = true
-          this.$fetch()
         })
-      this.deleteDialog = false
     },
     doReset() {
+      this.resetError = false
       this.$axios
         .post('/api/report/WinKerberos/reset', {})
         .then((r) => {
           this.$fetch()
+          this.resetDialog = false
         })
         .catch((e) => {
           this.resetError = true
-          this.$fetch()
         })
-      this.resetDialog = false
     },
     openDeleteDialog(item) {
       this.selected = item

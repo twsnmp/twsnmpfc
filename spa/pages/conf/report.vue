@@ -194,6 +194,8 @@ export default {
           Array.prototype.push.apply(this.report.DenyServices, l)
         }
       }
+      this.error = false
+      this.saved = false
       this.$axios
         .post('/api/conf/report', this.report)
         .then((r) => {

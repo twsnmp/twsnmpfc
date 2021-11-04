@@ -153,6 +153,9 @@
         <v-card-title>
           <span class="headline">IPアドレス削除</span>
         </v-card-title>
+        <v-alert v-model="deleteError" color="error" dense dismissible>
+          IPアドレスを削除できません
+        </v-alert>
         <v-card-text>
           IPアドレス'{{ selectedIP.IP }}'を削除しますか？
         </v-card-text>
@@ -172,10 +175,13 @@
     <v-dialog v-model="resetDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
-          <span class="headline">信用度再計算</span>
+          <span class="headline">信用スコア再計算</span>
         </v-card-title>
+        <v-alert v-model="resetError" color="error" dense dismissible>
+          信用スコアを再計算できません
+        </v-alert>
         <v-card-text>
-          IPアドレスレポートの信用度を再計算しますか？
+          IPアドレスレポートの信用スコアを再計算しますか？
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -532,28 +538,28 @@ export default {
   },
   methods: {
     doDelete() {
+      this.deleteError = false
       this.$axios
         .delete('/api/report/ip/' + this.selectedIP.IP)
         .then((r) => {
           this.$fetch()
+          this.deleteDialog = false
         })
         .catch((e) => {
           this.deleteError = true
-          this.$fetch()
         })
-      this.deleteDialog = false
     },
     doReset() {
+      this.resetError = false
       this.$axios
         .post('/api/report/ips/reset', {})
         .then((r) => {
           this.$fetch()
+          this.resetDialog = false
         })
         .catch((e) => {
           this.resetError = true
-          this.$fetch()
         })
-      this.resetDialog = false
     },
     openDeleteDialog(item) {
       this.selectedIP = item
@@ -617,6 +623,7 @@ export default {
     },
     addNode() {
       const url = '/api/node/update'
+      this.addNodeError = false
       this.$axios
         .post(url, this.node)
         .then(() => {

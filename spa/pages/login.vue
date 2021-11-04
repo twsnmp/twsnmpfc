@@ -38,6 +38,7 @@ export default {
   },
   methods: {
     async submit() {
+      this.error = false
       try {
         await this.$auth.loginWith('local', {
           data: this.login,

@@ -5,7 +5,7 @@
       <v-alert v-model="timeAnalyzeDataError" color="error" dense dismissible>
         時系列分析時にエラーが発生しました
       </v-alert>
-      <v-alert v-model="clearPollinhLogError" color="error" dense dismissible>
+      <v-alert v-model="clearPollingLogError" color="error" dense dismissible>
         ポーリングログのクリア時にエラーが発生しました
       </v-alert>
       <v-simple-table dense>
@@ -699,7 +699,7 @@ export default {
       ],
       pollingForecastDialog: false,
       clearPollingLogDialog: false,
-      clearPollinhLogError: false,
+      clearPollingLogError: false,
     }
   },
   async fetch() {
@@ -801,6 +801,7 @@ export default {
         return
       }
       this.aiTrainDialog = true
+      this.aiError = false
       this.$axios.$get('/api/aidata/' + this.$route.params.id).then((r) => {
         this.$nextTick(() => {
           this.$autoEncoder('error', 'model', r, (done) => {
@@ -823,6 +824,7 @@ export default {
         })
         return
       }
+      this.timeAnalyzeDataError = false
       this.$axios
         .$get('/api/polling/TimeAnalyze/' + this.$route.params.id)
         .then((r) => {
@@ -861,6 +863,7 @@ export default {
         })
         return
       }
+      this.timeAnalyzeDataError = false
       this.$axios
         .$get('/api/polling/TimeAnalyze/' + this.$route.params.id)
         .then((r) => {
@@ -913,7 +916,7 @@ export default {
           this.$fetch()
         })
         .catch(() => {
-          this.clearPollinhLogError = true
+          this.clearPollingLogError = true
         })
     },
   },

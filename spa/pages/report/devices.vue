@@ -123,6 +123,9 @@
         <v-card-title>
           <span class="headline">LANデバイス削除</span>
         </v-card-title>
+        <v-alert v-model="deleteError" color="error" dense dismissible>
+          LANデバイスを削除できません
+        </v-alert>
         <v-card-text>
           LANデバイス{{ selectedDevice.Name }}を削除しますか？
         </v-card-text>
@@ -142,8 +145,11 @@
     <v-dialog v-model="resetDialog" persistent max-width="500px">
       <v-card>
         <v-card-title>
-          <span class="headline">信用度再計算</span>
+          <span class="headline">信用スコア再計算</span>
         </v-card-title>
+        <v-alert v-model="resetError" color="error" dense dismissible>
+          信用スコアを再計算できまません
+        </v-alert>
         <v-card-text> レポートの信用度を再計算しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -415,28 +421,28 @@ export default {
   },
   methods: {
     doDelete() {
+      this.deleteError = false
       this.$axios
         .delete('/api/report/device/' + this.selectedDevice.ID)
         .then((r) => {
           this.$fetch()
+          this.deleteDialog = false
         })
         .catch((e) => {
           this.deleteError = true
-          this.$fetch()
         })
-      this.deleteDialog = false
     },
     doReset() {
+      this.resetError = false
       this.$axios
         .post('/api/report/devices/reset', {})
         .then((r) => {
           this.$fetch()
+          this.resetDialog = false
         })
         .catch((e) => {
           this.resetError = true
-          this.$fetch()
         })
-      this.resetDialog = false
     },
     openDeleteDialog(item) {
       this.selectedDevice = item
@@ -485,6 +491,7 @@ export default {
     },
     addNode() {
       const url = '/api/node/update'
+      this.addNodeError = false
       this.$axios
         .post(url, this.node)
         .then(() => {

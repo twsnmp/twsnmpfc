@@ -365,6 +365,7 @@ export default {
   },
   methods: {
     submit() {
+      this.error = false
       this.$axios
         .post('/api/conf/map', this.mapconf)
         .then((r) => {
@@ -388,6 +389,7 @@ export default {
       formData.append('Width', this.backImage.Width)
       formData.append('Height', this.backImage.Height)
       formData.append('file', this.backImage.File)
+      this.backImageError = false
       this.$axios
         .$post('/api/conf/backimage', formData, {
           headers: {
@@ -404,6 +406,7 @@ export default {
         })
     },
     doDeleteBackImage() {
+      this.backImageError = false
       this.$axios
         .delete('/api/conf/backimage')
         .then((r) => {
@@ -418,6 +421,7 @@ export default {
     updateGeoIP() {
       const formData = new FormData()
       formData.append('file', this.geoipFile)
+      this.geoipSaveError = false
       this.$axios
         .$post('/api/conf/geoip', formData, {
           headers: {
@@ -434,6 +438,7 @@ export default {
         })
     },
     deleteGeoIP() {
+      this.geoipDeleteError = false
       this.$axios
         .delete('/api/conf/geoip')
         .then((r) => {

@@ -123,6 +123,7 @@ export default {
   },
   methods: {
     submit() {
+      this.error = false
       this.$axios
         .post('/api/conf/influxdb', this.influxdb)
         .then((r) => {
@@ -133,6 +134,7 @@ export default {
         })
     },
     doInitInfluxdb() {
+      this.initInfluxdbError = false
       this.$axios
         .delete('/api/conf/influxdb')
         .then((r) => {

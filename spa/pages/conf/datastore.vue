@@ -320,6 +320,7 @@ export default {
       if (this.cleanupTarget === '') {
         return
       }
+      this.cleanupError = false
       this.$axios
         .delete('/api/' + this.cleanupTarget)
         .then((r) => {
@@ -332,6 +333,7 @@ export default {
         })
     },
     saveBackup() {
+      this.backupError = false
       this.$axios
         .post('/api/conf/backup', this.backup)
         .then((r) => {
@@ -361,6 +363,7 @@ export default {
       return this.$timeFormat(new Date(t / (1000 * 1000)))
     },
     doStopBackup() {
+      this.stopBackupError = false
       this.$axios
         .post('/api/stop/backup')
         .then((r) => {

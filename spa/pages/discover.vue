@@ -374,6 +374,7 @@ export default {
           this.discover.Conf.AutoAddPollings.push(this.selectedTemplate[i].ID)
         }
       }
+      this.error = false
       this.$axios
         .post('/api/discover/start', this.discover.Conf)
         .then((r) => {

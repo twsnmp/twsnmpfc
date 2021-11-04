@@ -171,6 +171,8 @@ export default {
   },
   methods: {
     doFeedback() {
+      this.feedbackDone = false
+      this.feedbackError = false
       this.$axios
         .post('/api/feedback', this.feedback)
         .then((r) => {
@@ -185,6 +187,7 @@ export default {
     checkUpdate() {
       this.checkUpdateDialog = true
       this.hasNewVersion = false
+      this.checkUpdateError = false
       this.$axios
         .get('/api/checkupdate')
         .then((r) => {

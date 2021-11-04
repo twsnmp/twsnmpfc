@@ -118,6 +118,9 @@
         <v-card-title>
           <span class="headline">レポート削除</span>
         </v-card-title>
+        <v-alert v-model="deleteError" color="error" dense dismissible>
+          イベントIDを削除できません
+        </v-alert>
         <v-card-text> 選択した項目を削除しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -328,16 +331,16 @@ export default {
   },
   methods: {
     doDelete() {
+      this.deleteError = false
       this.$axios
         .delete('/api/report/WinEventID/' + this.selected.ID)
         .then((r) => {
           this.$fetch()
+          this.deleteDialog = false
         })
         .catch((e) => {
           this.deleteError = true
-          this.$fetch()
         })
-      this.deleteDialog = false
     },
     openDeleteDialog(item) {
       this.selected = item

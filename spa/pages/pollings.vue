@@ -585,6 +585,7 @@ export default {
       this.deleteDialog = true
     },
     doDeletePolling() {
+      this.deleteError = false
       this.pollings.splice(this.deleteIndex, 1)
       this.$axios
         .post('/api/pollings/delete', [this.deletePolling.ID])
@@ -599,6 +600,7 @@ export default {
       this.selectedPollings.forEach((p) => {
         ids.push(p.ID)
       })
+      this.deleteError = false
       this.$axios
         .post('/api/pollings/delete', ids)
         .then(() => {
@@ -619,6 +621,7 @@ export default {
       this.selectedPollings.forEach((p) => {
         ids.push(p.ID)
       })
+      this.updateError = false
       this.$axios
         .post('/api/pollings/setlevel', {
           IDs: ids,
@@ -639,6 +642,7 @@ export default {
       this.selectedPollings.forEach((p) => {
         ids.push(p.ID)
       })
+      this.updateError = false
       this.$axios
         .post('/api/pollings/setlogmode', {
           IDs: ids,
@@ -687,6 +691,7 @@ export default {
       this.editDialog = true
     },
     doUpdatePolling() {
+      this.updateError = false
       if (this.editIndex > -1) {
         Object.assign(this.pollings[this.editIndex], this.editPolling)
         this.$axios.post('/api/polling/update', this.editPolling).catch((e) => {

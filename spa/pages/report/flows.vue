@@ -662,6 +662,7 @@ export default {
     },
     openUnknownPortDialog() {
       this.unknownPortDialog = true
+      this.unknownPortError = false
       this.$axios
         .get('/api/report/unknownport')
         .then((r) => {

@@ -281,6 +281,7 @@ export default {
       this.deleteDialog = true
     },
     doDeleteNode() {
+      this.deleteError = false
       this.nodes.splice(this.deleteIndex, 1)
       this.$axios.post('/api/nodes/delete', [this.deleteNode.ID]).catch((e) => {
         this.deleteError = true
@@ -301,6 +302,7 @@ export default {
       })
     },
     doUpdateNode() {
+      this.updateError = false
       if (this.editIndex > -1) {
         Object.assign(this.nodes[this.editIndex], this.editNode)
         this.$axios.post('/api/node/update', this.editNode).catch((e) => {
