@@ -15,7 +15,7 @@ ZIP          = zip
 DIST = dist
 SRC = ./main.go backend/*.go datastore/*.go discover/*.go logger/*.go notify/*.go \
       ping/*.go report/*.go security/*.go webapi/*.go polling/*.go
-TARGETS     = $(DIST)/twsnmpfc.exe $(DIST)/twsnmpfc.app $(DIST)/twsnmpfc $(DIST)/twsnmpfc.arm
+TARGETS     = $(DIST)/twsnmpfc.exe $(DIST)/twsnmpfc.app $(DIST)/twsnmpfc $(DIST)/twsnmpfc.arm $(DIST)/twsnmpfc.arm64
 GO_PKGROOT  = ./...
 
 ### PHONY ターゲットのビルドルール
@@ -30,10 +30,17 @@ zip: $(TARGETS)
 	cd dist && $(ZIP) twsnmpfc_mac.zip twsnmpfc.app
 	cd dist && $(ZIP) twsnmpfc_linux_amd64.zip twsnmpfc
 	cd dist && $(ZIP) twsnmpfc_linux_arm.zip twsnmpfc.arm
+	cd dist && $(ZIP) twsnmpfc_linux_arm64.zip twsnmpfc.arm64
 
 docker:  dist/twsnmpfc Docker/Dockerfile
 	cp dist/twsnmpfc Docker/
 	cd Docker && docker build -t twsnmp/twsnmpfc .
+
+dockerarm: Docker/Dockerfile dist/twsnmpfc.arm dist/twsnmpfc.arm64
+	cp dist/twsnmpfc.arm Docker/twsnmpfc
+	cd Docker && docker buildx build --platform linux/arm/v7 -t twsnmp/twsnmpfc:armv7_$(VERSION) --push .
+	cp dist/twsnmpfc.arm64 Docker/twsnmpfc
+	cd Docker && docker buildx build --platform linux/arm64 -t twsnmp/twsnmpfc:arm64_$(VERSION) --push .
 
 ### 実行ファイルのビルドルール
 $(DIST)/twsnmpfc.exe: statik/statik.go $(SRC)
@@ -42,6 +49,8 @@ $(DIST)/twsnmpfc.app: statik/statik.go $(SRC)
 	env GO111MODULE=on GOOS=darwin GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
 $(DIST)/twsnmpfc.arm: statik/statik.go $(SRC)
 	env GO111MODULE=on GOOS=linux GOARCH=arm GOARM=7 $(GO_BUILD) $(GO_LDFLAGS) -o $@
+$(DIST)/twsnmpfc.arm64: statik/statik.go $(SRC)
+	env GO111MODULE=on GOOS=linux GOARCH=arm64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
 $(DIST)/twsnmpfc: statik/statik.go $(SRC)
 	env GO111MODULE=on GOOS=linux GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
 
