@@ -23,12 +23,18 @@ type syslogFilter struct {
 	Tag       string
 	Message   string
 	Extractor string
+	NextTime  int64
+	Filter    int
 }
 
 type syslogWebAPI struct {
 	Logs          []*syslogWebAPILogEnt
 	ExtractHeader []string
 	ExtractDatas  [][]string
+	NextTime      int64
+	Process       int
+	Filter        int
+	Limit         int
 }
 
 type syslogWebAPILogEnt struct {
@@ -124,6 +130,9 @@ func postSyslog(c echo.Context) error {
 	tagFilter := makeStringFilter(filter.Tag)
 	levelFilter := getLogLevelFilter(filter.Level)
 	st := makeTimeFilter(filter.StartDate, filter.StartTime, 1)
+	if filter.NextTime > 0 {
+		st = filter.NextTime
+	}
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	grokCap := ""
 	var grokExtractor *grok.Grok
@@ -139,10 +148,29 @@ func postSyslog(c echo.Context) error {
 			}
 		}
 	}
-	i := 0
+	r.NextTime = 0
+	r.Process = 0
+	r.Filter = filter.Filter
 	r.ExtractDatas = [][]string{}
 	r.ExtractHeader = []string{}
+	i := 0
+	end := time.Now().Unix() + 15
 	datastore.ForEachLog(st, et, "syslog", func(l *datastore.LogEnt) bool {
+		if i > 1000 {
+			// 検索期間が15秒を超えた場合
+			if time.Now().Unix() > end {
+				r.NextTime = l.Time
+				return false
+			}
+			i = 0
+		}
+		i++
+		if r.Filter >= datastore.MapConf.LogDispSize {
+			// 検索数が表示件数を超えた場合
+			r.NextTime = l.Time
+			return false
+		}
+		r.Process++
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
 			return true
@@ -230,8 +258,9 @@ func postSyslog(c echo.Context) error {
 			}
 		}
 		r.Logs = append(r.Logs, re)
-		i++
-		return i <= datastore.MapConf.LogDispSize
+		r.Filter++
+		return true
 	})
+	r.Limit = datastore.MapConf.LogDispSize
 	return c.JSON(http.StatusOK, r)
 }

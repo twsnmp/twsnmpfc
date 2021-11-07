@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -23,9 +24,19 @@ type netflowFilter struct {
 	DstPort   string
 	Protocol  string
 	TCPFlag   string
+	NextTime  int64
+	Filter    int
 }
 
 type netflowWebAPI struct {
+	Logs     []*netflowWebAPILogEnt
+	NextTime int64
+	Process  int
+	Filter   int
+	Limit    int
+}
+
+type netflowWebAPILogEnt struct {
 	Time     int64
 	Src      string
 	SrcIP    string
@@ -41,7 +52,7 @@ type netflowWebAPI struct {
 }
 
 func postNetFlow(c echo.Context) error {
-	r := []*netflowWebAPI{}
+	r := new(netflowWebAPI)
 	filter := new(netflowFilter)
 	if err := c.Bind(filter); err != nil {
 		return echo.ErrBadRequest
@@ -64,9 +75,31 @@ func postNetFlow(c echo.Context) error {
 	srcPortFilter := makeNumberFilter(filter.SrcPort)
 	dstPortFilter := makeNumberFilter(filter.DstPort)
 	st := makeTimeFilter(filter.StartDate, filter.StartTime, 1)
+	if filter.NextTime > 0 {
+		st = filter.NextTime
+	}
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
+	r.NextTime = 0
+	r.Process = 0
+	r.Filter = filter.Filter
 	i := 0
+	end := time.Now().Unix() + 15
 	datastore.ForEachLog(st, et, "netflow", func(l *datastore.LogEnt) bool {
+		if i > 1000 {
+			// 検索期間が15秒を超えた場合
+			if time.Now().Unix() > end {
+				r.NextTime = l.Time
+				return false
+			}
+			i = 0
+		}
+		i++
+		if r.Filter >= datastore.MapConf.LogDispSize {
+			// 検索数が表示件数を超えた場合
+			r.NextTime = l.Time
+			return false
+		}
+		r.Process++
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
 			return true
@@ -83,7 +116,7 @@ func postNetFlow(c echo.Context) error {
 		var ft float64
 		var lt float64
 		var pi int
-		re := new(netflowWebAPI)
+		re := new(netflowWebAPILogEnt)
 		if sa, ok = sl["srcAddr"].(string); !ok {
 			return true
 		}
@@ -176,17 +209,18 @@ func postNetFlow(c echo.Context) error {
 		if protocolFilter > 0 && pi != protocolFilter {
 			return true
 		}
-		r = append(r, re)
-		i++
-		return i <= datastore.MapConf.LogDispSize
+		r.Logs = append(r.Logs, re)
+		r.Filter++
+		return true
 	})
+	r.Limit = datastore.MapConf.LogDispSize
 	return c.JSON(http.StatusOK, r)
 }
 
 const tcpFlags = "NCEUAPRSF"
 
 func postIPFIX(c echo.Context) error {
-	r := []*netflowWebAPI{}
+	r := new(netflowWebAPI)
 	filter := new(netflowFilter)
 	if err := c.Bind(filter); err != nil {
 		return echo.ErrBadRequest
@@ -209,9 +243,31 @@ func postIPFIX(c echo.Context) error {
 	srcPortFilter := makeNumberFilter(filter.SrcPort)
 	dstPortFilter := makeNumberFilter(filter.DstPort)
 	st := makeTimeFilter(filter.StartDate, filter.StartTime, 1)
+	if filter.NextTime > 0 {
+		st = filter.NextTime
+	}
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
+	r.NextTime = 0
+	r.Process = 0
+	r.Filter = filter.Filter
 	i := 0
+	end := time.Now().Unix() + 15
 	datastore.ForEachLog(st, et, "ipfix", func(l *datastore.LogEnt) bool {
+		if i > 1000 {
+			// 検索期間が15秒を超えた場合
+			if time.Now().Unix() > end {
+				r.NextTime = l.Time
+				return false
+			}
+			i = 0
+		}
+		i++
+		if r.Filter >= datastore.MapConf.LogDispSize {
+			// 検索数が表示件数を超えた場合
+			r.NextTime = l.Time
+			return false
+		}
+		r.Process++
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
 			return true
@@ -227,7 +283,7 @@ func postIPFIX(c echo.Context) error {
 		var packets float64
 		var ft float64
 		var lt float64
-		re := new(netflowWebAPI)
+		re := new(netflowWebAPILogEnt)
 		if ft, ok = sl["flowStartSysUpTime"].(float64); !ok {
 			return true
 		}
@@ -343,9 +399,10 @@ func postIPFIX(c echo.Context) error {
 		if protocolFilter > 0 && int(pi) != protocolFilter {
 			return true
 		}
-		r = append(r, re)
-		i++
-		return i <= datastore.MapConf.LogDispSize
+		r.Logs = append(r.Logs, re)
+		r.Filter++
+		return true
 	})
+	r.Limit = datastore.MapConf.LogDispSize
 	return c.JSON(http.StatusOK, r)
 }

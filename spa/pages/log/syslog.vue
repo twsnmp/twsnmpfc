@@ -4,6 +4,9 @@
       <v-card-title>
         Syslog
         <v-spacer></v-spacer>
+        <span class="text-caption">
+          {{ ft }}から{{ lt }} {{ count }} / {{ process }}件
+        </span>
       </v-card-title>
       <div id="logCountChart" style="width: 100%; height: 200px"></div>
       <v-data-table
@@ -55,6 +58,10 @@
         <v-btn color="primary" dark @click="filterDialog = true">
           <v-icon>mdi-magnify</v-icon>
           検索条件
+        </v-btn>
+        <v-btn v-if="filter.NextTime > 0" color="info" dark @click="nextLog">
+          <v-icon>mdi-page-next</v-icon>
+          続きを検索
         </v-btn>
         <download-excel
           :fetch="makeSyslogExports"
@@ -151,7 +158,7 @@
           <v-icon>mdi-brain</v-icon>
           AIアシスト
         </v-btn>
-        <v-btn color="normal" dark @click="$fetch()">
+        <v-btn color="normal" dark @click="doFilter()">
           <v-icon>mdi-cached</v-icon>
           再検索
         </v-btn>
@@ -892,6 +899,10 @@ import * as numeral from 'numeral'
 export default {
   data() {
     return {
+      count: 0,
+      process: 0,
+      ft: '',
+      lt: '',
       filterDialog: false,
       sdMenuShow: false,
       stMenuShow: false,
@@ -909,6 +920,8 @@ export default {
         Tag: '',
         Message: '',
         Extractor: '',
+        NextTime: 0,
+        Filter: 0,
       },
       headers: [
         { text: '状態', value: 'Level', width: '8%' },
@@ -1096,18 +1109,51 @@ export default {
     if (!r) {
       return
     }
-    this.logs = r.Logs ? r.Logs : []
+    if (this.filter.NextTime === 0) {
+      this.logs = []
+      this.extractDatas = []
+      this.extractHeader = []
+      this.numExtractTypeList = []
+      this.strExtractTypeList = []
+      if (this.conf.page > 1) {
+        this.options.page = this.conf.page
+        this.conf.page = 1
+      }
+    }
+    this.count = r.Filter
+    this.process += r.Process
+    this.logs = this.logs.concat(r.Logs ? r.Logs : [])
     let id = 0
+    this.ft = ''
+    let lt
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}.{SSS}')
       e.AIClass = ''
       e.AIResult = ''
       e.ID = id++
+      if (this.ft === '') {
+        this.ft = this.$timeFormat(t, '{yyyy}/{MM}/{dd} {HH}:{mm}')
+      }
+      lt = t
     })
-    if (this.conf.page > 1) {
-      this.options.page = this.conf.page
-      this.conf.page = 1
+    if (this.ft === '') {
+      if (this.filter.StartDate === '') {
+        this.ft = this.$timeFormat(
+          new Date(new Date() - 3600 * 1000),
+          '{yyyy}/{MM}/{dd} {HH}:{mm}'
+        )
+      } else {
+        this.ft =
+          this.filter.StartDate + ' ' + (this.filter.StartTime || '00:00')
+      }
+    }
+    if (lt) {
+      this.lt = this.$timeFormat(lt, '{MM}/{dd} {HH}:{mm}')
+    } else if (this.filter.EndDate === '') {
+      this.ft = this.$timeFormat(new Date(), '{yyyy}/{MM}/{dd} {HH}:{mm}')
+    } else {
+      this.ft = this.filter.EndDate + ' ' + (this.filter.EndtTime || '23:59')
     }
     this.$showLogLevelChart(this.logs)
     if (this.filterExtractorList.length < 1) {
@@ -1131,11 +1177,8 @@ export default {
         })
       }
     }
-    this.extractDatas = []
-    this.extractHeader = []
-    this.numExtractTypeList = []
-    this.strExtractTypeList = []
     if (r.ExtractHeader.length < 1 || r.ExtractDatas.length < 1) {
+      this.checkNextlog(r)
       return
     }
     r.ExtractHeader.forEach((col) => {
@@ -1169,6 +1212,7 @@ export default {
       firstData = false
       this.extractDatas.push(e)
     })
+    this.checkNextlog(r)
   },
   computed: {
     hasSelectedAILogs() {
@@ -1203,6 +1247,26 @@ export default {
         this.filter.EndTime = '23:59'
       }
       this.filterDialog = false
+      this.filter.NextTime = 0
+      this.filter.Filter = 0
+      this.count = 0
+      this.process = 0
+      this.limit = 0
+      this.$fetch()
+    },
+    checkNextlog(r) {
+      if (r.NextTime === 0) {
+        return
+      }
+      this.limit = r.Limit
+      this.filter.NextTime = r.NextTime
+      this.filter.Filter = r.Filter
+    },
+    nextLog() {
+      if (this.limit > 3 && this.filter.Filter >= this.limit) {
+        this.logs.splice(0, this.limit / 4)
+        this.filter.Filter = this.logs.length
+      }
       this.$fetch()
     },
     showHistogram() {

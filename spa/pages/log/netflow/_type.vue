@@ -4,6 +4,9 @@
       <v-card-title>
         {{ title }}
         <v-spacer></v-spacer>
+        <span class="text-caption">
+          {{ ft }}から{{ lt }} {{ count }} / {{ process }}件
+        </span>
       </v-card-title>
       <div id="logCountChart" style="width: 100%; height: 200px"></div>
       <v-data-table
@@ -45,6 +48,10 @@
         <v-btn color="primary" dark @click="filterDialog = true">
           <v-icon>mdi-magnify</v-icon>
           検索条件
+        </v-btn>
+        <v-btn v-if="filter.NextTime > 0" color="info" dark @click="nextLog">
+          <v-icon>mdi-page-next</v-icon>
+          続きを検索
         </v-btn>
         <download-excel
           :fetch="makeLogExports"
@@ -177,7 +184,7 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        <v-btn color="normal" dark @click="$fetch()">
+        <v-btn color="normal" dark @click="doFilter()">
           <v-icon>mdi-cached</v-icon>
           再検索
         </v-btn>
@@ -691,6 +698,10 @@ import * as numeral from 'numeral'
 export default {
   data() {
     return {
+      count: 0,
+      process: 0,
+      ft: '',
+      lt: '',
       filterDialog: false,
       sdMenuShow: false,
       stMenuShow: false,
@@ -711,6 +722,8 @@ export default {
         DstPort: '',
         Protocol: '',
         TCPFlag: '',
+        NextTime: 0,
+        Filter: 0,
       },
       headers: [
         { text: '受信日時', value: 'TimeStr', width: '15%' },
@@ -851,16 +864,50 @@ export default {
     }
   },
   async fetch() {
-    this.logs = await this.$axios.$post('/api/log/' + this.type, this.filter)
+    const r = await this.$axios.$post('/api/log/' + this.type, this.filter)
+    if (!r) {
+      return
+    }
+    if (this.filter.NextTime === 0) {
+      this.logs = []
+      if (this.conf.page > 1) {
+        this.options.page = this.conf.page
+        this.conf.page = 1
+      }
+    }
+    this.count = r.Filter
+    this.process += r.Process
+    this.logs = this.logs.concat(r.Logs ? r.Logs : [])
+    this.ft = ''
+    let lt
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t)
+      if (this.ft === '') {
+        this.ft = this.$timeFormat(t, '{yyyy}/{MM}/{dd} {HH}:{mm}')
+      }
+      lt = t
     })
-    if (this.conf.page > 1) {
-      this.options.page = this.conf.page
-      this.conf.page = 1
+    if (this.ft === '') {
+      if (this.filter.StartDate === '') {
+        this.ft = this.$timeFormat(
+          new Date(new Date() - 3600 * 1000),
+          '{yyyy}/{MM}/{dd} {HH}:{mm}'
+        )
+      } else {
+        this.ft =
+          this.filter.StartDate + ' ' + (this.filter.StartTime || '00:00')
+      }
+    }
+    if (lt) {
+      this.lt = this.$timeFormat(lt, '{MM}/{dd} {HH}:{mm}')
+    } else if (this.filter.EndDate === '') {
+      this.ft = this.$timeFormat(new Date(), '{yyyy}/{MM}/{dd} {HH}:{mm}')
+    } else {
+      this.ft = this.filter.EndDate + ' ' + (this.filter.EndtTime || '23:59')
     }
     this.$showLogCountChart(this.logs)
+    this.checkNextlog(r)
   },
   created() {
     this.type = this.$route.params.type || 'netflow'
@@ -892,6 +939,26 @@ export default {
         this.filter.EndTime = '23:59'
       }
       this.filterDialog = false
+      this.filter.NextTime = 0
+      this.filter.Filter = 0
+      this.count = 0
+      this.process = 0
+      this.limit = 0
+      this.$fetch()
+    },
+    checkNextlog(r) {
+      if (r.NextTime === 0) {
+        return
+      }
+      this.limit = r.Limit
+      this.filter.NextTime = r.NextTime
+      this.filter.Filter = r.Filter
+    },
+    nextLog() {
+      if (this.limit > 3 && this.filter.Filter >= this.limit) {
+        this.logs.splice(0, this.limit / 4)
+        this.filter.Filter = this.logs.length
+      }
       this.$fetch()
     },
     showHistogram() {
