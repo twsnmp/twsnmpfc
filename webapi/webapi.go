@@ -119,6 +119,7 @@ func setup(p *WebAPI) {
 	r.POST("/map/update", postMapUpdate)
 	r.POST("/line/delete", deleteLine)
 	r.POST("/line/add", postLineAdd)
+	r.POST("/wol/:id", postWOL)
 
 	r.GET("/pollings", getPollings)
 	r.GET("/polling/template", getPollingTemplate)

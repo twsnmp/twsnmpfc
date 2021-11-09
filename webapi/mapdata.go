@@ -2,11 +2,14 @@ package webapi
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/wol"
 )
 
 type mapWebAPI struct {
@@ -239,4 +242,30 @@ func getNodePolling(c echo.Context) error {
 		return true
 	})
 	return c.JSON(http.StatusOK, r)
+}
+
+func postWOL(c echo.Context) error {
+	id := c.Param("id")
+	n := datastore.GetNode(id)
+	if n == nil || n.MAC == "" {
+		log.Printf("postWOL node not found")
+		return echo.ErrBadRequest
+	}
+	a := strings.SplitN(n.MAC, "(", 2)
+	if len(a) < 1 || a[0] == "" {
+		log.Printf("postWOL no MAC")
+		return echo.ErrBadRequest
+	}
+	if err := wol.SendWakeOnLanPacket(a[0]); err != nil {
+		log.Printf("postWOL node not found")
+		return echo.ErrBadRequest
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:     "user",
+		Level:    "info",
+		NodeName: n.Name,
+		NodeID:   n.ID,
+		Event:    fmt.Sprintf("%sにWake ON LANパケットを送信しました", n.MAC),
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

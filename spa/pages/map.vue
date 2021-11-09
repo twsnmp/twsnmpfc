@@ -1,5 +1,11 @@
 <template>
   <v-row justify="center">
+    <v-snackbar v-model="wolError" absolute centered color="error">
+      Wake on LANパケットを送信できません
+    </v-snackbar>
+    <v-snackbar v-model="wolDone" absolute centered color="primary">
+      Wake on LANパケットを送信しました
+    </v-snackbar>
     <v-card min-width="1000px" width="100%">
       <v-card-title>
         イベントログ
@@ -192,6 +198,12 @@
         <v-card-title>
           <span class="headline">ノード情報</span>
         </v-card-title>
+        <v-snackbar v-model="wolError" absolute centered color="error">
+          Wake on LANパケットを送信できません
+        </v-snackbar>
+        <v-snackbar v-model="wolDone" absolute centered color="primary">
+          Wake on LANパケットを送信しました
+        </v-snackbar>
         <v-simple-table dense>
           <template #default>
             <thead>
@@ -201,6 +213,15 @@
               </tr>
             </thead>
             <tbody>
+              <tr>
+                <td>状態</td>
+                <td>
+                  <v-icon :color="$getStateColor(editNode.State)">
+                    {{ $getIconName(editNode.Icon) }}
+                  </v-icon>
+                  {{ $getStateName(editNode.State) }}
+                </td>
+              </tr>
               <tr>
                 <td>名前</td>
                 <td>{{ editNode.Name }}</td>
@@ -227,37 +248,91 @@
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="normal" dark @click="copyNode">
-            <v-icon>mdi-content-copy</v-icon>
-            コピー
-          </v-btn>
-          <v-btn color="normal" dark @click="showMIBBr">
-            <v-icon>mdi-eye</v-icon>
-            MIB
-          </v-btn>
-          <v-btn color="primary" dark @click="showNodePollingPage">
-            <v-icon>mdi-lan-check</v-icon>
-            ポーリング
-          </v-btn>
-          <v-btn color="primary" dark @click="showNodeLogPage">
-            <v-icon>mdi-calendar-check</v-icon>
-            ログ
-          </v-btn>
-          <v-btn color="primary" dark @click="checkPolling(false)">
-            <v-icon>mdi-cached</v-icon>
-            再確認
-          </v-btn>
-          <v-btn color="primary" dark @click="showEditNodeDialog">
-            <v-icon>mdi-pencil</v-icon>
-            編集
-          </v-btn>
-          <v-btn color="error" dark @click="deleteNode">
-            <v-icon>mdi-delete</v-icon>
-            削除
-          </v-btn>
+          <v-menu offset-y>
+            <template #activator="{ on, attrs }">
+              <v-btn dark v-bind="attrs" v-on="on">
+                <v-icon>mdi-menu</v-icon>
+                操作メニュー
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item @click="editNodeDialog = true">
+                <v-list-item-icon>
+                  <v-icon>mdi-pencil</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>編集</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item @click="checkPolling(false)">
+                <v-list-item-icon>
+                  <v-icon>mdi-cached</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>再確認</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item @click="deleteDialog = true">
+                <v-list-item-icon>
+                  <v-icon color="red">mdi-delete</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>削除</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item @click="copyNode()">
+                <v-list-item-icon>
+                  <v-icon>mdi-content-copy</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>コピー</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item @click="showMIBBr()">
+                <v-list-item-icon><v-icon>mdi-eye</v-icon></v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>MIBブラウザー</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item @click="showNodePollingPage()">
+                <v-list-item-icon>
+                  <v-icon>mdi-lan-check</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>ポーリング</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item @click="showNodeLogPage()">
+                <v-list-item-icon>
+                  <v-icon>mdi-calendar-check</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>ログ</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item v-if="editNode.MAC" @click="doWOL">
+                <v-list-item-icon><v-icon>mdi-alarm</v-icon></v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>Wake On LAN</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item
+                v-for="(url, i) in urls"
+                :key="i"
+                @click="openURL(url)"
+              >
+                <v-list-item-icon>
+                  <v-icon>mdi-link</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>{{ url }}</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list>
+          </v-menu>
           <v-btn color="normal" dark @click="showNodeDialog = false">
             <v-icon>mdi-close</v-icon>
-            キャンセル
+            閉じる
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -354,6 +429,12 @@
             <v-list-item-title>ログ</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item v-if="editNode.MAC" @click="doWOL">
+          <v-list-item-icon><v-icon>mdi-alarm</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Wake On LAN</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item v-for="(url, i) in urls" :key="i" @click="openURL(url)">
           <v-list-item-icon>
             <v-icon>mdi-link</v-icon>
@@ -420,6 +501,8 @@ export default {
         { text: '5', value: 5 },
       ],
       urls: [],
+      wolDone: false,
+      wolError: false,
     }
   },
   async fetch() {
@@ -678,6 +761,17 @@ export default {
         this.showNodeDialog = false
         this.$fetch()
       })
+    },
+    doWOL() {
+      this.$axios
+        .post('/api/wol/' + this.editNode.ID)
+        .then(() => {
+          this.wolDone = true
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.wolError = true
+        })
     },
   },
 }

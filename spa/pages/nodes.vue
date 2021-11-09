@@ -38,6 +38,9 @@
           </v-icon>
           <v-icon small @click="editNodeFunc(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deleteNodeFunc(item)"> mdi-delete </v-icon>
+          <v-icon v-if="item.MAC" small @click="doWOL(item.ID)">
+            mdi-alarm
+          </v-icon>
         </template>
         <template #[`body.append`]>
           <tr>
@@ -93,6 +96,12 @@
           <v-icon>mdi-cached</v-icon>
           更新
         </v-btn>
+        <v-snackbar v-model="wolError" absolute centered color="error">
+          Wake on LANパケットを送信できません
+        </v-snackbar>
+        <v-snackbar v-model="wolDone" absolute centered color="primary">
+          Wake on LANパケットを送信しました
+        </v-snackbar>
       </v-card-actions>
     </v-card>
     <v-dialog v-model="editDialog" persistent max-width="500px">
@@ -247,6 +256,8 @@ export default {
         { text: '復帰', value: 'repair' },
         { text: '不明', value: 'unknown' },
       ],
+      wolError: false,
+      wolDone: false,
     }
   },
   async fetch() {
@@ -348,6 +359,17 @@ export default {
         return false
       }
       return true
+    },
+    doWOL(id) {
+      this.$axios
+        .post('/api/wol/' + id)
+        .then(() => {
+          this.wolDone = true
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.wolError = true
+        })
     },
   },
 }
