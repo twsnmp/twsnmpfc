@@ -661,17 +661,29 @@ func getSensorInfo() []string {
 	return ret
 }
 
+func getRSSIStats(rssi []datastore.RSSIEnt) (min, mean, max float64) {
+	v := []float64{}
+	for _, e := range rssi {
+		v = append(v, float64(e.Value))
+	}
+	min, _ = stats.Min(v)
+	mean, _ = stats.Mean(v)
+	max, _ = stats.Max(v)
+	return
+}
+
 func getWifiAPReport() []string {
 	st := time.Now().Add(time.Duration(-24) * time.Hour).UnixNano()
 	ret := []string{}
-	ret = append(ret, "RSSI,BSSID,SSID,Host,Channel,Count,First Time")
+	ret = append(ret, "RSSI(min/avg/max),BSSID,SSID,Host,Channel,Count,First Time")
 	datastore.ForEachWifiAP(func(a *datastore.WifiAPEnt) bool {
 		if a.FirstTime < st {
 			return true
 		}
+		min, mean, max := getRSSIStats(a.RSSI)
 		t := time.Unix(0, a.FirstTime)
-		ret = append(ret, fmt.Sprintf("%d,%s,%s,%s,%s,%d,%s",
-			a.RSSI, a.BSSID, a.SSID, a.Host, a.Channel, a.Count, t.Format(time.RFC3339)))
+		ret = append(ret, fmt.Sprintf("%.0f/%.1f/%.0f,%s,%s,%s,%s,%d,%s",
+			min, mean, max, a.BSSID, a.SSID, a.Host, a.Channel, a.Count, t.Format(time.RFC3339)))
 		return true
 	})
 	return ret
@@ -680,14 +692,15 @@ func getWifiAPReport() []string {
 func getBlueDevcieReport() []string {
 	st := time.Now().Add(time.Duration(-24) * time.Hour).UnixNano()
 	ret := []string{}
-	ret = append(ret, "RSSI,Address,Name,Host,Address Type,Vendor,Count,Time")
+	ret = append(ret, "RSSI(min/avg/max),Address,Name,Host,Address Type,Vendor,Count,Time")
 	datastore.ForEachBludeDevice(func(b *datastore.BlueDeviceEnt) bool {
 		if b.FirstTime < st {
 			return true
 		}
+		min, mean, max := getRSSIStats(b.RSSI)
 		t := time.Unix(0, b.FirstTime)
-		ret = append(ret, fmt.Sprintf("%d,%s,%s,%s,%s,%s,%d,%s",
-			b.RSSI, b.Address, b.Name, b.Host, b.AddressType, b.Vendor, b.Count, t.Format(time.RFC3339)))
+		ret = append(ret, fmt.Sprintf("%.0f/%.1f/%.0f,%s,%s,%s,%s,%s,%d,%s",
+			min, mean, max, b.Address, b.Name, b.Host, b.AddressType, b.Vendor, b.Count, t.Format(time.RFC3339)))
 		return true
 	})
 	return ret
