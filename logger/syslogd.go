@@ -55,6 +55,7 @@ func syslogd(stopCh chan bool) {
 						Type: "syslog",
 						Log:  string(s),
 					}
+					report.UpdateSensor(sl["hostname"].(string), "syslog", 1)
 				} else {
 					log.Printf("syslogd err=%v", err)
 				}

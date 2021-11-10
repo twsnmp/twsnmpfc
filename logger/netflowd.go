@@ -78,12 +78,12 @@ func netflowd(stopCh chan bool) {
 				case *netflow5.Packet:
 					{
 						logNetflow(p)
-						report.UpdateFlowSensor(remote.IP.String(), "netflow", len(p.Records))
+						report.UpdateSensor(remote.IP.String(), "netflow", len(p.Records))
 					}
 				case *ipfix.Message:
 					{
 						r := logIPFIX(p)
-						report.UpdateFlowSensor(remote.IP.String(), "ipfix", r)
+						report.UpdateSensor(remote.IP.String(), "ipfix", r)
 					}
 				}
 			}

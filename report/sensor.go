@@ -8,14 +8,14 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func UpdateFlowSensor(h, t string, r int) {
+func UpdateSensor(h, t string, r int) {
 	id := fmt.Sprintf("%s:%s:", h, t)
 	now := time.Now().UnixNano()
 	e := datastore.GetSensor(id)
 	if e != nil {
 		e.Total += int64(r)
 		e.Send++
-		e.LastTime = time.Now().UnixNano()
+		e.LastTime = now
 		return
 	}
 	datastore.AddSensor(&datastore.SensorEnt{
