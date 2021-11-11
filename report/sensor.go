@@ -22,6 +22,7 @@ func UpdateSensor(h, t string, r int) {
 		ID:        id,
 		Host:      h,
 		Type:      t,
+		State:     "normal",
 		Total:     int64(r),
 		Send:      1,
 		LastTime:  now,
@@ -117,8 +118,8 @@ func checkMonitor(h, t string, m map[string]string) {
 }
 
 func setSensorState() {
-	warn := time.Now().Add(-30 * time.Minute).UnixNano()
-	low := time.Now().Add(-3 * time.Hour).UnixNano()
+	warn := time.Now().Add(-60 * time.Minute).UnixNano()
+	low := time.Now().Add(-6 * time.Hour).UnixNano()
 	high := time.Now().Add(-24 * time.Hour).UnixNano()
 	now := time.Now().UnixNano()
 	datastore.ForEachSensors(func(s *datastore.SensorEnt) bool {
@@ -141,7 +142,7 @@ func setSensorState() {
 				Event:    "センサー状態変化:" + s.Host + "," + s.Type + "," + s.Param,
 			})
 		}
-		if s.Type == "netflow" || s.Type == "ipfix" {
+		if s.Type == "netflow" || s.Type == "ipfix" || s.Type == "syslog" {
 			count := s.Total
 			send := s.Send
 			if len(s.Stats) > 0 {
