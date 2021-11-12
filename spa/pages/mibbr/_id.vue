@@ -15,6 +15,14 @@
       <v-alert v-model="error" color="error" dense dismissible>
         MIBを取得できませんでした
       </v-alert>
+      <v-overlay
+        absolute
+        :value="overlay"
+        color="rgb(179,179,179)"
+        opacity="0.8"
+      >
+        <v-img :src="neko"></v-img>
+      </v-overlay>
       <v-data-table
         :headers="headers"
         :items="items"
@@ -131,6 +139,9 @@
 export default {
   data() {
     return {
+      nekoNo: 1,
+      overlay: false,
+      neko: '/images/neko_anm1.png',
       node: {
         ID: '',
         Name: '',
@@ -196,6 +207,8 @@ export default {
       this.items = []
       this.wait = true
       this.error = false
+      this.nekoNo = 1
+      this.waitAnimation()
       this.$axios
         .post('/api/mibbr', this.mibget)
         .then((r) => {
@@ -219,6 +232,26 @@ export default {
           this.wait = false
           this.mibs = []
         })
+    },
+    waitAnimation() {
+      if (!this.wait) {
+        if (this.error) {
+          this.neko = '/images/neko_ng.png'
+        } else {
+          this.neko = '/images/neko_ok.png'
+        }
+        setTimeout(() => {
+          this.overlay = false
+        }, 2000)
+        return
+      }
+      this.overlay = true
+      this.neko = '/images/neko_anm' + this.nekoNo + '.png'
+      this.nekoNo++
+      if (this.nekoNo > 7) {
+        this.nekoNo = 1
+      }
+      this.timer = setTimeout(() => this.waitAnimation(), 200)
     },
     showList() {
       this.tableMode = false
