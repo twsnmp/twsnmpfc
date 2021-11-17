@@ -429,6 +429,14 @@
             <v-list-item-title>ログ</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item @click="showVPanelPage()">
+          <v-list-item-icon>
+            <v-icon>mdi-apps-box</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>パネル</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item v-if="editNode.MAC" @click="doWOL">
           <v-list-item-icon><v-icon>mdi-alarm</v-icon></v-list-item-icon>
           <v-list-item-content>
@@ -718,6 +726,9 @@ export default {
     },
     showNodeLogPage() {
       this.$router.push({ path: '/node/log/' + this.editNode.ID })
+    },
+    showVPanelPage() {
+      this.$router.push({ path: '/node/vpanel/' + this.editNode.ID })
     },
     showMIBBr() {
       this.$router.push({ path: '/mibbr/' + this.editNode.ID })

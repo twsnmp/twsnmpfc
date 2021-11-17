@@ -113,6 +113,7 @@ func setup(p *WebAPI) {
 	r.POST("/node/update", postNodeUpdate)
 	r.GET("/node/log/:id", getNodeLog)
 	r.GET("/node/polling/:id", getNodePolling)
+	r.GET("/node/vpanel/:id", getVPanel)
 	r.POST("/mibbr", postMIBBr)
 	r.GET("/mibbr/:id", getMIBBr)
 	r.GET("/map", getMap)

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/wol"
 )
@@ -268,4 +269,23 @@ func postWOL(c echo.Context) error {
 		Event:    fmt.Sprintf("%sにWake ON LANパケットを送信しました", n.MAC),
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+//
+type vpanelWebAPI struct {
+	Node  *datastore.NodeEnt
+	Ports []*backend.VPanelPortEnt
+	Power bool
+}
+
+func getVPanel(c echo.Context) error {
+	id := c.Param("id")
+	r := vpanelWebAPI{}
+	r.Node = datastore.GetNode(id)
+	if r.Node == nil {
+		return echo.ErrBadRequest
+	}
+	r.Power = backend.GetVPanelPowerInfo(r.Node)
+	r.Ports = backend.GetVPanelPorts(r.Node)
+	return c.JSON(http.StatusOK, r)
 }

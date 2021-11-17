@@ -46,6 +46,7 @@ export default {
     '@/plugins/echarts/sensor.js',
     '@/plugins/echarts/winlog.js',
     '@/plugins/brain.js',
+    '@/plugins/vpanel.js',
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)

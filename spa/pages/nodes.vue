@@ -36,6 +36,12 @@
           <v-icon small @click="$router.push({ path: '/node/log/' + item.ID })">
             mdi-calendar-check
           </v-icon>
+          <v-icon
+            small
+            @click="$router.push({ path: '/node/vpanel/' + item.ID })"
+          >
+            mdi-apps-box
+          </v-icon>
           <v-icon small @click="editNodeFunc(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deleteNodeFunc(item)"> mdi-delete </v-icon>
           <v-icon v-if="item.MAC" small @click="doWOL(item.ID)">
