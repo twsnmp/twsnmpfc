@@ -52,7 +52,7 @@ func GetVPanelPowerInfo(n *datastore.NodeEnt) bool {
 // 3.ラインの設定
 func GetVPanelPorts(n *datastore.NodeEnt) []*VPanelPortEnt {
 	// ポーリングから取得
-	if ports := getPortsFromPoling(n); len(ports) > 0 {
+	if ports := getPortsFromPolling(n); len(ports) > 0 {
 		return ports
 	}
 	// SNMPで取得
@@ -63,7 +63,7 @@ func GetVPanelPorts(n *datastore.NodeEnt) []*VPanelPortEnt {
 	return getPortsFromLine(n)
 }
 
-func getPortsFromPoling(n *datastore.NodeEnt) []*VPanelPortEnt {
+func getPortsFromPolling(n *datastore.NodeEnt) []*VPanelPortEnt {
 	ports := []*VPanelPortEnt{}
 	traffPollings := make(map[string]*datastore.PollingEnt)
 	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
@@ -89,6 +89,7 @@ func getPortsFromPoling(n *datastore.NodeEnt) []*VPanelPortEnt {
 					Name:         a[1],
 					pollingIndex: p.Params,
 					State:        state,
+					Type:         6,
 				})
 			} else if p.Mode == "traffic" {
 				traffPollings[p.Params] = p
@@ -98,7 +99,6 @@ func getPortsFromPoling(n *datastore.NodeEnt) []*VPanelPortEnt {
 	})
 	for _, e := range ports {
 		if p, ok := traffPollings[e.pollingIndex]; ok {
-			log.Println(p)
 			e.InBytes = getTraffData("bytes", p)
 			e.InPacktes = getTraffData("packets", p)
 			e.InError = getTraffData("errors", p)
@@ -165,6 +165,7 @@ func getPortsFromLine(n *datastore.NodeEnt) []*VPanelPortEnt {
 			Index: i,
 			Name:  name,
 			State: state,
+			Type:  6,
 		})
 		return true
 	})
