@@ -296,6 +296,45 @@ func getPortsBySNMP(n *datastore.NodeEnt) []*VPanelPortEnt {
 		}
 		return nil
 	})
+	// ifXTableからも取得する
+	ifXTable := false
+	_ = agent.Walk(datastore.MIBDB.NameToOID("ifXTable"), func(variable gosnmp.SnmpPDU) error {
+		a := strings.Split(datastore.MIBDB.OIDToName(variable.Name), ".")
+		if len(a) != 2 {
+			return nil
+		}
+		e, ok := ifMap[a[1]]
+		if !ok {
+			return nil
+		}
+		if !ifXTable {
+			// Reset Counter
+			for _, e := range ifMap {
+				e.InBytes = 0
+				e.InPacktes = 0
+				e.OutBytes = 0
+				e.OutPacktes = 0
+			}
+			ifXTable = true
+		}
+		switch a[0] {
+		case "ifName":
+			e.Name = getMIBStringVal(variable.Value)
+		case "ifHighSpeed":
+			e.Speed = gosnmp.ToBigInt(variable.Value).Int64() * 1000 * 1000
+		case "ifHCInOctets":
+			e.InBytes = gosnmp.ToBigInt(variable.Value).Int64()
+		case "ifHCInMulticastPkts", "ifHCInBroadcastPkts", "ifHCInUcastPkts":
+			e.InPacktes += gosnmp.ToBigInt(variable.Value).Int64()
+		case "ifHCOutOctets":
+			e.OutBytes = gosnmp.ToBigInt(variable.Value).Int64()
+		case "ifHCOutUcastPkts", "ifHCOutMulticastPkts", "ifHCOutBroadcastPkts":
+			e.OutPacktes += gosnmp.ToBigInt(variable.Value).Int64()
+		case "ifOutErrors":
+			e.OutError = gosnmp.ToBigInt(variable.Value).Int64()
+		}
+		return nil
+	})
 	for _, e := range ifMap {
 		if e.Oper == 1 {
 			e.State = "up"
