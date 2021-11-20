@@ -22,7 +22,7 @@ func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 		updateNodeState(n)
 		return true
 	})
-	updateLineState()
+	hasLineInfo := updateLineState()
 	go checkNewVersion()
 	timer := time.NewTicker(time.Second * 10)
 	newVersionTimer := time.NewTicker(time.Hour * 24)
@@ -46,10 +46,13 @@ func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 				return true
 			})
 			if change > 0 {
-				updateLineState()
+				hasLineInfo = updateLineState()
 			}
 			i++
 			if i > 5 {
+				if hasLineInfo {
+					hasLineInfo = updateLineState()
+				}
 				datastore.UpdateDBStats()
 				datastore.CheckDBBackup()
 				i = 0
@@ -104,7 +107,8 @@ func updateNodeState(n *datastore.NodeEnt) {
 	})
 }
 
-func updateLineState() {
+func updateLineState() bool {
+	hasLineInfo := false
 	datastore.ForEachLines(func(l *datastore.LineEnt) bool {
 		if p := datastore.GetPolling(l.PollingID1); p != nil {
 			l.State1 = p.State
@@ -125,17 +129,20 @@ func updateLineState() {
 						if l.Width > 5 {
 							l.Width = 5
 						}
+						hasLineInfo = true
 						l.Info = humanize.Bytes(uint64(vf)) + "PS"
 					}
 				} else {
 					if v, ok := p.Result["pps"]; ok {
 						if vf, ok := v.(float64); ok {
+							hasLineInfo = true
 							l.Info = humanize.Commaf(vf) + "PPS"
 						}
 					}
 				}
 				if v, ok := p.Result["obps"]; ok {
 					if vf, ok := v.(float64); ok {
+						hasLineInfo = true
 						l.Info += "/" + humanize.Bytes(uint64(vf)) + "PS"
 					}
 				}
@@ -143,6 +150,7 @@ func updateLineState() {
 		}
 		return true
 	})
+	return hasLineInfo
 }
 
 func checkNewVersion() {

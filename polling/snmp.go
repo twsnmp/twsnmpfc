@@ -590,6 +590,45 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			lr[n] = float64(v)
 		}
 	}
+	// ifXTableからも取得すると
+	oids = []string{}
+	oids = append(oids, datastore.MIBDB.NameToOID("ifHCInOctets."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifHCInUcastPkts."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifHCInMulticastPkts."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifHCInBroadcastPkts."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifHCOutOctets."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifHCOutUcastPkts."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifHCOutMulticastPkts."+pe.Params))
+	oids = append(oids, datastore.MIBDB.NameToOID("ifHCOutBroadcastPkts."+pe.Params))
+	result, err = agent.Get(oids)
+	if err == nil && len(result.Variables) > 0 {
+		ifInNUcastPkts := float64(0.0)
+		ifOutNUcastPkts := float64(0.0)
+		for _, variable := range result.Variables {
+			n := datastore.MIBDB.OIDToName(variable.Name)
+			if strings.HasPrefix(n, "ifHCInOctets") {
+				lr["ifInOctets."+pe.Params] = float64(gosnmp.ToBigInt(variable.Value).Uint64())
+			} else if strings.HasPrefix(n, "ifHCInUcastPkts") {
+				lr["ifInUcastPkts."+pe.Params] = float64(gosnmp.ToBigInt(variable.Value).Uint64())
+			} else if strings.HasPrefix(n, "ifHCInMulticastPkts") {
+				ifInNUcastPkts += float64(gosnmp.ToBigInt(variable.Value).Uint64())
+			} else if strings.HasPrefix(n, "ifHCInBroadcastPkts") {
+				ifInNUcastPkts += float64(gosnmp.ToBigInt(variable.Value).Uint64())
+			} else if strings.HasPrefix(n, "ifHCOutOctets") {
+				lr["ifOutOctets."+pe.Params] = float64(gosnmp.ToBigInt(variable.Value).Uint64())
+			} else if strings.HasPrefix(n, "ifHCOutUcastPkts") {
+				lr["ifOutUcastPkts."+pe.Params] = float64(gosnmp.ToBigInt(variable.Value).Uint64())
+			} else if strings.HasPrefix(n, "ifHCOutMulticastPkts") {
+				ifOutNUcastPkts += float64(gosnmp.ToBigInt(variable.Value).Uint64())
+			} else if strings.HasPrefix(n, "ifHCOutBroadcastPkts") {
+				ifOutNUcastPkts += float64(gosnmp.ToBigInt(variable.Value).Uint64())
+			}
+		}
+		lr["ifOutNUcastPkts."+pe.Params] = ifInNUcastPkts
+		lr["ifInNUcastPkts."+pe.Params] = ifOutNUcastPkts
+	} else {
+		log.Printf("ifXTable not found err=%v", err)
+	}
 	keys := []string{}
 	for k := range lr {
 		keys = append(keys, k)

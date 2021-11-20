@@ -2,6 +2,7 @@ package webapi
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -50,7 +51,12 @@ func deletePollings(c echo.Context) error {
 	}
 	for _, id := range ids {
 		if err := datastore.DeletePolling(id); err != nil {
-			return echo.ErrBadRequest
+			log.Printf("delete pollings id=%s err=%v", id, err)
+			datastore.AddEventLog(&datastore.EventLogEnt{
+				Type:  "user",
+				Level: "warn",
+				Event: fmt.Sprintf("%sのポーリングを削除できません", id),
+			})
 		}
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
