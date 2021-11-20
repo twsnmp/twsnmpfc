@@ -175,6 +175,7 @@
             label="ラインの太さ"
           >
           </v-select>
+          <v-text-field v-model="editLine.Port" label="ポート"></v-text-field>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -476,6 +477,7 @@ export default {
         PollingID2: '',
         PollingID: '',
         Info: '',
+        Port: '',
       },
       editNode: {},
       nodeList: [],

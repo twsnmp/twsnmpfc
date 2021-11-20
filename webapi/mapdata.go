@@ -189,6 +189,7 @@ func postLineAdd(c echo.Context) error {
 		l.Info = lu.Info
 		l.PollingID = lu.PollingID
 		l.Width = lu.Width
+		l.Port = lu.Port
 		if err := datastore.UpdateLine(l); err != nil {
 			return echo.ErrBadRequest
 		}

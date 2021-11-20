@@ -18,6 +18,7 @@ type LineEnt struct {
 	Width      int
 	State      string
 	Info       string
+	Port       string
 }
 
 func AddLine(l *LineEnt) error {

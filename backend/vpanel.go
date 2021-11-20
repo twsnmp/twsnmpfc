@@ -68,8 +68,8 @@ func getPortsFromPolling(n *datastore.NodeEnt) []*VPanelPortEnt {
 	traffPollings := make(map[string]*datastore.PollingEnt)
 	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
 		if p.NodeID == n.ID && p.Type == "snmp" {
-			if p.Mode == "ifOperStatus" && strings.Contains(p.Script, ":") {
-				a := strings.Split(p.Script, ":")
+			if p.Mode == "ifOperStatus" && strings.Contains(p.Filter, ":") {
+				a := strings.Split(p.Filter, ":")
 				if len(a) != 2 {
 					return true
 				}
@@ -130,7 +130,7 @@ func getPortsFromLine(n *datastore.NodeEnt) []*VPanelPortEnt {
 		}
 		name := ""
 		i := int64(0)
-		a := strings.Split(l.Info, ":")
+		a := strings.Split(l.Port, ":")
 		if len(a) == 2 {
 			i, _ = strconv.ParseInt(a[0], 10, 64)
 			if max < i {
