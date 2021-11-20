@@ -114,6 +114,16 @@
     "AutoMode": "index:ifIndex"
   },
   {
+    "Name": "LANポート送受信(HC)",
+    "Type": "snmp",
+    "Mode": "ps",
+    "Params": "ifHCInOctets.$i,ifHCOutOctets.$i",
+    "Script": "Mbps=8*(ifHCInOctets+ifHCOutOctets)/1000000;Mbps < 1000",
+    "Level": "low",
+    "Descr": "LANポートの送受信の合計量をMbps単位で測定 64ビットカウンターを使用",
+    "AutoMode": "index:ifIndex"
+  },
+  {
     "Name": "LANポート受信",
     "Type": "snmp",
     "Mode": "ps",
@@ -124,6 +134,16 @@
     "AutoMode": "index:ifIndex"
   },
   {
+    "Name": "LANポート受信(HC)",
+    "Type": "snmp",
+    "Mode": "ps",
+    "Params": "ifHCInOctets.$i",
+    "Script": "rxbytesps=ifHCInOctets;rxbytesps > 0",
+    "Level": "low",
+    "Descr": "LANポート受信データ量 64ビットカウンターを使用",
+    "AutoMode": "index:ifIndex"
+  },
+  {
     "Name": "LANポート送信",
     "Type": "snmp",
     "Mode": "ps",
@@ -131,6 +151,16 @@
     "Script": "txbytesps=ifOutOctets;txbytesps > 0",
     "Level": "low",
     "Descr": "LANポート送信データ量",
+    "AutoMode": "index:ifIndex"
+  },
+  {
+    "Name": "LANポート送信(HC)",
+    "Type": "snmp",
+    "Mode": "ps",
+    "Params": "ifHCOutOctets.$i",
+    "Script": "txbytesps=ifHCOutOctets;txbytesps > 0",
+    "Level": "low",
+    "Descr": "LANポート送信データ量 64ビットカウンターを使用",
     "AutoMode": "index:ifIndex"
   },
   {
