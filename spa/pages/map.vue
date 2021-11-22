@@ -295,6 +295,22 @@
                   <v-list-item-title>MIBブラウザー</v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
+              <v-list-item @click="showVPanelPage()">
+                <v-list-item-icon>
+                  <v-icon>mdi-apps-box</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>パネル</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item @click="showHostResourcePage()">
+                <v-list-item-icon>
+                  <v-icon>mdi-gauge</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>ホストリソース</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
               <v-list-item @click="showNodePollingPage()">
                 <v-list-item-icon>
                   <v-icon>mdi-lan-check</v-icon>
@@ -436,6 +452,14 @@
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>パネル</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="showHostResourcePage()">
+          <v-list-item-icon>
+            <v-icon>mdi-gauge</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>ホストリソース</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-item v-if="editNode.MAC" @click="doWOL">
@@ -731,6 +755,9 @@ export default {
     },
     showVPanelPage() {
       this.$router.push({ path: '/node/vpanel/' + this.editNode.ID })
+    },
+    showHostResourcePage() {
+      this.$router.push({ path: '/node/hostResource/' + this.editNode.ID })
     },
     showMIBBr() {
       this.$router.push({ path: '/mibbr/' + this.editNode.ID })

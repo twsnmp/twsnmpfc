@@ -43,6 +43,7 @@
             mdi-apps-box
           </v-icon>
           <v-icon
+            v-if="item.Community || item.User"
             small
             @click="$router.push({ path: '/node/hostResource/' + item.ID })"
           >
