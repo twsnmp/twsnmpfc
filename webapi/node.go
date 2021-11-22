@@ -13,51 +13,13 @@ import (
 	"github.com/twsnmp/twsnmpfc/wol"
 )
 
-type mapWebAPI struct {
-	LastUpdate int64
-	MapConf    *datastore.MapConfEnt
-	Nodes      map[string]*datastore.NodeEnt
-	Lines      []*datastore.LineEnt
-	Pollings   map[string][]*datastore.PollingEnt
-	Logs       []*datastore.EventLogEnt
-}
-
-func getMap(c echo.Context) error {
-	r := &mapWebAPI{
-		MapConf:  &datastore.MapConf,
-		Nodes:    make(map[string]*datastore.NodeEnt),
-		Lines:    []*datastore.LineEnt{},
-		Pollings: make(map[string][]*datastore.PollingEnt),
-	}
-	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
-		r.Nodes[n.ID] = n
-		return true
-	})
-	datastore.ForEachLines(func(l *datastore.LineEnt) bool {
-		r.Lines = append(r.Lines, l)
-		return true
-	})
-	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
-		r.Pollings[p.NodeID] = append(r.Pollings[p.NodeID], p)
-		return true
-	})
-	i := 0
-	datastore.ForEachLastEventLog("", func(e *datastore.EventLogEnt) bool {
-		r.Logs = append(r.Logs, e)
-		i++
-		return i < 100
-	})
-	r.LastUpdate = time.Now().Unix()
-	return c.JSON(http.StatusOK, r)
-}
-
 type nodePosWebAPI struct {
 	ID string
 	X  int
 	Y  int
 }
 
-func postMapUpdate(c echo.Context) error {
+func postNodePos(c echo.Context) error {
 	list := []nodePosWebAPI{}
 	if err := c.Bind(&list); err != nil {
 		return echo.ErrBadRequest
@@ -143,66 +105,6 @@ func postNodeUpdate(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
-func deleteLine(c echo.Context) error {
-	l := new(datastore.LineEnt)
-	if err := c.Bind(l); err != nil {
-		return echo.ErrBadRequest
-	}
-	if err := datastore.DeleteLine(l.ID); err != nil {
-		return echo.ErrBadRequest
-	}
-	datastore.AddEventLog(&datastore.EventLogEnt{
-		Type:   "user",
-		Level:  "info",
-		NodeID: l.NodeID1,
-		Event:  fmt.Sprintf("ラインを削除しました(%s)", l.ID),
-	})
-	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
-}
-
-func postLineAdd(c echo.Context) error {
-	lu := new(datastore.LineEnt)
-	if err := c.Bind(lu); err != nil {
-		return echo.ErrBadRequest
-	}
-	if lu.PollingID1 == "" || lu.PollingID2 == "" {
-		return echo.ErrBadRequest
-	}
-	if p := datastore.GetPolling(lu.PollingID1); p != nil {
-		lu.State1 = p.State
-	}
-	if p := datastore.GetPolling(lu.PollingID2); p != nil {
-		lu.State2 = p.State
-	}
-	l := datastore.GetLine(lu.ID)
-	if l == nil {
-		if err := datastore.AddLine(lu); err != nil {
-			return echo.ErrBadRequest
-		}
-	} else {
-		l.NodeID1 = lu.NodeID1
-		l.NodeID2 = lu.NodeID2
-		l.PollingID1 = lu.PollingID1
-		l.PollingID2 = lu.PollingID2
-		l.State1 = lu.State1
-		l.State2 = lu.State2
-		l.Info = lu.Info
-		l.PollingID = lu.PollingID
-		l.Width = lu.Width
-		l.Port = lu.Port
-		if err := datastore.UpdateLine(l); err != nil {
-			return echo.ErrBadRequest
-		}
-	}
-	datastore.AddEventLog(&datastore.EventLogEnt{
-		Type:   "user",
-		Level:  "info",
-		NodeID: lu.NodeID1,
-		Event:  fmt.Sprintf("ラインを更新しました(%s)", lu.ID),
-	})
-	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
-}
-
 type nodeWebAPI struct {
 	Node     *datastore.NodeEnt
 	Logs     []*datastore.EventLogEnt
@@ -272,7 +174,7 @@ func postWOL(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
-//
+// vpanelデータ
 type vpanelWebAPI struct {
 	Node  *datastore.NodeEnt
 	Ports []*backend.VPanelPortEnt
@@ -288,5 +190,23 @@ func getVPanel(c echo.Context) error {
 	}
 	r.Power = backend.GetVPanelPowerInfo(r.Node)
 	r.Ports = backend.GetVPanelPorts(r.Node)
+	return c.JSON(http.StatusOK, r)
+}
+
+// ホストリソースデータ
+type hostResorceWebAPI struct {
+	Node         *datastore.NodeEnt
+	HostResource *backend.HostResourceEnt
+}
+
+func getHostResource(c echo.Context) error {
+	id := c.Param("id")
+	r := hostResorceWebAPI{}
+	r.Node = datastore.GetNode(id)
+	if r.Node == nil {
+		log.Printf("host resorce node not found id=%s", id)
+		return echo.ErrBadRequest
+	}
+	r.HostResource = backend.GetHostResource(r.Node)
 	return c.JSON(http.StatusOK, r)
 }
