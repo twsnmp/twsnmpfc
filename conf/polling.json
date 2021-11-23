@@ -108,7 +108,7 @@
     "Type": "snmp",
     "Mode": "ps",
     "Params": "ifInOctets.$i,ifOutOctets.$i",
-    "Script": "Mbps=8*(ifInOctets+ifOutOctets)/1000000;Mbps < 1000",
+    "Script": "Mbps=8*(ifInOctets_PS+ifOutOctets_PS)/1000000;Mbps < 1000",
     "Level": "low",
     "Descr": "LANポートの送受信の合計量をMbps単位で測定",
     "AutoMode": "index:ifIndex"
@@ -118,7 +118,7 @@
     "Type": "snmp",
     "Mode": "ps",
     "Params": "ifHCInOctets.$i,ifHCOutOctets.$i",
-    "Script": "Mbps=8*(ifHCInOctets+ifHCOutOctets)/1000000;Mbps < 1000",
+    "Script": "Mbps=8*(ifHCInOctets_PS+ifHCOutOctets_PS)/1000000;Mbps < 1000",
     "Level": "low",
     "Descr": "LANポートの送受信の合計量をMbps単位で測定 64ビットカウンターを使用",
     "AutoMode": "index:ifIndex"
@@ -128,7 +128,7 @@
     "Type": "snmp",
     "Mode": "ps",
     "Params": "ifInOctets.$i",
-    "Script": "rxbytesps=ifInOctets;rxbytesps > 0",
+    "Script": "rxbytesps=ifInOctets_PS;rxbytesps > 0",
     "Level": "low",
     "Descr": "LANポート受信データ量",
     "AutoMode": "index:ifIndex"
@@ -138,7 +138,7 @@
     "Type": "snmp",
     "Mode": "ps",
     "Params": "ifHCInOctets.$i",
-    "Script": "rxbytesps=ifHCInOctets;rxbytesps > 0",
+    "Script": "rxbytesps=ifHCInOctets_PS;rxbytesps > 0",
     "Level": "low",
     "Descr": "LANポート受信データ量 64ビットカウンターを使用",
     "AutoMode": "index:ifIndex"
@@ -148,7 +148,7 @@
     "Type": "snmp",
     "Mode": "ps",
     "Params": "ifOutOctets.$i",
-    "Script": "txbytesps=ifOutOctets;txbytesps > 0",
+    "Script": "txbytesps=ifOutOctets_PS;txbytesps > 0",
     "Level": "low",
     "Descr": "LANポート送信データ量",
     "AutoMode": "index:ifIndex"
@@ -158,7 +158,7 @@
     "Type": "snmp",
     "Mode": "ps",
     "Params": "ifHCOutOctets.$i",
-    "Script": "txbytesps=ifHCOutOctets;txbytesps > 0",
+    "Script": "txbytesps=ifHCOutOctets_PS;txbytesps > 0",
     "Level": "low",
     "Descr": "LANポート送信データ量 64ビットカウンターを使用",
     "AutoMode": "index:ifIndex"

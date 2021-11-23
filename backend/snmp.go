@@ -11,39 +11,65 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
+type HrSystem struct {
+	Index   int
+	Name    string
+	Value   string
+	Polling string
+}
+
+type HrStorage struct {
+	Index string
+	Type  string
+	Descr string
+	Size  int64
+	Used  int64
+	Unit  int64
+}
+
+type HrDevice struct {
+	Index  string
+	Type   string
+	Descr  string
+	Status string
+	Errors string
+}
+
+type HrFileSystem struct {
+	Index    string
+	Type     string
+	Mount    string
+	Remote   string
+	Bootable int64
+	Access   int64
+}
+
 type HrProcess struct {
 	PID    string
 	Name   string
 	Type   string
 	Status string
+	Path   string
+	Param  string
 	CPU    int64
 	Mem    int64
 }
 
-type HrStorage struct {
-	Type  string
-	Descr string
-	Size  int64
-	Used  int64
-}
-
-type HrSystem struct {
-	Index int
-	Name  string
-	Value string
-}
-
 type HostResourceEnt struct {
-	System  []*HrSystem
-	Process []*HrProcess
-	Storage []*HrStorage
+	System     []*HrSystem
+	Storage    []*HrStorage
+	Device     []*HrDevice
+	FileSystem []*HrFileSystem
+	Process    []*HrProcess
 }
 
 func GetHostResource(n *datastore.NodeEnt) *HostResourceEnt {
 	hr := new(HostResourceEnt)
 	hr.System = []*HrSystem{}
-	hr.Process = []*HrProcess{}
 	hr.Storage = []*HrStorage{}
+	hr.Device = []*HrDevice{}
+	hr.FileSystem = []*HrFileSystem{}
+	hr.Process = []*HrProcess{}
 	agent := getSNMPAgent(n)
 	if agent == nil {
 		return hr
@@ -55,8 +81,10 @@ func GetHostResource(n *datastore.NodeEnt) *HostResourceEnt {
 	}
 	defer agent.Conn.Close()
 	nCPU := 1
-	procMap := make(map[string]*HrProcess)
 	storageMap := make(map[string]*HrStorage)
+	deviceMap := make(map[string]*HrDevice)
+	fsMap := make(map[string]*HrFileSystem)
+	procMap := make(map[string]*HrProcess)
 	_ = agent.Walk(datastore.MIBDB.NameToOID("host"), func(variable gosnmp.SnmpPDU) error {
 		a := strings.SplitN(datastore.MIBDB.OIDToName(variable.Name), ".", 2)
 		if len(a) != 2 {
@@ -71,35 +99,59 @@ func GetHostResource(n *datastore.NodeEnt) *HostResourceEnt {
 			})
 		case "hrSystemDate":
 			hr.System = append(hr.System, &HrSystem{
-				Name:  "システム稼働時間",
-				Value: getDateAndTime(variable.Value),
-				Index: 2,
+				Name:    "システム時刻",
+				Value:   getDateAndTime(variable.Value),
+				Index:   2,
+				Polling: "hrSystemDate",
+			})
+		case "hrSystemInitialLoadDevice":
+			hr.System = append(hr.System, &HrSystem{
+				Name:  "起動デバイス",
+				Value: getMIBStringVal(variable.Value),
+				Index: 3,
+			})
+		case "hrSystemInitialLoadParameters":
+			hr.System = append(hr.System, &HrSystem{
+				Name:  "起動パラメータ",
+				Value: getMIBStringVal(variable.Value),
+				Index: 4,
 			})
 		case "hrSystemNumUsers":
 			hr.System = append(hr.System, &HrSystem{
-				Name:  "システムユーザ数",
-				Value: fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Int64()),
-				Index: 3,
+				Name:    "システムユーザ数",
+				Value:   fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Int64()),
+				Index:   5,
+				Polling: "hrSystemNumUsers",
 			})
 		case "hrSystemProcesses":
 			hr.System = append(hr.System, &HrSystem{
-				Name:  "システムプロセス数",
+				Name:    "システムプロセス数",
+				Value:   fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Int64()),
+				Index:   6,
+				Polling: "hrSystemProcesses",
+			})
+		case "hrSystemMaxProcesses":
+			hr.System = append(hr.System, &HrSystem{
+				Name:  "最大プロセス数",
 				Value: fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Int64()),
-				Index: 4,
+				Index: 7,
 			})
 		case "hrMemorySize":
 			hr.System = append(hr.System, &HrSystem{
 				Name:  "メモリサイズ",
 				Value: fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Int64()),
-				Index: 5,
+				Index: 8,
 			})
 		case "hrProcessorLoad":
 			hr.System = append(hr.System, &HrSystem{
-				Name:  fmt.Sprintf("CPU%d使用率", nCPU),
-				Value: fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Int64()),
-				Index: 5 + nCPU,
+				Name:    fmt.Sprintf("CPU%d使用率", nCPU),
+				Value:   fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Int64()),
+				Index:   8 + nCPU,
+				Polling: "hrProcessorLoad." + a[1],
 			})
 			nCPU++
+		case "hrStorageIndex":
+			// Skip
 		case "hrStorageType":
 			if s, ok := storageMap[a[1]]; !ok {
 				storageMap[a[1]] = &HrStorage{
@@ -132,6 +184,97 @@ func GetHostResource(n *datastore.NodeEnt) *HostResourceEnt {
 			} else {
 				s.Used = gosnmp.ToBigInt(variable.Value).Int64()
 			}
+		case "hrStorageAllocationUnits":
+			if s, ok := storageMap[a[1]]; !ok {
+				storageMap[a[1]] = &HrStorage{
+					Unit: gosnmp.ToBigInt(variable.Value).Int64(),
+				}
+			} else {
+				s.Unit = gosnmp.ToBigInt(variable.Value).Int64()
+			}
+		case "hrDeviceIndex":
+			// Skip
+		case "hrDeviceType":
+			if d, ok := deviceMap[a[1]]; !ok {
+				deviceMap[a[1]] = &HrDevice{
+					Type: datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value)),
+				}
+			} else {
+				d.Type = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
+			}
+		case "hrDeviceDescr":
+			if d, ok := deviceMap[a[1]]; !ok {
+				deviceMap[a[1]] = &HrDevice{
+					Descr: getMIBStringVal(variable.Value),
+				}
+			} else {
+				d.Descr = getMIBStringVal(variable.Value)
+			}
+		case "hrDeviceID", "hrProcessorFrwID", "hrNetworkIfIndex", "hrDiskStorageAccess", "hrDiskStorageMedia":
+		case "hrDiskStorageRemoveble", "hrDiskStorageCapacity", "hrPartitionIndex", "hrPartitionLabel", "hrPartitionID":
+		case "hrPartitionSize", "hrPartitionFSIndex":
+			// Skip
+		case "hrDeviceStatus":
+			if d, ok := deviceMap[a[1]]; !ok {
+				deviceMap[a[1]] = &HrDevice{
+					Status: getDeviceStatusName(gosnmp.ToBigInt(variable.Value).Int64()),
+				}
+			} else {
+				d.Status = getDeviceStatusName(gosnmp.ToBigInt(variable.Value).Int64())
+			}
+		case "hrDeviceErrors":
+			if d, ok := deviceMap[a[1]]; !ok {
+				deviceMap[a[1]] = &HrDevice{
+					Errors: getMIBStringVal(variable.Value),
+				}
+			} else {
+				d.Errors = getMIBStringVal(variable.Value)
+			}
+		case "hrFSIndex":
+			// Skip
+		case "hrFSMountPoint":
+			if f, ok := fsMap[a[1]]; !ok {
+				fsMap[a[1]] = &HrFileSystem{
+					Mount: getMIBStringVal(variable.Value),
+				}
+			} else {
+				f.Mount = getMIBStringVal(variable.Value)
+			}
+		case "hrFSRemoteMountPoint":
+			if f, ok := fsMap[a[1]]; !ok {
+				fsMap[a[1]] = &HrFileSystem{
+					Remote: getMIBStringVal(variable.Value),
+				}
+			} else {
+				f.Remote = getMIBStringVal(variable.Value)
+			}
+		case "hrFSType":
+			if f, ok := fsMap[a[1]]; !ok {
+				fsMap[a[1]] = &HrFileSystem{
+					Type: datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value)),
+				}
+			} else {
+				f.Type = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
+			}
+		case "hrFSAccess":
+			if f, ok := fsMap[a[1]]; !ok {
+				fsMap[a[1]] = &HrFileSystem{
+					Access: gosnmp.ToBigInt(variable.Value).Int64(),
+				}
+			} else {
+				f.Access = gosnmp.ToBigInt(variable.Value).Int64()
+			}
+		case "hrFSBootable":
+			if f, ok := fsMap[a[1]]; !ok {
+				fsMap[a[1]] = &HrFileSystem{
+					Bootable: gosnmp.ToBigInt(variable.Value).Int64(),
+				}
+			} else {
+				f.Bootable = gosnmp.ToBigInt(variable.Value).Int64()
+			}
+		case "hrFSLastFullBackupDate", "hrFSLastPartialBackupDate":
+		case "hrSWRunIndex", "hrSWRunID":
+			// Skip
 		case "hrSWRunName":
 			if p, ok := procMap[a[1]]; !ok {
 				procMap[a[1]] = &HrProcess{
@@ -156,6 +299,22 @@ func GetHostResource(n *datastore.NodeEnt) *HostResourceEnt {
 			} else {
 				p.Status = getSWRunStatusName(gosnmp.ToBigInt(variable.Value).Int64())
 			}
+		case "hrSWRunPath":
+			if p, ok := procMap[a[1]]; !ok {
+				procMap[a[1]] = &HrProcess{
+					Path: getMIBStringVal(variable.Value),
+				}
+			} else {
+				p.Path = getMIBStringVal(variable.Value)
+			}
+		case "hrSWRunParameters":
+			if p, ok := procMap[a[1]]; !ok {
+				procMap[a[1]] = &HrProcess{
+					Param: getMIBStringVal(variable.Value),
+				}
+			} else {
+				p.Param = getMIBStringVal(variable.Value)
+			}
 		case "hrSWRunPerfCPU":
 			if p, ok := procMap[a[1]]; !ok {
 				procMap[a[1]] = &HrProcess{
@@ -172,17 +331,46 @@ func GetHostResource(n *datastore.NodeEnt) *HostResourceEnt {
 			} else {
 				p.Mem = gosnmp.ToBigInt(variable.Value).Int64()
 			}
+		default:
+			log.Printf("%v", a)
 		}
 		return nil
 	})
-	for _, s := range storageMap {
+	for i, s := range storageMap {
+		s.Index = i
+		if s.Unit > 0 {
+			s.Size *= s.Unit
+			s.Used *= s.Unit
+		}
 		hr.Storage = append(hr.Storage, s)
 	}
 	for pid, p := range procMap {
 		p.PID = pid
 		hr.Process = append(hr.Process, p)
 	}
+	for i, d := range deviceMap {
+		d.Index = i
+		hr.Device = append(hr.Device, d)
+	}
+	for i, f := range fsMap {
+		f.Index = i
+		hr.FileSystem = append(hr.FileSystem, f)
+	}
 	return hr
+}
+
+func getDeviceStatusName(s int64) string {
+	switch s {
+	case 2:
+		return "Running"
+	case 3:
+		return "Warning"
+	case 4:
+		return "Testing"
+	case 5:
+		return "Down"
+	}
+	return "Unknown"
 }
 
 func getSWRunStatusName(s int64) string {
@@ -403,8 +591,8 @@ func getDateAndTime(i interface{}) string {
 		return v
 	case []uint8:
 		if len(v) > 6 {
-			return fmt.Sprintf("%d/%d/%d %d:%d:%d",
-				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6])
+			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d%c%02d%02d",
+				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[8], v[9], v[10])
 		}
 	case int, int64, uint, uint64:
 		return fmt.Sprintf("%d", v)

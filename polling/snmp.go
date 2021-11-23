@@ -80,6 +80,8 @@ func doPollingSnmp(pe *datastore.PollingEnt) {
 		doPollingSnmpSysUpTime(pe, agent)
 	case "ifOperStatus":
 		doPollingSnmpIF(pe, agent)
+	case "hrSystemDate":
+		doPollingSnmpSystemDate(pe, agent)
 	case "count":
 		doPollingSnmpCount(pe, agent)
 	case "process":
@@ -240,7 +242,8 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 					if vof, ok := vo.(float64); ok {
 						d := vf - vof
 						lr[k+"_Delta"] = d
-						vm.Set(k+"_Delta", d)
+						vn := getValueName(k) + "_Delta"
+						vm.Set(vn, d)
 					}
 				}
 			}
@@ -261,25 +264,27 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 						if vd, ok := lr[k+"_Delta"]; ok {
 							if vdf, ok := vd.(float64); ok {
 								lr[k+"_PS"] = float64((vdf * 100.0) / diff)
-								vm.Set(k+"_PS", float64((vdf*100.0)/diff))
+								vn := getValueName(k) + "_PS"
+								vm.Set(vn, float64((vdf*100.0)/diff))
 							}
 						}
 					}
 				}
 			}
 		}
-		pe.Result = lr
-		value, err := vm.Run(script)
-		if err == nil {
-			if ok, _ := value.ToBoolean(); !ok {
-				setPollingState(pe, pe.Level)
-				return
-			}
-			setPollingState(pe, "normal")
+	}
+	pe.Result = lr
+	value, err := vm.Run(script)
+	if err == nil {
+		if ok, _ := value.ToBoolean(); !ok {
+			setPollingState(pe, pe.Level)
 			return
 		}
-		setPollingError("snmp", pe, err)
+		setPollingState(pe, "normal")
+		return
 	}
+	log.Printf("snmp polling err=%v", err)
+	setPollingError("snmp", pe, err)
 }
 
 func getValueName(n string) string {
@@ -763,4 +768,48 @@ func getMIBStringVal(i interface{}) string {
 		return fmt.Sprintf("%d", v)
 	}
 	return ""
+}
+
+func doPollingSnmpSystemDate(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
+	script := pe.Script
+	oids := []string{datastore.MIBDB.NameToOID("hrSystemDate.0")}
+	result, err := agent.Get(oids)
+	if err != nil {
+		setPollingError("snmp", pe, err)
+		return
+	}
+	vm := otto.New()
+	lr := make(map[string]interface{})
+	for _, variable := range result.Variables {
+		if variable.Name == datastore.MIBDB.NameToOID("hrSystemDate.0") {
+			if v, ok := variable.Value.([]uint8); ok {
+				ts := fmt.Sprintf("%04d-%02d-%02dT%02d:%02d:%02d%c%02d:%02d",
+					(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[8], v[9], v[10])
+				t, err := time.Parse(time.RFC3339, ts)
+				if err != nil {
+					setPollingError("snmp", pe, err)
+					return
+				}
+				diff := t.Unix() - time.Now().Unix()
+				if diff < 0 {
+					diff *= -1
+				}
+				lr["hrSystemDate"] = ts
+				lr["diff"] = float64(diff)
+				vm.Set("diff", diff)
+			}
+			break
+		}
+	}
+	pe.Result = lr
+	value, err := vm.Run(script)
+	if err == nil {
+		if ok, _ := value.ToBoolean(); !ok {
+			setPollingState(pe, pe.Level)
+			return
+		}
+		setPollingState(pe, "normal")
+		return
+	}
+	setPollingError("snmp", pe, err)
 }
