@@ -125,15 +125,86 @@
                   mdi-memory
                 </v-icon>
               </template>
+              <template #[`body.append`]>
+                <tr>
+                  <td>
+                    <v-select
+                      v-model="pfilter.status"
+                      :items="procStatusList"
+                      label="Status"
+                    >
+                    </v-select>
+                  </td>
+                  <td></td>
+                  <td></td>
+                  <td>
+                    <v-text-field
+                      v-model="pfilter.name"
+                      label="name"
+                    ></v-text-field>
+                  </td>
+                </tr>
+              </template>
             </v-data-table>
           </v-tab-item>
         </v-tabs-items>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-menu offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list v-if="tab === 0">
+            <v-list-item @click="showCPUChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>CPU使用率</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+        <download-excel
+          :fetch="makeExports"
+          type="csv"
+          name="TWSNMP_FC_Host_Resource.xls"
+          :header="exportTitle"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeExports"
+          type="xls"
+          name="TWSNMP_FC_Host_Resource.xls"
+          :header="exportTitle"
+          :worksheet="exportSheet"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-microsoft-excel</v-icon>
+            Excel
+          </v-btn>
+        </download-excel>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           更新
+        </v-btn>
+        <v-btn
+          color="normal"
+          dark
+          @click="$router.push({ path: '/node/polling/' + node.ID })"
+        >
+          <v-icon>mdi-lan-check</v-icon>
+          ポーリング
         </v-btn>
         <v-btn color="normal" dark @click="$router.go(-1)">
           <v-icon>mdi-arrow-left</v-icon>
@@ -246,6 +317,10 @@ export default {
       storage: [],
       device: [],
       process: [],
+      pfilter: {
+        sttaus: '',
+        name: '',
+      },
       fs: [],
       systemHeaders: [
         { text: 'No', value: 'Index', width: '10%' },
@@ -277,14 +352,30 @@ export default {
         { text: 'ブート', value: 'Bootable', width: '10%' },
       ],
       processHeaders: [
-        { text: '状態', value: 'Status', width: '8%' },
+        {
+          text: '状態',
+          value: 'Status',
+          width: '10%',
+          filter: (value) => {
+            if (!this.pfilter.status) return true
+            return value === this.pfilter.status
+          },
+        },
         { text: 'PID', value: 'PID', width: '8%' },
         { text: '種別', value: 'Type', width: '10%' },
-        { text: '名前', value: 'Name', width: '15%' },
+        {
+          text: '名前',
+          value: 'Name',
+          width: '15%',
+          filter: (value) => {
+            if (!this.pfilter.name) return true
+            return value.includes(this.pfilter.name)
+          },
+        },
         { text: 'パス', value: 'Path', width: '15%' },
         { text: 'パラメータ', value: 'Param', width: '20%' },
-        { text: 'CPU', value: 'CPU', width: '8%' },
-        { text: 'Mem', value: 'Mem', width: '8%' },
+        { text: 'CPU', value: 'CPU', width: '7%' },
+        { text: 'Mem', value: 'Mem', width: '7%' },
         { text: '操作', value: 'actions', width: '8%' },
       ],
       editDialog: false,
@@ -304,6 +395,15 @@ export default {
         LogMode: 1,
         PollInt: 60,
       },
+      exportTitle: '',
+      exportSheet: '',
+      procStatusList: [
+        { text: '', value: '' },
+        { text: '動作中', value: 'Running' },
+        { text: '動作待', value: 'Runnable' },
+        { text: '起動待', value: 'NotRunnable' },
+        { text: '停止', value: 'Invalid' },
+      ],
     }
   },
   async fetch() {
@@ -553,6 +653,87 @@ export default {
           this.polling.Script = tmpScript
           this.addError = true
         })
+    },
+    makeExports() {
+      const exports = []
+      switch (this.tab) {
+        case 0:
+          this.exportTitle = this.node.Name + 'のシステム情報'
+          this.exportSheet = 'システム情報'
+          this.system.forEach((e) => {
+            exports.push({
+              項目: e.Name,
+              値: e.Value,
+            })
+          })
+          break
+        case 1:
+          this.exportTitle = this.node.Name + 'のストレージ情報'
+          this.exportSheet = 'ストレージ情報'
+          this.storage.forEach((e) => {
+            exports.push({
+              種別: this.getStorageTypeName(e.Type),
+              説明: e.Descr,
+              サイズ: e.Size,
+              使用量: e.Used,
+              使用率: e.Rate,
+              単位: e.Unit,
+            })
+          })
+          break
+        case 2:
+          this.exportTitle = this.node.Name + 'のデバイス情報'
+          this.exportSheet = 'デバイス情報'
+          this.device.forEach((e) => {
+            exports.push({
+              状態: this.getStatusName(e.Status),
+              インデックス: e.Index,
+              種別: this.getDeviceTypeName(e.Type),
+              説明: e.Descr,
+              エラー: e.Errors,
+            })
+          })
+          break
+        case 3:
+          this.exportTitle = this.node.Name + 'のファイルシステム情報'
+          this.exportSheet = 'ファイルシステム情報'
+          this.fs.forEach((e) => {
+            exports.push({
+              マウント: e.Mount,
+              リモート: e.Remote,
+              種別: this.getFSTypeName(e.Type),
+              アクセス: this.getAccess(e.Access),
+              ブート: this.getTrueFalse(e.Bootable),
+            })
+          })
+          break
+        case 4:
+          this.exportTitle = this.node.Name + 'のプロセス情報'
+          this.exportSheet = 'プロセス情報'
+          this.process.forEach((e) => {
+            if (this.pfilter.name && !e.Name.includes(this.pfilter.name)) {
+              return
+            }
+            if (this.pfilter.status && e.Status !== this.pfilter.status) {
+              return
+            }
+            exports.push({
+              状態: this.getStatusName(e.Status),
+              PID: e.PID,
+              種別: e.Type,
+              名前: e.Name,
+              パス: e.Path,
+              パラメータ: e.Param,
+              CPU: e.CPU,
+              Mem: e.Mem,
+            })
+          })
+          break
+      }
+      return exports
+    },
+    showCPUChart() {
+      this.exportTitle = ''
     },
   },
 }
