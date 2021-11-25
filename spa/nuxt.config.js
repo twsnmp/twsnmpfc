@@ -45,6 +45,7 @@ export default {
     '@/plugins/echarts/twpcap.js',
     '@/plugins/echarts/sensor.js',
     '@/plugins/echarts/winlog.js',
+    '@/plugins/echarts/hostResource.js',
     '@/plugins/brain.js',
     '@/plugins/vpanel.js',
   ],

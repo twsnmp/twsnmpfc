@@ -50,6 +50,12 @@
               <template #[`item.Type`]="{ item }">
                 {{ getStorageTypeName(item.Type) }}
               </template>
+              <template #[`item.Size`]="{ item }">
+                {{ formatBytes(item.Size) }}
+              </template>
+              <template #[`item.Used`]="{ item }">
+                {{ formatBytes(item.Used) }}
+              </template>
               <template #[`item.actions`]="{ item }">
                 <v-icon small @click="editStoragePolling(item)">
                   mdi-card-plus
@@ -114,6 +120,12 @@
                   {{ getStatusName(item.Status) }}
                 </span>
               </template>
+              <template #[`item.CPU`]="{ item }">
+                {{ formatSec(item.CPU / 100.0) }}
+              </template>
+              <template #[`item.Mem`]="{ item }">
+                {{ formatBytes(item.Mem * 1024) }}
+              </template>
               <template #[`item.actions`]="{ item }">
                 <v-icon small @click="editProcessStatusPolling(item)">
                   mdi-eye
@@ -158,13 +170,53 @@
               グラフと集計
             </v-btn>
           </template>
-          <v-list v-if="tab === 0">
+          <v-list>
+            <v-list-item @click="showSummaryChart">
+              <v-list-item-icon>
+                <v-icon>mdi-gauge</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>CPU/Mem概要</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
             <v-list-item @click="showCPUChart">
               <v-list-item-icon>
-                <v-icon>mdi-chart-bar</v-icon>
+                <v-icon>mdi-cpu-64-bit</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title>CPU使用率</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="showStorageChart">
+              <v-list-item-icon>
+                <v-icon>mdi-memory</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>ストレージ使用率</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="showProcChart(true)">
+              <v-list-item-icon>
+                <v-icon>mdi-cpu-64-bit</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>プロセス単位のCPU使用量</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="showProcChart(false)">
+              <v-list-item-icon>
+                <v-icon>mdi-memory</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>プロセス単位のMem使用量</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -304,10 +356,26 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="chartDialog" persistent max-width="950px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">{{ chartTitle }}</span>
+        </v-card-title>
+        <div id="chart" style="width: 900px; height: 700px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="chartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
 <script>
+import * as numeral from 'numeral'
 export default {
   data() {
     return {
@@ -404,6 +472,8 @@ export default {
         { text: '起動待', value: 'NotRunnable' },
         { text: '停止', value: 'Invalid' },
       ],
+      chartTitle: '',
+      chartDialog: false,
     }
   },
   async fetch() {
@@ -711,10 +781,7 @@ export default {
           this.exportTitle = this.node.Name + 'のプロセス情報'
           this.exportSheet = 'プロセス情報'
           this.process.forEach((e) => {
-            if (this.pfilter.name && !e.Name.includes(this.pfilter.name)) {
-              return
-            }
-            if (this.pfilter.status && e.Status !== this.pfilter.status) {
+            if (!this.filterProcess(e)) {
               return
             }
             exports.push({
@@ -724,16 +791,135 @@ export default {
               名前: e.Name,
               パス: e.Path,
               パラメータ: e.Param,
-              CPU: e.CPU,
-              Mem: e.Mem,
+              CPU: e.CPU / 100,
+              Mem: e.Mem * 1024,
             })
           })
           break
       }
       return exports
     },
+    filterProcess(e) {
+      if (this.pfilter.name && !e.Name.includes(this.pfilter.name)) {
+        return false
+      }
+      if (this.pfilter.status && e.Status !== this.pfilter.status) {
+        return false
+      }
+      return true
+    },
+    showSummaryChart() {
+      this.chartTitle = 'CPU/Mem使用率概要'
+      this.chartDialog = true
+      this.$nextTick(() => {
+        const data = {
+          CPU: 0,
+          Mem: 0,
+          VM: 0,
+        }
+        let cpu = 0
+        this.system.forEach((e) => {
+          if (e.Name.includes('CPU')) {
+            cpu++
+            data.CPU = e.Value
+          }
+        })
+        this.storage.forEach((e) => {
+          if (e.Type.includes('hrStorageRam')) {
+            data.Mem = e.Rate
+          }
+          if (
+            e.Type.includes('hrStorageVirtualMemory') &&
+            !e.Descr.includes('wap')
+          ) {
+            data.VM = e.Rate
+          }
+        })
+        data.CPU /= cpu > 0 ? cpu : 1
+        this.$showHrSummary('chart', data)
+      })
+    },
     showCPUChart() {
-      this.exportTitle = ''
+      this.chartTitle = 'CPU使用率'
+      this.chartDialog = true
+      this.$nextTick(() => {
+        const list = []
+        this.system.forEach((e) => {
+          if (e.Name.includes('CPU')) {
+            list.unshift({
+              Name: e.Name,
+              Value: e.Value,
+            })
+          }
+        })
+        this.$showHrBarChart('chart', 'CPU使用率', '%', list)
+      })
+    },
+    showStorageChart() {
+      this.chartTitle = 'ストレージ使用率'
+      this.chartDialog = true
+      this.$nextTick(() => {
+        const list = []
+        this.storage.forEach((e) => {
+          const t = this.getStorageTypeName(e.Type)
+          if (!t.includes('その他')) {
+            list.unshift({
+              Name: e.Descr + '(' + t + ')',
+              Value: e.Rate,
+            })
+          }
+        })
+        this.$showHrBarChart('chart', 'ストレージ使用率', '%', list)
+      })
+    },
+    showProcChart(bCPU) {
+      if (bCPU) {
+        this.chartTitle = 'プロセス単位のCPU使用量'
+      } else {
+        this.chartTitle = 'プロセス単位のMem使用量'
+      }
+      this.chartDialog = true
+      let max = 0
+      this.$nextTick(() => {
+        const list = []
+        this.process.forEach((e) => {
+          if (!this.filterProcess(e)) {
+            return
+          }
+          const v = bCPU ? e.CPU / 100.0 : e.Mem * 1024
+          if (max < v) {
+            max = v
+          }
+          list.push({
+            Name: e.Name + '(' + e.PID + ')',
+            Value: v,
+          })
+        })
+        list.sort((a, b) => {
+          if (a.Value < b.Value) return -1
+          if (a.Value > b.Value) return 1
+          return 0
+        })
+        while (list.length > 50) {
+          list.shift()
+        }
+        this.$showHrBarChart(
+          'chart',
+          bCPU ? 'CPU使用量' : 'Mem使用量',
+          bCPU ? '秒' : 'Bytes',
+          list,
+          max
+        )
+      })
+    },
+    formatCount(n) {
+      return numeral(n).format('0,0')
+    },
+    formatSec(n) {
+      return numeral(n).format('0,0.00')
+    },
+    formatBytes(n) {
+      return numeral(n).format('0.000b')
     },
   },
 }
