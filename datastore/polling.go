@@ -106,7 +106,6 @@ func DeletePolling(pollingID string) error {
 		}
 		return true
 	})
-	ClearPollingLog(pollingID)
 	DeleteAIResult(pollingID)
 	return nil
 }
@@ -159,6 +158,9 @@ func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bo
 		}
 		c := b.Cursor()
 		for k, v := c.Seek([]byte(sk)); k != nil; k, v = c.Next() {
+			if !bytes.Contains(v, []byte(pollingID)) {
+				continue
+			}
 			var e PollingLogEnt
 			err := json.Unmarshal(v, &e)
 			if err != nil {
@@ -182,6 +184,7 @@ func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bo
 	})
 }
 
+// ClearPollingLog : ポーリングログを削除する
 func ClearPollingLog(pollingID string) error {
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingLogs"))
@@ -193,12 +196,48 @@ func ClearPollingLog(pollingID string) error {
 			if !bytes.Contains(v, []byte(pollingID)) {
 				continue
 			}
+			var e PollingLogEnt
+			err := json.Unmarshal(v, &e)
+			if err != nil {
+				log.Printf("ClearPollingLog log err=%v", err)
+				continue
+			}
+			if e.PollingID != pollingID {
+				continue
+			}
 			_ = c.Delete()
 		}
-		b = tx.Bucket([]byte("ai"))
-		if b != nil {
-			_ = b.Delete([]byte(pollingID))
+		return nil
+	})
+}
+
+// ClearDeletedPollingLogs : ポーリングログの削除をまとめて行う
+func ClearDeletedPollingLogs(ids []string) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("pollingLogs"))
+		if b == nil {
+			return fmt.Errorf("bucket pollingLogs not found")
 		}
+		c := b.Cursor()
+		del := 0
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			for _, id := range ids {
+				if bytes.Contains(v, []byte(id)) {
+					var e PollingLogEnt
+					err := json.Unmarshal(v, &e)
+					if err != nil {
+						log.Printf("ClearDeletedPollingLogs err=%v", err)
+					} else {
+						if e.PollingID == id {
+							_ = c.Delete()
+							del++
+							break
+						}
+					}
+				}
+			}
+		}
+		log.Printf("ClearDeletedPollingLogs del=%d", del)
 		return nil
 	})
 }

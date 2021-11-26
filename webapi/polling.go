@@ -59,6 +59,7 @@ func deletePollings(c echo.Context) error {
 			})
 		}
 	}
+	go datastore.ClearDeletedPollingLogs(ids)
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",
 		Level: "info",
@@ -315,5 +316,6 @@ func deletePollingLog(c echo.Context) error {
 	if err := datastore.ClearPollingLog(id); err != nil {
 		return echo.ErrInternalServerError
 	}
+	datastore.DeleteAIResult(id)
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
