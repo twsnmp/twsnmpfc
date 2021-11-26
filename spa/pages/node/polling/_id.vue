@@ -1,17 +1,7 @@
 <template>
   <v-row justify="center">
     <v-card min-width="1000px" width="95%">
-      <v-card-title>
-        ポーリング - {{ node.Name }}
-        <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
-      </v-card-title>
+      <v-card-title> ポーリング - {{ node.Name }} </v-card-title>
       <v-alert v-model="deleteError" color="error" dense dismissible>
         ポーリングを削除できませんでした
       </v-alert>
@@ -22,13 +12,13 @@
         v-model="selectedPollings"
         :headers="headers"
         :items="pollings"
-        :search="search"
         item-key="ID"
         show-select
         dense
-        :items-per-page="15"
-        sort-by="State"
-        sort-asec
+        :items-per-page="conf.itemsPerPage"
+        :sort-by="conf.sortBy"
+        :sort-desc="conf.sortDesc"
+        :options.sync="options"
       >
         <template #[`item.State`]="{ item }">
           <v-icon :color="$getStateColor(item.State)">{{
@@ -59,6 +49,25 @@
           <v-icon small @click="editPollingFunc(item)"> mdi-pencil </v-icon>
           <v-icon small @click="deletePollingFunc(item)"> mdi-delete </v-icon>
           <v-icon small @click="copyPolling(item)"> mdi-content-copy </v-icon>
+        </template>
+        <template #[`body.append`]>
+          <tr>
+            <td></td>
+            <td>
+              <v-select v-model="conf.state" :items="stateList" label="State">
+              </v-select>
+            </td>
+            <td>
+              <v-text-field v-model="conf.name" label="name"></v-text-field>
+            </td>
+            <td></td>
+            <td>
+              <v-select v-model="conf.polltype" :items="typeList" label="type">
+              </v-select>
+            </td>
+            <td></td>
+            <td></td>
+          </tr>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -391,15 +400,38 @@ export default {
       editPolling: {},
       deletePolling: {},
       extractorList: [],
-      search: '',
       headers: [
-        { text: '状態', value: 'State', width: '12%' },
-        { text: '名前', value: 'Name', width: '26%' },
-        { text: 'レベル', value: 'Level', width: '14%' },
-        { text: '種別', value: 'Type', width: '14%' },
-        { text: 'ログ', value: 'LogMode', width: '6%' },
+        {
+          text: '状態',
+          value: 'State',
+          width: '12%',
+          filter: (value) => {
+            if (!this.conf.state) return true
+            return this.conf.state === value
+          },
+        },
+        {
+          text: '名前',
+          value: 'Name',
+          width: '23%',
+          filter: (value) => {
+            if (!this.conf.name) return true
+            return value.includes(this.conf.name)
+          },
+        },
+        { text: 'レベル', value: 'Level', width: '15%' },
+        {
+          text: '種別',
+          value: 'Type',
+          width: '10%',
+          filter: (value) => {
+            if (!this.conf.polltype) return true
+            return this.conf.polltype === value
+          },
+        },
+        { text: 'ログ', value: 'LogMode', width: '10%' },
         { text: '最終実施', value: 'TimeStr', width: '15%' },
-        { text: '操作', value: 'actions', width: '12%' },
+        { text: '操作', value: 'actions', width: '10%' },
       ],
       pollings: [],
       autoAdd: false,
@@ -437,6 +469,45 @@ export default {
       newLevel: 'off',
       setPollingLogModeDialog: false,
       newLogMode: 0,
+      stateList: [
+        { text: '', value: '' },
+        { text: '重度', value: 'high' },
+        { text: '軽度', value: 'low' },
+        { text: '注意', value: 'warn' },
+        { text: '正常', value: 'normal' },
+        { text: '復帰', value: 'repair' },
+        { text: '不明', value: 'unknown' },
+      ],
+      typeList: [
+        { text: '', value: '' },
+        { text: 'PING', value: 'ping' },
+        { text: 'SNMP', value: 'snmp' },
+        { text: 'TCP', value: 'tcp' },
+        { text: 'HTTP', value: 'http' },
+        { text: 'TLS', value: 'tls' },
+        { text: 'DNS', value: 'dns' },
+        { text: 'NTP', value: 'ntp' },
+        { text: 'SYSLOG', value: 'syslog' },
+        { text: 'SNMP TRAP', value: 'trap' },
+        { text: 'NetFlow', value: 'netflow' },
+        { text: 'IPFIX', value: 'ipfix' },
+        { text: 'Command', value: 'cmd' },
+        { text: 'SSH', value: 'ssh' },
+        { text: 'Report', value: 'report' },
+        { text: 'TWSNMP', value: 'twsnmp' },
+        { text: 'VMware', value: 'vmware' },
+      ],
+      conf: {
+        state: '',
+        node: '',
+        name: '',
+        polltype: '',
+        sortBy: 'State',
+        sortDesc: false,
+        page: 1,
+        itemsPerPage: 15,
+      },
+      options: {},
     }
   },
   async fetch() {
@@ -468,6 +539,19 @@ export default {
     hasSelectedPollings() {
       return this.selectedPollings.length > 0
     },
+  },
+  created() {
+    const c = this.$store.state.pollings.conf
+    if (c && c.sortBy) {
+      Object.assign(this.conf, c)
+    }
+  },
+  beforeDestroy() {
+    this.conf.sortBy = this.options.sortBy[0]
+    this.conf.sortDesc = this.options.sortDesc[0]
+    this.conf.page = this.options.page
+    this.conf.itemsPerPage = this.options.itemsPerPage
+    this.$store.commit('pollings/setConf', this.conf)
   },
   methods: {
     editPollingFunc(item) {
