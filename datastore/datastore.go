@@ -90,8 +90,9 @@ var (
 	ouiMap     map[string]string
 	tlsCSMap   map[string]string
 
-	logSize     int64
-	compLogSize int64
+	logSize      int64
+	compLogSize  int64
+	mailTemplate map[string]string
 )
 
 const (
@@ -225,7 +226,19 @@ func loadDataFromFS(fs http.FileSystem) error {
 		}
 		r.Close()
 	}
+	loadMailTemplateToMap("test", fs)
+	loadMailTemplateToMap("notify", fs)
+	loadMailTemplateToMap("report", fs)
 	return nil
+}
+
+func loadMailTemplateToMap(t string, fs http.FileSystem) {
+	if r, err := fs.Open("/conf/mail_" + t + ".html"); err == nil {
+		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+			mailTemplate[t] = string(b)
+		}
+		r.Close()
+	}
 }
 
 func openDB(path string) error {

@@ -53,6 +53,16 @@
             required
           />
           <v-text-field v-model="notify.Subject" label="件名" required />
+          <v-text-field
+            v-model="notify.URL"
+            label="メール文面に含めるTWSNMP FCのURL"
+            required
+          />
+          <v-switch
+            v-model="notify.HTMLMail"
+            label="HTML形式でメールを送信する"
+            dense
+          ></v-switch>
           <v-slider
             v-model="notify.Interval"
             label="送信間隔(分)"
@@ -130,6 +140,8 @@ export default {
         CheckUpdate: false,
         NotifyRepair: false,
         NotifyLowScore: false,
+        HTMLMail: false,
+        URL: '',
       },
       error: false,
       saved: false,
@@ -152,6 +164,7 @@ export default {
         .post('/api/conf/notify', this.notify)
         .then((r) => {
           this.saved = true
+          this.$fetch()
         })
         .catch((e) => {
           this.error = true

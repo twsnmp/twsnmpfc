@@ -3,6 +3,9 @@ package datastore
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"go.etcd.io/bbolt"
 )
@@ -21,6 +24,8 @@ type NotifyConfEnt struct {
 	CheckUpdate        bool
 	NotifyRepair       bool
 	NotifyLowScore     bool
+	URL                string
+	HTMLMail           bool
 }
 
 func SaveNotifyConf() error {
@@ -38,4 +43,15 @@ func SaveNotifyConf() error {
 		}
 		return b.Put([]byte("notifyConf"), s)
 	})
+}
+
+func LoadMailTemplate(t string) string {
+	f := fmt.Sprintf("mail_%s.html", t)
+	if r, err := os.Open(filepath.Join(dspath, f)); err == nil {
+		b, err := ioutil.ReadAll(r)
+		if err == nil {
+			return string(b)
+		}
+	}
+	return mailTemplate[t]
 }

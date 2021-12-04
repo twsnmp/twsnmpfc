@@ -2,6 +2,7 @@ package webapi
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -24,6 +25,9 @@ func getNotifyConf(c echo.Context) error {
 	r.CheckUpdate = datastore.NotifyConf.CheckUpdate
 	r.NotifyRepair = datastore.NotifyConf.NotifyRepair
 	r.NotifyLowScore = datastore.NotifyConf.NotifyLowScore
+	r.URL = datastore.NotifyConf.URL
+	r.HTMLMail = datastore.NotifyConf.HTMLMail
+	log.Println(r.URL)
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -44,8 +48,13 @@ func postNotifyConf(c echo.Context) error {
 	datastore.NotifyConf.CheckUpdate = nc.CheckUpdate
 	datastore.NotifyConf.NotifyRepair = nc.NotifyRepair
 	datastore.NotifyConf.NotifyLowScore = nc.NotifyLowScore
+	datastore.NotifyConf.URL = nc.URL
+	datastore.NotifyConf.HTMLMail = nc.HTMLMail
 	if nc.Password != "" {
 		datastore.NotifyConf.Password = nc.Password
+	}
+	if nc.URL == "" {
+		datastore.NotifyConf.URL = fmt.Sprintf("%s://%s", c.Scheme(), c.Request().Host)
 	}
 	if err := datastore.SaveNotifyConf(); err != nil {
 		return echo.ErrBadRequest
@@ -63,6 +72,9 @@ func postNotifyTest(c echo.Context) error {
 	if err := c.Bind(nc); err != nil {
 		return echo.ErrBadRequest
 	}
+	if nc.URL == "" {
+		nc.URL = fmt.Sprintf("%s://%s", c.Scheme(), c.Request().Host)
+	}
 	if err := notify.SendTestMail(nc); err != nil {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "user",
@@ -76,5 +88,6 @@ func postNotifyTest(c echo.Context) error {
 		Level: "info",
 		Event: "試験メールを送信しました",
 	})
+	c.Scheme()
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
