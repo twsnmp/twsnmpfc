@@ -110,24 +110,24 @@
     </tr>
     <tr class="content">
       <td style="padding:5px 20px;">
-        <h3>【現在のマップ情報】</h3>
+        <h3>【イベントログ】</h3>
         <table class="infoTable">
           <tr>
-            <th width="30%">項目</th>
-            <th>値</th>
+            <th width="10%">状態</th>
+            <th width="15%">発生日時</th>
+            <th width="10%">種別</th>
+            <th width="15%">関連ノード</th>
+            <th width="50%">イベント</th>
           </tr>
+          {{ range .Logs }}
           <tr>
-            <td>マップ名</td>
-            <td>{{.MapName}}</td>
+            <td class="{{.Level}}">{{.Level | levelName}}</td>
+            <td>{{.Time | formatLogTime }}</td>
+            <td>{{.Type}}</td>
+            <td>{{.NodeName}}</td>
+            <td>{{.Event}}</td>
           </tr>
-          <tr>
-            <td>マップ状態</td>
-            <td class="high">{{.MapState}}</td>
-          </tr>
-          <tr>
-            <td>ノード状態別の数</td>
-            <td>{{.NodeCount}}</td>
-          </tr>
+          {{ end }}
         </table>
       </td>
     </tr>
