@@ -24,6 +24,7 @@ type NotifyConfEnt struct {
 	CheckUpdate        bool
 	NotifyRepair       bool
 	NotifyLowScore     bool
+	NotifyNewInfo      bool
 	URL                string
 	HTMLMail           bool
 }

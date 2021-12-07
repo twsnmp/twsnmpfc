@@ -2,7 +2,6 @@ package webapi
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -14,7 +13,6 @@ func getNotifyConf(c echo.Context) error {
 	r := new(datastore.NotifyConfEnt)
 	r.MailServer = datastore.NotifyConf.MailServer
 	r.User = datastore.NotifyConf.User
-	//	r.Password = datastore.NotifyConf.Password
 	r.InsecureSkipVerify = datastore.NotifyConf.InsecureSkipVerify
 	r.MailTo = datastore.NotifyConf.MailTo
 	r.MailFrom = datastore.NotifyConf.MailFrom
@@ -25,9 +23,9 @@ func getNotifyConf(c echo.Context) error {
 	r.CheckUpdate = datastore.NotifyConf.CheckUpdate
 	r.NotifyRepair = datastore.NotifyConf.NotifyRepair
 	r.NotifyLowScore = datastore.NotifyConf.NotifyLowScore
+	r.NotifyNewInfo = datastore.NotifyConf.NotifyNewInfo
 	r.URL = datastore.NotifyConf.URL
 	r.HTMLMail = datastore.NotifyConf.HTMLMail
-	log.Println(r.URL)
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -48,6 +46,7 @@ func postNotifyConf(c echo.Context) error {
 	datastore.NotifyConf.CheckUpdate = nc.CheckUpdate
 	datastore.NotifyConf.NotifyRepair = nc.NotifyRepair
 	datastore.NotifyConf.NotifyLowScore = nc.NotifyLowScore
+	datastore.NotifyConf.NotifyNewInfo = nc.NotifyNewInfo
 	datastore.NotifyConf.URL = nc.URL
 	datastore.NotifyConf.HTMLMail = nc.HTMLMail
 	if nc.Password != "" {

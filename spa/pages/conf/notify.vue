@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="600">
+    <v-card min-width="800">
       <v-form>
         <v-card-title primary-title> 通知設定 </v-card-title>
         <v-alert v-if="$fetchState.error" color="error" dense>
@@ -24,19 +24,25 @@
             label="メールサーバー"
             required
           />
-          <v-text-field
-            v-model="notify.User"
-            autocomplete="off"
-            label="ユーザーID"
-            required
-          />
-          <v-text-field
-            v-model="notify.Password"
-            type="password"
-            autocomplete="off"
-            label="パスワード"
-            required
-          />
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="notify.User"
+                autocomplete="off"
+                label="ユーザーID"
+                required
+              />
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="notify.Password"
+                type="password"
+                autocomplete="off"
+                label="パスワード"
+                required
+              />
+            </v-col>
+          </v-row>
           <v-switch
             v-model="notify.InsecureSkipVerify"
             label="サーバー証明書を検証しない"
@@ -82,24 +88,49 @@
               ></v-text-field>
             </template>
           </v-slider>
-          <v-select v-model="notify.Level" :items="$levelList" label="レベル">
-          </v-select>
-          <v-switch
-            v-model="notify.NotifyRepair"
-            label="復帰した時も通知する"
-            dense
-          ></v-switch>
-          <v-switch
-            v-model="notify.Report"
-            label="定期レポートを送信する"
-            dense
-          ></v-switch>
-          <v-switch
-            v-if="notify.Report"
-            v-model="notify.NotifyLowScore"
-            label="信用スコア下位リストも送信"
-            dense
-          ></v-switch>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="notify.Level"
+                :items="$levelList"
+                label="レベル"
+              >
+              </v-select>
+            </v-col>
+            <v-col></v-col>
+            <v-col>
+              <v-switch
+                v-model="notify.NotifyRepair"
+                label="復帰した時も通知する"
+                dense
+              ></v-switch>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-switch
+                v-model="notify.Report"
+                label="定期レポートを送信"
+                dense
+              ></v-switch>
+            </v-col>
+            <v-col>
+              <v-switch
+                v-if="notify.Report"
+                v-model="notify.NotifyNewInfo"
+                label="最新情報リスト"
+                dense
+              ></v-switch>
+            </v-col>
+            <v-col>
+              <v-switch
+                v-if="notify.Report"
+                v-model="notify.NotifyLowScore"
+                label="信用スコア下位リスト"
+                dense
+              ></v-switch>
+            </v-col>
+          </v-row>
           <v-switch
             v-model="notify.CheckUpdate"
             label="更新版を確認する"
@@ -140,6 +171,7 @@ export default {
         CheckUpdate: false,
         NotifyRepair: false,
         NotifyLowScore: false,
+        NotifyNewInfo: false,
         HTMLMail: false,
         URL: '',
       },

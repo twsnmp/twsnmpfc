@@ -63,14 +63,14 @@
     }
     table.infoTable {
       margin: 5px 0 5px 0;
-      width: 90%;
-      text-align: center;
+      width: 95%;
       border-collapse: collapse;
       border-spacing: 0;
       font-size: 12px;
     }
     table.infoTable th {
       padding: 2px;
+      text-align: center;
       background: #ccc;
       border: solid 1px #333;
     }
@@ -80,23 +80,29 @@
     }
     td.high {
       color: #FFFFFF;
+      text-align: center;
       background-color: #e31a1c;
     }
     td.low {
+      text-align: center;
       background-color: #fb9a99;
     }
     td.warn {
+      text-align: center;
       background-color: #dfdf22;
     }
     td.normal {
+      text-align: center;
       background-color: #33a02c;
     }
     td.repair,
     td.info {
+      text-align: center;
       color: #FFFFFF;
       background-color: #1f78b4;
     }
     td.unkown {
+      text-align: center;
       background-color: #777;
     }
   </style>
@@ -110,27 +116,302 @@
     </tr>
     <tr class="content">
       <td style="padding:5px 20px;">
-        <h3>【現在のマップ情報】</h3>
+        <h3>【マップ情報】</h3>
         <table class="infoTable">
           <tr>
             <th width="30%">項目</th>
             <th>値</th>
           </tr>
+          {{ range .Info }}
           <tr>
-            <td>マップ名</td>
-            <td>{{.MapName}}</td>
+            <td>{{.Name}}</td>
+            <td class="{{.Class}}" style="text-align: left;">{{.Value}}</td>
           </tr>
-          <tr>
-            <td>マップ状態</td>
-            <td class="high">{{.MapState}}</td>
-          </tr>
-          <tr>
-            <td>ノード状態別の数</td>
-            <td>{{.NodeCount}}</td>
-          </tr>
+          {{ end }}
         </table>
       </td>
     </tr>
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【センサー情報】</h3>
+        <table class="infoTable">
+          <tr>
+            <th width="10%">状態</th>
+            <th width="25%">ホスト</th>
+            <th width="15%">種別</th>
+            <th width="25%">パラメータ</th>
+            <th width="10%">総数</th>
+            <th width="15%">最終確認</th>
+          </tr>
+          {{ range .Sensors }}
+          <tr>
+            <td class="{{.State}}">{{.State | levelName}}</td>
+            <td>{{.Host}}</td>
+            <td>{{.Type}}</td>
+            <td>{{.Param}}</td>
+            <td style="text-align: right;">{{.Total | formatCount}}</td>
+            <td>{{.LastTime | formatLogTime}}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </td>
+    </tr>
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【AI分析情報】</h3>
+        <table class="infoTable">
+          <tr>
+            <th width="15%">異常スコア</th>
+            <th width="25%">ノード名</th>
+            <th width="35%">ポーリング名</th>
+            <th width="10%">分析数</th>
+            <th width="15%">最終確認</th>
+          </tr>
+          {{ range .AIList }}
+          <tr>
+            <td class="{{.LastScore | aiScoreClass}}">{{.LastScore | formatScore}}</td>
+            <td>{{.NodeName}}</td>
+            <td>{{.PollingName}}</td>
+            <td style="text-align: right;">{{ .Count | formatCount}}</td>
+            <td>{{ .LastTime  | formatAITime}}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </td>
+    </tr>
+    {{ if .NotifyNewInfo }}
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【48時間以内に新しく発見したデバイス】</h3>
+        <table class="infoTable">
+          <tr>
+            <th width="10%">スコア</th>
+            <th width="20%">名前</th>
+            <th width="15%">IP</th>
+            <th width="15%">MAC</th>
+            <th width="25%">ベンダー</th>
+            <th width="15%">初回確認</th>
+          </tr>
+          {{ range .NewDevices }}
+          <tr>
+            <td class="{{.Score| scoreClass}}">{{.Score | formatScore}}</td>
+            <td>{{.Name}}</td>
+            <td>{{.IP}}</td>
+            <td>{{.ID}}</td>
+            <td>{{.Vendor}}</td>
+            <td>{{.FirstTime | formatLogTime}}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </td>
+    </tr>
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【48時間以内に新しく発見したユーザーID】</h3>
+        <table class="infoTable">
+          <tr>
+            <th width="10%">信用スコア</th>
+            <th width="25%">ユーザーID</th>
+            <th width="15%">サーバー</th>
+            <th width="25%">サーバーIP</th>
+            <th width="10%">クライアント数</th>
+            <th width="15%">初回確認</th>
+          </tr>
+          {{ range .NewUsers }}
+          <tr>
+            <td class="{{.Score| scoreClass}}">{{.Score | formatScore}}</td>
+            <td>{{.UserID}}</td>
+            <td>{{.ServerName}}</td>
+            <td>{{.Server}}</td>
+            <td style="text-align: right;">{{len .ClientMap}}</td>
+            <td>{{.FirstTime | formatLogTime}}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </td>
+    </tr>
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【24時間以内に新しく発見したIPアドレス】</h3>
+        <table class="infoTable">
+          <tr>
+            <th width="10%">スコア</th>
+            <th width="15%">IP</th>
+            <th width="30%">名前</th>
+            <th width="15%">MAC</th>
+            <th width="25%">位置</th>
+            <th width="15%">初回確認</th>
+          </tr>
+          {{ range .NewIPs }}
+          <tr>
+            <td class="{{.Score| scoreClass}}">{{.Score | formatScore}}</td>
+            <td>{{.IP}}</td>
+            <td>{{.Name}}</td>
+            <td>{{.MAC}}</td>
+            <td>{{.Loc}}</td>
+            <td>{{.FirstTime | formatLogTime}}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </td>
+    </tr>
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【24時間以内に新しく発見したWifi AP】</h3>
+        <table class="infoTable">
+          <tr>
+            <th width="15%">RSSI(min/avg/max)</th>
+            <th width="15%">BSSID</th>
+            <th width="15%">SSID</th>
+            <th width="20%">検知ホスト</th>
+            <th width="10%">チャネル</th>
+            <th width="10%">検知回数</th>
+            <th width="15%">初回確認</th>
+          </tr>
+          {{ range .NewWifiAPs }}
+          <tr>
+            <td class="{{ .RSSI | rssiClass}}">{{.RSSI | formatRSSI }}</td>
+            <td>{{.BSSID}}</td>
+            <td>{{.SSID}}</td>
+            <td>{{.Host}}</td>
+            <td style="text-align: right;">{{.Channel}}</td>
+            <td style="text-align: right;">{{ .Count | formatCount}}</td>
+            <td>{{.FirstTime | formatLogTime}}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </td>
+    </tr>
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【24時間以内に新しく発見したBluetooth デバイス】</h3>
+        <table class="infoTable">
+          <tr>
+            <th width="10%">RSSI</th>
+            <th width="10%">アドレス</th>
+            <th width="15%">名前</th>
+            <th width="15%">検知ホスト</th>
+            <th width="10%">アドレス種別</th>
+            <th width="15%">ベンダー</th>
+            <th width="10%">回数</th>
+            <th width="15%">初回確認</th>
+          </tr>
+          {{ range .NewBlueDevcies }}
+          <tr>
+            <td class="{{ .RSSI | rssiClass}}">{{.RSSI | formatRSSI }}</td>
+            <td>{{.Address}}</td>
+            <td>{{.Name}}</td>
+            <td>{{.Host}}</td>
+            <td>{{.AddressType}}</td>
+            <td>{{.Vendor}}</td>
+            <td style="text-align: right;">{{.Count | formatCount}}</td>
+            <td>{{.FirstTime | formatLogTime}}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </td>
+    </tr>
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【最新24時間の障害ログ】</h3>
+        <table class="infoTable">
+          <tr>
+            <th width="10%">状態</th>
+            <th width="15%">発生日時</th>
+            <th width="10%">種別</th>
+            <th width="15%">関連ノード</th>
+            <th width="50%">イベント</th>
+          </tr>
+          {{ range .Logs }}
+          <tr>
+            <td class="{{.Level}}">{{.Level | levelName}}</td>
+            <td>{{.Time | formatLogTime }}</td>
+            <td>{{.Type}}</td>
+            <td>{{.NodeName}}</td>
+            <td>{{.Event}}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </td>
+    </tr>
+    {{ end }}
+    {{ if .NotifyLowScore }}
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【信用スコアが下位10%のデバイス】</h3>
+        <table class="infoTable">
+          <tr>
+            <th width="10%">スコア</th>
+            <th width="20%">名前</th>
+            <th width="15%">IP</th>
+            <th width="15%">MAC</th>
+            <th width="25%">ベンダー</th>
+            <th width="15%">最終確認</th>
+          </tr>
+          {{ range .BadDevices }}
+          <tr>
+            <td class="{{.Score| scoreClass}}">{{.Score | formatScore}}</td>
+            <td>{{.Name}}</td>
+            <td>{{.IP}}</td>
+            <td>{{.ID}}</td>
+            <td>{{.Vendor}}</td>
+            <td>{{.LastTime | formatLogTime}}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </td>
+    </tr>
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【信用スコアが下位10%のユーザーID】</h3>
+        <table class="infoTable">
+          <tr>
+            <th width="10%">信用スコア</th>
+            <th width="25%">ユーザーID</th>
+            <th width="15%">サーバー</th>
+            <th width="25%">サーバーIP</th>
+            <th width="10%">クライアント数</th>
+            <th width="15%">最終確認</th>
+          </tr>
+          {{ range .BadUsers }}
+          <tr>
+            <td class="{{.Score| scoreClass}}">{{.Score | formatScore}}</td>
+            <td>{{.UserID}}</td>
+            <td>{{.ServerName}}</td>
+            <td>{{.Server}}</td>
+            <td style="text-align: right;">{{len .ClientMap}}</td>
+            <td>{{.FirstTime | formatLogTime}}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </td>
+    </tr>
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【信用スコアが下位1%のIPアドレス】</h3>
+        <table class="infoTable">
+          <tr>
+            <th width="10%">スコア</th>
+            <th width="15%">IP</th>
+            <th width="30%">名前</th>
+            <th width="15%">MAC</th>
+            <th width="25%">位置</th>
+            <th width="15%">最終確認</th>
+          </tr>
+          {{ range .BadIPs }}
+          <tr>
+            <td class="{{.Score| scoreClass}}">{{.Score | formatScore}}</td>
+            <td>{{.IP}}</td>
+            <td>{{.Name}}</td>
+            <td>{{.MAC}}</td>
+            <td>{{.Loc}}</td>
+            <td>{{.FirstTime | formatLogTime}}</td>
+          </tr>
+          {{ end }}
+        </table>
+      </td>
+    </tr>
+    {{ end }}
     <tr class="totwsnmp">
       <td style="padding: 10px 0 10px 0;">
         <table bgcolor="#1565C0" border="0" cellspacing="0" cellpadding="0" class="buttonwrapper">

@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
@@ -199,4 +200,66 @@ func levelName(s string) string {
 
 func formatLogTime(t int64) string {
 	return time.Unix(0, t).Local().Format("2006/01/02 15:04:05")
+}
+func formatAITime(t int64) string {
+	return time.Unix(t, 0).Local().Format("2006/01/02 15:04:05")
+}
+
+func formatRSSI(rssi []datastore.RSSIEnt) string {
+	min, mean, max := getRSSIStats(rssi)
+	return fmt.Sprintf("%.0f/%.1f/%.0f", min, mean, max)
+}
+
+func scoreClass(s float64) string {
+	if s >= 50 {
+		return "info"
+	} else if s > 42 {
+		return "warn"
+	} else if s > 33 {
+		return "low"
+	}
+	return "high"
+}
+
+func rssiClass(rssi []datastore.RSSIEnt) string {
+	s := 0
+	if len(rssi) > 0 {
+		s = rssi[len(rssi)-1].Value
+	}
+	if s >= 0 {
+		return "unkown"
+	} else if s > -70 {
+		return "info"
+	} else if s > -80 {
+		return "warn"
+	}
+	return "high"
+}
+
+func aiScoreClass(s float64) string {
+	if s > 100.0 {
+		s = 1.0
+	} else {
+		s = 100.0 - s
+	}
+	return scoreClass(s)
+}
+
+func formatScore(s float64) string {
+	return fmt.Sprintf("%.2f", s)
+}
+
+func formatCount(i interface{}) string {
+	c := int64(0)
+	switch v := i.(type) {
+	case int64:
+		c = v
+	case int:
+		c = int64(v)
+	case float32:
+		c = int64(v)
+	case float64:
+		c = int64(v)
+	}
+	return humanize.Comma(c)
 }
