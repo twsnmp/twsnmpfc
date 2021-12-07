@@ -75,6 +75,13 @@ func (writer logWriter) Write(bytes []byte) (int, error) {
 func main() {
 	st := time.Now()
 	log.Printf("start twsnmpfc version=%s(%s)", version, commit)
+	log.Println("config")
+	flag.VisitAll(func(f *flag.Flag) {
+		// password以外の起動パラメータ、環境変数をログに記録
+		if f.Name != "password" {
+			log.Printf("%s='%s'", f.Name, f.Value.String())
+		}
+	})
 	if cpuprofile != "" {
 		f, err := os.Create(cpuprofile)
 		if err != nil {
