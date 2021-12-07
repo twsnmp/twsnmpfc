@@ -226,6 +226,7 @@ func loadDataFromFS(fs http.FileSystem) error {
 		}
 		r.Close()
 	}
+	mailTemplate = make(map[string]string)
 	loadMailTemplateToMap("test", fs)
 	loadMailTemplateToMap("notify", fs)
 	loadMailTemplateToMap("report", fs)
@@ -235,6 +236,7 @@ func loadDataFromFS(fs http.FileSystem) error {
 func loadMailTemplateToMap(t string, fs http.FileSystem) {
 	if r, err := fs.Open("/conf/mail_" + t + ".html"); err == nil {
 		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+			log.Printf("load mail template=%s", t)
 			mailTemplate[t] = string(b)
 		}
 		r.Close()
