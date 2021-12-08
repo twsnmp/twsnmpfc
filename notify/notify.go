@@ -82,9 +82,9 @@ func checkNotify(lastLog string) string {
 		if nl == 3 {
 			return fmt.Sprintf("%016x", list[0].Time)
 		}
-		body, repair := getNotifyBody(list, nl)
-		if len(body) > 0 {
-			err := sendMail(datastore.NotifyConf.Subject+"(障害)", body)
+		failure, repair := getNotifyBody(list, nl)
+		if failure != "" {
+			err := sendMail(datastore.NotifyConf.Subject+"(障害)", failure)
 			r := ""
 			if err != nil {
 				log.Printf("send mail err=%v", err)
@@ -96,7 +96,7 @@ func checkNotify(lastLog string) string {
 				Event: fmt.Sprintf("通知メール送信 %s", r),
 			})
 		}
-		if len(repair) > 0 {
+		if repair != "" {
 			err := sendMail(datastore.NotifyConf.Subject+"(復帰)", repair)
 			r := ""
 			if err != nil {
@@ -142,7 +142,14 @@ func getNotifyBody(list []*datastore.EventLogEnt, nl int) (string, string) {
 		}
 		failure = append(failure, l)
 	}
-	return eventLogListToString(false, failure), eventLogListToString(true, repair)
+	f, r := "", ""
+	if len(failure) > 0 {
+		f = eventLogListToString(false, failure)
+	}
+	if len(repair) > 0 {
+		r = eventLogListToString(true, repair)
+	}
+	return f, r
 }
 
 func eventLogListToString(repair bool, list []*datastore.EventLogEnt) string {
