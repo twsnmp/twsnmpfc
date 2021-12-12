@@ -51,3 +51,8 @@ func postDiscoverStop(c echo.Context) error {
 	discover.StopDiscover()
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
+
+func deleteDiscoverStat(c echo.Context) error {
+	discover.ClearStat()
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}

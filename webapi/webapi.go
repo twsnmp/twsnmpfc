@@ -106,6 +106,7 @@ func setup(p *WebAPI) {
 	r.DELETE("/logs", deleteLogs)
 	r.DELETE("/arp", deleteArp)
 	r.GET("/discover", getDiscover)
+	r.DELETE("/discover/stat", deleteDiscoverStat)
 	r.POST("/discover/start", postDiscoverStart)
 	r.POST("/discover/stop", postDiscoverStop)
 	r.GET("/nodes", getNodes)

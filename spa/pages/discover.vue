@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="discover.Stat.Running" min-width="600px" width="600px">
+  <v-card v-if="discover.Stat.Total > 0" min-width="600px" width="600px">
     <v-card-title primary-title> 自動発見 </v-card-title>
     <v-list-item three-line>
       <v-list-item-content>
@@ -90,9 +90,19 @@
     </v-list-item>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="error" :disabled="reqStop" dark @click="stop">
+      <v-btn
+        v-if="discover.Stat.Running"
+        color="error"
+        :disabled="reqStop"
+        dark
+        @click="stop"
+      >
         <v-icon>mdi-stop</v-icon>
         停止
+      </v-btn>
+      <v-btn v-else color="normal" @click="clear">
+        <v-icon>mdi-delete</v-icon>
+        完了
       </v-btn>
       <v-btn color="normal" to="/map">
         <v-icon>mdi-lan</v-icon>
@@ -389,6 +399,10 @@ export default {
     stop() {
       this.reqStop = true
       this.$axios.post('/api/discover/stop', {})
+    },
+    async clear() {
+      await this.$axios.delete('/api/discover/stat')
+      this.$fetch()
     },
     update() {
       if (this.discover.Stat.Running) {

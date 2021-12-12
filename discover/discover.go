@@ -175,6 +175,23 @@ func StartDiscover() error {
 	return nil
 }
 
+func ClearStat() {
+	if Stat.Running {
+		return
+	}
+	Stat.Total = 0
+	Stat.Sent = 0
+	Stat.Found = 0
+	Stat.Snmp = 0
+	Stat.Web = 0
+	Stat.Mail = 0
+	Stat.SSH = 0
+	Stat.File = 0
+	Stat.RDP = 0
+	Stat.StartTime = 0
+	Stat.Now = 0
+}
+
 func getSnmpInfo(t string, dent *discoverInfoEnt) {
 	agent := &gosnmp.GoSNMP{
 		Target:             t,
