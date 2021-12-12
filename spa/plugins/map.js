@@ -3,6 +3,7 @@ import P5 from 'p5'
 const MAP_SIZE_X = 2500
 const MAP_SIZE_Y = 5000
 let mapRedraw = true
+let readOnly = false
 
 let mapCallBack
 
@@ -30,10 +31,11 @@ const setIconCodeMap = (list) => {
   iconCodeMap.unknown = String.fromCodePoint(0xF0A39)
 }
 
-const setMAP = (m,url) => {
+const setMAP = (m,url,ro) => {
   if (!url || url === '/') {
     url = window.location.origin
   }
+  readOnly = ro
   nodes = m.Nodes
   lines = m.Lines
   backImage = m.MapConf.BackImage
@@ -170,6 +172,9 @@ const mapMain = (p5) => {
   }
 
   p5.mouseDragged = () => {
+    if (readOnly) {
+      return true
+    }
     if (dragMode === 0) {
       if (selectedNodes.length > 0 ){
         dragMode = 2
@@ -188,6 +193,9 @@ const mapMain = (p5) => {
   }
 
   const canvasMousePressed = () => {
+    if (readOnly) {
+      return true
+    }
     clickInCanvas = true
     mapRedraw = true
     if (
@@ -210,6 +218,9 @@ const mapMain = (p5) => {
   }
 
   p5.mouseReleased = (e) => {
+    if (readOnly) {
+      return true
+    }
     mapRedraw = true
     if(!clickInCanvas){
       selectedNodes.length = 0
@@ -241,6 +252,9 @@ const mapMain = (p5) => {
   }
 
   p5.keyReleased = () => {
+    if (readOnly) {
+      return true
+    }
     if (p5.keyCode === p5.DELETE || p5.keyCode === p5.BACKSPACE) {
       // Delete
       if (selectedNodes.length > 0){

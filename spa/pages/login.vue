@@ -15,6 +15,11 @@
           label="パスワード"
           required
         />
+        <v-switch
+          v-model="readOnly"
+          label="閲覧モードでログイン"
+          dense
+        ></v-switch>
         <v-btn block color="primary" dark @click="submit">
           ログイン
           <v-icon>mdi-login</v-icon>
@@ -33,6 +38,7 @@ export default {
         UserId: '',
         Password: '',
       },
+      readOnly: false,
       error: false,
     }
   },
@@ -43,6 +49,7 @@ export default {
         await this.$auth.loginWith('local', {
           data: this.login,
         })
+        this.$store.commit('map/setReadOnly', this.readOnly)
         this.$router.push('/map')
       } catch (e) {
         this.error = true

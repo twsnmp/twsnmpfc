@@ -14,6 +14,7 @@
           :to="item.to"
           router
           exact
+          :disabled="readOnly && item.readOnly"
         >
           <v-list-item-action>
             <v-icon>{{ item.icon }}</v-icon>
@@ -170,6 +171,7 @@
             :to="item.to"
             router
             exact
+            :disabled="readOnly"
           >
             <v-list-item-action>
               <v-icon>{{ item.icon }}</v-icon>
@@ -271,16 +273,19 @@ export default {
           icon: 'mdi-laptop',
           title: 'ノード',
           to: '/nodes',
+          readOnly: true,
         },
         {
           icon: 'mdi-lan-check',
           title: 'ポーリング',
           to: '/pollings',
+          readOnly: true,
         },
         {
           icon: 'mdi-telescope',
           title: '自動発見',
           to: '/discover',
+          readOnly: true,
         },
         {
           icon: 'mdi-card-search',
@@ -503,6 +508,9 @@ export default {
     },
     nodeList() {
       return this.$store.state.map.nodeList
+    },
+    readOnly() {
+      return this.$store.state.map.readOnly
     },
   },
   mounted() {

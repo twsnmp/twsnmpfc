@@ -2,6 +2,7 @@ export const state = () => ({
   title: 'TWSNMP FC',
   nodeList: [],
   lastUpdate: 0,
+  readOnly: false,
 })
 
 export const mutations = {
@@ -15,5 +16,8 @@ export const mutations = {
         value: k,
       })
     })
+  },
+  setReadOnly(state, v) {
+    state.readOnly = v
   },
 }
