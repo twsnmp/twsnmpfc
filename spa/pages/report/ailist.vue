@@ -34,7 +34,9 @@
           <v-icon small @click="$router.push({ path: '/polling/' + item.ID })">
             mdi-lan-check
           </v-icon>
-          <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
+          <v-icon v-if="!readOnly" small @click="openDeleteDialog(item)">
+            mdi-delete
+          </v-icon>
         </template>
         <template #[`body.append`]>
           <tr>
@@ -160,6 +162,11 @@ export default {
       )
       a.IconScore = a.Score >= 100.0 ? 1.0 : 100.0 - a.Score
     })
+  },
+  computed: {
+    readOnly() {
+      return this.$store.state.map.readOnly
+    },
   },
   methods: {
     doDelete() {

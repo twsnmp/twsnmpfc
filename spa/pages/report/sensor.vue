@@ -27,7 +27,9 @@
         </template>
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
-          <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
+          <v-icon v-if="!readOnly" small @click="openDeleteDialog(item)">
+            mdi-delete
+          </v-icon>
         </template>
         <template #[`body.append`]>
           <tr>
@@ -335,6 +337,11 @@ export default {
       s.MonitorLen = s.Monitors ? s.Monitors.length : 0
       s.StatsLen = s.Stats ? s.Stats.length : 0
     })
+  },
+  computed: {
+    readOnly() {
+      return this.$store.state.map.readOnly
+    },
   },
   methods: {
     doDelete() {

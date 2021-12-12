@@ -60,7 +60,9 @@
             mdi-file-find
           </v-icon>
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
-          <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
+          <v-icon v-if="!readOnly" small @click="openDeleteDialog(item)">
+            mdi-delete
+          </v-icon>
         </template>
         <template #[`body.append`]>
           <tr>
@@ -407,6 +409,11 @@ export default {
       this.options.page = this.conf.page
       this.conf.page = 1
     }
+  },
+  computed: {
+    readOnly() {
+      return this.$store.state.map.readOnly
+    },
   },
   created() {
     const c = this.$store.state.report.radius.conf

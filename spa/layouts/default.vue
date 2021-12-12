@@ -161,7 +161,12 @@
             </v-list-item-content>
           </v-list-item>
         </v-list-group>
-        <v-list-group no-action prepend-icon="mdi-cogs" :value="false">
+        <v-list-group
+          v-if="!readOnly"
+          no-action
+          prepend-icon="mdi-cogs"
+          :value="false"
+        >
           <template #activator>
             <v-list-item-title>システム設定</v-list-item-title>
           </template>
@@ -171,7 +176,6 @@
             :to="item.to"
             router
             exact
-            :disabled="readOnly"
           >
             <v-list-item-action>
               <v-icon>{{ item.icon }}</v-icon>
@@ -514,6 +518,8 @@ export default {
     },
   },
   mounted() {
+    const ro = localStorage.getItem('twsnmpReadOnly')
+    this.$store.commit('map/setReadOnly', ro || false)
     this.cron()
   },
   beforeDestroy() {

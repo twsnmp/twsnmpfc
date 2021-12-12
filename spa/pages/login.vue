@@ -42,6 +42,9 @@ export default {
       error: false,
     }
   },
+  mounted() {
+    this.readOnly = this.$store.state.map.readOnly
+  },
   methods: {
     async submit() {
       this.error = false
@@ -49,6 +52,7 @@ export default {
         await this.$auth.loginWith('local', {
           data: this.login,
         })
+        localStorage.setItem('twsnmpReadOnly', this.readOnly)
         this.$store.commit('map/setReadOnly', this.readOnly)
         this.$router.push('/map')
       } catch (e) {
