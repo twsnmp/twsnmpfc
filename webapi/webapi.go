@@ -88,6 +88,7 @@ func setup(p *WebAPI) {
 	r.GET("/conf/notify", getNotifyConf)
 	r.POST("/conf/notify", postNotifyConf)
 	r.POST("/notify/test", postNotifyTest)
+	r.POST("/notify/chat/test", postNotifyChartTest)
 	r.GET("/conf/influxdb", getInfluxdb)
 	r.POST("/conf/influxdb", postInfluxdb)
 	r.DELETE("/conf/influxdb", deleteInfluxdb)

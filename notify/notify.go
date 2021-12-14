@@ -78,43 +78,14 @@ func checkNotify(lastLog string) string {
 	})
 	log.Printf("check notify last=%s len=%d", lastLog, len(list))
 	if len(list) > 0 {
-		nl := getLevelNum(datastore.NotifyConf.Level)
-		if nl == 3 {
-			return fmt.Sprintf("%016x", list[0].Time)
-		}
-		failure, repair := getNotifyBody(list, nl)
-		if failure != "" {
-			err := sendMail(datastore.NotifyConf.Subject+"(障害)", failure)
-			r := ""
-			if err != nil {
-				log.Printf("send mail err=%v", err)
-				r = fmt.Sprintf("失敗 エラー=%v", err)
-			}
-			datastore.AddEventLog(&datastore.EventLogEnt{
-				Type:  "system",
-				Level: "info",
-				Event: fmt.Sprintf("通知メール送信 %s", r),
-			})
-		}
-		if repair != "" {
-			err := sendMail(datastore.NotifyConf.Subject+"(復帰)", repair)
-			r := ""
-			if err != nil {
-				log.Printf("send mail err=%v", err)
-				r = fmt.Sprintf("失敗 エラー=%v", err)
-			}
-			datastore.AddEventLog(&datastore.EventLogEnt{
-				Type:  "system",
-				Level: "info",
-				Event: fmt.Sprintf("復帰通知メール送信 %s", r),
-			})
-		}
+		sendNotifyMail(list)
+		sendNotifyChat(list)
 		lastLog = fmt.Sprintf("%016x", list[0].Time)
 	}
 	return lastLog
 }
 
-//
+// getNotifyBody : 通知メールの本文を作成する
 func getNotifyBody(list []*datastore.EventLogEnt, nl int) (string, string) {
 	failure := []*datastore.EventLogEnt{}
 	repair := []*datastore.EventLogEnt{}
@@ -152,6 +123,7 @@ func getNotifyBody(list []*datastore.EventLogEnt, nl int) (string, string) {
 	return f, r
 }
 
+// eventLogListToString : イベントログを通知メールの本文に変換する
 func eventLogListToString(repair bool, list []*datastore.EventLogEnt) string {
 	if !datastore.NotifyConf.HTMLMail {
 		r := []string{}

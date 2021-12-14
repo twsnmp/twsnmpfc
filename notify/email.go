@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/base64"
+	"fmt"
 	"html/template"
 	"log"
 	"net"
@@ -14,8 +15,54 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
+func canSendMail() bool {
+	if datastore.NotifyConf.MailServer == "" ||
+		datastore.NotifyConf.MailFrom == "" ||
+		datastore.NotifyConf.MailTo == "" {
+		return false
+	}
+	return true
+}
+
+func sendNotifyMail(list []*datastore.EventLogEnt) {
+	if !canSendMail() {
+		return
+	}
+	nl := getLevelNum(datastore.NotifyConf.Level)
+	if nl == 3 {
+		return
+	}
+	failure, repair := getNotifyBody(list, nl)
+	if failure != "" {
+		err := sendMail(datastore.NotifyConf.Subject+"(障害)", failure)
+		r := ""
+		if err != nil {
+			log.Printf("send mail err=%v", err)
+			r = fmt.Sprintf("失敗 エラー=%v", err)
+		}
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "system",
+			Level: "info",
+			Event: fmt.Sprintf("通知メール送信 %s", r),
+		})
+	}
+	if repair != "" {
+		err := sendMail(datastore.NotifyConf.Subject+"(復帰)", repair)
+		r := ""
+		if err != nil {
+			log.Printf("send mail err=%v", err)
+			r = fmt.Sprintf("失敗 エラー=%v", err)
+		}
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "system",
+			Level: "info",
+			Event: fmt.Sprintf("復帰通知メール送信 %s", r),
+		})
+	}
+}
+
 func sendMail(subject, body string) error {
-	if datastore.NotifyConf.MailServer == "" || datastore.NotifyConf.MailFrom == "" || datastore.NotifyConf.MailTo == "" {
+	if !canSendMail() {
 		return nil
 	}
 	host, _, err := net.SplitHostPort(datastore.NotifyConf.MailServer)

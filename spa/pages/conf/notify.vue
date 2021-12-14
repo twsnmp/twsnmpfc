@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="800">
+    <v-card min-width="900" width="90%">
       <v-form>
         <v-card-title primary-title> 通知設定 </v-card-title>
         <v-alert v-if="$fetchState.error" color="error" dense>
@@ -13,17 +13,28 @@
           通知設定を保存しました
         </v-alert>
         <v-alert v-model="failed" color="error" dense dismissible>
-          テストメールの送信に失敗しました
+          テストメッセージの送信に失敗しました
         </v-alert>
         <v-alert v-model="sent" color="primary" dense dismissible>
-          テストメールを送信しました
+          テストメッセージを送信しました
         </v-alert>
         <v-card-text>
-          <v-text-field
-            v-model="notify.MailServer"
-            label="メールサーバー"
-            required
-          />
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="notify.MailServer"
+                label="メールサーバー"
+                required
+              />
+            </v-col>
+            <v-col>
+              <v-switch
+                v-model="notify.InsecureSkipVerify"
+                label="サーバー証明書を検証しない"
+                dense
+              ></v-switch>
+            </v-col>
+          </v-row>
           <v-row dense>
             <v-col>
               <v-text-field
@@ -43,21 +54,22 @@
               />
             </v-col>
           </v-row>
-          <v-switch
-            v-model="notify.InsecureSkipVerify"
-            label="サーバー証明書を検証しない"
-            dense
-          ></v-switch>
-          <v-text-field
-            v-model="notify.MailTo"
-            label="宛先メールアドレス"
-            required
-          />
-          <v-text-field
-            v-model="notify.MailFrom"
-            label="送信元メールアドレス"
-            required
-          />
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="notify.MailTo"
+                label="宛先メールアドレス"
+                required
+              />
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="notify.MailFrom"
+                label="送信元メールアドレス"
+                required
+              />
+            </v-col>
+          </v-row>
           <v-text-field v-model="notify.Subject" label="件名" required />
           <v-text-field
             v-model="notify.URL"
@@ -136,12 +148,33 @@
             label="更新版を確認する"
             dense
           ></v-switch>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="notify.ChatType"
+                :items="chatList"
+                label="チャット通知"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-if="notify.ChatType"
+                v-model="notify.ChatWebhookURL"
+                label="チャットWebhookのURL"
+              />
+            </v-col>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="test">
             <v-icon>mdi-email-send</v-icon>
             テスト
+          </v-btn>
+          <v-btn v-if="notify.ChatType" color="normal" dark @click="chatTest">
+            <v-icon>mdi-email-send</v-icon>
+            Chatテスト
           </v-btn>
           <v-btn color="primary" dark @click="submit">
             <v-icon>mdi-content-save</v-icon>
@@ -174,11 +207,17 @@ export default {
         NotifyNewInfo: false,
         HTMLMail: false,
         URL: '',
+        ChatType: '',
+        ChatWebhookURL: '',
       },
       error: false,
       saved: false,
       sent: false,
       failed: false,
+      chatList: [
+        { text: '使用しない', value: '' },
+        { text: 'Discord', value: 'discord' },
+      ],
     }
   },
   async fetch() {
@@ -206,6 +245,17 @@ export default {
       this.clearMsg()
       this.$axios
         .post('/api/notify/test', this.notify)
+        .then((r) => {
+          this.sent = true
+        })
+        .catch((e) => {
+          this.failed = true
+        })
+    },
+    chatTest() {
+      this.clearMsg()
+      this.$axios
+        .post('/api/notify/chat/test', this.notify)
         .then((r) => {
           this.sent = true
         })
