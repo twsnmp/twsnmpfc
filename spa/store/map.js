@@ -18,6 +18,11 @@ export const mutations = {
     })
   },
   setReadOnly(state, v) {
+    if (!v || v === 'false') {
+      v = false
+    } else {
+      v = true
+    }
     state.readOnly = v
   },
 }
