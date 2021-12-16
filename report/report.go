@@ -135,6 +135,7 @@ func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
 	timer := time.NewTicker(time.Minute * 5)
 	log.Println("start report")
 	go checkOldReport()
+	setSensorState()
 	calcScore()
 	checkCerts()
 	last := time.Now().UnixNano()
