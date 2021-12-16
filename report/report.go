@@ -13,7 +13,7 @@ import (
 
 	"github.com/montanaflynn/stats"
 	"github.com/mrichman/godnsbl"
-	"github.com/openrdap/rdap"
+	"github.com/twsnmp/rdap"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
