@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/notify"
 )
 
 func UpdateSensor(h, t string, r int) {
@@ -134,13 +135,15 @@ func setSensorState() {
 			s.State = "normal"
 		}
 		if oldState != s.State {
-			datastore.AddEventLog(&datastore.EventLogEnt{
+			l := &datastore.EventLogEnt{
 				Type:     "sensor",
 				Level:    s.State,
 				NodeID:   "",
 				NodeName: s.Host,
 				Event:    "センサー状態変化:" + s.Host + "," + s.Type + "," + s.Param,
-			})
+			}
+			datastore.AddEventLog(l)
+			notify.SendNotifyChat(l)
 		}
 		if s.Type == "netflow" || s.Type == "ipfix" || s.Type == "syslog" {
 			count := s.Total

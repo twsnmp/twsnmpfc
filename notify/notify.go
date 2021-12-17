@@ -79,7 +79,6 @@ func checkNotify(lastLog string) string {
 	log.Printf("check notify last=%s len=%d", lastLog, len(list))
 	if len(list) > 0 {
 		sendNotifyMail(list)
-		sendNotifyChat(list)
 		lastLog = fmt.Sprintf("%016x", list[0].Time)
 	}
 	return lastLog

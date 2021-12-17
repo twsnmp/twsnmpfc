@@ -62,7 +62,8 @@ func canSendChat() bool {
 	return true
 }
 
-func sendNotifyChat(list []*datastore.EventLogEnt) {
+// SendNotifyChat : 通知のチャットメッセージを送信する
+func SendNotifyChat(l *datastore.EventLogEnt) {
 	if !canSendChat() {
 		return
 	}
@@ -70,51 +71,61 @@ func sendNotifyChat(list []*datastore.EventLogEnt) {
 	if nl == 3 {
 		return
 	}
-	ti := time.Now().Add(time.Duration(-datastore.NotifyConf.Interval) * time.Minute).UnixNano()
-	f := 0
-	r := 0
-	e := 0
-	for i := len(list) - 1; i >= 0; i-- {
-		l := list[i]
-		if ti > l.Time {
-			continue
+	if l.Level == "repair" {
+		if !datastore.NotifyConf.NotifyRepair {
+			return
 		}
-		if datastore.NotifyConf.NotifyRepair {
-			if l.Level == "repair" {
-				a := strings.Split(l.Event, ":")
-				if len(a) < 2 {
-					continue
-				}
-				// 復帰前の状態を確認する
-				np := getLevelNum(a[len(a)-1])
-				if np > nl {
-					continue
-				}
-				// 復帰を通知する
-				if err := SendChat(&datastore.NotifyConf, getChatMessage(l, true)); err != nil {
-					log.Printf("send discord error=%v", err)
-					e++
-					continue
-				}
-				r++
-				continue
-			}
+		a := strings.Split(l.Event, ":")
+		if len(a) < 2 {
+			return
 		}
-		np := getLevelNum(l.Level)
+		// 復帰前の状態を確認する
+		np := getLevelNum(a[len(a)-1])
 		if np > nl {
-			continue
+			return
 		}
-		if err := SendChat(&datastore.NotifyConf, getChatMessage(l, false)); err != nil {
+		// 復帰を通知する
+		if err := SendChat(&datastore.NotifyConf, getChatMessage(l, true)); err != nil {
 			log.Printf("send discord error=%v", err)
-			e++
-			continue
+			datastore.AddEventLog(&datastore.EventLogEnt{
+				Type:     "system",
+				Level:    "warn",
+				NodeID:   l.NodeID,
+				NodeName: l.NodeName,
+				Event:    "復帰通知のチャットメッセージを送信できません",
+			})
+			return
 		}
-		f++
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:     "system",
+			Level:    "info",
+			NodeID:   l.NodeID,
+			NodeName: l.NodeName,
+			Event:    "復帰通知のチャットメッセージを送信しました",
+		})
+		return
+	}
+	np := getLevelNum(l.Level)
+	if np > nl {
+		return
+	}
+	if err := SendChat(&datastore.NotifyConf, getChatMessage(l, false)); err != nil {
+		log.Printf("send discord error=%v", err)
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:     "system",
+			Level:    "warn",
+			NodeID:   l.NodeID,
+			NodeName: l.NodeName,
+			Event:    "障害通知のチャットメッセージを送信できません",
+		})
+		return
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
-		Type:  "system",
-		Level: "info",
-		Event: fmt.Sprintf("通知チャットメッセージ送信 障害=%d 復帰=%d 送信エラー=%d", f, r, e),
+		Type:     "system",
+		Level:    "info",
+		NodeID:   l.NodeID,
+		NodeName: l.NodeName,
+		Event:    "障害通知のチャットメッセージを送信しました",
 	})
 }
 

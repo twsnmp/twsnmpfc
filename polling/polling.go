@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/notify"
 )
 
 const maxPolling = 300
@@ -243,13 +244,15 @@ func setPollingState(pe *datastore.PollingEnt, newState string) {
 			nodeName = n.Name
 		}
 		datastore.SetNodeStateChanged(pe.NodeID)
-		datastore.AddEventLog(&datastore.EventLogEnt{
+		l := &datastore.EventLogEnt{
 			Type:     "polling",
 			Level:    pe.State,
 			NodeID:   pe.NodeID,
 			NodeName: nodeName,
 			Event:    fmt.Sprintf("ポーリング状態変化:%s(%s):%s", pe.Name, pe.Type, oldState),
-		})
+		}
+		datastore.AddEventLog(l)
+		notify.SendNotifyChat(l)
 	}
 }
 
