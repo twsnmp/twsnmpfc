@@ -103,8 +103,8 @@ func postNotifyChartTest(c echo.Context) error {
 	if nc.URL == "" {
 		nc.URL = fmt.Sprintf("%s://%s", c.Scheme(), c.Request().Host)
 	}
-	msg := fmt.Sprintf("%s（試験メッセージ）\n\nテストです。", datastore.NotifyConf.Subject)
-	if err := notify.SendChat(nc, msg); err != nil {
+	title := fmt.Sprintf("%s（試験メッセージ）", datastore.NotifyConf.Subject)
+	if err := notify.SendChat(nc, title, "info", "テストです。"); err != nil {
 		log.Printf("chat test nc=%#v err=%v", nc, err)
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "user",

@@ -13,16 +13,41 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-type discordMsg struct {
-	Content string `json:"content"`
+type discordEnt struct {
+	Title       string `json:"title"`
+	Color       string `json:"color"`
+	URL         string `json:"url"`
+	Description string `json:"description"`
 }
 
-func SendChat(c *datastore.NotifyConfEnt, message string) error {
+type discordMsg struct {
+	Embeds []discordEnt `json:"embeds"`
+}
+
+func SendChat(c *datastore.NotifyConfEnt, title, level, message string) error {
 	if c.ChatType != "discord" || c.ChatWebhookURL == "" {
 		return fmt.Errorf("invalid chat params")
 	}
+	color := "10070709"
+	switch level {
+	case "high":
+		color = "15548997"
+	case "low":
+		color = "15418782"
+	case "warn":
+		color = "16705372"
+	case "normal":
+		color = "5763719"
+	case "repair", "info":
+		color = "5793266"
+	}
 	m := discordMsg{
-		Content: message,
+		Embeds: []discordEnt{{
+			Title:       title,
+			Color:       color,
+			Description: message,
+			URL:         c.URL,
+		}},
 	}
 	j, err := json.Marshal(m)
 	if err != nil {
@@ -85,7 +110,8 @@ func SendNotifyChat(l *datastore.EventLogEnt) {
 			return
 		}
 		// 復帰を通知する
-		if err := SendChat(&datastore.NotifyConf, getChatMessage(l, true)); err != nil {
+		title, message := getChatMessage(l, true)
+		if err := SendChat(&datastore.NotifyConf, title, "repair", message); err != nil {
 			log.Printf("send discord error=%v", err)
 			datastore.AddEventLog(&datastore.EventLogEnt{
 				Type:     "system",
@@ -109,7 +135,8 @@ func SendNotifyChat(l *datastore.EventLogEnt) {
 	if np > nl {
 		return
 	}
-	if err := SendChat(&datastore.NotifyConf, getChatMessage(l, false)); err != nil {
+	title, message := getChatMessage(l, false)
+	if err := SendChat(&datastore.NotifyConf, title, l.Level, message); err != nil {
 		log.Printf("send discord error=%v", err)
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:     "system",
@@ -129,26 +156,23 @@ func SendNotifyChat(l *datastore.EventLogEnt) {
 	})
 }
 
-func getChatMessage(l *datastore.EventLogEnt, repair bool) string {
+func getChatMessage(l *datastore.EventLogEnt, repair bool) (string, string) {
 	subtitle := "障害"
 	if repair {
 		subtitle = "復帰"
 	}
-	return fmt.Sprintf(
-		`%s(%s)
-		
-		発生日時: %s
+	return fmt.Sprintf("%s(%s)", datastore.NotifyConf.Subject, subtitle),
+		fmt.Sprintf(
+			`発生日時: %s
 		状態: %s
 		タイプ: %s
 		関連ノード: %s
 		イベント: %s
 		`,
-		datastore.NotifyConf.Subject,
-		subtitle,
-		formatLogTime(l.Time),
-		levelName(l.Level),
-		l.Type,
-		l.NodeName,
-		l.Event,
-	)
+			formatLogTime(l.Time),
+			levelName(l.Level),
+			l.Type,
+			l.NodeName,
+			l.Event,
+		)
 }
