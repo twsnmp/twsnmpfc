@@ -34,6 +34,8 @@
 - パネル表示
 - ホストリソースMIB
 - Wake On LAN対応
+- Discordへの通知
+- HTMLメール通知、定期レポート
 
 ![2021-04-10_11-56-00](https://user-images.githubusercontent.com/5225950/114256371-cc61db80-99f3-11eb-8631-c1917554ce26.png)
 
