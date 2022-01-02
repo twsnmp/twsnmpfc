@@ -578,4 +578,8 @@ export default {
 .log td {
   word-break: break-all;
 }
+
+.v-application .v-date-picker-table .v-date-picker-table__current {
+  color: #fff !important;
+}
 </style>
