@@ -98,35 +98,39 @@ const makeLogCountChart = (div) => {
   chart.resize()
 }
 
+const addChartData = (data, count, ctm, newCtm) => {
+  let t = new Date(ctm * 60 * 1000)
+  data.push({
+    name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
+    value: [t, count],
+  })
+  ctm++
+  for (; ctm < newCtm; ctm++) {
+    t = new Date(ctm * 60 * 1000)
+    data.push({
+      name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
+      value: [t, 0],
+    })
+  }
+  return ctm
+}
+
 const showLogCountChart = (logs) => {
   const data = []
   let count = 0
   let ctm
   logs.forEach((e) => {
-    if (!ctm) {
-      ctm = Math.floor(e.Time / (1000 * 1000 * 1000 * 60))
-      count++
-      return
-    }
     const newCtm = Math.floor(e.Time / (1000 * 1000 * 1000 * 60))
+    if (!ctm) {
+      ctm = newCtm
+    }
     if (ctm !== newCtm) {
-      let t = new Date(ctm * 60 * 1000)
-      data.push({
-        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
-        value: [t, count],
-      })
-      ctm++
-      for (; ctm < newCtm; ctm++) {
-        t = new Date(ctm * 60 * 1000)
-        data.push({
-          name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
-          value: [t, 0],
-        })
-      }
+      ctm = addChartData(data, count, ctm, newCtm)
       count = 0
     }
     count++
   })
+  addChartData(data, count, ctm, ctm + 1)
   chart.setOption({
     series: [
       {

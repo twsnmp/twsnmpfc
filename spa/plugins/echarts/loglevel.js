@@ -130,6 +130,27 @@ const makeLogLevelChart = (div) => {
   chart.resize()
 }
 
+const addChartData = (data, count, ctm, newCtm) => {
+  let t = new Date(ctm * 60 * 1000)
+  for (const k in count) {
+    data[k].push({
+      name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
+      value: [t, count[k]],
+    })
+  }
+  ctm++
+  for (; ctm < newCtm; ctm++) {
+    t = new Date(ctm * 60 * 1000)
+    for (const k in count) {
+      data[k].push({
+        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
+        value: [t, 0],
+      })
+    }
+  }
+  return ctm
+}
+
 const showLogLevelChart = (logs) => {
   const data = {
     high: [],
@@ -146,36 +167,19 @@ const showLogLevelChart = (logs) => {
   let ctm
   logs.forEach((e) => {
     const lvl = data[e.Level] ? e.Level : 'other'
-    if (!ctm) {
-      ctm = Math.floor(e.Time / (1000 * 1000 * 1000 * 60))
-      count[lvl]++
-      return
-    }
     const newCtm = Math.floor(e.Time / (1000 * 1000 * 1000 * 60))
+    if (!ctm) {
+      ctm = newCtm
+    }
     if (ctm !== newCtm) {
-      let t = new Date(ctm * 60 * 1000)
-      for (const k in count) {
-        data[k].push({
-          name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
-          value: [t, count[k]],
-        })
-      }
-      ctm++
-      for (; ctm < newCtm; ctm++) {
-        t = new Date(ctm * 60 * 1000)
-        for (const k in count) {
-          data[k].push({
-            name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
-            value: [t, 0],
-          })
-        }
-      }
+      ctm = addChartData(data, count, ctm, newCtm)
       for (const k in count) {
         count[k] = 0
       }
     }
     count[lvl]++
   })
+  addChartData(data, count, ctm, ctm + 1)
   chart.setOption({
     series: [
       {

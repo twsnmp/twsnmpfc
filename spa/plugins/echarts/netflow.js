@@ -343,63 +343,67 @@ const makeNetFlowTraffic = (div, type) => {
   chart.resize()
 }
 
+const addChartData = (data, type, ent, ctm, newCtm) => {
+  let t = new Date(ctm * 60 * 1000)
+  let d = 0
+  switch (type) {
+    case 'bytes':
+      d = ent.bytes
+      break
+    case 'packets':
+      d = ent.packets
+      break
+    case 'bps':
+      if (ent.dur > 0) {
+        d = ent.bytes / ent.dur
+      }
+      break
+    case 'pps':
+      if (ent.dur > 0) {
+        d = ent.packets / ent.dur
+      }
+      break
+  }
+  data.push({
+    name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
+    value: [t, d],
+  })
+  ctm++
+  for (; ctm < newCtm; ctm++) {
+    t = new Date(ctm * 60 * 1000)
+    data.push({
+      name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
+      value: [t, 0],
+    })
+  }
+  return ctm
+}
+
 const showNetFlowTraffic = (div, logs, type) => {
   makeNetFlowTraffic(div, type)
   const data = []
-  let bytes = 0
-  let packets = 0
-  let dur = 0
+  const ent = {
+    bytes: 0,
+    packets: 0,
+    dur: 0,
+  }
   let ctm
   logs.forEach((l) => {
-    if (!ctm) {
-      ctm = Math.floor(l.Time / (1000 * 1000 * 1000 * 60))
-      bytes += l.Bytes
-      dur += l.Duration
-      packets += l.Packets
-      return
-    }
     const newCtm = Math.floor(l.Time / (1000 * 1000 * 1000 * 60))
-    if (ctm !== newCtm) {
-      let t = new Date(ctm * 60 * 1000)
-      let d = 0
-      switch (type) {
-        case 'bytes':
-          d = bytes
-          break
-        case 'packets':
-          d = packets
-          break
-        case 'bps':
-          if (dur > 0) {
-            d = bytes / dur
-          }
-          break
-        case 'pps':
-          if (dur > 0) {
-            d = packets / dur
-          }
-          break
-      }
-      data.push({
-        name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
-        value: [t, d],
-      })
-      ctm++
-      for (; ctm < newCtm; ctm++) {
-        t = new Date(ctm * 60 * 1000)
-        data.push({
-          name: echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'),
-          value: [t, 0],
-        })
-      }
-      bytes = 0
-      dur = 0
-      packets = 0
+    if (!ctm) {
+      ctm = newCtm
     }
-    bytes += l.Bytes
-    dur += l.Duration
-    packets += l.Packets
+    if (ctm !== newCtm) {
+      ctm = addChartData(data, type, ent, ctm, newCtm)
+      ent.bytes = 0
+      ent.dur = 0
+      ent.packets = 0
+    }
+    ent.bytes += l.Bytes
+    ent.dur += l.Duration
+    ent.packets += l.Packets
   })
+  addChartData(data, type, ent, ctm, ctm + 1)
   chart.setOption({
     series: [
       {
