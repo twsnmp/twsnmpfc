@@ -75,7 +75,7 @@ func getPortsFromPolling(n *datastore.NodeEnt) []*VPanelPortEnt {
 				}
 				state := "down"
 				switch p.State {
-				case "normal", "reapir":
+				case "normal", "repair":
 					state = "up"
 				case "unknown":
 					state = "off"
@@ -152,7 +152,7 @@ func getPortsFromLine(n *datastore.NodeEnt) []*VPanelPortEnt {
 		}
 		state := "down"
 		switch s {
-		case "normal", "reapir":
+		case "normal", "repair":
 			state = "up"
 		case "unknown":
 			state = "off"
