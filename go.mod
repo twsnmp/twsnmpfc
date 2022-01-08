@@ -6,9 +6,9 @@ require (
 	github.com/Songmu/timeout v0.4.0
 	github.com/beevik/ntp v0.3.0
 	github.com/chewxy/stl v1.3.1
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-playground/validator v9.31.0+incompatible
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/mdlayher/netx v0.0.0-20200512211805-669a06fde734
@@ -49,7 +49,6 @@ require (
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/flatbuffers v1.12.0 // indirect
 	github.com/jarcoal/httpmock v1.0.8 // indirect
