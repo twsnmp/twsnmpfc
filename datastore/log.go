@@ -145,8 +145,10 @@ func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
 }
 
 func deleteOldLog(bucket string, days int) error {
+	s := time.Now()
+	delCount := 0
 	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -days).UnixNano())
-	return db.Batch(func(tx *bbolt.Tx) error {
+	err := db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
 			return fmt.Errorf("bucket %s not found", bucket)
@@ -161,10 +163,12 @@ func deleteOldLog(bucket string, days int) error {
 		}
 		return nil
 	})
+	log.Printf("delete old logs bucket=%s count=%d dur=%s", bucket, delCount, time.Since(s))
+	time.Sleep(time.Millisecond * 10)
+	return err
 }
 
 func deleteOldLogs() {
-	delCount = 0
 	if MapConf.LogDays < 1 {
 		log.Println("mapConf.LogDays < 1 ")
 		return
@@ -174,9 +178,6 @@ func deleteOldLogs() {
 		if err := deleteOldLog(b, MapConf.LogDays); err != nil {
 			log.Printf("deleteOldLog err=%v", err)
 		}
-	}
-	if delCount > 0 {
-		log.Printf("DeleteLogs=%d", delCount)
 	}
 }
 

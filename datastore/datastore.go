@@ -78,7 +78,6 @@ var (
 	dstDB        *bbolt.DB
 	dstTx        *bbolt.Tx
 	eventLogCh   chan *EventLogEnt
-	delCount     int
 
 	influxc   client.Client
 	muInfluxc sync.Mutex
@@ -99,7 +98,7 @@ const (
 	// MaxDispLog : ログの検索結果の最大値
 	MaxDispLog = 20000
 	// MaxDelLog : ログ削除処理の最大削除数
-	MaxDelLog = 500000
+	MaxDelLog = 60000
 )
 
 // Define errors
