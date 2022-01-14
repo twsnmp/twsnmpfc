@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -68,9 +69,14 @@ func doPollingTWSNMP(pe *datastore.PollingEnt) {
 func doTWSNMPGet(n *datastore.NodeEnt, pe *datastore.PollingEnt) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pe.Timeout)*time.Second)
 	defer cancel()
-	url := fmt.Sprintf("https://%s:8192/api/mapstatus", n.IP)
+	url := fmt.Sprintf("http://%s:8080/mobile/api/mapstatus", n.IP)
 	if n.URL != "" {
-		url = n.URL + "/api/mapstatus"
+		for _, u := range strings.Split(n.URL, ",") {
+			if strings.HasPrefix(u, "http") {
+				url = u + "/mobile/api/mapstatus"
+				break
+			}
+		}
 	}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
