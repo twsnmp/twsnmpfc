@@ -354,6 +354,34 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="openURLDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">アクセス先URLの選択</span>
+        </v-card-title>
+        <v-card-text>
+          <v-radio-group v-model="selectedURL" mandatory>
+            <v-radio
+              v-for="(url, i) in urls"
+              :key="i"
+              :label="url"
+              :value="url"
+            ></v-radio>
+          </v-radio-group>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="openURL(selectedURL)">
+            <v-icon>mdi-link</v-icon>
+            選択
+          </v-btn>
+          <v-btn color="normal" @click="openURLDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-menu
       v-model="showMapContextMenu"
       :position-x="x"
@@ -537,6 +565,8 @@ export default {
       urls: [],
       wolDone: false,
       wolError: false,
+      openURLDialog: false,
+      selectedURL: '',
     }
   },
   async fetch() {
@@ -628,13 +658,24 @@ export default {
         case 'refresh':
           this.$fetch()
           break
-        case 'showNode':
-          if (!this.map.Nodes[r.Param]) {
-            return
+        case 'nodeDoubleClicked':
+          if (this.map.Nodes[r.Param]) {
+            const n = this.map.Nodes[r.Param]
+            if (n.URL) {
+              this.urls = n.URL.split(',')
+              if (this.urls.length === 1) {
+                this.openURL(this.urls[0])
+                return
+              } else if (this.urls.length > 1) {
+                this.openURLDialog = true
+                return
+              }
+            }
+            this.urls = []
+            this.copyFrom = ''
+            this.editNode = this.map.Nodes[r.Param]
+            this.showNodeDialog = true
           }
-          this.copyFrom = ''
-          this.editNode = this.map.Nodes[r.Param]
-          this.showNodeDialog = true
           break
         case 'contextMenu':
           this.x = r.x
@@ -767,6 +808,7 @@ export default {
       this.$router.push({ path: '/mibbr/' + this.editNode.ID })
     },
     openURL(url) {
+      this.openURLDialog = false
       window.open(url, '_blank')
     },
     addLine() {

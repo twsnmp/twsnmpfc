@@ -269,8 +269,7 @@ const mapMain = (p5) => {
 
   p5.doubleClicked = () => {
     if (selectedNodes.length === 1 ){
-      // Show Node Info
-      showNode()
+      nodeDoubleClicked()
     }
     return true
   }
@@ -376,14 +375,16 @@ const mapMain = (p5) => {
     }
     draggedNodes.length = 0
   }
-  const showNode = () => {
+  // nodeをダブルクリックした場合
+  const nodeDoubleClicked = () => {
     if (mapCallBack) {
       mapCallBack({
-        Cmd: 'showNode',
+        Cmd: 'nodeDoubleClicked',
         Param: selectedNodes[0],
       })
     }
   }
+  // lineの編集
   const editLine = () => {
     if (selectedNodes.length !== 2 ){
       return
