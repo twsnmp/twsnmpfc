@@ -142,6 +142,7 @@ const iconList = [
   { text: 'Apple', icon: 'mdi-apple', value: 'mdi-apple' ,code: 0xF0035},
   { text: 'Google', icon: 'mdi-google', value: 'mdi-google' ,code: 0xF02AD},
   { text: 'CDプレーヤー', icon: 'mdi-disc-player', value: 'mdi-disc-player' ,code: 0xF0960},
+  { text: 'TWSNMP連携マップ', icon: 'mdi-layers-search', value: 'mdi-layers-search' ,code: 0xF1206},
 ]
 
 const iconMap = {}
