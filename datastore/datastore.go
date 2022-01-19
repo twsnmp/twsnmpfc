@@ -98,7 +98,7 @@ const (
 	// MaxDispLog : ログの検索結果の最大値
 	MaxDispLog = 20000
 	// MaxDelLog : ログ削除処理の最大削除数
-	MaxDelLog = 60000
+	MaxDelLog = 10000
 )
 
 // Define errors

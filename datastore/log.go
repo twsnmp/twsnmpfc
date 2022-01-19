@@ -164,7 +164,6 @@ func deleteOldLog(bucket string, days int) error {
 		return nil
 	})
 	log.Printf("delete old logs bucket=%s count=%d dur=%s", bucket, delCount, time.Since(s))
-	time.Sleep(time.Millisecond * 10)
 	return err
 }
 
@@ -210,7 +209,7 @@ func DeleteArp() {
 func eventLogger(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Println("start eventlog")
-	timer1 := time.NewTicker(time.Minute * 2)
+	timer1 := time.NewTicker(time.Minute)
 	timer2 := time.NewTicker(time.Second * 5)
 	list := []*EventLogEnt{}
 	for {
