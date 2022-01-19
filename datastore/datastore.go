@@ -244,7 +244,10 @@ func loadMailTemplateToMap(t string, fs http.FileSystem) {
 
 func openDB(path string) error {
 	var err error
-	db, err = bbolt.Open(path, 0600, nil)
+	db, err = bbolt.Open(path, 0600, &bbolt.Options{
+		FreelistType:   bbolt.FreelistMapType,
+		NoFreelistSync: true,
+	})
 	if err != nil {
 		return err
 	}
