@@ -118,6 +118,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("no statik fs err=%v", err)
 	}
+	log.Println("call datastore.Init")
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 	if err = datastore.Init(ctx, dataStorePath, statikFS, wg); err != nil {
@@ -128,24 +129,31 @@ func main() {
 		Level: "info",
 		Event: "TWSNMP FC起動",
 	})
+	log.Println("call ping.Start")
 	if err = ping.Start(ctx, wg, pingMode); err != nil {
 		log.Fatalf("start ping err=%v", err)
 	}
+	log.Println("call report.Start")
 	if err = report.Start(ctx, wg); err != nil {
 		log.Fatalf("start report err=%v", err)
 	}
+	log.Println("call logger.Start")
 	if err = logger.Start(ctx, wg); err != nil {
 		log.Fatalf("start logger err=%v", err)
 	}
+	log.Println("call polling.Start")
 	if err = polling.Start(ctx, wg); err != nil {
 		log.Fatalf("start polling err=%v", err)
 	}
+	log.Println("call backend.Start")
 	if err = backend.Start(ctx, dataStorePath, version, wg); err != nil {
 		log.Fatalf("start backend err=%v", err)
 	}
+	log.Println("call notify.Start")
 	if err = notify.Start(ctx, wg); err != nil {
 		log.Fatalf("start notify err=%v", err)
 	}
+	log.Println("call webapi.Start")
 	w := &webapi.WebAPI{
 		Statik:        http.FileServer(statikFS),
 		Port:          port,

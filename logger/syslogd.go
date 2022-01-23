@@ -34,7 +34,6 @@ func syslogd(stopCh chan bool) {
 			}
 		case sl := <-syslogCh:
 			{
-				syslogCount++
 				s, err := json.Marshal(sl)
 				if err == nil {
 					tag, ok := sl["tag"].(string)

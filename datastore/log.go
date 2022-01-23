@@ -163,7 +163,9 @@ func deleteOldLog(bucket string, days int) error {
 		}
 		return nil
 	})
-	log.Printf("delete old logs bucket=%s count=%d dur=%s", bucket, delCount, time.Since(s))
+	if delCount > 0 {
+		log.Printf("delete old logs bucket=%s count=%d dur=%s", bucket, delCount, time.Since(s))
+	}
 	return err
 }
 
@@ -269,6 +271,11 @@ func SaveLogBuffer(logBuffer []*LogEnt) {
 		ipfix := tx.Bucket([]byte("ipfix"))
 		trap := tx.Bucket([]byte("trap"))
 		arp := tx.Bucket([]byte("arplog"))
+		sc := 0
+		nfc := 0
+		tc := 0
+		ac := 0
+		oc := 0
 		for _, l := range logBuffer {
 			k := fmt.Sprintf("%016x", l.Time)
 			s, err := json.Marshal(l)
@@ -282,17 +289,25 @@ func SaveLogBuffer(logBuffer []*LogEnt) {
 			compLogSize += int64(len(s))
 			switch l.Type {
 			case "syslog":
+				sc++
 				syslog.Put([]byte(k), []byte(s))
 			case "netflow":
+				nfc++
 				netflow.Put([]byte(k), []byte(s))
 			case "ipfix":
+				nfc++
 				ipfix.Put([]byte(k), []byte(s))
 			case "trap":
+				tc++
 				trap.Put([]byte(k), []byte(s))
 			case "arplog":
+				ac++
 				arp.Put([]byte(k), []byte(s))
+			default:
+				oc++
 			}
 		}
+		log.Printf("syslog=%d,netflow=%d,trap=%d,arplog=%d,other=%d", sc, nfc, tc, ac, oc)
 		return nil
 	})
 }

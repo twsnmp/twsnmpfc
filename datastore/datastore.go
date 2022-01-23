@@ -243,35 +243,39 @@ func loadMailTemplateToMap(t string, fs http.FileSystem) {
 }
 
 func openDB(path string) error {
+	log.Println("start openDB")
 	var err error
-	db, err = bbolt.Open(path, 0600, &bbolt.Options{
-		FreelistType:   bbolt.FreelistMapType,
-		NoFreelistSync: true,
-	})
+	db, err = bbolt.Open(path, 0600, nil)
 	if err != nil {
 		return err
 	}
+	log.Println("db.Stats")
 	prevDBStats = db.Stats()
 	dbOpenTime = time.Now()
+	log.Println("initDB")
 	err = initDB()
 	if err != nil {
 		db.Close()
 		return err
 	}
+	log.Println("loadConf")
 	err = loadConf()
 	if err != nil {
 		db.Close()
 		return err
 	}
+	log.Println("loadMapData")
 	err = loadMapData()
 	if err != nil {
 		db.Close()
 		return err
 	}
+	log.Println("setupInfluxdb")
 	err = setupInfluxdb()
 	if err != nil {
 		log.Printf("setup influxdb err=%v", err)
 	}
+	log.Println("end openDB")
 	return nil
 }
 

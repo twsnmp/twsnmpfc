@@ -16,8 +16,6 @@ import (
 )
 
 var logCh = make(chan *datastore.LogEnt, 5000)
-var syslogCount = 0
-var netflowCount = 0
 
 func Start(ctx context.Context, wg *sync.WaitGroup) error {
 	logCh = make(chan *datastore.LogEnt, 100)
@@ -70,8 +68,7 @@ func logger(ctx context.Context, wg *sync.WaitGroup) {
 			if len(logBuffer) > 0 {
 				st := time.Now()
 				datastore.SaveLogBuffer(logBuffer)
-				log.Printf("save log len=%d dur=%v syslog=%d netflow=%d",
-					len(logBuffer), time.Since(st), syslogCount, netflowCount)
+				log.Printf("save log len=%d dur=%v", len(logBuffer), time.Since(st))
 				logBuffer = []*datastore.LogEnt{}
 			}
 		case <-timer2.C:
