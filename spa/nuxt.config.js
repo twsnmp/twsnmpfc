@@ -21,7 +21,10 @@ export default {
   },
 
   // Global CSS (https://go.nuxtjs.dev/config-css)
-  css: ['~/node_modules/@mdi/font/css/materialdesignicons.css'],
+  css: [
+    '~/node_modules/@mdi/font/css/materialdesignicons.css',
+    '~/node_modules/@fontsource/roboto/index.css',
+  ],
 
   // Plugins to run before rendering page (https://go.nuxtjs.dev/config-plugins)
   plugins: [
