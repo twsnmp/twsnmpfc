@@ -109,6 +109,12 @@ func loadConf() error {
 				log.Printf("load conf err=%v", err)
 			}
 		}
+		v = b.Get([]byte("icons"))
+		if v != nil {
+			if err := json.Unmarshal(v, &icons); err != nil {
+				log.Printf("load icons err=%v", err)
+			}
+		}
 		return nil
 	})
 	if err == nil && MapConf.PrivateKey == "" {
@@ -187,5 +193,57 @@ func SaveMapConf() error {
 			return fmt.Errorf("bucket config is nil")
 		}
 		return b.Put([]byte("mapConf"), s)
+	})
+}
+
+type IconEnt struct {
+	Text string
+	Icon string
+	Code int64
+}
+
+var icons []*IconEnt
+
+func GetIcons() []*IconEnt {
+	return icons
+}
+
+func AddOrUpdateIcon(i *IconEnt) error {
+	for _, e := range icons {
+		if e.Icon == i.Icon {
+			e.Text = i.Text
+			e.Code = i.Code
+			return saveIcons()
+		}
+	}
+	icons = append(icons, i)
+	return saveIcons()
+}
+
+func DeleteIcon(icon string) error {
+	tmp := icons
+	icons = []*IconEnt{}
+	for _, i := range tmp {
+		if i.Icon != icon {
+			icons = append(icons, i)
+		}
+	}
+	return saveIcons()
+}
+
+func saveIcons() error {
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	s, err := json.Marshal(icons)
+	if err != nil {
+		return err
+	}
+	return db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("config"))
+		if b == nil {
+			return fmt.Errorf("bucket config is nil")
+		}
+		return b.Put([]byte("icons"), s)
 	})
 }

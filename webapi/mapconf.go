@@ -81,6 +81,31 @@ func postMapConf(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
+// Icon Listの取得
+func getIcons(c echo.Context) error {
+	r := datastore.GetIcons()
+	return c.JSON(http.StatusOK, r)
+}
+
+func postIcon(c echo.Context) error {
+	i := new(datastore.IconEnt)
+	if err := c.Bind(i); err != nil {
+		return echo.ErrBadRequest
+	}
+	if err := datastore.AddOrUpdateIcon(i); err != nil {
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func deleteIcon(c echo.Context) error {
+	icon := c.Param("icon")
+	if err := datastore.DeleteIcon(icon); err != nil {
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
 func postBackImage(c echo.Context) error {
 	f, err := c.FormFile("file")
 	if err != nil {

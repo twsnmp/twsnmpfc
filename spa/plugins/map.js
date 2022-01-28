@@ -31,6 +31,10 @@ const setIconCodeMap = (list) => {
   iconCodeMap.unknown = String.fromCodePoint(0xF0A39)
 }
 
+const setIconToMap = (e) => {
+  iconCodeMap[e.Icon] = String.fromCodePoint(e.Code)
+} 
+
 const setMAP = (m,url,ro) => {
   if (!url || url === '/') {
     url = window.location.origin
@@ -447,4 +451,5 @@ export default (context, inject) => {
   inject('selectNode', selectNode)
   inject('refreshMAP', refreshMAP)
   inject('setMapContextMenu', setMapContextMenu)
+  inject('setIconToMap', setIconToMap)
 }

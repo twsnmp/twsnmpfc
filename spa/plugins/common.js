@@ -155,6 +155,34 @@ const getIconName = (icon) => {
   return iconMap[icon] ? iconMap[icon] : 'mdi-comment-question-outline'
 }
 
+const setIcon = (e) => {
+  for( let i = 0; i < iconList; i++) {
+    if(iconList[i].value === e.Icon) {
+      iconList[i].text = e.Text
+      iconList[i].Code = e.Code
+      return
+    }
+  }
+  // 追加
+  iconList.push({
+    text: e.Text,
+    icon: e.Icon,
+    value: e.Icon,
+    code: e.Code,
+  })
+  iconMap[e.Icon] = e.Icon
+}
+
+const delIcon = (icon) => {
+  for( let i = 0; i < iconList; i++) {
+    if(iconList[i].value === icon) {
+      iconList.splice(i+1,1)
+      delete(iconMap[icon])
+      return
+    }
+  }
+}
+
 const timeFormat = (date, format) => {
   if (!format) {
       format = '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'
@@ -383,4 +411,6 @@ export default (context, inject) => {
   inject('tcpFlagFilterList', tcpFlagFilterList)
   inject('cmpIP', cmpIP)
   inject('getLogModeName', getLogModeName)
+  inject('setIcon', setIcon)
+  inject('delIcon', delIcon)
 }

@@ -463,6 +463,11 @@ export default {
           to: '/conf/map',
         },
         {
+          icon: 'mdi-view-module-outline',
+          title: 'アイコン',
+          to: '/conf/icons',
+        },
+        {
           icon: 'mdi-email-send',
           title: '通知',
           to: '/conf/notify',
@@ -498,6 +503,7 @@ export default {
       timer: null,
       logs: [],
       newLog: 0,
+      iconImported: false,
     }
   },
   computed: {
@@ -540,6 +546,9 @@ export default {
         } else {
           this.checkNewLog()
         }
+        if (!this.iconImported) {
+          this.importIcon()
+        }
       }
       if (!this.version) {
         this.getVersion()
@@ -562,6 +571,16 @@ export default {
         this.logs.forEach((e) => {
           const t = new Date(e.Time / (1000 * 1000))
           e.TimeStr = this.$timeFormat(t)
+        })
+      }
+    },
+    async importIcon() {
+      const icons = await this.$axios.$get('/api/conf/icons')
+      if (icons) {
+        this.iconImported = true
+        icons.forEach((e) => {
+          this.$setIcon(e)
+          this.$setIconToMap(e)
         })
       }
     },
