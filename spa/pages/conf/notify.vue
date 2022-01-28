@@ -39,7 +39,7 @@
             <v-col>
               <v-text-field
                 v-model="notify.User"
-                autocomplete="off"
+                autocomplete="username"
                 label="ユーザーID"
                 required
               />
@@ -48,7 +48,7 @@
               <v-text-field
                 v-model="notify.Password"
                 type="password"
-                autocomplete="off"
+                autocomplete="new-password"
                 label="パスワード"
                 required
               />

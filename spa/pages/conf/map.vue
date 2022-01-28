@@ -16,14 +16,14 @@
           <v-text-field v-model="mapconf.MapName" label="マップ名" required />
           <v-text-field
             v-model="mapconf.UserID"
-            autocomplete="off"
+            autocomplete="username"
             label="ユーザーID"
             required
           />
           <v-text-field
             v-model="mapconf.Password"
             type="password"
-            autocomplete="off"
+            autocomplete="new-password"
             label="パスワード"
             required
           />
@@ -99,7 +99,7 @@
           <v-text-field
             v-if="mapconf.SnmpMode != ''"
             v-model="mapconf.SnmpUser"
-            autocomplete="off"
+            autocomplete="username"
             label="ユーザーID"
             required
           />
@@ -107,7 +107,7 @@
             v-if="mapconf.SnmpMode != ''"
             v-model="mapconf.SnmpPassword"
             type="password"
-            autocomplete="off"
+            autocomplete="new-password"
             label="パスワード"
             required
           />

@@ -283,12 +283,12 @@
           ></v-text-field>
           <v-text-field
             v-model="node.User"
-            autocomplete="off"
+            autocomplete="username"
             label="ユーザー"
           ></v-text-field>
           <v-text-field
             v-model="node.Password"
-            autocomplete="off"
+            autocomplete="new-password"
             type="password"
             label="パスワード"
           ></v-text-field>
