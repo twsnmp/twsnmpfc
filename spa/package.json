@@ -12,6 +12,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@mdi/font": "^5.9.55",
     "@nuxtjs/auth-next": "^5.0.0-1622718665.cc99959",
     "@nuxtjs/axios": "^5.13.6",
     "brain.js": "^2.0.0-beta.2",
@@ -29,7 +30,6 @@
     "world-map-geojson": "^1.0.2"
   },
   "devDependencies": {
-    "@mdi/font": "^5.9.55",
     "@nuxtjs/eslint-config": "^6.0.1",
     "@nuxtjs/eslint-module": "^3.0.2",
     "@nuxtjs/vuetify": "^1.11.3",
