@@ -117,41 +117,77 @@
         </v-snackbar>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="editDialog" persistent max-width="500px">
+    <v-dialog v-model="editDialog" persistent max-width="800px">
       <v-card>
         <v-card-title> ノード設定 </v-card-title>
         <v-card-text>
-          <v-text-field v-model="editNode.Name" label="名前"></v-text-field>
-          <v-text-field v-model="editNode.IP" label="IPアドレス"></v-text-field>
-          <v-select v-model="editNode.Icon" :items="$iconList" label="アイコン">
-          </v-select>
-          <v-select
-            v-model="editNode.AddrMode"
-            :items="$addrModeList"
-            label="アドレスモード"
-          >
-          </v-select>
-          <v-select
-            v-model="editNode.SnmpMode"
-            :items="$snmpModeList"
-            label="SNMPモード"
-          >
-          </v-select>
-          <v-text-field
-            v-model="editNode.Community"
-            label="Community"
-          ></v-text-field>
-          <v-text-field
-            v-model="editNode.User"
-            autocomplete="off"
-            label="ユーザー"
-          ></v-text-field>
-          <v-text-field
-            v-model="editNode.Password"
-            autocomplete="off"
-            type="password"
-            label="パスワード"
-          ></v-text-field>
+          <v-row dense>
+            <v-col>
+              <v-text-field v-model="editNode.Name" label="名前"></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNode.IP"
+                label="IPアドレス"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="editNode.AddrMode"
+                :items="$addrModeList"
+                label="アドレスモード"
+              >
+              </v-select>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="editNode.Icon"
+                :items="$iconList"
+                label="アイコン"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-icon x-large style="magin-top: 10px; margin-left: 10px">
+                {{ $getIconName(editNode.Icon) }}
+              </v-icon>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="editNode.SnmpMode"
+                :items="$snmpModeList"
+                label="SNMPモード"
+              >
+              </v-select>
+            </v-col>
+            <v-col v-if="editNode.SnmpMode == ''">
+              <v-text-field
+                v-model="editNode.Community"
+                label="Community"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="editNode.User"
+                autocomplete="username"
+                label="ユーザー"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNode.Password"
+                autocomplete="new-password"
+                type="password"
+                label="パスワード"
+              ></v-text-field>
+            </v-col>
+          </v-row>
           <v-text-field
             v-model="editNode.PublicKey"
             label="公開鍵"
