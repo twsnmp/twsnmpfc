@@ -1,4 +1,4 @@
-import * as brain from 'brain.js/src/index'
+import * as brain from 'brain.js'
 import * as echarts from 'echarts'
 import 'echarts-gl'
 import * as ecStat from 'echarts-stat'
