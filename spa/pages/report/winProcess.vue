@@ -329,11 +329,11 @@ export default {
     this.process.forEach((e) => {
       e.First = this.$timeFormat(
         new Date(e.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       e.Last = this.$timeFormat(
         new Date(e.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
     })
     if (this.conf.page > 1) {

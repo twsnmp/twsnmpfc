@@ -509,11 +509,11 @@ export default {
     this.ips.forEach((ip) => {
       ip.First = this.$timeFormat(
         new Date(ip.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       ip.Last = this.$timeFormat(
         new Date(ip.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       const loc = this.$getLocInfo(ip.Loc)
       ip.LatLong = loc.LatLong

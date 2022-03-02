@@ -456,7 +456,7 @@ const showSyslogHost3D = (div, logs) => {
         fontSize: 8,
         formatter(value, index) {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       axisLine: {
@@ -829,7 +829,7 @@ const showSyslogExtract3D = (div, extractDatas, xType, zType, colorType) => {
         fontSize: 8,
         formatter(value, index) {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       axisLine: {

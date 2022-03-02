@@ -545,11 +545,11 @@ export default {
     this.tls.forEach((t) => {
       t.First = this.$timeFormat(
         new Date(t.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       t.Last = this.$timeFormat(
         new Date(t.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       let loc = this.$getLocInfo(t.ClientLoc)
       t.ClientLatLong = loc.LatLong

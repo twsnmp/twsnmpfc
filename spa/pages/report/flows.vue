@@ -527,11 +527,11 @@ export default {
     this.flows.forEach((f) => {
       f.First = this.$timeFormat(
         new Date(f.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       f.Last = this.$timeFormat(
         new Date(f.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       const sl = Object.keys(f.Services)
       f.ServiceCount = sl.length

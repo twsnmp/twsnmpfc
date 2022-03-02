@@ -307,11 +307,11 @@ export default {
     this.certs.forEach((c) => {
       c.First = this.$timeFormat(
         new Date(c.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       c.Last = this.$timeFormat(
         new Date(c.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       if (c.NotAfter) {
         c.NotAfterDate = this.$timeFormat(

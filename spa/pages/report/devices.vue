@@ -396,11 +396,11 @@ export default {
     this.devices.forEach((d) => {
       d.First = this.$timeFormat(
         new Date(d.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       d.Last = this.$timeFormat(
         new Date(d.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
     })
     if (this.conf.page > 1) {

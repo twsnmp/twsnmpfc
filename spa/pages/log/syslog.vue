@@ -1149,7 +1149,7 @@ export default {
       }
     }
     if (lt) {
-      this.lt = this.$timeFormat(lt, '{MM}/{dd} {HH}:{mm}')
+      this.lt = this.$timeFormat(lt, '{yyyy}/{MM}/{dd} {HH}:{mm}')
     } else if (this.filter.EndDate === '') {
       this.ft = this.$timeFormat(new Date(), '{yyyy}/{MM}/{dd} {HH}:{mm}')
     } else {

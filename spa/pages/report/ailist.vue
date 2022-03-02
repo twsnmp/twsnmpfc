@@ -158,7 +158,7 @@ export default {
     this.ai.forEach((a) => {
       a.Last = this.$timeFormat(
         new Date(a.LastTime * 1000),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'
       )
       a.IconScore = a.Score >= 100.0 ? 1.0 : 100.0 - a.Score
     })

@@ -332,11 +332,11 @@ export default {
     this.envMonitor.forEach((e) => {
       e.First = this.$timeFormat(
         new Date(e.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       e.Last = this.$timeFormat(
         new Date(e.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       e.DataCount = e.EnvData.length
       e.LastRSSI =
@@ -449,7 +449,7 @@ export default {
         exports.push({
           記録日時: this.$timeFormat(
             new Date(d.Time / (1000 * 1000)),
-            '{MM}/{dd} {HH}:{mm}:{ss}'
+            '{yyyy}/{MM}/{dd} {HH}:{mm}'
           ),
           気温: d.Temp,
           湿度: d.Humidity,

@@ -294,7 +294,7 @@ const makeNetFlowTraffic = (div, type) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       nameTextStyle: {
@@ -1087,7 +1087,7 @@ const showNetFlowService3D = (div, logs, type) => {
         fontSize: 8,
         formatter(value, index) {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       axisLine: {
@@ -1299,7 +1299,7 @@ const showNetFlowSender3D = (div, logs, type) => {
         fontSize: 8,
         formatter(value, index) {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       axisLine: {
@@ -1516,7 +1516,7 @@ const showNetFlowIPFlow3D = (div, logs, type) => {
         fontSize: 8,
         formatter(value, index) {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       axisLine: {

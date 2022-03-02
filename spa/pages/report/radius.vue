@@ -396,11 +396,11 @@ export default {
     this.radius.forEach((r) => {
       r.First = this.$timeFormat(
         new Date(r.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       r.Last = this.$timeFormat(
         new Date(r.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       const t = r.Accept * 1 + r.Reject * 1
       r.Rate = t ? (100.0 * r.Accept) / t : 0.0

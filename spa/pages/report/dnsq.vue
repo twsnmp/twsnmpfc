@@ -315,11 +315,11 @@ export default {
     this.dnsq.forEach((t) => {
       t.First = this.$timeFormat(
         new Date(t.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       t.Last = this.$timeFormat(
         new Date(t.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
     })
     if (this.conf.page > 1) {

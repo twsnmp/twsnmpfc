@@ -58,7 +58,7 @@ const showSensorStatsChart = (div, stats) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       nameTextStyle: {
@@ -217,7 +217,7 @@ const showSensorCpuMemChart = (div, monitor) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       nameTextStyle: {
@@ -355,7 +355,7 @@ const showSensorNetChart = (div, monitor) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       nameTextStyle: {
@@ -482,7 +482,7 @@ const showSensorProcChart = (div, monitor) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       nameTextStyle: {
@@ -669,7 +669,7 @@ const showRSSITime3DChart = (div, wifi, list, filter) => {
         fontSize: 8,
         formatter(value, index) {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       axisLine: {
@@ -1022,7 +1022,7 @@ const showEnv3DChart = (div, type, list, filter) => {
         fontSize: 8,
         formatter(value, index) {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       axisLine: {
@@ -1164,7 +1164,7 @@ const showEnv2DChart = (div, type, list, filter) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       nameTextStyle: {

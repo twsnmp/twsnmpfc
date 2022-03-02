@@ -48,7 +48,7 @@ const makeLogLevelChart = (div) => {
         fontSize: '8px',
         formatter: (value, index) => {
           const date = new Date(value)
-          return echarts.time.format(date, '{MM}/{dd} {HH}:{mm}')
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
         },
       },
       nameTextStyle: {

@@ -487,11 +487,11 @@ export default {
     this.servers.forEach((s) => {
       s.First = this.$timeFormat(
         new Date(s.FirstTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       s.Last = this.$timeFormat(
         new Date(s.LastTime / (1000 * 1000)),
-        '{MM}/{dd} {HH}:{mm}:{ss}'
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       const sl = Object.keys(s.Services)
       s.ServiceCount = sl.length
