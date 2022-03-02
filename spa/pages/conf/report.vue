@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="600">
+    <v-card min-width="1000px" width="95%">
       <v-form>
         <v-card-title primary-title> レポート設定 </v-card-title>
         <v-alert v-if="$fetchState.error" color="error" dense>
@@ -13,100 +13,146 @@
           レポート設定を保存しました
         </v-alert>
         <v-card-text>
-          <v-text-field
-            v-model="report.AllowLocalIP"
-            label="使用してよいローカルIPアドレス"
-            hint="正規表現かワイルドカードで指定"
-          />
-          <v-switch
-            v-model="report.JapanOnly"
-            label="日本とローカル以外のサーバーは安全と思わない"
-          ></v-switch>
-          <v-select
-            v-if="!report.JapanOnly"
-            v-model="report.DenyCountries"
-            :items="countries"
-            label="安全と思わない国"
-            multiple
-            chips
-            hint="安全と思わないサーバーの設置場所を選択"
-            persistent-hint
-          ></v-select>
-          <v-text-field
-            v-if="!report.JapanOnly"
-            v-model="denyCountries"
-            label="安全と思わない国"
-            hint="国コードをカンマ区切りで指定"
-          />
-          <v-select
-            v-model="report.DenyServices"
-            :items="services"
-            label="安全と思わないサービス"
-            multiple
-            chips
-            hint="安全な通信と思わないサービスを選択"
-            persistent-hint
-          ></v-select>
-          <v-text-field
-            v-model="denyServices"
-            label="安全と思わないサービス"
-            hint="http/tcpのようなサービス名をカンマ区切りで指定"
-          />
-          <v-text-field v-model="report.AllowDNS" label="安全なDNSサーバー" />
-          <v-text-field v-model="report.AllowDHCP" label="安全なDHCPサーバー" />
-          <v-text-field
-            v-model="report.AllowMail"
-            label="安全なメールサーバー"
-            hint="IPアドレスをカンマ区切りで指定"
-          />
-          <v-text-field
-            v-model="report.AllowLDAP"
-            label="安全なAD/LDAPサーバー"
-            hint="IPアドレスをカンマ区切りで指定"
-          />
-          <v-slider
-            v-model="report.DropFlowThTCPPacket"
-            label="レポートで利用するフローデータの最小パケット数"
-            class="align-center"
-            max="100"
-            min="0"
-            hide-details
-            hint="0は制限なし"
-          >
-            <template #append>
+          <v-row dense>
+            <v-col>
               <v-text-field
+                v-model="report.AllowLocalIP"
+                label="使用してよいローカルIPアドレス"
+                hint="正規表現かワイルドカードで指定"
+              />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-switch
+                v-model="report.JapanOnly"
+                label="日本とローカル以外のサーバーは安全と思わない"
+              ></v-switch>
+            </v-col>
+          </v-row>
+          <v-row v-if="!report.JapanOnly" dense>
+            <v-col cols="8">
+              <v-select
+                v-model="report.DenyCountries"
+                :items="countries"
+                label="安全と思わない国"
+                multiple
+                chips
+                hint="安全と思わないサーバーの設置場所を選択"
+                persistent-hint
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="denyCountries"
+                label="安全と思わない国"
+                hint="国コードをカンマ区切りで指定"
+              />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col cols="8">
+              <v-select
+                v-model="report.DenyServices"
+                :items="services"
+                label="安全と思わないサービス"
+                multiple
+                chips
+                hint="安全な通信と思わないサービスを選択"
+                persistent-hint
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="denyServices"
+                label="安全と思わないサービス"
+                hint="http/tcpのようなサービス名をカンマ区切りで指定"
+              />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="report.AllowDNS"
+                label="安全なDNSサーバー"
+              />
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="report.AllowDHCP"
+                label="安全なDHCPサーバー"
+              />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="report.AllowMail"
+                label="安全なメールサーバー"
+                hint="IPアドレスをカンマ区切りで指定"
+              />
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="report.AllowLDAP"
+                label="安全なAD/LDAPサーバー"
+                hint="IPアドレスをカンマ区切りで指定"
+              />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-slider
                 v-model="report.DropFlowThTCPPacket"
-                class="mt-0 pt-0"
+                label="レポート対象の最小パケット数"
+                class="align-center"
+                max="100"
+                min="0"
                 hide-details
-                single-line
-                type="number"
-                style="width: 60px"
-              ></v-text-field>
-            </template>
-          </v-slider>
-          <v-slider
-            v-model="report.RetentionTimeForSafe"
-            label="安全なデバイス、サーバー、フローの保持時間(時間)"
-            class="align-center"
-            max="240"
-            min="3"
-            hide-details
-          >
-            <template #append>
-              <v-text-field
+                hint="0は制限なし"
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="report.DropFlowThTCPPacket"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+            <v-col>
+              <v-slider
                 v-model="report.RetentionTimeForSafe"
-                class="mt-0 pt-0"
+                label="安全なレポートの保持時間(時間)"
+                class="align-center"
+                max="240"
+                min="3"
                 hide-details
-                single-line
-                type="number"
-                style="width: 60px"
-              ></v-text-field>
-            </template>
-          </v-slider>
-          <v-switch
-            v-model="report.IncludeNoMACIP"
-            label="MACアドレスが不明のIPもレポートに記録する"
-          ></v-switch>
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="report.RetentionTimeForSafe"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-switch
+                v-model="report.IncludeNoMACIP"
+                label="MACアドレスが不明のIPもレポートに記録する"
+              ></v-switch>
+            </v-col>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>

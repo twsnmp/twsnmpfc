@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="900">
+    <v-card min-width="1000px" width="95%">
       <v-card-title primary-title> リソースモニター </v-card-title>
       <v-alert v-if="$fetchState.error" color="error" dense>
         リソース情報を取得できません

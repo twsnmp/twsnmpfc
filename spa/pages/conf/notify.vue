@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="900" width="90%">
+    <v-card min-width="1000" width="90%">
       <v-form>
         <v-card-title primary-title> 通知設定 </v-card-title>
         <v-alert v-if="$fetchState.error" color="error" dense>
@@ -70,36 +70,48 @@
               />
             </v-col>
           </v-row>
-          <v-text-field v-model="notify.Subject" label="件名" required />
-          <v-text-field
-            v-model="notify.URL"
-            label="メール文面に含めるTWSNMP FCのURL"
-            required
-          />
-          <v-switch
-            v-model="notify.HTMLMail"
-            label="HTML形式でメールを送信する"
-            dense
-          ></v-switch>
-          <v-slider
-            v-model="notify.Interval"
-            label="送信間隔(分)"
-            class="align-center"
-            max="1440"
-            min="5"
-            hide-details
-          >
-            <template #append>
+          <v-row dense>
+            <v-col>
+              <v-text-field v-model="notify.Subject" label="件名" required />
+            </v-col>
+            <v-col>
               <v-text-field
+                v-model="notify.URL"
+                label="メール文面に含めるTWSNMP FCのURL"
+                required
+              />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-switch
+                v-model="notify.HTMLMail"
+                label="HTML形式でメールを送信する"
+                dense
+              ></v-switch>
+            </v-col>
+            <v-col>
+              <v-slider
                 v-model="notify.Interval"
-                class="mt-0 pt-0"
+                label="送信間隔(分)"
+                class="align-center"
+                max="1440"
+                min="5"
                 hide-details
-                single-line
-                type="number"
-                style="width: 60px"
-              ></v-text-field>
-            </template>
-          </v-slider>
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="notify.Interval"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+          </v-row>
           <v-row dense>
             <v-col>
               <v-select
@@ -109,7 +121,6 @@
               >
               </v-select>
             </v-col>
-            <v-col></v-col>
             <v-col>
               <v-switch
                 v-model="notify.NotifyRepair"
@@ -142,12 +153,14 @@
                 dense
               ></v-switch>
             </v-col>
+            <v-col>
+              <v-switch
+                v-model="notify.CheckUpdate"
+                label="更新版を確認する"
+                dense
+              ></v-switch>
+            </v-col>
           </v-row>
-          <v-switch
-            v-model="notify.CheckUpdate"
-            label="更新版を確認する"
-            dense
-          ></v-switch>
           <v-row dense>
             <v-col>
               <v-select

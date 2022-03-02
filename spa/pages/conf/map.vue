@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="600">
+    <v-card min-width="1000px" width="95%">
       <v-form>
         <v-card-title primary-title> マップ設定 </v-card-title>
         <v-alert v-if="$fetchState.error" color="error" dense>
@@ -13,116 +13,151 @@
           マップ設定を保存しました
         </v-alert>
         <v-card-text>
-          <v-text-field v-model="mapconf.MapName" label="マップ名" required />
-          <v-text-field
-            v-model="mapconf.UserID"
-            autocomplete="username"
-            label="ユーザーID"
-            required
-          />
-          <v-text-field
-            v-model="mapconf.Password"
-            type="password"
-            autocomplete="new-password"
-            label="パスワード"
-            required
-          />
-          <v-slider
-            v-model="mapconf.PollInt"
-            label="ポーリング間隔(Sec)"
-            class="align-center"
-            max="3600"
-            min="5"
-            hide-details
-          >
-            <template #append>
+          <v-row dense>
+            <v-col>
               <v-text-field
+                v-model="mapconf.MapName"
+                label="マップ名"
+                required
+              />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="mapconf.UserID"
+                autocomplete="username"
+                label="ユーザーID"
+                required
+              />
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="mapconf.Password"
+                type="password"
+                autocomplete="new-password"
+                label="パスワード"
+                required
+              />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-slider
                 v-model="mapconf.PollInt"
-                class="mt-0 pt-0"
+                label="ポーリング間隔(Sec)"
+                class="align-center"
+                max="3600"
+                min="5"
                 hide-details
-                single-line
-                type="number"
-                style="width: 60px"
-              ></v-text-field>
-            </template>
-          </v-slider>
-          <v-slider
-            v-model="mapconf.Timeout"
-            label="タイムアウト(Sec)"
-            class="align-center"
-            max="10"
-            min="1"
-            hide-details
-          >
-            <template #append>
-              <v-text-field
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="mapconf.PollInt"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+            <v-col>
+              <v-slider
                 v-model="mapconf.Timeout"
-                class="mt-0 pt-0"
+                label="タイムアウト(Sec)"
+                class="align-center"
+                max="10"
+                min="1"
                 hide-details
-                single-line
-                type="number"
-                style="width: 60px"
-              ></v-text-field>
-            </template>
-          </v-slider>
-          <v-slider
-            v-model="mapconf.Retry"
-            label="リトライ回数"
-            class="align-center"
-            max="5"
-            min="0"
-            hide-details
-          >
-            <template #append>
-              <v-text-field
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="mapconf.Timeout"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+            <v-col>
+              <v-slider
                 v-model="mapconf.Retry"
-                class="mt-0 pt-0"
+                label="リトライ回数"
+                class="align-center"
+                max="5"
+                min="0"
                 hide-details
-                single-line
-                type="number"
-                style="width: 60px"
-              ></v-text-field>
-            </template>
-          </v-slider>
-          <v-select
-            v-model="mapconf.SnmpMode"
-            :items="$snmpModeList"
-            label="SNMPモード"
-          >
-          </v-select>
-          <v-text-field
-            v-if="mapconf.SnmpMode == ''"
-            v-model="mapconf.Community"
-            label="Community名"
-            required
-          />
-          <v-text-field
-            v-if="mapconf.SnmpMode != ''"
-            v-model="mapconf.SnmpUser"
-            autocomplete="username"
-            label="ユーザーID"
-            required
-          />
-          <v-text-field
-            v-if="mapconf.SnmpMode != ''"
-            v-model="mapconf.SnmpPassword"
-            type="password"
-            autocomplete="new-password"
-            label="パスワード"
-            required
-          />
-          <v-select
-            v-model="mapconf.AILevel"
-            :items="$levelList"
-            label="AI障害判定レベル"
-          >
-          </v-select>
-          <v-select
-            v-model="mapconf.AIThreshold"
-            :items="$aiThList"
-            label="AI閾値"
-          >
-          </v-select>
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="mapconf.Retry"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="mapconf.SnmpMode"
+                :items="$snmpModeList"
+                label="SNMPモード"
+              >
+              </v-select>
+            </v-col>
+            <v-col v-if="mapconf.SnmpMode == ''">
+              <v-text-field
+                v-model="mapconf.Community"
+                label="Community名"
+                required
+              />
+            </v-col>
+            <v-col v-if="mapconf.SnmpMode != ''">
+              <v-text-field
+                v-model="mapconf.SnmpUser"
+                autocomplete="username"
+                label="ユーザーID"
+                required
+              />
+            </v-col>
+            <v-col v-if="mapconf.SnmpMode != ''">
+              <v-text-field
+                v-model="mapconf.SnmpPassword"
+                type="password"
+                autocomplete="new-password"
+                label="パスワード"
+                required
+              />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="mapconf.AILevel"
+                :items="$levelList"
+                label="AI障害判定レベル"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="mapconf.AIThreshold"
+                :items="$aiThList"
+                label="AI閾値"
+              >
+              </v-select>
+            </v-col>
+          </v-row>
           <v-row justify="space-around">
             <v-switch v-model="mapconf.EnableSyslogd" label="syslog"></v-switch>
             <v-switch
@@ -138,47 +173,57 @@
               label="ARP Watch"
             ></v-switch>
           </v-row>
-          <v-slider
-            v-model="mapconf.LogDispSize"
-            label="ログ表示件数"
-            class="align-center"
-            max="200000"
-            min="10000"
-            hide-details
-          >
-            <template #append>
-              <v-text-field
+          <v-row dense>
+            <v-col>
+              <v-slider
                 v-model="mapconf.LogDispSize"
+                label="ログ表示件数"
+                class="align-center"
+                max="200000"
+                min="10000"
                 hide-details
-                single-line
-                type="number"
-                style="width: 60px"
-              ></v-text-field>
-            </template>
-          </v-slider>
-          <v-slider
-            v-model="mapconf.LogDays"
-            label="ログ保存日数"
-            class="align-center"
-            max="365"
-            min="7"
-            hide-details
-          >
-            <template #append>
-              <v-text-field
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="mapconf.LogDispSize"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+            <v-col>
+              <v-slider
                 v-model="mapconf.LogDays"
-                class="mt-0 pt-0"
+                label="ログ保存日数"
+                class="align-center"
+                max="365"
+                min="7"
                 hide-details
-                single-line
-                type="number"
-                style="width: 60px"
-              ></v-text-field>
-            </template>
-          </v-slider>
-          <v-switch
-            v-model="mapconf.EnableMobileAPI"
-            label="モバイルアプリからの接続を許可する"
-          ></v-switch>
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="mapconf.LogDays"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-switch
+                v-model="mapconf.EnableMobileAPI"
+                label="モバイルアプリからの接続を許可する"
+              ></v-switch>
+            </v-col>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>

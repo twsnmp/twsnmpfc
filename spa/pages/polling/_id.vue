@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="900px">
+    <v-card min-width="1000px" width="100%">
       <v-card-title> ポーリング情報 </v-card-title>
       <v-alert v-model="timeAnalyzeDataError" color="error" dense dismissible>
         時系列分析時にエラーが発生しました

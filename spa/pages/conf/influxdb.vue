@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="600">
+    <v-card min-width="1000px" width="95%">
       <v-form>
         <v-card-title primary-title> Influxdb設定 </v-card-title>
         <v-alert v-if="$fetchState.error" color="error" dense>
@@ -13,39 +13,65 @@
           Influxdb設定を保存しました
         </v-alert>
         <v-card-text>
-          <v-text-field v-model="influxdb.URL" label="URL" required />
-          <v-text-field
-            v-model="influxdb.User"
-            autocomplete="username"
-            label="ユーザーID"
-            required
-          />
-          <v-text-field
-            v-model="influxdb.Password"
-            type="password"
-            autocomplete="new-password"
-            label="パスワード"
-            required
-          />
-          <v-text-field v-model="influxdb.DB" label="データベース" required />
-          <v-select
-            v-model="influxdb.Duration"
-            :items="durationList"
-            label="保存期間"
-          >
-          </v-select>
-          <v-select
-            v-model="influxdb.PollingLog"
-            :items="pollingLogList"
-            label="ポーリングログ"
-          >
-          </v-select>
-          <v-select
-            v-model="influxdb.AIScore"
-            :items="aiScoreList"
-            label="AI分析結果"
-          >
-          </v-select>
+          <v-row dense>
+            <v-col>
+              <v-text-field v-model="influxdb.URL" label="URL" required />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="influxdb.User"
+                autocomplete="username"
+                label="ユーザーID"
+                required
+              />
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="influxdb.Password"
+                type="password"
+                autocomplete="new-password"
+                label="パスワード"
+                required
+              />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="influxdb.DB"
+                label="データベース"
+                required
+              />
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="influxdb.Duration"
+                :items="durationList"
+                label="保存期間"
+              >
+              </v-select>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="influxdb.PollingLog"
+                :items="pollingLogList"
+                label="ポーリングログ"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="influxdb.AIScore"
+                :items="aiScoreList"
+                label="AI分析結果"
+              >
+              </v-select>
+            </v-col>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>

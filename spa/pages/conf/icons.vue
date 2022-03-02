@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="1000px" width="100%">
+    <v-card min-width="1000px" width="95%">
       <v-card-title>
         アイコン
         <v-spacer></v-spacer>

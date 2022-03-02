@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-card min-width="900px" width="80%">
+    <v-card min-width="1000px" width="95%">
       <v-form>
         <v-card-title primary-title> データストア </v-card-title>
         <v-alert v-if="$fetchState.error" color="error" dense>
