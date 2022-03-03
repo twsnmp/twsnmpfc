@@ -1573,6 +1573,8 @@ const getNetFlowFFTMap = (logs) => {
   const m = new Map()
   m.set('Total', { Name: 'Total', Count: 0, Data: [], Total: 0 })
   let packets = 0
+  let st = Infinity
+  let lt = 0
   logs.forEach((l) => {
     const e = m.get(l.SrcIP)
     if (!e) {
@@ -1581,17 +1583,34 @@ const getNetFlowFFTMap = (logs) => {
       e.Total += l.Packets
     }
     packets += l.Packets
+    if (st > l.Time) {
+      st = l.Time
+    }
+    if (lt < l.Time) {
+      lt = l.Time
+    }
   })
   m.get('Total').Total = packets
+  let sampleSec = 1
+  const dur = (lt - st) / (1000 * 1000 * 1000)
+  if (dur > 3600 * 24 * 365) {
+    sampleSec = 3600
+  } else if (dur > 3600 * 24 * 30) {
+    sampleSec = 600
+  } else if (dur > 3600 * 24 * 7) {
+    sampleSec = 120
+  } else if (dur > 3600 * 24) {
+    sampleSec = 60
+  }
   let cts
   logs.forEach((l) => {
     if (!cts) {
-      cts = Math.floor(l.Time / (1000 * 1000 * 1000))
+      cts = Math.floor(l.Time / (1000 * 1000 * 1000 * sampleSec))
       m.get('Total').Count++
       m.get(l.SrcIP).Count++
       return
     }
-    const newCts = Math.floor(l.Time / (1000 * 1000 * 1000))
+    const newCts = Math.floor(l.Time / (1000 * 1000 * 1000 * sampleSec))
     if (cts !== newCts) {
       m.forEach((e) => {
         e.Data.push(e.Count)
@@ -1622,7 +1641,7 @@ const getNetFlowFFTMap = (logs) => {
     }
   }
   m.forEach((e) => {
-    e.FFT = doFFT(e.Data, 1)
+    e.FFT = doFFT(e.Data, 1 / sampleSec)
   })
   return m
 }
