@@ -218,7 +218,8 @@ const makePollingHistogram = (div) => {
   chart.resize()
 }
 
-const showPollingHistogram = (polling, logs, ent) => {
+const showPollingHistogram = (div, polling, logs, ent) => {
+  makePollingHistogram(div)
   if (ent === '') {
     return
   }
@@ -756,7 +757,6 @@ const showPollingLogForecast = (div, polling, logs, ent) => {
 
 export default (context, inject) => {
   inject('showPollingChart', showPollingChart)
-  inject('makePollingHistogram', makePollingHistogram)
   inject('showPollingHistogram', showPollingHistogram)
   inject('setDataList', setDataList)
   inject('showPollingLogSTL', showPollingLogSTL)

@@ -816,8 +816,12 @@ export default {
     showPollingHistogram() {
       this.pollingHistogramDialog = true
       this.$nextTick(() => {
-        this.$makePollingHistogram('pollingHistogram')
-        this.$showPollingHistogram(this.polling, this.logs, this.selectedValEnt)
+        this.$showPollingHistogram(
+          'pollingHistogram',
+          this.polling,
+          this.logs,
+          this.selectedValEnt
+        )
       })
     },
     doAI() {
