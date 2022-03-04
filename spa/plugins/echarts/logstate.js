@@ -138,7 +138,11 @@ const makeLogStateChart = (div) => {
   chart.resize()
 }
 
-const showLogStateChart = (logs) => {
+const showLogStateChart = (div, logs, zoomCallback) => {
+  if (chart) {
+    chart.dispose()
+  }
+  makeLogStateChart(div)
   const data = {
     high: [],
     low: [],
@@ -154,6 +158,8 @@ const showLogStateChart = (logs) => {
     unknown: 0,
   }
   let cth
+  let st = Infinity
+  let lt = 0
   logs.forEach((e) => {
     const lvl = data[e.State] ? e.State : 'normal'
     if (!cth) {
@@ -185,6 +191,12 @@ const showLogStateChart = (logs) => {
       }
     }
     count[lvl]++
+    if (st > e.Time) {
+      st = e.Time
+    }
+    if (lt < e.Time) {
+      lt = e.Time
+    }
   })
   chart.setOption({
     series: [
@@ -206,9 +218,23 @@ const showLogStateChart = (logs) => {
     ],
   })
   chart.resize()
+  if (zoomCallback) {
+    chart.on('datazoom', (e) => {
+      if (e.batch && e.batch.length === 2 && e.batch[0].startValue) {
+        zoomCallback(
+          e.batch[0].startValue * 1000 * 1000,
+          e.batch[0].endValue * 1000 * 1000
+        )
+      } else if (e.start !== undefined && e.end !== undefined) {
+        zoomCallback(
+          st + (lt - st) * (e.start / 100),
+          st + (lt - st) * (e.end / 100)
+        )
+      }
+    })
+  }
 }
 
 export default (context, inject) => {
-  inject('makeLogStateChart', makeLogStateChart)
   inject('showLogStateChart', showLogStateChart)
 }

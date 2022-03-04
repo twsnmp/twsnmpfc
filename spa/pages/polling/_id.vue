@@ -185,7 +185,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="pollingLogDialog" persistent max-width="950px">
+    <v-dialog v-model="pollingLogDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
         <v-card-title>
           ポーリングログ - {{ node.Name }} - {{ polling.Name }}
@@ -198,7 +198,7 @@
             hide-details
           ></v-text-field>
         </v-card-title>
-        <div id="logStateChart" style="width: 900px; height: 200px"></div>
+        <div id="logStateChart" style="width: 1000px; height: 200px"></div>
         <v-data-table
           :headers="headers"
           :items="logs"
@@ -230,7 +230,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="pollingResultDialog" persistent max-width="950px">
+    <v-dialog v-model="pollingResultDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
         <v-card-title>
           ポーリング結果 - {{ node.Name }} - {{ polling.Name }}
@@ -244,7 +244,7 @@
             @change="selectValEnt"
           ></v-select>
         </v-card-title>
-        <div id="pollingChart" style="width: 900px; height: 400px"></div>
+        <div id="pollingChart" style="width: 1000px; height: 400px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="primary" dark @click="filterDialog = true">
@@ -286,7 +286,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="pollingHistogramDialog" persistent max-width="950px">
+    <v-dialog v-model="pollingHistogramDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
         <v-card-title>
           ヒストグラム - {{ node.Name }} - {{ polling.Name }}
@@ -652,9 +652,21 @@ export default {
       node: {},
       polling: {},
       search: '',
+      zoom: {
+        st: false,
+        et: false,
+      },
       headers: [
         { text: '状態', value: 'State', width: '10%' },
-        { text: '記録日時', value: 'TimeStr', width: '20%' },
+        {
+          text: '記録日時',
+          value: 'TimeStr',
+          width: '20%',
+          filter: (t, s, i) => {
+            if (!this.zoom.st || !this.zoom.et) return true
+            return i.Time >= this.zoom.st && i.Time <= this.zoom.et
+          },
+        },
         { text: '結果', value: 'ResultStr', width: '70%' },
       ],
       filterDialog: false,
@@ -741,6 +753,10 @@ export default {
     }
   },
   methods: {
+    zoomCallBack(st, et) {
+      this.zoom.st = st
+      this.zoom.et = et
+    },
     selectValEnt() {
       if (this.pollingResultDialog) {
         this.$showPollingChart(this.polling, this.logs, this.selectedValEnt)
@@ -762,8 +778,7 @@ export default {
     showPollingLog() {
       this.pollingLogDialog = true
       this.$nextTick(() => {
-        this.$makeLogStateChart('logStateChart')
-        this.$showLogStateChart(this.logs)
+        this.$showLogStateChart('logStateChart', this.logs, this.zoomCallBack)
       })
     },
     showPollingResult(at) {

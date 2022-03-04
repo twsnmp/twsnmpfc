@@ -248,9 +248,8 @@ export default {
         if (this.numValEntList) {
           this.selectedValEnt = this.numValEntList[0].value
         }
-        this.$makeLogStateChart('logStateChart')
         this.$makePollingChart('pollingChart')
-        this.$showLogStateChart(this.logs)
+        this.$showLogStateChart('logStateChart', this.logs)
         this.$showPollingChart(this.polling, this.logs, this.selectedValEnt)
       })
     },
