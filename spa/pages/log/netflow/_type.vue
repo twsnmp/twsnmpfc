@@ -725,8 +725,20 @@ export default {
         NextTime: 0,
         Filter: 0,
       },
+      zoom: {
+        st: false,
+        et: false,
+      },
       headers: [
-        { text: '受信日時', value: 'TimeStr', width: '15%' },
+        {
+          text: '受信日時',
+          value: 'TimeStr',
+          width: '15%',
+          filter: (t, s, i) => {
+            if (!this.zoom.st || !this.zoom.et) return true
+            return i.Time >= this.zoom.st && i.Time <= this.zoom.et
+          },
+        },
         {
           text: '送信元',
           value: 'Src',
@@ -906,7 +918,7 @@ export default {
     } else {
       this.ft = this.filter.EndDate + ' ' + (this.filter.EndtTime || '23:59')
     }
-    this.$showLogCountChart(this.logs)
+    this.$showLogCountChart('logCountChart', this.logs, this.zoomCallBack)
     this.checkNextlog(r)
   },
   created() {
@@ -918,8 +930,7 @@ export default {
     }
   },
   mounted() {
-    this.$makeLogCountChart('logCountChart')
-    this.$showLogCountChart(this.logs)
+    this.$showLogCountChart('logCountChart', this.logs)
     window.addEventListener('resize', this.$resizeLogCountChart)
   },
   beforeDestroy() {
@@ -931,6 +942,10 @@ export default {
     this.$store.commit('log/logs/setNetFlow', this.conf)
   },
   methods: {
+    zoomCallBack(st, et) {
+      this.zoom.st = st
+      this.zoom.et = et
+    },
     doFilter() {
       if (this.filter.StartDate !== '' && this.filter.StartTime === '') {
         this.filter.StartTime = '00:00'

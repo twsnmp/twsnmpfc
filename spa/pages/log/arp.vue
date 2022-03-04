@@ -250,6 +250,10 @@ export default {
         IP: '',
         MAC: '',
       },
+      zoom: {
+        st: false,
+        et: false,
+      },
       headers: [
         {
           text: '状態',
@@ -260,7 +264,15 @@ export default {
             return this.conf.state === value
           },
         },
-        { text: '記録日時', value: 'TimeStr', width: '15%' },
+        {
+          text: '記録日時',
+          value: 'TimeStr',
+          width: '15%',
+          filter: (t, s, i) => {
+            if (!this.zoom.st || !this.zoom.et) return true
+            return i.Time >= this.zoom.st && i.Time <= this.zoom.et
+          },
+        },
         {
           text: 'IPアドレス',
           value: 'IP',
@@ -341,7 +353,7 @@ export default {
       this.options.page = this.conf.page
       this.conf.page = 1
     }
-    this.$showLogCountChart(this.logs)
+    this.$showLogCountChart('logCountChart', this.logs, this.zoomCallBack)
   },
   created() {
     const c = this.$store.state.log.logs.arpLog
@@ -350,8 +362,7 @@ export default {
     }
   },
   mounted() {
-    this.$makeLogCountChart('logCountChart')
-    this.$showLogCountChart(this.logs)
+    this.$showLogCountChart('logCountChart', this.logs)
     window.addEventListener('resize', this.$resizeLogCountChart)
   },
   beforeDestroy() {
@@ -363,6 +374,10 @@ export default {
     this.$store.commit('log/logs/setArpLog', this.conf)
   },
   methods: {
+    zoomCallBack(st, et) {
+      this.zoom.st = st
+      this.zoom.et = et
+    },
     doFilter() {
       if (this.filter.StartDate !== '' && this.filter.StartTime === '') {
         this.filter.StartTime = '00:00'

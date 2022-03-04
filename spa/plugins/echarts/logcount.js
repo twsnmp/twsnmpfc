@@ -115,10 +115,16 @@ const addChartData = (data, count, ctm, newCtm) => {
   return ctm
 }
 
-const showLogCountChart = (logs) => {
+const showLogCountChart = (div, logs, zoomCallback) => {
+  if (chart) {
+    chart.dispose()
+  }
+  makeLogCountChart(div)
   const data = []
   let count = 0
   let ctm
+  let st = Infinity
+  let lt = 0
   logs.forEach((e) => {
     const newCtm = Math.floor(e.Time / (1000 * 1000 * 1000 * 60))
     if (!ctm) {
@@ -129,6 +135,12 @@ const showLogCountChart = (logs) => {
       count = 0
     }
     count++
+    if (st > e.Time) {
+      st = e.Time
+    }
+    if (lt < e.Time) {
+      lt = e.Time
+    }
   })
   addChartData(data, count, ctm, ctm + 1)
   chart.setOption({
@@ -139,6 +151,21 @@ const showLogCountChart = (logs) => {
     ],
   })
   chart.resize()
+  if (zoomCallback) {
+    chart.on('datazoom', (e) => {
+      if (e.batch && e.batch.length === 2 && e.batch[0].startValue) {
+        zoomCallback(
+          e.batch[0].startValue * 1000 * 1000,
+          e.batch[0].endValue * 1000 * 1000
+        )
+      } else if (e.start !== undefined && e.end !== undefined) {
+        zoomCallback(
+          st + (lt - st) * (e.start / 100),
+          st + (lt - st) * (e.end / 100)
+        )
+      }
+    })
+  }
 }
 
 const resizeLogCountChart = () => {
@@ -148,7 +175,6 @@ const resizeLogCountChart = () => {
 }
 
 export default (context, inject) => {
-  inject('makeLogCountChart', makeLogCountChart)
   inject('showLogCountChart', showLogCountChart)
   inject('resizeLogCountChart', resizeLogCountChart)
 }

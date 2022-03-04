@@ -240,8 +240,20 @@ export default {
         Variables: '',
       },
       search: '',
+      zoom: {
+        st: false,
+        et: false,
+      },
       headers: [
-        { text: '受信日時', value: 'TimeStr', width: '20%' },
+        {
+          text: '受信日時',
+          value: 'TimeStr',
+          width: '20%',
+          filter: (t, s, i) => {
+            if (!this.zoom.st || !this.zoom.et) return true
+            return i.Time >= this.zoom.st && i.Time <= this.zoom.et
+          },
+        },
         {
           text: '送信元',
           value: 'FromAddress',
@@ -289,7 +301,7 @@ export default {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}.{SSS}')
     })
-    this.$showLogCountChart(this.logs)
+    this.$showLogCountChart('logCountChart', this.logs, this.zoomCallBack)
     if (this.conf.page > 1) {
       this.options.page = this.conf.page
       this.conf.page = 1
@@ -302,8 +314,7 @@ export default {
     }
   },
   mounted() {
-    this.$makeLogCountChart('logCountChart')
-    this.$showLogCountChart(this.logs)
+    this.$showLogCountChart('logCountChart', this.logs)
     window.addEventListener('resize', this.$resizeLogCountChart)
   },
   beforeDestroy() {
@@ -315,6 +326,10 @@ export default {
     this.$store.commit('log/logs/setTrapLog', this.conf)
   },
   methods: {
+    zoomCallBack(st, et) {
+      this.zoom.st = st
+      this.zoom.et = et
+    },
     doFilter() {
       if (this.filter.StartDate !== '' && this.filter.StartTime === '') {
         this.filter.StartTime = '00:00'
