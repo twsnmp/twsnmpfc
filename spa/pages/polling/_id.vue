@@ -759,7 +759,12 @@ export default {
     },
     selectValEnt() {
       if (this.pollingResultDialog) {
-        this.$showPollingChart(this.polling, this.logs, this.selectedValEnt)
+        this.$showPollingChart(
+          'pollingChart',
+          this.polling,
+          this.logs,
+          this.selectedValEnt
+        )
       }
       if (this.pollingHistogramDialog) {
         this.$showPollingHistogram(this.polling, this.logs, this.selectedValEnt)
@@ -785,8 +790,13 @@ export default {
       this.heatMapDialog = false
       this.pollingResultDialog = true
       this.$nextTick(() => {
-        this.$makePollingChart('pollingChart')
-        this.$showPollingChart(this.polling, this.logs, this.selectedValEnt, at)
+        this.$showPollingChart(
+          'pollingChart',
+          this.polling,
+          this.logs,
+          this.selectedValEnt,
+          at
+        )
       })
     },
     showPollingForecast() {
