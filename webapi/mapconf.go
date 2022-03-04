@@ -35,6 +35,7 @@ func getMapConf(c echo.Context) error {
 	r.AIThreshold = datastore.MapConf.AIThreshold
 	r.BackImage = datastore.MapConf.BackImage
 	r.GeoIPInfo = datastore.MapConf.GeoIPInfo
+	r.EnableMobileAPI = datastore.MapConf.EnableMobileAPI
 	return c.JSON(http.StatusOK, r)
 }
 
