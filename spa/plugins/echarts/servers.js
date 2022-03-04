@@ -117,6 +117,14 @@ const showServerMapChart = (div, servers) => {
   }
   chart.setOption(option)
   chart.resize()
+  chart.on('dblclick', (p) => {
+    const url =
+      'https://www.google.com/maps/search/?api=1&zoom=10&query=' +
+      p.value[1] +
+      ',' +
+      p.value[0]
+    window.open(url, '_blank')
+  })
 }
 
 const showCountryChart = (div, list) => {
