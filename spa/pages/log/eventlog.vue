@@ -257,6 +257,10 @@ export default {
         Event: '',
       },
       search: '',
+      zoom: {
+        st: false,
+        et: false,
+      },
       headers: [
         {
           text: '状態',
@@ -267,7 +271,15 @@ export default {
             return this.conf.level === value
           },
         },
-        { text: '発生日時', value: 'TimeStr', width: '15%' },
+        {
+          text: '発生日時',
+          value: 'TimeStr',
+          width: '15%',
+          filter: (t, s, i) => {
+            if (!this.zoom.st || !this.zoom.et) return true
+            return i.Time >= this.zoom.st && i.Time <= this.zoom.et
+          },
+        },
         {
           text: '種別',
           value: 'Type',
@@ -332,7 +344,7 @@ export default {
       this.options.page = this.conf.page
       this.conf.page = 1
     }
-    this.$showLogLevelChart(this.logs)
+    this.$showLogLevelChart('logCountChart', this.logs, this.zoomCallBack)
   },
   created() {
     const c = this.$store.state.log.logs.eventLog
@@ -341,8 +353,7 @@ export default {
     }
   },
   mounted() {
-    this.$makeLogLevelChart('logCountChart')
-    this.$showLogLevelChart(this.logs)
+    this.$showLogLevelChart('logCountChart', this.logs)
     window.addEventListener('resize', this.$resizeLogLevelChart)
   },
   beforeDestroy() {
@@ -354,6 +365,10 @@ export default {
     this.$store.commit('log/logs/setEventLog', this.conf)
   },
   methods: {
+    zoomCallBack(st, et) {
+      this.zoom.st = st
+      this.zoom.et = et
+    },
     doFilter() {
       if (this.filter.StartDate !== '' && this.filter.StartTime === '') {
         this.filter.StartTime = '00:00'

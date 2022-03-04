@@ -52,9 +52,21 @@ export default {
     return {
       node: {},
       search: '',
+      zoom: {
+        st: false,
+        et: false,
+      },
       headers: [
         { text: '状態', value: 'Level', width: '10%' },
-        { text: '発生日時', value: 'TimeStr', width: '15%' },
+        {
+          text: '発生日時',
+          value: 'TimeStr',
+          width: '15%',
+          filter: (t, s, i) => {
+            if (!this.zoom.st || !this.zoom.et) return true
+            return i.Time >= this.zoom.st && i.Time <= this.zoom.et
+          },
+        },
         { text: '種別', value: 'Type', width: '10%' },
         { text: 'イベント', value: 'Event', width: '50%' },
       ],
@@ -71,11 +83,16 @@ export default {
         e.TimeStr = this.$timeFormat(t)
       })
     }
-    this.$showLogLevelChart(this.logs)
+    this.$showLogLevelChart('logCountChart', this.logs, this.zoomCallBack)
   },
   mounted() {
-    this.$makeLogLevelChart('logCountChart')
-    this.$showLogLevelChart(this.logs)
+    this.$showLogLevelChart('logCountChart', this.logs)
+  },
+  methods: {
+    zoomCallBack(st, et) {
+      this.zoom.st = st
+      this.zoom.et = et
+    },
   },
 }
 </script>

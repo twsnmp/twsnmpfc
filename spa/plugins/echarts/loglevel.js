@@ -151,7 +151,11 @@ const addChartData = (data, count, ctm, newCtm) => {
   return ctm
 }
 
-const showLogLevelChart = (logs) => {
+const showLogLevelChart = (div, logs, zoomCallback) => {
+  if (chart) {
+    chart.dispose()
+  }
+  makeLogLevelChart(div)
   const data = {
     high: [],
     low: [],
@@ -165,6 +169,8 @@ const showLogLevelChart = (logs) => {
     other: 0,
   }
   let ctm
+  let st = Infinity
+  let lt = 0
   logs.forEach((e) => {
     const lvl = data[e.Level] ? e.Level : 'other'
     const newCtm = Math.floor(e.Time / (1000 * 1000 * 1000 * 60))
@@ -178,6 +184,12 @@ const showLogLevelChart = (logs) => {
       }
     }
     count[lvl]++
+    if (st > e.Time) {
+      st = e.Time
+    }
+    if (lt < e.Time) {
+      lt = e.Time
+    }
   })
   addChartData(data, count, ctm, ctm + 1)
   chart.setOption({
@@ -197,6 +209,21 @@ const showLogLevelChart = (logs) => {
     ],
   })
   chart.resize()
+  if (zoomCallback) {
+    chart.on('datazoom', (e) => {
+      if (e.batch && e.batch.length === 2 && e.batch[0].startValue) {
+        zoomCallback(
+          e.batch[0].startValue * 1000 * 1000,
+          e.batch[0].endValue * 1000 * 1000
+        )
+      } else if (e.start !== undefined && e.end !== undefined) {
+        zoomCallback(
+          st + (lt - st) * (e.start / 100),
+          st + (lt - st) * (e.end / 100)
+        )
+      }
+    })
+  }
 }
 
 const resizeLogLevelChart = () => {
@@ -206,7 +233,6 @@ const resizeLogLevelChart = () => {
 }
 
 export default (context, inject) => {
-  inject('makeLogLevelChart', makeLogLevelChart)
   inject('showLogLevelChart', showLogLevelChart)
   inject('resizeLogLevelChart', resizeLogLevelChart)
 }

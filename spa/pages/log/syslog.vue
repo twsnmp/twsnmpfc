@@ -923,9 +923,21 @@ export default {
         NextTime: 0,
         Filter: 0,
       },
+      zoom: {
+        st: false,
+        et: false,
+      },
       headers: [
         { text: '状態', value: 'Level', width: '8%' },
-        { text: '日時', value: 'TimeStr', width: '17%' },
+        {
+          text: '日時',
+          value: 'TimeStr',
+          width: '17%',
+          filter: (t, s, i) => {
+            if (!this.zoom.st || !this.zoom.et) return true
+            return i.Time >= this.zoom.st && i.Time <= this.zoom.et
+          },
+        },
         {
           text: '種別',
           value: 'Type',
@@ -1155,7 +1167,7 @@ export default {
     } else {
       this.ft = this.filter.EndDate + ' ' + (this.filter.EndtTime || '23:59')
     }
-    this.$showLogLevelChart(this.logs)
+    this.$showLogLevelChart('logCountChart', this.logs, this.zoomCallBack)
     if (this.filterExtractorList.length < 1) {
       const groks = await this.$axios.$get('/api/conf/grok')
       if (groks) {
@@ -1226,8 +1238,7 @@ export default {
     }
   },
   mounted() {
-    this.$makeLogLevelChart('logCountChart')
-    this.$showLogLevelChart(this.logs)
+    this.$showLogLevelChart('logCountChart', this.logs)
     window.addEventListener('resize', this.$resizeLogLevelChart)
   },
   beforeDestroy() {
@@ -1239,6 +1250,10 @@ export default {
     this.$store.commit('log/logs/setSyslog', this.conf)
   },
   methods: {
+    zoomCallBack(st, et) {
+      this.zoom.st = st
+      this.zoom.et = et
+    },
     doFilter() {
       if (this.filter.StartDate !== '' && this.filter.StartTime === '') {
         this.filter.StartTime = '00:00'
