@@ -38,3 +38,29 @@ export const isPrivateIP = (addr) => {
     /^::$/.test(addr)
   )
 }
+
+export const setZoomCallback = (chart, cb, st, lt) => {
+  if (!cb) {
+    return
+  }
+  chart.on('datazoom', (e) => {
+    if (e.batch && e.batch.length === 2) {
+      if (e.batch[0].startValue) {
+        // Select ZOOM
+        // eslint-disable-next-line node/no-callback-literal
+        cb(
+          e.batch[0].startValue * 1000 * 1000,
+          e.batch[0].endValue * 1000 * 1000
+        )
+      } else if (e.batch[0].end === 100 && e.batch[0].start === 0) {
+        // Reset ZOOM
+        // eslint-disable-next-line node/no-callback-literal
+        cb(false, false)
+      }
+    } else if (e.start !== undefined && e.end !== undefined) {
+      // Scroll ZOOM
+      // eslint-disable-next-line node/no-callback-literal
+      cb(st + (lt - st) * (e.start / 100), st + (lt - st) * (e.end / 100))
+    }
+  })
+}

@@ -1,4 +1,5 @@
 import * as echarts from 'echarts'
+import { setZoomCallback } from './utils.js'
 
 let chart
 
@@ -218,21 +219,7 @@ const showLogStateChart = (div, logs, zoomCallback) => {
     ],
   })
   chart.resize()
-  if (zoomCallback) {
-    chart.on('datazoom', (e) => {
-      if (e.batch && e.batch.length === 2 && e.batch[0].startValue) {
-        zoomCallback(
-          e.batch[0].startValue * 1000 * 1000,
-          e.batch[0].endValue * 1000 * 1000
-        )
-      } else if (e.start !== undefined && e.end !== undefined) {
-        zoomCallback(
-          st + (lt - st) * (e.start / 100),
-          st + (lt - st) * (e.end / 100)
-        )
-      }
-    })
-  }
+  setZoomCallback(chart, zoomCallback, st, lt)
 }
 
 export default (context, inject) => {
