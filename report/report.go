@@ -39,7 +39,6 @@ var (
 func Start(ctx context.Context, wg *sync.WaitGroup) error {
 	datastore.LaodReportConf()
 	UpdateReportConf()
-	datastore.LoadReport()
 	deviceReportCh = make(chan *deviceReportEnt, 100)
 	userReportCh = make(chan *userReportEnt, 100)
 	flowReportCh = make(chan *flowReportEnt, 500)
@@ -134,6 +133,8 @@ func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	timer := time.NewTicker(time.Minute * 5)
 	log.Println("start report")
+	datastore.LoadReport()
+	log.Println("load report done")
 	go checkOldReport()
 	setSensorState()
 	calcScore()
