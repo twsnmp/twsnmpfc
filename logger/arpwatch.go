@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -326,7 +327,10 @@ func checkFixMACMode(n *datastore.NodeEnt) {
 }
 
 func checkFixHostMode(n *datastore.NodeEnt) {
-	ips, err := net.LookupHost(n.Name)
+	r := &net.Resolver{}
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
+	defer cancel()
+	ips, err := r.LookupHost(ctx, n.Name)
 	if err != nil {
 		log.Printf("check fixed host err=%v", err)
 		return

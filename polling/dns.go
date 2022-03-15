@@ -1,6 +1,7 @@
 package polling
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strings"
@@ -97,6 +98,9 @@ func doPollingDNS(pe *datastore.PollingEnt) {
 
 func doLookup(mode, target string) ([]string, error) {
 	ret := []string{}
+	r := &net.Resolver{}
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
+	defer cancel()
 	switch mode {
 	case "ipaddr":
 		if addr, err := net.ResolveIPAddr("ip", target); err == nil {
@@ -105,11 +109,11 @@ func doLookup(mode, target string) ([]string, error) {
 			return ret, err
 		}
 	case "addr":
-		return net.LookupAddr(target)
+		return r.LookupAddr(ctx, target)
 	case "host":
-		return net.LookupHost(target)
+		return r.LookupHost(ctx, target)
 	case "mx":
-		if mxs, err := net.LookupMX(target); err == nil {
+		if mxs, err := r.LookupMX(ctx, target); err == nil {
 			for _, mx := range mxs {
 				ret = append(ret, mx.Host)
 			}
@@ -118,7 +122,7 @@ func doLookup(mode, target string) ([]string, error) {
 			return ret, err
 		}
 	case "ns":
-		if nss, err := net.LookupNS(target); err == nil {
+		if nss, err := r.LookupNS(ctx, target); err == nil {
 			for _, ns := range nss {
 				ret = append(ret, ns.Host)
 			}
@@ -127,13 +131,13 @@ func doLookup(mode, target string) ([]string, error) {
 			return ret, err
 		}
 	case "cname":
-		if cname, err := net.LookupCNAME(target); err == nil {
+		if cname, err := r.LookupCNAME(ctx, target); err == nil {
 			return []string{cname}, nil
 		} else {
 			return ret, err
 		}
 	case "txt":
-		return net.LookupTXT(target)
+		return r.LookupTXT(ctx, target)
 	}
 	return ret, nil
 }

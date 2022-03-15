@@ -350,7 +350,10 @@ func findNodeInfoFromIP(ip string) (string, string) {
 		addIpToNameChahe(ip, n.Name, n.ID)
 		return n.Name, n.ID
 	}
-	if names, err := net.LookupAddr(ip); err == nil && len(names) > 0 {
+	r := &net.Resolver{}
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
+	defer cancel()
+	if names, err := r.LookupAddr(ctx, ip); err == nil && len(names) > 0 {
 		addIpToNameChahe(ip, names[0], "")
 		return names[0], ""
 	}
@@ -525,7 +528,10 @@ func getIPInfo(ip string) *[]AddrInfoEnt {
 	} else {
 		ret = append(ret, AddrInfoEnt{Level: "info", Title: "管理対象ノード", Value: "いいえ"})
 	}
-	if names, err := net.LookupAddr(ip); err == nil && len(names) > 0 {
+	r := &net.Resolver{}
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
+	defer cancel()
+	if names, err := r.LookupAddr(ctx, ip); err == nil && len(names) > 0 {
 		for _, n := range names {
 			ret = append(ret, AddrInfoEnt{Level: "info", Title: "DNSホスト名", Value: n})
 		}

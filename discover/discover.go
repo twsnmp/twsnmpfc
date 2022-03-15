@@ -6,6 +6,7 @@ package discover
 */
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -122,7 +123,10 @@ func StartDiscover() error {
 						IfIndexList: []string{},
 						ServerList:  make(map[string]bool),
 					}
-					if names, err := net.LookupAddr(ipstr); err == nil && len(names) > 0 {
+					r := &net.Resolver{}
+					ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
+					defer cancel()
+					if names, err := r.LookupAddr(ctx, ipstr); err == nil && len(names) > 0 {
 						dent.HostName = names[0]
 					}
 					getSnmpInfo(ipstr, &dent)
