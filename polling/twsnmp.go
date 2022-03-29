@@ -45,6 +45,7 @@ func doPollingTWSNMP(pe *datastore.PollingEnt) {
 		}
 		rTime = endTime - startTime
 		ok = true
+		break
 	}
 	pe.Result["rtt"] = float64(rTime)
 	if ok {
@@ -53,6 +54,7 @@ func doPollingTWSNMP(pe *datastore.PollingEnt) {
 			setPollingError("twsnmp", pe, err)
 			return
 		}
+		delete(pe.Result, "error")
 		pe.Result["state"] = ms.State
 		pe.Result["high"] = float64(ms.High)
 		pe.Result["low"] = float64(ms.Low)

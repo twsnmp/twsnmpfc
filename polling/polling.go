@@ -233,8 +233,8 @@ func setPollingState(pe *datastore.PollingEnt, newState string) {
 			sendEvent = true
 		}
 	default:
-		if pe.State != pe.Level {
-			pe.State = pe.Level
+		if pe.State != newState {
+			pe.State = newState
 			sendEvent = true
 		}
 	}
