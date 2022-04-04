@@ -196,6 +196,26 @@
             </v-col>
             <v-col>
               <v-slider
+                v-model="mapconf.LogTimeout"
+                label="ログ検索タイムアウト"
+                class="align-center"
+                max="600"
+                min="15"
+                hide-details
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="mapconf.LogTimeout"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+            <v-col>
+              <v-slider
                 v-model="mapconf.LogDays"
                 label="ログ保存日数"
                 class="align-center"
@@ -372,6 +392,7 @@ export default {
         Retry: 1,
         LogDays: 14,
         LogDispSize: 10000,
+        LogTimeout: 15,
         SnmpMode: '',
         Community: 'public',
         SnmpUser: '',

@@ -29,6 +29,7 @@ type MapConfEnt struct {
 	Retry        int
 	LogDays      int
 	LogDispSize  int
+	LogTimeout   int
 	SnmpMode     string
 	Community    string
 	SnmpUser     string
@@ -52,6 +53,7 @@ func initConf() {
 	MapConf.Retry = 1
 	MapConf.Timeout = 1
 	MapConf.LogDispSize = 5000
+	MapConf.LogTimeout = 15
 	MapConf.LogDays = 14
 	MapConf.AILevel = "info"
 	MapConf.AIThreshold = 81

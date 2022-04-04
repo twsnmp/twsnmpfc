@@ -83,7 +83,11 @@ func postNetFlow(c echo.Context) error {
 	r.Process = 0
 	r.Filter = filter.Filter
 	i := 0
-	end := time.Now().Unix() + 15
+	to := 15
+	if datastore.MapConf.LogTimeout > 0 {
+		to = datastore.MapConf.LogTimeout
+	}
+	end := time.Now().Unix() + int64(to)
 	datastore.ForEachLog(st, et, "netflow", func(l *datastore.LogEnt) bool {
 		if i > 1000 {
 			// 検索期間が15秒を超えた場合
@@ -251,7 +255,11 @@ func postIPFIX(c echo.Context) error {
 	r.Process = 0
 	r.Filter = filter.Filter
 	i := 0
-	end := time.Now().Unix() + 15
+	to := 15
+	if datastore.MapConf.LogTimeout > 0 {
+		to = datastore.MapConf.LogTimeout
+	}
+	end := time.Now().Unix() + int64(to)
 	datastore.ForEachLog(st, et, "ipfix", func(l *datastore.LogEnt) bool {
 		if i > 1000 {
 			// 検索期間が15秒を超えた場合

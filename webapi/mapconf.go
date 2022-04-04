@@ -23,6 +23,7 @@ func getMapConf(c echo.Context) error {
 	r.Retry = datastore.MapConf.Retry
 	r.LogDays = datastore.MapConf.LogDays
 	r.LogDispSize = datastore.MapConf.LogDispSize
+	r.LogTimeout = datastore.MapConf.LogTimeout
 	r.SnmpMode = datastore.MapConf.SnmpMode
 	r.Community = datastore.MapConf.Community
 	r.SnmpUser = datastore.MapConf.SnmpUser
@@ -54,6 +55,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.Retry = mc.Retry
 	datastore.MapConf.LogDays = mc.LogDays
 	datastore.MapConf.LogDispSize = mc.LogDispSize
+	datastore.MapConf.LogTimeout = mc.LogTimeout
 	datastore.RestartSnmpTrapd = datastore.MapConf.SnmpMode != mc.SnmpMode ||
 		datastore.MapConf.Community != mc.Community ||
 		datastore.MapConf.SnmpUser != mc.SnmpUser
