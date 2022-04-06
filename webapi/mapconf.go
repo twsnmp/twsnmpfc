@@ -27,13 +27,13 @@ func getMapConf(c echo.Context) error {
 	r.SnmpMode = datastore.MapConf.SnmpMode
 	r.Community = datastore.MapConf.Community
 	r.SnmpUser = datastore.MapConf.SnmpUser
-	//	r.SnmpPassword = datastore.MapConf.SmmpPassword
 	r.EnableSyslogd = datastore.MapConf.EnableSyslogd
 	r.EnableTrapd = datastore.MapConf.EnableTrapd
 	r.EnableNetflowd = datastore.MapConf.EnableNetflowd
 	r.EnableArpWatch = datastore.MapConf.EnableArpWatch
 	r.AILevel = datastore.MapConf.AILevel
 	r.AIThreshold = datastore.MapConf.AIThreshold
+	r.AIMode = datastore.MapConf.AIMode
 	r.BackImage = datastore.MapConf.BackImage
 	r.GeoIPInfo = datastore.MapConf.GeoIPInfo
 	r.EnableMobileAPI = datastore.MapConf.EnableMobileAPI
@@ -73,6 +73,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.EnableMobileAPI = mc.EnableMobileAPI
 	datastore.MapConf.AILevel = mc.AILevel
 	datastore.MapConf.AIThreshold = mc.AIThreshold
+	datastore.MapConf.AIMode = mc.AIMode
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}

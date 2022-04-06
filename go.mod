@@ -6,6 +6,7 @@ require (
 	github.com/Songmu/timeout v0.4.0
 	github.com/beevik/ntp v0.3.0
 	github.com/chewxy/stl v1.3.1
+	github.com/codegaudi/go-iforest v0.0.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -37,7 +38,6 @@ require (
 
 require (
 	github.com/Songmu/wrapcommander v0.1.0 // indirect
-	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/alecthomas/participle v0.4.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a // indirect

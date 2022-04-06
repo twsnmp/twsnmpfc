@@ -143,6 +143,14 @@
           <v-row dense>
             <v-col>
               <v-select
+                v-model="mapconf.AIMode"
+                :items="aiModeList"
+                label="AIアルゴリズム"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-select
                 v-model="mapconf.AILevel"
                 :items="$levelList"
                 label="AI障害判定レベル"
@@ -402,7 +410,12 @@ export default {
         EnableNetflowd: false,
         AILevel: 'high',
         AIThreshold: 81,
+        AIMode: 'lof',
       },
+      aiModeList: [
+        { text: 'Local Outiler Factor', value: 'lof' },
+        { text: 'Isolation Forest', value: 'iforest' },
+      ],
       backImage: {
         X: 0,
         Y: 0,

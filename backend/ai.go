@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"strings"
 	"sync"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/montanaflynn/stats"
 	"github.com/twsnmp/golof/lof"
 
+	go_iforest "github.com/codegaudi/go-iforest"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -200,7 +202,12 @@ func getStateNum(s string) float64 {
 }
 
 func calcAIScore(req *AIReq) {
-	res := calcLOF(req)
+	var res *datastore.AIResult
+	if datastore.MapConf.AIMode == "iforest" {
+		res = calcIForest(req)
+	} else {
+		res = calcLOF(req)
+	}
 	if len(res.ScoreData) < 1 {
 		return
 	}
@@ -264,6 +271,51 @@ func calcLOF(req *AIReq) *datastore.AIResult {
 		r[i] /= diff
 		r[i] *= 100.0
 		// r[i] = (1.0 - r[i]) * 100.0
+	}
+	mean, err := stats.Mean(r)
+	if err != nil {
+		return &res
+	}
+	sd, err := stats.StandardDeviation(r)
+	if err != nil {
+		return &res
+	}
+	for i := range r {
+		score := ((10 * (float64(r[i]) - mean) / sd) + 50)
+		res.ScoreData = append(res.ScoreData, []float64{float64(req.TimeStamp[i]), score})
+	}
+	res.PollingID = req.PollingID
+	res.LastTime = req.TimeStamp[len(req.TimeStamp)-1]
+	return &res
+}
+
+func calcIForest(req *AIReq) *datastore.AIResult {
+	res := datastore.AIResult{}
+	rand.Seed(time.Now().UnixNano())
+	iforest, err := go_iforest.NewIForest(req.Data, 1000, 256)
+	if err != nil {
+		log.Printf("NewIForest err=%v", err)
+		return &res
+	}
+	r := make([]float64, len(req.Data))
+	for i, v := range req.Data {
+		r[i] = iforest.CalculateAnomalyScore(v)
+	}
+	max, err := stats.Max(r)
+	if err != nil {
+		return &res
+	}
+	min, err := stats.Min(r)
+	if err != nil {
+		return &res
+	}
+	diff := max - min
+	if diff == 0 {
+		return &res
+	}
+	for i := range r {
+		r[i] /= diff
+		r[i] *= 100.0
 	}
 	mean, err := stats.Mean(r)
 	if err != nil {

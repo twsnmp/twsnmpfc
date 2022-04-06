@@ -44,6 +44,7 @@ type MapConfEnt struct {
 	EnableMobileAPI bool
 	AILevel         string
 	AIThreshold     int
+	AIMode          string
 	GeoIPInfo       string
 }
 
@@ -57,6 +58,7 @@ func initConf() {
 	MapConf.LogDays = 14
 	MapConf.AILevel = "info"
 	MapConf.AIThreshold = 81
+	MapConf.AIMode = "lof"
 	MapConf.Community = "public"
 	MapConf.UserID = "twsnmp"
 	MapConf.Password = security.PasswordHash("twsnmp")
