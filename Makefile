@@ -54,13 +54,20 @@ $(DIST)/twsnmpfc.arm64: statik/statik.go $(SRC)
 $(DIST)/twsnmpfc: statik/statik.go $(SRC)
 	env GO111MODULE=on GOOS=linux GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
 
+### pwaのビルド
+pwa/public/build/bundle.js: pwa/src/* pwa/public/*
+	cd pwa && npm run build
+
 ### nuxt.js アプリのビルド
 spa/dist/index.html: spa/*.js* spa/pages/* spa/pages/report/* spa/pages/conf/*  \
     spa/pages/log/* spa/pages/node/*/* spa/pages/polling/* spa/pages/mibbr/* \
     spa/pages/report/*/* spa/layouts/* spa/plugins/* spa/plugins/echarts/*
 	cd spa && npm run generate
-statik/statik.go: spa/dist/* conf/* spa/dist/index.html
+statik/statik.go: spa/dist/* conf/* spa/dist/index.html pwa/public/build/bundle.js
 	cp -a conf  spa/dist
+	rm -rf spa/dist/pwa
+	mkdir spa/dist/pwa
+	cp -a pwa/public/* spa/dist/pwa/
 	statik -src spa/dist
 clean_spa:
 	rm -f spa/dist/index.html
