@@ -3,6 +3,7 @@
   import { html, h } from "gridjs";
   import "./gridjs.css";
   import {getState} from "./common.js"
+  import {setMAP, showMAP} from "./map"
   import { session, twsnmpApiGetJSON } from "./twsnmpapi.js";
   import { createEventDispatcher, onMount } from "svelte";
   import Grid from "gridjs-svelte";
@@ -61,8 +62,10 @@
       tmp.push([l.Level, l.Time, l.Type, l.NodeName, l.Event]);
     });
     logs = tmp;
+    setMAP(map);
   };
   onMount(() => {
+    showMAP('map');
     refresh();
   });
 </script>
