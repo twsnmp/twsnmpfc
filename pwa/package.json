@@ -22,6 +22,13 @@
     "@mdi/font": "^6.6.96",
     "@primer/css": "^19.8.2",
     "bulma": "^0.9.3",
+    "echarts": "^5.3.2",
+    "echarts-gl": "^2.0.9",
+    "echarts-stat": "^1.2.0",
+    "gridjs": "^5.0.2",
+    "gridjs-svelte": "^2.1.1",
+    "p5": "^1.4.1",
+    "p5-svelte": "^3.1.2",
     "rollup-plugin-copy": "^3.4.0",
     "sirv-cli": "^2.0.0"
   }

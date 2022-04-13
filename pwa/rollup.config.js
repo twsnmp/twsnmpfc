@@ -80,6 +80,7 @@ export default {
 		production && terser(),
 		replace({
 			APIURL: production ? '' : 'http://localhost:8080',
+      'process.env.NODE_ENV': JSON.stringify( 'development' ),
 		})
 	],
 	watch: {

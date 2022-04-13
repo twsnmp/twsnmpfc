@@ -1,23 +1,20 @@
 <script>
-  import {session} from './twsnmpapi.js';
-	import Login from "./Login.svelte";
-	import Main from "./Main.svelte";
+  import { session } from "./twsnmpapi.js";
+  import Login from "./Login.svelte";
+  import Main from "./Main.svelte";
   let page = "login";
 
-	const handleLogin = () => {
-		if ($session.token) {
-			page = "main";
-		}
-  }
-
+  const handleDone = () => {
+    page = $session.token ? "main" : "login";
+  };
 </script>
 
 <main>
   <div id="page">
-    {#if page == "login" }
-     <Login on:done={handleLogin}/>
+    {#if page == "login"}
+      <Login on:done={handleDone} />
     {:else if page == "main"}
-     <Main/>
+      <Main on:done={handleDone} />
     {/if}
   </div>
 </main>
@@ -30,6 +27,6 @@
   #page {
     height: 100%;
     width: 98%;
-    margin:10px auto;
+    margin: 10px auto;
   }
 </style>
