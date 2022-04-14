@@ -4,7 +4,6 @@ const MAP_SIZE_X = 2500
 const MAP_SIZE_Y = 5000
 
 let mapRedraw = true
-let hasMAP = false
 
 let nodes = {}
 let lines = []
@@ -113,12 +112,14 @@ const mapMain = (p5) => {
   }
 }
 
+let map;
+
 export const showMAP = (div) => {
   mapRedraw = true
-  if (hasMAP) {
-    return
+  if (map) {
+    map.remove();
+    map = undefined;
   }
-  new P5(mapMain, div)
-  hasMAP = true
+  map = new P5(mapMain, div)
 }
 

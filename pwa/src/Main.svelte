@@ -42,8 +42,10 @@
     { name: "イベント", width: "55%" },
   ];
   let errMsg = "";
+  let timer;
   const logout = () => {
     $session.token = "";
+    clearTimeout(timer);
     dispatch("done", {});
   };
   let pagination = {
@@ -64,9 +66,15 @@
     logs = tmp;
     setMAP(map);
   };
+
+  const loop = () => {
+    refresh();
+    timer = setTimeout(loop,60000);
+  }
+
   onMount(() => {
     showMAP('map');
-    refresh();
+    loop();
   });
 </script>
 
