@@ -1,11 +1,11 @@
 <script>
   import { session } from "./twsnmpapi.js";
   import Login from "./Login.svelte";
-  import Main from "./Main.svelte";
+  import Map from "./Map.svelte";
   let page = "login";
 
   const handleDone = () => {
-    page = $session.token ? "main" : "login";
+    page = $session.token ? "map" : "login";
   };
 </script>
 
@@ -13,8 +13,8 @@
   <div id="page">
     {#if page == "login"}
       <Login on:done={handleDone} />
-    {:else if page == "main"}
-      <Main on:done={handleDone} />
+    {:else if page == "map"}
+      <Map on:done={handleDone} />
     {/if}
   </div>
 </main>

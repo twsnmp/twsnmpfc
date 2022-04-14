@@ -22,7 +22,7 @@
   };
 
   let logs = [];
-  let columns = [
+  let logColumns = [
     {
       name: "状態",
       width: "8%",
@@ -43,16 +43,33 @@
   ];
   let errMsg = "";
   let timer;
-  const logout = () => {
-    $session.token = "";
-    clearTimeout(timer);
-    dispatch("done", {});
-  };
-  let pagination = {
+
+  const logPagination = {
     limit: 10,
     enable: true,
   };
-  const refresh = async () => {
+
+  const listPagination = {
+    limit: 20,
+    enable: true,
+  };
+
+  let page = "map";
+  let nodes = [];
+  let nodeColumns = [
+    {
+      name: "状態",
+      width: "10%",
+      formatter: (cell) => formatLevel(cell),
+    },
+    { name: "名前", width: "20%" },
+    { name: "IPアドレス", width: "15%" },
+    { name: "MACアドレス", width: "25%" },
+    { name: "説明", width: "35%" },
+  ];
+
+
+  const refreshMAP = async () => {
     const r = await twsnmpApiGetJSON("/api/map");
     if (!r) {
       errMsg = "マップ情報を取得できません！";
@@ -65,6 +82,30 @@
     });
     logs = tmp;
     setMAP(map);
+  }
+
+  const refreshNodes = async () => {
+    const r = await twsnmpApiGetJSON("/api/nodes");
+    if (!r) {
+      errMsg = "ノードリストを取得できません！";
+      return;
+    }
+    const tmp = [];
+    r.forEach((n) => {
+      tmp.push([n.State, n.Name, n.IP, n.MAC, n.Descr]);
+    });
+    nodes = tmp;
+  }
+
+  const refresh = () => {
+    switch (page) {
+    case "map":
+      refreshMAP();
+      return;
+    case "node":
+      refreshNodes();
+      return;
+    }
   };
 
   const loop = () => {
@@ -76,13 +117,33 @@
     showMAP('map');
     loop();
   });
+
+  const showPage = () => {
+    if (page =="map") {
+      showMAP("map");
+    }
+    refresh();
+  }
+
+  const logout = () => {
+    $session.token = "";
+    clearTimeout(timer);
+    dispatch("done", {});
+  };
+
 </script>
 
 <div class="Box">
-  <div class="Box-header">
-    <h3 class="Box-title">
-      {map.MapConf.MapName}
-    </h3>
+  <div class="Box-header d-flex flex-items-center">
+    <h3 class="Box-title overflow-hidden flex-auto">{map.MapConf.MapName}</h3>
+    <select
+      class="form-select mr-1"
+      bind:value={page}
+      on:change={showPage}
+    >
+      <option value="map">マップ</option>
+      <option value="node">ノードリスト</option>
+    </select>
   </div>
   {#if errMsg}
     <div class="flash flash-error">
@@ -90,12 +151,27 @@
       {errMsg}
     </div>
   {/if}
-  <div class="Box-body">
-    <div id="map" />
-  </div>
-  <div class="Box-row markdown-body log">
-    <Grid data={logs} sort resizable search {pagination} {columns} language={jaJP} />
-  </div>
+  {#if page == "map"}
+    <div class="Box-body">
+      <div id="map" />
+    </div>
+    <div class="Box-row markdown-body log">
+      <Grid data={logs} sort resizable search pagination={logPagination} columns={logColumns} language={jaJP} />
+    </div>
+  {:else if page == "node"}
+    <div class="Box-row markdown-body log">
+      <Grid data={nodes} sort resizable search pagination={listPagination} columns={nodeColumns} language={jaJP} />
+    </div>
+  {:else if page == "polling"}
+    <div class="Box-body">
+    </div>
+  {:else if page == "sensor"}
+    <div class="Box-body">
+    </div>
+  {:else if page == "ai"}
+    <div class="Box-body">
+    </div>
+  {/if}
   <div class="Box-footer text-right">
     <button class="btn btn-danger" type="button" on:click={logout}>
       <span class="mdi mdi-logout" />
