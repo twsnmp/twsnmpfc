@@ -16,8 +16,20 @@
     },
   };
 
+  let errMsg = "";
+  let timer;
+  let page = "map";
+
+  const pagination = {
+    limit: 10,
+    enable: true,
+  };
+
   const formatLevel = (level) => {
     const e = getState(level);
+    if(!e || !e.text){
+      console.log(level);
+    }
     return html(`<div><span class="mdi ${e.icon}" style="color: ${e.color};"></span>${e.text}</div>`);
   };
 
@@ -41,33 +53,6 @@
     { name: "関連ノード", width: "15%" },
     { name: "イベント", width: "55%" },
   ];
-  let errMsg = "";
-  let timer;
-
-  const logPagination = {
-    limit: 10,
-    enable: true,
-  };
-
-  const listPagination = {
-    limit: 20,
-    enable: true,
-  };
-
-  let page = "map";
-  let nodes = [];
-  let nodeColumns = [
-    {
-      name: "状態",
-      width: "10%",
-      formatter: (cell) => formatLevel(cell),
-    },
-    { name: "名前", width: "20%" },
-    { name: "IPアドレス", width: "15%" },
-    { name: "MACアドレス", width: "25%" },
-    { name: "説明", width: "35%" },
-  ];
-
 
   const refreshMAP = async () => {
     const r = await twsnmpApiGetJSON("/api/map");
@@ -84,6 +69,19 @@
     setMAP(map);
   }
 
+  let nodes = [];
+  let nodeColumns = [
+    {
+      name: "状態",
+      width: "10%",
+      formatter: (cell) => formatLevel(cell),
+    },
+    { name: "名前", width: "20%" },
+    { name: "IPアドレス", width: "15%" },
+    { name: "MACアドレス", width: "25%" },
+    { name: "説明", width: "35%" },
+  ];
+
   const refreshNodes = async () => {
     const r = await twsnmpApiGetJSON("/api/nodes");
     if (!r) {
@@ -97,6 +95,49 @@
     nodes = tmp;
   }
 
+  let pollings = [];
+  let pollingColumns = [
+    {
+      name: "状態",
+      width: "10%",
+      formatter: (cell) => formatLevel(cell),
+    },
+    { name: "ノード名", width: "20%" },
+    { name: "名前", width: "35%" },
+    {
+      name: "レベル",
+      width: "10%",
+      formatter: (cell) => formatLevel(cell),
+    },
+    { name: "種別", width: "10%" },
+    {
+      name: "最終実施",
+      width: "15%",
+      formatter: (cell) =>
+        echarts.time.format(
+          new Date(cell / (1000 * 1000)),
+          "{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}"
+        ),
+    },
+  ];
+
+  const refreshPollings = async () => {
+    const r = await twsnmpApiGetJSON("/api/pollings");
+    if (!r) {
+      errMsg = "ポーリングリストを取得できません！";
+      return;
+    }
+    const nodeNameMap = {};
+    r.NodeList.forEach((n)=>{
+      nodeNameMap[n.value] = n.text;
+    });
+    const tmp = [];
+    r.Pollings.forEach((p) => {
+      tmp.push([p.State,nodeNameMap[p.NodeID] || "", p.Name, p.Level, p.Type,p.LastTime]);
+    });
+    pollings = tmp;
+  }
+
   const refresh = () => {
     switch (page) {
     case "map":
@@ -104,6 +145,9 @@
       return;
     case "node":
       refreshNodes();
+      return;
+    case "polling":
+      refreshPollings();
       return;
     }
   };
@@ -120,7 +164,10 @@
 
   const showPage = () => {
     if (page =="map") {
+      pagination.limit = 10;
       showMAP("map");
+    } else {
+      pagination.limit = 20;
     }
     refresh();
   }
@@ -143,6 +190,11 @@
     >
       <option value="map">マップ</option>
       <option value="node">ノードリスト</option>
+      <option value="polling">ポーリングリスト</option>
+      <option value="sensor">センサーリスト</option>
+      <option value="ai">AI分析リスト</option>
+      <option value="device">LANデバイスリスト</option>
+      <option value="ip">IPアドレスリスト</option>
     </select>
   </div>
   {#if errMsg}
@@ -156,14 +208,15 @@
       <div id="map" />
     </div>
     <div class="Box-row markdown-body log">
-      <Grid data={logs} sort resizable search pagination={logPagination} columns={logColumns} language={jaJP} />
+      <Grid data={logs} sort resizable search {pagination} columns={logColumns} language={jaJP} />
     </div>
   {:else if page == "node"}
     <div class="Box-row markdown-body log">
-      <Grid data={nodes} sort resizable search pagination={listPagination} columns={nodeColumns} language={jaJP} />
+      <Grid data={nodes} sort resizable search {pagination} columns={nodeColumns} language={jaJP} />
     </div>
   {:else if page == "polling"}
-    <div class="Box-body">
+    <div class="Box-row markdown-body log">
+      <Grid data={pollings} sort resizable search {pagination} columns={pollingColumns} language={jaJP} />
     </div>
   {:else if page == "sensor"}
     <div class="Box-body">

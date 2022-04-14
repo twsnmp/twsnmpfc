@@ -21,7 +21,7 @@ stateList.forEach((e) => {
 })
 
 export const getState = (state) => {
-  return stateMap[state] ? stateMap[state] : {color:'gray',icon:'mdi-comment-question-outline', name:'不明'}
+  return stateMap[state] ? stateMap[state] : {color:'gray',icon:'mdi-comment-question-outline', text:'不明'}
 }
 
 const iconList = [
