@@ -11,6 +11,9 @@
     pollingColumns,
     sensorColumns,
     aiColumns,
+    deviceColumns,
+    ipColumns,
+    setTableCallback
   } from "./columns";
   const dispatch = createEventDispatcher();
 
@@ -137,6 +140,36 @@
     ais = tmp;
   };
 
+  let devices = [];
+
+  const refreshDevices = async () => {
+    const r = await twsnmpApiGetJSON("/api/report/devices");
+    if (!r) {
+      errMsg = "LANデバイスリストを取得できません!";
+      return;
+    }
+    const tmp = [];
+    r.forEach((d) => {
+      tmp.push([d.Score, d.ID, d.Name, d.IP,d.Vendor,d.FirstTime, d.LastTime]);
+    });
+    devices = tmp;
+  };
+
+  let ips = [];
+
+  const refreshIPs = async () => {
+    const r = await twsnmpApiGetJSON("/api/report/ips");
+    if (!r) {
+      errMsg = "IPアドレスリストを取得できません!";
+      return;
+    }
+    const tmp = [];
+    r.forEach((i) => {
+      tmp.push([i.Score, i.IP, i.Name,i.Loc,i.MAC,i.Vendor,i.FirstTime, i.LastTime]);
+    });
+    ips = tmp;
+  };
+
   const refresh = () => {
     switch (page) {
       case "map":
@@ -153,6 +186,12 @@
         return;
       case "ai":
         refreshAI();
+        return;
+      case "device":
+        refreshDevices();
+        return;
+      case "ip":
+        refreshIPs();
         return;
     }
   };
@@ -171,18 +210,6 @@
   let sensorID = "";
   let aiID = "";
 
-  const showPage = () => {
-    errMsg = "";
-    pagination.limit = page == "node" ? 25 : 10;
-    if (page == "map") {
-      showMAP("map");
-    }
-    if (page != "polling") {
-      pollingID = "";
-    }
-    refresh();
-  };
-
   const showPolling = (id) => {
     pollingID = id;
   };
@@ -194,6 +221,36 @@
   const showAI = (id) => {
     aiID = id;
   };
+ 
+
+  const showPage = () => {
+    errMsg = "";
+    pollingID = "";
+    sensorID = "";
+    aiID = "";
+    pagination.limit = 10;
+    setTableCallback(undefined);
+    switch(page){
+      case "polling":
+        setTableCallback(showPolling);
+        break;
+      case "sensor":
+        setTableCallback(showSensor);
+        break;
+      case "ai":
+        setTableCallback(showAI);
+        break;
+      case "map":
+        showMAP("map");
+        break;
+      case "node":
+      case "device":
+        pagination.limit = 25;
+        break;
+    }
+    refresh();
+  };
+
 
   const logout = () => {
     $session.token = "";
@@ -292,6 +349,40 @@
         search
         {pagination}
         columns={aiColumns}
+        language={jaJP}
+      />
+    </div>
+    {#if aiID}
+      <div class="Box-body">
+        {aiID}
+      </div>
+    {/if}
+  {:else if page == "device"}
+    <div class="Box-row markdown-body log">
+      <Grid
+        data={devices}
+        sort
+        resizable
+        search
+        {pagination}
+        columns={deviceColumns}
+        language={jaJP}
+      />
+    </div>
+    {#if aiID}
+      <div class="Box-body">
+        {aiID}
+      </div>
+    {/if}
+  {:else if page == "ip"}
+    <div class="Box-row markdown-body log">
+      <Grid
+        data={ips}
+        sort
+        resizable
+        search
+        {pagination}
+        columns={ipColumns}
         language={jaJP}
       />
     </div>

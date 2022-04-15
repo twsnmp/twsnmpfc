@@ -3,6 +3,13 @@ import * as echarts from "echarts";
 import { html, h } from "gridjs";
 import { getState } from "./common";
 
+// call back
+let tableCallBack;
+
+export const setTableCallback = (cb) => {
+  tableCallBack = cb;
+} 
+
 // ステータスのフォーマット
 export const formatLevel = (level) => {
   const e = getState(level);
@@ -23,6 +30,22 @@ export const formatAIScore = (score) => {
   }
   const e = getState(level);
   return html(`<div><span class="mdi ${e.icon}" style="color: ${e.color};"></span>${score.toFixed(1)}</div>`);
+}
+
+// 信用スコア
+export const formatScore = (s) => {
+  let level = "high";
+  if (s > 66) {
+    level = 'repair';
+  } else if (s >= 50) {
+    level  = 'info';
+  } else if (s > 42) {
+    level = 'warn';
+  } else if (s > 33) {
+    level = 'low';
+  }
+  const e = getState(level);
+  return html(`<div><span class="mdi ${e.icon}" style="color: ${e.color};"></span>${s.toFixed(1)}</div>`);
 }
 
 
@@ -90,7 +113,11 @@ export const pollingColumns = [
     formatter: (cell, row) => {
         return h('button', {
           className: 'btn-link',
-          onClick: () => {showPolling(cell)}
+          onClick: () => {
+            if (tableCallBack){
+              tableCallBack(cell)
+            }
+          }
         }, 'show');
       }
     }
@@ -132,7 +159,11 @@ export const sensorColumns = [
     formatter: (cell, row) => {
         return h('button', {
           className: 'btn-link',
-          onClick: () => {showSensor(cell)}
+          onClick: () => {
+            if (tableCallBack){
+              tableCallBack(cell)
+            }
+          }
         }, 'show');
       }
     }
@@ -163,8 +194,75 @@ export const aiColumns = [
     formatter: (cell, row) => {
         return h('button', {
           className: 'btn-link',
-          onClick: () => {showAI(cell)}
+          onClick: () => {
+            if (tableCallBack){
+              tableCallBack(cell)
+            }
+          }
         }, 'show');
       }
     }
+];
+
+// デバイスリスト
+export const deviceColumns = [
+  { 
+    name: '信用スコア',
+    width: '5%',
+    formatter: (cell) => formatScore(cell),
+  },
+  { name: 'MACアドレス',width: '15%'},
+  { name: '名前',width: '15%'},
+  { name: 'IPアドレス',width: '15%'},
+  { name: 'ベンダー',width: '20%'},
+  { 
+    name: '初回',
+    width: '15%',
+    formatter: (cell) =>
+      echarts.time.format(
+        new Date(cell / (1000 * 1000)),
+        "{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}"
+      ),
+  },
+  {
+    name: '最終',
+    width: '15%',
+    formatter: (cell) =>
+      echarts.time.format(
+        new Date(cell / (1000 * 1000)),
+        "{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}"
+      ),
+  },
+];
+
+// IPアドレスリスト
+export const ipColumns = [
+  { 
+    name: '信用スコア',
+    width: '5%',
+    formatter: (cell) => formatScore(cell),
+  },
+  { name: 'IPアドレス',width: '10%' },
+  { name: '名前', width: '10%'},
+  { name: '位置', width: '10%' },
+  { name: 'MACアドレス',width: '10%'},
+  { name: 'ベンダー',width: '15%'},
+  { 
+    name: '初回',
+    width: '10%',
+    formatter: (cell) =>
+      echarts.time.format(
+        new Date(cell / (1000 * 1000)),
+        "{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}"
+      ),
+  },
+  {
+    name: '最終',
+    width: '10%',
+    formatter: (cell) =>
+      echarts.time.format(
+        new Date(cell / (1000 * 1000)),
+        "{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}"
+      ),
+  },
 ];
