@@ -27,9 +27,6 @@
 
   const formatLevel = (level) => {
     const e = getState(level);
-    if(!e || !e.text){
-      console.log(level);
-    }
     return html(`<div><span class="mdi ${e.icon}" style="color: ${e.color};"></span>${e.text}</div>`);
   };
 
@@ -37,12 +34,12 @@
   let logColumns = [
     {
       name: "状態",
-      width: "8%",
+      width: "10%",
       formatter: (cell) => formatLevel(cell),
     },
     {
       name: "発生日時",
-      width: "12%",
+      width: "15%",
       formatter: (cell) =>
         echarts.time.format(
           new Date(cell / (1000 * 1000)),
@@ -51,7 +48,7 @@
     },
     { name: "種別", width: "10%" },
     { name: "関連ノード", width: "15%" },
-    { name: "イベント", width: "55%" },
+    { name: "イベント", width: "50%" },
   ];
 
   const refreshMAP = async () => {
@@ -95,6 +92,7 @@
     nodes = tmp;
   }
 
+  let pollingMap = {};
   let pollings = [];
   let pollingColumns = [
     {
@@ -103,7 +101,7 @@
       formatter: (cell) => formatLevel(cell),
     },
     { name: "ノード名", width: "20%" },
-    { name: "名前", width: "35%" },
+    { name: "名前", width: "30%" },
     {
       name: "レベル",
       width: "10%",
@@ -119,6 +117,16 @@
           "{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}"
         ),
     },
+    {
+      name : "詳細",
+      width: "5%",
+      formatter: (cell, row) => {
+          return h('button', {
+            className: 'btn-link',
+            onClick: () => {showPolling(cell)}
+          }, 'show');
+        }
+      }
   ];
 
   const refreshPollings = async () => {
@@ -131,11 +139,71 @@
     r.NodeList.forEach((n)=>{
       nodeNameMap[n.value] = n.text;
     });
+    pollingMap = {};
     const tmp = [];
     r.Pollings.forEach((p) => {
-      tmp.push([p.State,nodeNameMap[p.NodeID] || "", p.Name, p.Level, p.Type,p.LastTime]);
+      pollingMap[p.ID] = p;
+      tmp.push([p.State,nodeNameMap[p.NodeID] || "", p.Name, p.Level, p.Type,p.LastTime,p.ID]);
     });
     pollings = tmp;
+  }
+
+  let sensorMap = {};
+  let sensors = [];
+  let sensorColumns = [
+    {
+      name: "状態",
+      width: "10%",
+      formatter: (cell) => formatLevel(cell),
+    },
+    { name: '送信元', width: '15%'},
+    { name: '種別', width: '10%' },
+    { name: 'パラメータ',width: '15%'},
+    { name: '回数', width: '7%' },
+    { name: '送信数', width: '7%' },
+    { 
+      name: '初回',
+      width: '13%',
+      formatter: (cell) =>
+        echarts.time.format(
+          new Date(cell / (1000 * 1000)),
+          "{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}"
+        ),
+    },
+    {
+      name: '最終',
+      width: '13%',
+      formatter: (cell) =>
+        echarts.time.format(
+          new Date(cell / (1000 * 1000)),
+          "{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}"
+        ),
+    },
+    {
+      name : "詳細",
+      width: "5%",
+      formatter: (cell, row) => {
+          return h('button', {
+            className: 'btn-link',
+            onClick: () => {showSensor(cell)}
+          }, 'show');
+        }
+      }
+  ];
+
+  const refreshSensors = async () => {
+    const r = await twsnmpApiGetJSON("/api/report/sensors");
+    if (!r) {
+      errMsg = "センサーリストを取得できません！";
+      return;
+    }
+    sensorMap = {};
+    const tmp = [];
+    r.forEach((s) => {
+      sensorMap[s.ID] = s;
+      tmp.push([s.State, s.Host,s.Type,s.Param,s.Total,s.Send,s.FirstTime,s.LastTime,s.ID]);
+    });
+    sensors = tmp;
   }
 
   const refresh = () => {
@@ -148,6 +216,9 @@
       return;
     case "polling":
       refreshPollings();
+      return;
+    case "sensor":
+      refreshSensors();
       return;
     }
   };
@@ -162,14 +233,27 @@
     loop();
   });
 
+  let pollingID = '';
+  let sensorID = '';
+
   const showPage = () => {
+    errMsg = "";
+    pagination.limit = page=="node" ? 25 : 10;
     if (page =="map") {
-      pagination.limit = 10;
       showMAP("map");
-    } else {
-      pagination.limit = 20;
+    }
+    if (page != "polling") {
+      pollingID = "";
     }
     refresh();
+  }
+
+  const showPolling = (id) => {
+    pollingID = id;
+  }
+
+  const showSensor = (id) => {
+    sensorID = id;
   }
 
   const logout = () => {
@@ -218,9 +302,20 @@
     <div class="Box-row markdown-body log">
       <Grid data={pollings} sort resizable search {pagination} columns={pollingColumns} language={jaJP} />
     </div>
+    {#if pollingID}
+      <div class="Box-body">
+        {pollingID}
+      </div>
+    {/if}
   {:else if page == "sensor"}
-    <div class="Box-body">
+    <div class="Box-row markdown-body log">
+      <Grid data={sensors} sort resizable search {pagination} columns={sensorColumns} language={jaJP} />
     </div>
+    {#if sensorID}
+      <div class="Box-body">
+        {sensorID}
+      </div>
+    {/if}
   {:else if page == "ai"}
     <div class="Box-body">
     </div>
