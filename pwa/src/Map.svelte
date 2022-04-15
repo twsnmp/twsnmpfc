@@ -206,6 +206,69 @@
     sensors = tmp;
   }
 
+  const formatAIScore = (score) => {
+    let level = "high";
+    const s = score >= 100.0 ? 1.0 : 100.0  - score;
+    if (s > 66) {
+      level = 'repair';
+    } else if (s >= 50) {
+      level  = 'info';
+    } else if (s > 42) {
+      level = 'warn';
+    } else if (s > 33) {
+      level = 'low';
+    }
+    const e = getState(level);
+    return html(`<div><span class="mdi ${e.icon}" style="color: ${e.color};"></span>${score.toFixed(1)}</div>`);
+  }
+
+  let aiMap = {};
+  let ais = [];
+  let aiColumns = [
+    { 
+      name: '異常スコア',
+      width: '15%',
+      formatter: (cell) => formatAIScore(cell),
+    },
+    { name: 'ノード', width: '20%'},
+    { name: 'ポーリング',width: '30%'},
+    { name: 'データ数', width: '10%' },
+    { 
+      name: '日時',
+      width: '15%',
+      formatter: (cell) =>
+        echarts.time.format(
+          new Date(cell / (1000 * 1000)),
+          "{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}"
+        ),
+    },
+    {
+      name : "詳細",
+      width: "5%",
+      formatter: (cell, row) => {
+          return h('button', {
+            className: 'btn-link',
+            onClick: () => {showAI(cell)}
+          }, 'show');
+        }
+      }
+  ];
+
+  const refreshAI = async () => {
+    const r = await twsnmpApiGetJSON("/api/report/ailist");
+    if (!r) {
+      errMsg = "AI分析リストを取得できません!";
+      return;
+    }
+    aiMap = {};
+    const tmp = [];
+    r.forEach((a) => {
+      aiMap[a.ID] = a;
+      tmp.push([a.Score,a.NodeName,a.PollingName,a.Count,a.LastTime,a.ID]);
+    });
+    ais = tmp;
+  }
+
   const refresh = () => {
     switch (page) {
     case "map":
@@ -219,6 +282,9 @@
       return;
     case "sensor":
       refreshSensors();
+      return;
+    case "ai":
+      refreshAI();
       return;
     }
   };
@@ -235,6 +301,7 @@
 
   let pollingID = '';
   let sensorID = '';
+  let aiID = '';
 
   const showPage = () => {
     errMsg = "";
@@ -254,6 +321,10 @@
 
   const showSensor = (id) => {
     sensorID = id;
+  }
+
+  const showAI = (id) => {
+    aiID = id;
   }
 
   const logout = () => {
@@ -317,8 +388,14 @@
       </div>
     {/if}
   {:else if page == "ai"}
-    <div class="Box-body">
+    <div class="Box-row markdown-body log">
+      <Grid data={ais} sort resizable search {pagination} columns={aiColumns} language={jaJP} />
     </div>
+    {#if aiID}
+      <div class="Box-body">
+        {aiID}
+      </div>
+    {/if}
   {/if}
   <div class="Box-footer text-right">
     <button class="btn btn-danger" type="button" on:click={logout}>
