@@ -36,6 +36,8 @@
 - Wake On LAN対応
 - Discordへの通知
 - HTMLメール通知、定期レポート
+- 異常検知アルゴリズムのIsolation Forestに対応(v1.10.0)
+- PWAに対応(v1.10.0)
 
 ![2021-04-10_11-56-00](https://user-images.githubusercontent.com/5225950/114256371-cc61db80-99f3-11eb-8631-c1917554ce26.png)
 
