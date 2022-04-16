@@ -63,8 +63,11 @@ spa/dist/index.html: spa/*.js* spa/pages/* spa/pages/report/* spa/pages/conf/*  
     spa/pages/log/* spa/pages/node/*/* spa/pages/polling/* spa/pages/mibbr/* \
     spa/pages/report/*/* spa/layouts/* spa/plugins/* spa/plugins/echarts/*
 	cd spa && npm run generate
-statik/statik.go: spa/dist/* spa/dist/pwa conf/* spa/dist/index.html pwa/public/build/bundle.js
+statik/statik.go: spa/dist/* conf/* spa/dist/index.html pwa/public/build/bundle.js
 	cp -a conf  spa/dist
+	rm -rf spa/dist/pwa
+	mkdir spa/dist/pwa
+	cp -a pwa/public/* spa/dist/pwa/
 	statik -src spa/dist
 spa/dist/pwa: pwa/public/build/bundle.js
 	rm -rf spa/dist/pwa
