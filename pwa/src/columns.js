@@ -184,7 +184,7 @@ export const aiColumns = [
     width: '15%',
     formatter: (cell) =>
       echarts.time.format(
-        new Date(cell / (1000 * 1000)),
+        new Date(cell * 1000),
         "{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}"
       ),
   },

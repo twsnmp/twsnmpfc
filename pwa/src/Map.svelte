@@ -15,6 +15,7 @@
     ipColumns,
     setTableCallback
   } from "./columns";
+  import Sensor from "./Sensor.svelte"
   const dispatch = createEventDispatcher();
 
   let map = {
@@ -207,7 +208,7 @@
   });
 
   let pollingID = "";
-  let sensorID = "";
+  let sensorStats;
   let aiID = "";
 
   const showPolling = (id) => {
@@ -215,7 +216,13 @@
   };
 
   const showSensor = (id) => {
-    sensorID = id;
+    sensorStats = undefined;
+    setTimeout(()=>{
+      const s = sensorMap[id];
+      if (s && s.Stats){
+        sensorStats = s.Stats;
+      }
+    },100);
   };
 
   const showAI = (id) => {
@@ -226,7 +233,7 @@
   const showPage = () => {
     errMsg = "";
     pollingID = "";
-    sensorID = "";
+    sensorStats = undefined;
     aiID = "";
     pagination.limit = 10;
     setTableCallback(undefined);
@@ -335,9 +342,9 @@
         language={jaJP}
       />
     </div>
-    {#if sensorID}
+    {#if sensorStats}
       <div class="Box-body">
-        {sensorID}
+        <Sensor stats={sensorStats} />
       </div>
     {/if}
   {:else if page == "ai"}
