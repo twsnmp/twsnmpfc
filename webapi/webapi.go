@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -65,6 +66,7 @@ func setup(p *WebAPI) {
 		Output:           os.Stdout,
 		CustomTimeFormat: "2006-01-02T15:04:05.000",
 	})
+	mime.AddExtensionType(".js", "application/javascript")
 	e.Use(logger)
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
