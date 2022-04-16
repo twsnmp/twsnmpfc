@@ -64,6 +64,7 @@
           <v-btn v-if="isAuthenticated" color="info" @click="checkUpdate">
             更新版の確認
           </v-btn>
+          <v-btn color="primary" href="/pwa" target="_blank"> PWA </v-btn>
           <v-btn
             v-if="isAuthenticated"
             color="error"
