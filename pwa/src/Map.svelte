@@ -15,7 +15,9 @@
     ipColumns,
     setTableCallback
   } from "./columns";
-  import Sensor from "./Sensor.svelte"
+  import Sensor from "./Sensor.svelte";
+  import AIResult from "./AIResult.svelte";
+
   const dispatch = createEventDispatcher();
 
   let map = {
@@ -209,6 +211,7 @@
 
   let pollingID = "";
   let sensorStats;
+  let sesnorTitle;
   let aiID = "";
 
   const showPolling = (id) => {
@@ -221,12 +224,16 @@
       const s = sensorMap[id];
       if (s && s.Stats){
         sensorStats = s.Stats;
+        sesnorTitle = s.Host + ":" + s.Type;
       }
     },100);
   };
 
   const showAI = (id) => {
-    aiID = id;
+    aiID = undefined;
+    setTimeout(()=>{
+      aiID = id;
+    },100);
   };
  
 
@@ -257,7 +264,6 @@
     }
     refresh();
   };
-
 
   const logout = () => {
     $session.token = "";
@@ -344,7 +350,7 @@
     </div>
     {#if sensorStats}
       <div class="Box-body">
-        <Sensor stats={sensorStats} />
+        <Sensor stats={sensorStats} title={sesnorTitle} />
       </div>
     {/if}
   {:else if page == "ai"}
@@ -361,7 +367,7 @@
     </div>
     {#if aiID}
       <div class="Box-body">
-        {aiID}
+        <AIResult id={aiID} />
       </div>
     {/if}
   {:else if page == "device"}
@@ -376,11 +382,6 @@
         language={jaJP}
       />
     </div>
-    {#if aiID}
-      <div class="Box-body">
-        {aiID}
-      </div>
-    {/if}
   {:else if page == "ip"}
     <div class="Box-row markdown-body log">
       <Grid
@@ -393,11 +394,6 @@
         language={jaJP}
       />
     </div>
-    {#if aiID}
-      <div class="Box-body">
-        {aiID}
-      </div>
-    {/if}
   {/if}
   <div class="Box-footer text-right">
     <button class="btn btn-danger" type="button" on:click={logout}>

@@ -1,5 +1,6 @@
 <script>
   export let stats = [];
+  export let title = '';
   import { onMount } from "svelte";
   import * as echarts from "echarts";
   let chart;
@@ -10,7 +11,12 @@
     chart = echarts.init(document.getElementById('chart'),"dark");
     const option = {
       title: {
-        show: false,
+        show:true,
+        text: title,
+        textStyle: {
+          fontSize: '14px',
+        },
+        left: "20%",
       },
       toolbox: {
         feature: {
@@ -26,8 +32,8 @@
         },
       },
       grid: {
-        left: "10%",
-        right: "10%",
+        left: "8%",
+        right: "8%",
         top: 40,
         buttom: 0,
       },
@@ -36,6 +42,7 @@
         textStyle: {
           fontSize: 10,
         },
+        right: "20%",
       },
       xAxis: {
         type: "time",
