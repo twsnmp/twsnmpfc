@@ -17,6 +17,7 @@
   } from "./columns";
   import Sensor from "./Sensor.svelte";
   import AIResult from "./AIResult.svelte";
+import PollingLog from "./PollingLog.svelte";
 
   const dispatch = createEventDispatcher();
 
@@ -91,7 +92,7 @@
         p.Level,
         p.Type,
         p.LastTime,
-        p.ID,
+        p.LogMode ? p.ID : '',
       ]);
     });
     pollings = tmp;
@@ -215,7 +216,10 @@
   let aiID = "";
 
   const showPolling = (id) => {
-    pollingID = id;
+    pollingID = undefined;
+    setTimeout(()=>{
+      pollingID = id;
+    },100);
   };
 
   const showSensor = (id) => {
@@ -333,7 +337,7 @@
     </div>
     {#if pollingID}
       <div class="Box-body">
-        {pollingID}
+        <PollingLog id={pollingID} />
       </div>
     {/if}
   {:else if page == "sensor"}

@@ -111,14 +111,14 @@ export const pollingColumns = [
     name : "詳細",
     width: "5%",
     formatter: (cell, row) => {
-        return h('button', {
+        return cell ?  h('button', {
           className: 'btn-link',
           onClick: () => {
             if (tableCallBack){
               tableCallBack(cell)
             }
           }
-        }, 'show');
+        }, 'show') : '';
       }
     }
 ];

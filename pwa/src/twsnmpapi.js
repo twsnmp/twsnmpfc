@@ -57,7 +57,28 @@ export const twsnmpApiPostJSON = async (api,data) => {
       },
       body: JSON.stringify(data),
     })
-    return res.status == 204;
+    return res.status == 204 || res.status == 200;
+  } catch (e) {
+    console.log(e);
+    return false;
+  }
+}
+
+export const twsnmpApiPostJSONWithData = async (api,data) => {
+  const s = get(session);
+  try {
+    const res = await fetch('APIURL'+ api, {
+      method: 'POST',
+      headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + s.token,
+      },
+      body: JSON.stringify(data),
+    })
+    if (res.status != 200) {
+      return undefined;
+    }
+    return await res.json();
   } catch (e) {
     console.log(e);
     return false;
