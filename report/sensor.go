@@ -119,9 +119,10 @@ func checkMonitor(h, t string, m map[string]string) {
 }
 
 func setSensorState() {
-	warn := time.Now().Add(-60 * time.Minute).UnixNano()
-	low := time.Now().Add(-6 * time.Hour).UnixNano()
-	high := time.Now().Add(-24 * time.Hour).UnixNano()
+	to := datastore.ReportConf.SensorTimeout
+	warn := time.Now().Add(-time.Duration(to) * time.Hour).UnixNano()
+	low := time.Now().Add(-time.Duration(to*6) * time.Hour).UnixNano()
+	high := time.Now().Add(-time.Duration(to*24) * time.Hour).UnixNano()
 	now := time.Now().UnixNano()
 	datastore.ForEachSensors(func(s *datastore.SensorEnt) bool {
 		oldState := s.State
@@ -133,6 +134,9 @@ func setSensorState() {
 			s.State = "warn"
 		} else {
 			s.State = "normal"
+		}
+		if s.Ignore {
+			s.State = "unknown"
 		}
 		if oldState != s.State {
 			l := &datastore.EventLogEnt{

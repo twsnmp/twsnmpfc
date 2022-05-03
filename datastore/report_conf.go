@@ -19,6 +19,7 @@ type ReportConfEnt struct {
 	JapanOnly            bool
 	DropFlowThTCPPacket  int
 	RetentionTimeForSafe int
+	SensorTimeout        int
 	IncludeNoMACIP       bool
 }
 
@@ -28,6 +29,7 @@ var ReportConf ReportConfEnt
 func LaodReportConf() error {
 	ReportConf.RetentionTimeForSafe = 24
 	ReportConf.DropFlowThTCPPacket = 3
+	ReportConf.SensorTimeout = 1
 	return db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		v := b.Get([]byte("report"))

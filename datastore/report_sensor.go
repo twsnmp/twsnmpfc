@@ -15,6 +15,7 @@ type SensorEnt struct {
 	Total     int64
 	Send      int64
 	State     string
+	Ignore    bool
 	Stats     []SensorStatsEnt
 	Monitors  []SensorMonitorEnt
 	FirstTime int64

@@ -5,6 +5,12 @@
         センサー
         <v-spacer></v-spacer>
       </v-card-title>
+      <v-alert v-model="deleteError" color="error" dense dismissible>
+        センサーの削除に失敗しました
+      </v-alert>
+      <v-alert v-model="toggleError" color="error" dense dismissible>
+        センサーの設定に失敗しました
+      </v-alert>
       <v-data-table
         :headers="headers"
         :items="sensors"
@@ -29,6 +35,12 @@
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon v-if="!readOnly" small @click="openDeleteDialog(item)">
             mdi-delete
+          </v-icon>
+          <v-icon v-if="item.Ignore" small @click="toggleSensor(item.ID)">
+            mdi-play
+          </v-icon>
+          <v-icon v-if="!item.Ignore" small @click="toggleSensor(item.ID)">
+            mdi-stop
           </v-icon>
         </template>
         <template #[`body.append`]>
@@ -317,6 +329,7 @@ export default {
       cpuMemChartDialog: false,
       netChartDialog: false,
       procChartDialog: false,
+      toggleError: false,
     }
   },
   async fetch() {
@@ -355,6 +368,17 @@ export default {
           this.$fetch()
         })
       this.deleteDialog = false
+    },
+    toggleSensor(id) {
+      this.$axios
+        .post('/api/report/sensor/' + id)
+        .then((r) => {
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.toggleError = true
+          this.$fetch()
+        })
     },
     openDeleteDialog(item) {
       this.selected = item

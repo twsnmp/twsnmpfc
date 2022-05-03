@@ -152,6 +152,27 @@
                 label="MACアドレスが不明のIPもレポートに記録する"
               ></v-switch>
             </v-col>
+            <v-col>
+              <v-slider
+                v-model="report.SensorTimeout"
+                label="センサー異常判定時間(時間)"
+                class="align-center"
+                max="24"
+                min="1"
+                hide-details
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="report.SensorTimeout"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
           </v-row>
         </v-card-text>
         <v-card-actions>

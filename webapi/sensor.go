@@ -25,3 +25,15 @@ func deleteSensor(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
+
+// センサーをモニタするしないを切り替え
+func postSensor(c echo.Context) error {
+	id := c.Param("id")
+	s := datastore.GetSensor(id)
+	if s == nil {
+		return echo.ErrBadRequest
+	}
+	s.Ignore = !s.Ignore
+	s.State = "unknown"
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
