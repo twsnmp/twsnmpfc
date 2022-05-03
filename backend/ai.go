@@ -292,7 +292,12 @@ func calcLOF(req *AIReq) *datastore.AIResult {
 func calcIForest(req *AIReq) *datastore.AIResult {
 	res := datastore.AIResult{}
 	rand.Seed(time.Now().UnixNano())
-	iforest, err := go_iforest.NewIForest(req.Data, 1000, 256)
+	sub := 256
+	if len(req.Data) < sub {
+		sub = len(req.Data) / 2
+		log.Printf("IForest subSample=%d", sub)
+	}
+	iforest, err := go_iforest.NewIForest(req.Data, 1000, sub)
 	if err != nil {
 		log.Printf("NewIForest err=%v", err)
 		return &res

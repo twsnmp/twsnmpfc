@@ -161,6 +161,8 @@ const autoEncoder = (divError, divModel, req, callback) => {
     })
   const model = document.getElementById(divModel)
   if (model) {
+    net.options.inputSize = req.Data[0].length
+    net.options.outputSize = req.Data[0].length
     model.innerHTML = brain.utilities.toSVG(net)
   }
 }
