@@ -4,12 +4,8 @@ import { getChartParams } from '~/plugins/echarts/chartparams.js'
 
 let chart
 
-const makePollingChart = (div) => {
-  if (chart) {
-    chart.dispose()
-  }
-  chart = echarts.init(document.getElementById(div))
-  const option = {
+const getPollingChartOption = (div) => {
+  return {
     title: {
       show: false,
     },
@@ -41,9 +37,16 @@ const makePollingChart = (div) => {
     },
     grid: {
       left: '10%',
-      right: '5%',
-      top: 30,
+      right: '10%',
+      top: 60,
       buttom: 0,
+    },
+    legend: {
+      data: [''],
+      textStyle: {
+        color: '#ccc',
+        fontSize: 10,
+      },
     },
     xAxis: {
       type: 'time',
@@ -70,8 +73,116 @@ const makePollingChart = (div) => {
         show: false,
       },
     },
-    yAxis: {
+    yAxis: [
+      {
+        type: 'value',
+        nameTextStyle: {
+          color: '#ccc',
+          fontSize: 10,
+          margin: 2,
+        },
+        axisLabel: {
+          color: '#ccc',
+          fontSize: 8,
+          margin: 2,
+        },
+        axisLine: {
+          lineStyle: {
+            color: '#ccc',
+          },
+        },
+      },
+    ],
+    series: [
+      {
+        color: '#1f78b4',
+        type: 'line',
+        showSymbol: false,
+        data: [],
+      },
+    ],
+  }
+}
+
+const setChartData = (series, t, values) => {
+  const data = [t.getTime() * 1000 * 1000]
+  const name = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
+  const mean = ecStat.statistics.mean(values)
+  series[0].data.push({
+    name,
+    value: [t, mean],
+  })
+  data.push(mean)
+  const max = ecStat.statistics.max(values)
+  series[1].data.push({
+    name,
+    value: [t, max],
+  })
+  data.push(max)
+  const min = ecStat.statistics.min(values)
+  series[2].data.push({
+    name,
+    value: [t, min],
+  })
+  data.push(min)
+  const median = ecStat.statistics.median(values)
+  series[3].data.push({
+    name,
+    value: [t, median],
+  })
+  data.push(median)
+  const variance = ecStat.statistics.sampleVariance(values)
+  series[4].data.push({
+    name,
+    value: [t, variance],
+  })
+  data.push(variance)
+}
+
+const showPollingChart = (div, polling, logs, ent, at, per1h) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+
+  const option = getPollingChartOption(div)
+
+  chart.setOption(option)
+  if (ent === '') {
+    chart.resize()
+    return
+  }
+  const dp = getChartParams(ent)
+  if (per1h) {
+    option.series[0].name = '平均値'
+    option.series.push({
+      name: '最大値',
+      type: 'line',
+      large: true,
+      data: [],
+    })
+    option.series.push({
+      name: '最小値',
+      type: 'line',
+      large: true,
+      data: [],
+    })
+    option.series.push({
+      name: '中央値',
+      type: 'line',
+      large: true,
+      data: [],
+    })
+    option.series.push({
+      name: '分散',
+      type: 'line',
+      large: true,
+      yAxisIndex: 1,
+      data: [],
+    })
+    option.yAxis.push({
       type: 'value',
+      name: '分散',
       nameTextStyle: {
         color: '#ccc',
         fontSize: 10,
@@ -87,54 +198,61 @@ const makePollingChart = (div) => {
           color: '#ccc',
         },
       },
-    },
-    series: [
-      {
-        color: '#1f78b4',
-        type: 'line',
-        showSymbol: false,
-        data: [],
-      },
-    ],
-  }
-  chart.setOption(option)
-  chart.resize()
-}
-
-const showPollingChart = (div, polling, logs, ent, at) => {
-  makePollingChart(div)
-  if (ent === '') {
-    return
-  }
-  const data = []
-  const dp = getChartParams(polling, ent)
-  logs.forEach((l) => {
-    const t = new Date(l.Time / (1000 * 1000))
-    const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
-    let numVal = getNumVal(ent, l.Result)
-    numVal *= dp.mul
-    data.push({
-      name: ts,
-      value: [new Date(l.Time / (1000 * 1000)), numVal],
     })
-  })
-  const opt = {
-    yAxis: {
-      name: dp.axis,
-    },
-    series: [
-      {
-        name: dp.axis,
-        data,
-      },
-    ],
+    option.legend.data[0] = '平均値'
+    option.legend.data.push('最大値')
+    option.legend.data.push('最小値')
+    option.legend.data.push('中央値')
+    option.legend.data.push('分散')
+    let tS = -1
+    const values = []
+    const dt = 3600 * 1000
+    logs.forEach((l) => {
+      const t = new Date(l.Time / (1000 * 1000))
+      const tC = Math.floor(t.getTime() / dt)
+      if (tS !== tC) {
+        if (tS > 0) {
+          if (values.length > 0) {
+            tS++
+            setChartData(option.series, new Date(tS * dt), values)
+            values.length = 0
+            while (tS < tC) {
+              tS++
+              setChartData(option.series, new Date(tS * dt), [0, 0, 0, 0])
+            }
+          }
+        }
+        tS = tC
+      }
+      let numVal = getNumVal(ent, l.Result)
+      numVal *= dp.mul
+      values.push(numVal || 0.0)
+    })
+    if (values.length > 0) {
+      tS++
+      setChartData(option.series, new Date(tS * dt), values)
+    }
+  } else {
+    logs.forEach((l) => {
+      const t = new Date(l.Time / (1000 * 1000))
+      const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
+      let numVal = getNumVal(ent, l.Result)
+      numVal *= dp.mul
+      option.series[0].data.push({
+        ts,
+        value: [t, numVal || 0.0],
+      })
+    })
+    option.series[0].name = dp.axis
+    option.legend.data[0] = dp.axis
   }
+  option.yAxis.name = dp.axis
   if (at && at.UnixTime) {
-    const st = new Date(at.UnixTime * 1000)
+    const st = new Date((at.UnixTime - 3600) * 1000)
     const et = new Date((at.UnixTime + 3600) * 1000)
-    opt.series[0].markArea = {
+    option.series[0].markArea = {
       itemStyle: {
-        color: 'rgba(24,173, 172, 0.2)',
+        color: 'rgba(92,92, 192, 0.2)',
       },
       data: [
         [
@@ -148,7 +266,7 @@ const showPollingChart = (div, polling, logs, ent, at) => {
       ],
     }
   }
-  chart.setOption(opt)
+  chart.setOption(option)
   chart.resize()
 }
 
@@ -224,7 +342,7 @@ const showPollingHistogram = (div, polling, logs, ent) => {
     return
   }
   const data = []
-  const dp = getChartParams(polling, ent)
+  const dp = getChartParams(ent)
   logs.forEach((l) => {
     if (!l.Result.error) {
       let numVal = getNumVal(ent, l.Result)
@@ -421,7 +539,7 @@ const showPollingLogSTL = (div, polling, data, ent, unit) => {
   const seasonal = []
   const trend = []
   const resid = []
-  const dp = getChartParams(polling, ent)
+  const dp = getChartParams(ent)
   for (let i = 0; i < timeList.length; i++) {
     const t = new Date(timeList[i] * 1000)
     const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
@@ -581,7 +699,7 @@ const showPollingLogFFT = (div, polling, data, ent, unit, fftType) => {
     return
   }
   const freq = fftType === 'hz'
-  const dp = getChartParams(polling, ent)
+  const dp = getChartParams(ent)
   const fft = []
   for (let i = 0; i < fftin.length; i++) {
     if (freq) {
@@ -717,7 +835,7 @@ const showPollingLogForecast = (div, polling, logs, ent) => {
     ],
   }
   if (ent !== '') {
-    const dp = getChartParams(polling, ent)
+    const dp = getChartParams(ent)
     const data = []
     logs.forEach((l) => {
       if (!l.Result.error) {

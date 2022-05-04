@@ -247,6 +247,13 @@
         <div id="pollingChart" style="width: 1000px; height: 400px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-switch
+            v-model="per1h"
+            class="mr-3"
+            dense
+            label="時間単位"
+            @change="selectValEnt"
+          ></v-switch>
           <v-btn color="primary" dark @click="filterDialog = true">
             <v-icon>mdi-calendar-clock</v-icon>
             時間範囲
@@ -687,6 +694,8 @@ export default {
       timeStr: [],
       pollingLogDialog: false,
       pollingResultDialog: false,
+      per1h: false,
+      at: undefined,
       pollingHistogramDialog: false,
       aiTrainDialog: false,
       aiHeatMapDialog: false,
@@ -763,7 +772,9 @@ export default {
           'pollingChart',
           this.polling,
           this.logs,
-          this.selectedValEnt
+          this.selectedValEnt,
+          this.at,
+          this.per1h
         )
       }
       if (this.pollingHistogramDialog) {
@@ -789,13 +800,15 @@ export default {
     showPollingResult(at) {
       this.heatMapDialog = false
       this.pollingResultDialog = true
+      this.at = at
       this.$nextTick(() => {
         this.$showPollingChart(
           'pollingChart',
           this.polling,
           this.logs,
           this.selectedValEnt,
-          at
+          this.at,
+          this.per1h
         )
       })
     },
