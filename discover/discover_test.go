@@ -46,6 +46,7 @@ func TestDiscover(t *testing.T) {
 	datastore.DiscoverConf.EndIP = "192.168.1.2"
 	datastore.DiscoverConf.Retry = 1
 	datastore.DiscoverConf.Timeout = 2
+	datastore.DiscoverConf.Active = true
 	err = StartDiscover()
 	if err != nil {
 		t.Fatal(err)

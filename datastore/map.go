@@ -62,6 +62,7 @@ func initConf() {
 	MapConf.Community = "public"
 	MapConf.UserID = "twsnmp"
 	MapConf.Password = security.PasswordHash("twsnmp")
+	MapConf.EnableArpWatch = true
 	DiscoverConf.Retry = 1
 	DiscoverConf.Timeout = 1
 	NotifyConf.InsecureSkipVerify = true

@@ -70,6 +70,24 @@ func StartDiscover() error {
 	if Stat.Running {
 		return fmt.Errorf("discover already runnning")
 	}
+	if datastore.DiscoverConf.Active {
+		return ActiveDiscover()
+	}
+	return PassiveDiscover()
+}
+
+// 再起動後も動作する
+func CheckDiscover() {
+	if Stat.Running || datastore.DiscoverConf.Active {
+		return
+	}
+	if datastore.DiscoverConf.StartIP == "" || datastore.DiscoverConf.EndIP == "" {
+		return
+	}
+	PassiveDiscover()
+}
+
+func ActiveDiscover() error {
 	sip, err := ipv4.FromDots(datastore.DiscoverConf.StartIP)
 	if err != nil {
 		return fmt.Errorf("discover start ip err=%v", err)
@@ -84,7 +102,7 @@ func StartDiscover() error {
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
 		Level: "info",
-		Event: fmt.Sprintf("自動発見開始 %s - %s", datastore.DiscoverConf.StartIP, datastore.DiscoverConf.EndIP),
+		Event: fmt.Sprintf("自動発見開始(Active) %s - %s", datastore.DiscoverConf.StartIP, datastore.DiscoverConf.EndIP),
 	})
 	Stop = false
 	Stat.Total = eip - sip + 1
@@ -173,7 +191,7 @@ func StartDiscover() error {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
 			Level: "info",
-			Event: fmt.Sprintf("自動発見終了 %s - %s", datastore.DiscoverConf.StartIP, datastore.DiscoverConf.EndIP),
+			Event: fmt.Sprintf("自動発見終了(Active) %s - %s", datastore.DiscoverConf.StartIP, datastore.DiscoverConf.EndIP),
 		})
 	}()
 	return nil
@@ -516,6 +534,7 @@ func checkServer(dent *discoverInfoEnt) {
 		"kerberos": "88",
 	}
 	for s, p := range checkList {
+		time.Sleep(time.Second)
 		if doTCPConnect(dent.IP + ":" + p) {
 			dent.ServerList[s] = true
 		}
@@ -541,4 +560,173 @@ func getMIBStringVal(i interface{}) string {
 		return fmt.Sprintf("%d", v)
 	}
 	return ""
+}
+
+func PassiveDiscover() error {
+	sip, err := ipv4.FromDots(datastore.DiscoverConf.StartIP)
+	if err != nil {
+		return fmt.Errorf("discover start ip err=%v", err)
+	}
+	eip, err := ipv4.FromDots(datastore.DiscoverConf.EndIP)
+	if err != nil {
+		return fmt.Errorf("discover end ip err=%v", err)
+	}
+	if sip > eip {
+		return fmt.Errorf("discover start ip > end ip")
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "system",
+		Level: "info",
+		Event: fmt.Sprintf("自動発見開始(Passive) %s - %s", datastore.DiscoverConf.StartIP, datastore.DiscoverConf.EndIP),
+	})
+	Stop = false
+	Stat.Total = eip - sip + 1
+	Stat.Sent = 0
+	Stat.Found = 0
+	Stat.Snmp = 0
+	Stat.Web = 0
+	Stat.Mail = 0
+	Stat.SSH = 0
+	Stat.File = 0
+	Stat.RDP = 0
+	Stat.Running = true
+	Stat.StartTime = time.Now().Unix()
+	Stat.Now = 0
+	X = (1 + datastore.DiscoverConf.X/GRID) * GRID
+	Y = (1 + datastore.DiscoverConf.Y/GRID) * GRID
+	for checkNodePos(X, Y) {
+		X += GRID
+		if X > GRID*10 {
+			X = GRID
+			Y += GRID
+		}
+	}
+
+	next := time.Now().Unix()
+	go func() {
+		for !Stop {
+			Stat.Now = time.Now().Unix()
+			if Stat.Now < next {
+				time.Sleep(time.Second * 2)
+				continue
+			}
+			next += 300
+			log.Printf("discover passive now=%d next=%d", Stat.Now, next)
+			Stat.Sent++
+			foundNodeMap := make(map[string]*discoverInfoEnt)
+			datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+				if datastore.FindNodeFromIP(d.IP) != nil {
+					return true
+				}
+				if ip, err := ipv4.FromDots(d.IP); err == nil && ip >= sip && ip <= eip {
+					foundNodeMap[d.IP] = &discoverInfoEnt{
+						IP:          d.IP,
+						HostName:    d.Name,
+						IfIndexList: []string{},
+						ServerList:  make(map[string]bool),
+					}
+				}
+				return true
+			})
+			datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+				if datastore.FindNodeFromIP(i.IP) != nil {
+					return true
+				}
+				if _, ok := foundNodeMap[i.IP]; ok {
+					return true
+				}
+				if ip, err := ipv4.FromDots(i.IP); err == nil && ip >= sip && ip <= eip {
+					foundNodeMap[i.IP] = &discoverInfoEnt{
+						IP:          i.IP,
+						HostName:    i.Name,
+						IfIndexList: []string{},
+						ServerList:  make(map[string]bool),
+					}
+				}
+				return true
+			})
+			datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
+				var ok bool
+				var dent *discoverInfoEnt
+				if dent, ok = foundNodeMap[s.Server]; !ok {
+					if datastore.FindNodeFromIP(s.Server) != nil {
+						return true
+					}
+					if ip, err := ipv4.FromDots(s.Server); err == nil && ip >= sip && ip <= eip {
+						dent = &discoverInfoEnt{
+							IP:          s.Server,
+							HostName:    s.ServerName,
+							IfIndexList: []string{},
+							ServerList:  make(map[string]bool),
+						}
+						foundNodeMap[s.Server] = dent
+					}
+				}
+				for sv := range s.Services {
+					dent.ServerList[sv] = true
+				}
+				return true
+			})
+			for ip, dent := range foundNodeMap {
+				if dent.HostName == "" {
+					r := &net.Resolver{}
+					ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
+					defer cancel()
+					if names, err := r.LookupAddr(ctx, ip); err == nil && len(names) > 0 {
+						dent.HostName = names[0]
+					}
+				}
+				dent.X = X
+				dent.Y = Y
+				Stat.Found++
+				X += GRID
+				if X > GRID*10 {
+					X = GRID
+					Y += GRID
+				}
+				if dent.ServerList["snmp"] {
+					Stat.Snmp++
+				}
+				if dent.ServerList["http"] || dent.ServerList["https"] {
+					Stat.Web++
+				}
+				if dent.ServerList["cifs"] || dent.ServerList["nfs"] {
+					Stat.File++
+				}
+				if dent.ServerList["rdp"] || dent.ServerList["vnc"] {
+					Stat.RDP++
+				}
+				if dent.ServerList["ldap"] || dent.ServerList["ldaps"] || dent.ServerList["kerberos"] {
+					Stat.LDAP++
+				}
+				if dent.ServerList["smtp"] || dent.ServerList["imap"] || dent.ServerList["pop3"] {
+					Stat.Mail++
+				}
+				if dent.ServerList["ssh"] {
+					Stat.SSH++
+				}
+				addFoundNode(dent)
+			}
+		}
+		Stat.Running = false
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "system",
+			Level: "info",
+			Event: fmt.Sprintf("自動発見終了(Passive) %s - %s", datastore.DiscoverConf.StartIP, datastore.DiscoverConf.EndIP),
+		})
+	}()
+	return nil
+}
+
+// 同じ位置にノードがあれば次の場所に配置
+func checkNodePos(x, y int) bool {
+	hit := false
+	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
+		if n.X == x && n.Y == y {
+			hit = true
+			return false
+		}
+		return true
+	})
+	return hit
 }

@@ -12,13 +12,19 @@
             stream
           ></v-progress-linear>
         </v-list-item-subtitle>
-        <v-list-item-subtitle>
+        <v-list-item-subtitle v-if="discover.Conf.Active">
           全アドレス:{{ discover.Stat.Total }} / 送信済み:{{
             discover.Stat.Sent
           }}
-          / 発見:{{ discover.Stat.Found }} 経過時間:{{ time }}秒 / 速度{{
+          / 発見:{{ discover.Stat.Found }} 経過時間:{{ time }} / 速度{{
             speed
           }}件/秒
+        </v-list-item-subtitle>
+        <v-list-item-subtitle v-if="!discover.Conf.Active">
+          全アドレス:{{ discover.Stat.Total }} / 実行回数:{{
+            discover.Stat.Sent
+          }}
+          / 発見:{{ discover.Stat.Found }} 経過時間:{{ time }}
         </v-list-item-subtitle>
       </v-list-item-content>
     </v-list-item>
@@ -116,7 +122,16 @@
       <v-alert v-model="error" color="error" dense dismissible>
         自動発見を開始できません
       </v-alert>
+      <v-alert v-model="discover.Conf.Active" color="error" dense dismissible>
+        ネットワークのスキャンとホストに対するポートスキャンを実施します。<br />
+        サイバー攻撃と誤解されるかもしれません。 注意して実行してください。
+      </v-alert>
       <v-card-text>
+        <v-switch
+          v-model="discover.Conf.Active"
+          label="アクティブモード"
+          dense
+        ></v-switch>
         <v-text-field
           v-model="discover.Conf.StartIP"
           label="開始IP"
@@ -211,6 +226,7 @@
 </template>
 
 <script>
+import * as numeral from 'numeral'
 export default {
   data() {
     return {
@@ -239,7 +255,8 @@ export default {
       },
       error: false,
       reqStop: false,
-      basicPolling: true,
+      basicPolling: false,
+      timer: undefined,
       templates: [],
       selectedTemplate: [],
       searchTemplate: '',
@@ -355,7 +372,9 @@ export default {
       return (100 * this.discover.Stat.SSH) / this.discover.Stat.Found
     },
     time() {
-      return this.discover.Stat.Now - this.discover.Stat.StartTime
+      return numeral(
+        this.discover.Stat.Now - this.discover.Stat.StartTime
+      ).format('00:00:00')
     },
     speed() {
       const diff = this.discover.Stat.Now - this.discover.Stat.StartTime
@@ -368,6 +387,15 @@ export default {
   activated() {
     if (this.$fetchState.timestamp <= Date.now() - 10000) {
       this.$fetch()
+    }
+  },
+  mounted() {
+    this.update()
+  },
+  beforeDestroy() {
+    if (this.timer) {
+      clearTimeout(this.timer)
+      this.timer = undefined
     }
   },
   methods: {
@@ -407,7 +435,9 @@ export default {
     update() {
       if (this.discover.Stat.Running) {
         this.$fetch()
-        setTimeout(this.update, 1000 * 10)
+        this.timer = setTimeout(this.update, 1000 * 10)
+      } else if (this.$fetchState.pending) {
+        this.timer = setTimeout(this.update, 500)
       }
     },
     filterAutoAdd(value, search, item) {

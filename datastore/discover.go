@@ -8,6 +8,7 @@ import (
 )
 
 type DiscoverConfEnt struct {
+	Active          bool
 	StartIP         string `validate:"required,ipv4"`
 	EndIP           string `validate:"required,ipv4"`
 	AutoAddPollings []string
