@@ -76,17 +76,6 @@ func StartDiscover() error {
 	return PassiveDiscover()
 }
 
-// 再起動後も動作する
-func CheckDiscover() {
-	if Stat.Running || datastore.DiscoverConf.Active {
-		return
-	}
-	if datastore.DiscoverConf.StartIP == "" || datastore.DiscoverConf.EndIP == "" {
-		return
-	}
-	PassiveDiscover()
-}
-
 func ActiveDiscover() error {
 	sip, err := ipv4.FromDots(datastore.DiscoverConf.StartIP)
 	if err != nil {
@@ -662,8 +651,14 @@ func PassiveDiscover() error {
 						foundNodeMap[s.Server] = dent
 					}
 				}
+				if dent == nil {
+					return true
+				}
 				for sv := range s.Services {
-					dent.ServerList[sv] = true
+					a := strings.SplitN(sv, "/", 2)
+					if len(a) > 0 {
+						dent.ServerList[a[0]] = true
+					}
 				}
 				return true
 			})

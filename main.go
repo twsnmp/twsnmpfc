@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/rakyll/statik/fs"
-	"github.com/twsnmp/twsnmpfc/discover"
 	"github.com/twsnmp/twsnmpfc/logger"
 	"github.com/twsnmp/twsnmpfc/notify"
 	_ "github.com/twsnmp/twsnmpfc/statik"
@@ -154,8 +153,6 @@ func main() {
 	if err = notify.Start(ctx, wg); err != nil {
 		log.Fatalf("start notify err=%v", err)
 	}
-	log.Println("call discover")
-	discover.CheckDiscover()
 	log.Println("call webapi.Start")
 	w := &webapi.WebAPI{
 		Statik:        http.FileServer(statikFS),
