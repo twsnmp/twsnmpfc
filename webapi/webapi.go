@@ -129,6 +129,8 @@ func setup(p *WebAPI) {
 	r.POST("/line/delete", deleteLine)
 	r.POST("/line/add", postLine)
 	r.POST("/wol/:id", postWOL)
+	// Ping画面
+	r.POST("/ping/:ip", postPing)
 
 	r.GET("/pollings", getPollings)
 	r.GET("/polling/template", getPollingTemplate)

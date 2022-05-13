@@ -56,6 +56,7 @@ type PingEnt struct {
 	Time     int64
 	lastSend int64
 	Error    error
+	TTL      int
 	done     chan bool
 }
 
@@ -240,6 +241,7 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 					p.Stat = PingOK
 					p.Time = tm
 					p.Error = nil
+					p.TTL = ttl
 					p.done <- true
 				}
 			}

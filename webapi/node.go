@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/ping"
 	"github.com/twsnmp/twsnmpfc/wol"
 )
 
@@ -209,4 +210,28 @@ func getHostResource(c echo.Context) error {
 	}
 	r.HostResource = backend.GetHostResource(r.Node)
 	return c.JSON(http.StatusOK, r)
+}
+
+type PingReq struct {
+	IP   string
+	Size int
+}
+
+type PingRes struct {
+	Stat int
+	Time int64
+	TTL  int
+}
+
+func postPing(c echo.Context) error {
+	req := new(PingReq)
+	if err := c.Bind(req); err != nil {
+		return echo.ErrBadRequest
+	}
+	res := new(PingRes)
+	pe := ping.DoPing(req.IP, 1, 0, req.Size)
+	res.Stat = int(pe.Stat)
+	res.Time = pe.Time
+	res.TTL = pe.TTL
+	return c.JSON(http.StatusOK, res)
 }
