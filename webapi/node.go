@@ -231,7 +231,7 @@ func postPing(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	res := new(PingRes)
-	pe := ping.DoPing(req.IP, 1, 0, req.Size)
+	pe := ping.DoPing(req.IP, 3, 0, req.Size)
 	res.Stat = int(pe.Stat)
 	res.TimeStamp = time.Now().Unix()
 	res.Time = pe.Time

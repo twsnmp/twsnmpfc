@@ -27,6 +27,7 @@
       <v-alert v-model="error" color="error" dense dismissible>
         PINGを実行できませんでした
       </v-alert>
+      <div id="chart" style="width: 100%; height: 250px"></div>
       <v-data-table
         :headers="headers"
         :items="results"
@@ -89,6 +90,9 @@
 </template>
 
 <script>
+import * as echarts from 'echarts'
+// import * as ecStat from 'echarts-stat'
+
 export default {
   data() {
     return {
@@ -128,10 +132,15 @@ export default {
       wait: false,
       timer: null,
       stop: false,
+      chart: undefined,
+      chartOption: {},
     }
   },
   created() {
     this.ip = this.$route.params.ip
+  },
+  mounted() {
+    this.showChart()
   },
   beforeDestroy() {
     if (this.timer) {
@@ -141,6 +150,9 @@ export default {
   },
   methods: {
     startPing() {
+      if (this.chart) {
+        this.chartOption.series[0].data = []
+      }
       this.stop = false
       this.wait = true
       this.pingReq.count = 0
@@ -150,6 +162,112 @@ export default {
     },
     stopPing() {
       this.stop = true
+    },
+    showChart() {
+      this.chartOption = {
+        title: {
+          show: false,
+        },
+        backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+          {
+            offset: 0,
+            color: '#4b5769',
+          },
+          {
+            offset: 1,
+            color: '#404a59',
+          },
+        ]),
+        toolbox: {
+          iconStyle: {
+            color: '#ccc',
+          },
+          feature: {
+            dataZoom: {},
+            saveAsImage: { name: 'twsnmp_ping' },
+          },
+        },
+        dataZoom: [{}],
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow',
+          },
+        },
+        grid: {
+          left: '10%',
+          right: '10%',
+          top: 60,
+          buttom: 0,
+        },
+        legend: {
+          data: [''],
+          textStyle: {
+            color: '#ccc',
+            fontSize: 10,
+          },
+        },
+        xAxis: {
+          type: 'time',
+          name: '日時',
+          nameTextStyle: {
+            color: '#ccc',
+            fontSize: 10,
+            margin: 2,
+          },
+          axisLabel: {
+            color: '#ccc',
+            fontSize: '8px',
+            formatter(value, index) {
+              const date = new Date(value)
+              return echarts.time.format(
+                date,
+                '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'
+              )
+            },
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ccc',
+            },
+          },
+          splitLine: {
+            show: false,
+          },
+        },
+        yAxis: [
+          {
+            type: 'value',
+            name: '応答時間(秒)',
+            nameTextStyle: {
+              color: '#ccc',
+              fontSize: 10,
+              margin: 2,
+            },
+            axisLabel: {
+              color: '#ccc',
+              fontSize: 8,
+              margin: 2,
+            },
+            axisLine: {
+              lineStyle: {
+                color: '#ccc',
+              },
+            },
+          },
+        ],
+        series: [
+          {
+            color: '#1f78b4',
+            type: 'line',
+            showSymbol: false,
+            data: [],
+          },
+        ],
+      }
+      this.chart = echarts.init(document.getElementById('chart'))
+      this.chart.setOption(this.chartOption)
+      this.chart.resize()
     },
     async _doPing() {
       const r = await this.$axios.$post('/api/ping', {
@@ -162,6 +280,16 @@ export default {
       }
       this.pingReq.count++
       this.results.push(r)
+      if (this.chart && r.Stat === 1) {
+        const t = new Date(r.TimeStamp * 1000)
+        const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
+        this.chartOption.series[0].data.push({
+          ts,
+          value: [t, r.Time / (1000 * 1000 * 1000)],
+        })
+        this.chart.setOption(this.chartOption)
+        this.chart.resize()
+      }
       if ((this.count === 0 || this.pingReq.count < this.count) && !this.stop) {
         if (this.size === 0) {
           // サイズを変更するモード
