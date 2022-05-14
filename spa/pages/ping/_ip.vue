@@ -347,8 +347,8 @@ export default {
       const exports = []
       this.results.forEach((r) => {
         exports.push({
-          時刻: r.TimeStamp,
-          応答時間: r.Time,
+          時刻: this.getTimeStamp(r.TimeStamp),
+          応答時間: this.getTime(r.Time),
           サイズ: r.Size,
         })
       })
