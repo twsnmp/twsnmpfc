@@ -176,15 +176,16 @@
 <script>
 import * as echarts from 'echarts'
 import * as ecStat from 'echarts-stat'
+import * as numeral from 'numeral'
 
 export default {
   data() {
     return {
       ip: '',
-      size: 64,
-      count: 5,
+      size: 0,
+      count: 10,
       pingReq: {
-        size: 64,
+        size: 0,
         count: 0,
       },
       countList: [
@@ -193,6 +194,8 @@ export default {
         { text: '3回', value: 3 },
         { text: '5回', value: 5 },
         { text: '10回', value: 10 },
+        { text: '20回', value: 20 },
+        { text: '30回', value: 30 },
         { text: '50回', value: 50 },
         { text: '100回', value: 100 },
       ],
@@ -602,7 +605,7 @@ export default {
           max: maxRtt,
           dimension: 2,
           inRange: {
-            color: ['#000090', '#DD2000'],
+            color: ['#eee', '#e0e000', '#ee0000'],
           },
         },
         xAxis3D: {
@@ -680,7 +683,7 @@ export default {
           {
             name: 'PING分析(3D)',
             type: 'scatter3D',
-            symbolSize: 3,
+            symbolSize: 10,
             dimensions: ['サイズ', '日時', '応答時間(秒)'],
             data,
           },
@@ -708,6 +711,11 @@ export default {
         data.push([r.Size, r.Time / (1000 * 1000 * 1000)])
       })
       const reg = ecStat.regression('linear', data)
+      const speed =
+        numeral(
+          reg.parameter.gradient ? 1.0 / reg.parameter.gradient : 0.0
+        ).format('0.00a') + 'bps'
+      const delay = reg.parameter.intercept.toFixed(6) + `sec`
       const option = {
         title: {
           show: false,
@@ -807,9 +815,9 @@ export default {
               label: {
                 normal: {
                   show: true,
-                  formatter: reg.expression,
+                  formatter: `回線速度=${speed} 遅延=${delay}`,
                   textStyle: {
-                    color: '#ccc',
+                    color: '#eee',
                     fontSize: 12,
                   },
                 },
