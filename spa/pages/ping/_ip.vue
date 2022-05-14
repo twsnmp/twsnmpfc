@@ -605,7 +605,15 @@ export default {
           max: maxRtt,
           dimension: 2,
           inRange: {
-            color: ['#eee', '#e0e000', '#ee0000'],
+            color: [
+              '#1710c0',
+              '#0b9df0',
+              '#00fea8',
+              '#00ff0d',
+              '#f5f811',
+              '#f09a09',
+              '#fe0300',
+            ],
           },
         },
         xAxis3D: {
