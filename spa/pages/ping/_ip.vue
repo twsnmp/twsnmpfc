@@ -382,6 +382,9 @@ export default {
       }
       if ((this.count === 0 || this.pingReq.count < this.count) && !this.stop) {
         if (this.size === 0) {
+          if (r.Stat !== 1) {
+            this.pingReq.size = 0
+          }
           // サイズを変更するモード
           this.pingReq.size += 100
         }
@@ -599,7 +602,7 @@ export default {
           max: maxRtt,
           dimension: 2,
           inRange: {
-            color: ['#e31a1c', '#fb9a99', '#dfdf22', '#1f78b4', '#777'],
+            color: ['#000090', '#DD2000'],
           },
         },
         xAxis3D: {
@@ -696,6 +699,132 @@ export default {
       if (this.linear) {
         this.linear.dispose()
       }
+      this.linear = echarts.init(document.getElementById('linear'))
+      const data = []
+      this.results.forEach((r) => {
+        if (r.Stat !== 1) {
+          return
+        }
+        data.push([r.Size, r.Time / (1000 * 1000 * 1000)])
+      })
+      const reg = ecStat.regression('linear', data)
+      const option = {
+        title: {
+          show: false,
+        },
+        backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+          {
+            offset: 0,
+            color: '#4b5769',
+          },
+          {
+            offset: 1,
+            color: '#404a59',
+          },
+        ]),
+        toolbox: {
+          iconStyle: {
+            color: '#ccc',
+          },
+          feature: {
+            dataZoom: {},
+            saveAsImage: { name: 'twsnmp_ping_size' },
+          },
+        },
+        dataZoom: [{}],
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow',
+          },
+        },
+        grid: {
+          left: '10%',
+          right: '10%',
+          top: 40,
+          buttom: 0,
+        },
+        xAxis: {
+          type: 'value',
+          name: 'サイズ',
+          nameTextStyle: {
+            color: '#ccc',
+            fontSize: 10,
+            margin: 2,
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ccc',
+            },
+          },
+          splitLine: {
+            show: false,
+          },
+        },
+        yAxis: [
+          {
+            type: 'value',
+            name: '応答時間(秒)',
+            nameTextStyle: {
+              color: '#ccc',
+              fontSize: 10,
+              margin: 2,
+            },
+            axisLine: {
+              lineStyle: {
+                color: '#ccc',
+              },
+            },
+            axisLabel: {
+              color: '#ccc',
+              fontSize: 8,
+              margin: 2,
+            },
+          },
+        ],
+        series: [
+          {
+            name: 'scatter',
+            type: 'scatter',
+            label: {
+              emphasis: {
+                show: true,
+              },
+            },
+            data,
+          },
+          {
+            name: 'line',
+            type: 'line',
+            showSymbol: false,
+            data: reg.points,
+            markPoint: {
+              itemStyle: {
+                normal: {
+                  color: 'transparent',
+                },
+              },
+              label: {
+                normal: {
+                  show: true,
+                  formatter: reg.expression,
+                  textStyle: {
+                    color: '#ccc',
+                    fontSize: 12,
+                  },
+                },
+              },
+              data: [
+                {
+                  coord: reg.points[reg.points.length - 1],
+                },
+              ],
+            },
+          },
+        ],
+      }
+      this.linear.setOption(option)
+      this.linear.resize()
     },
   },
 }
