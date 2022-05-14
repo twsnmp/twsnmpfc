@@ -218,20 +218,25 @@ type PingReq struct {
 }
 
 type PingRes struct {
-	Stat int
-	Time int64
-	TTL  int
+	Stat      int
+	TimeStamp int64
+	Time      int64
+	Size      int
 }
 
 func postPing(c echo.Context) error {
 	req := new(PingReq)
 	if err := c.Bind(req); err != nil {
+		log.Println(err)
 		return echo.ErrBadRequest
 	}
 	res := new(PingRes)
 	pe := ping.DoPing(req.IP, 1, 0, req.Size)
 	res.Stat = int(pe.Stat)
+	res.TimeStamp = time.Now().Unix()
 	res.Time = pe.Time
-	res.TTL = pe.TTL
+	res.Size = pe.Size
+	log.Printf("ping req=%#v", req)
+	log.Printf("ping res=%#v", res)
 	return c.JSON(http.StatusOK, res)
 }

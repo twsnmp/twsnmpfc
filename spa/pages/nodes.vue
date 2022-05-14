@@ -36,6 +36,9 @@
           <v-icon small @click="$router.push({ path: '/node/log/' + item.ID })">
             mdi-calendar-check
           </v-icon>
+          <v-icon small @click="$router.push({ path: '/ping/' + item.IP })">
+            mdi-check-network
+          </v-icon>
           <v-icon
             small
             @click="$router.push({ path: '/node/vpanel/' + item.ID })"
