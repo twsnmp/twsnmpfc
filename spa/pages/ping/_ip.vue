@@ -80,18 +80,101 @@
             Excel
           </v-btn>
         </download-excel>
+        <v-menu v-if="results.length > 0" offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              分析レポート
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="showHistogram">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-histogram</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> ヒストグラム </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="show3D">
+              <v-list-item-icon>
+                <v-icon>mdi-rotate-3d</v-icon>
+                <v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> 3Dグラフ </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item v-if="size === 0" @click="updateLeaner">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>回線速度予測</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <v-btn color="normal" dark @click="$router.go(-1)">
           <v-icon>mdi-arrow-left</v-icon>
           戻る
         </v-btn>
       </v-card-actions>
     </v-card>
+    <v-dialog v-model="histogramDialog" persistent max-width="950px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          ヒストグラム
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <div id="histogram" style="width: 900px; height: 400px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="histogramDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="chart3DDialog" persistent max-width="1050px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          実行日時、サイズ、応答時間の関係(3D)
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <div id="chart3d" style="width: 1000px; height: 750px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="chart3DDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="linearDialog" persistent max-width="1050px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          回線速度予測
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <div id="linear" style="width: 1000px; height: 750px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="linearDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
 <script>
 import * as echarts from 'echarts'
-// import * as ecStat from 'echarts-stat'
+import * as ecStat from 'echarts-stat'
 
 export default {
   data() {
@@ -134,6 +217,12 @@ export default {
       stop: false,
       chart: undefined,
       chartOption: {},
+      histogramDialog: false,
+      histgram: undefined,
+      chart3DDialog: false,
+      chart3D: undefined,
+      linearDialog: false,
+      lenear: undefined,
     }
   },
   created() {
@@ -353,6 +442,125 @@ export default {
         })
       })
       return exports
+    },
+    showHistogram() {
+      this.histogramDialog = true
+      this.$nextTick(() => {
+        this.updateHistogram()
+      })
+    },
+    updateHistogram() {
+      if (this.histgram) {
+        this.histgram.dispose()
+      }
+      const data = []
+      this.results.forEach((r) => {
+        data.push(r.Time / (1000 * 1000 * 1000))
+      })
+      const bins = ecStat.histogram(data)
+      this.histgram = echarts.init(document.getElementById('histogram'))
+      const option = {
+        title: {
+          show: false,
+        },
+        backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+          {
+            offset: 0,
+            color: '#4b5769',
+          },
+          {
+            offset: 1,
+            color: '#404a59',
+          },
+        ]),
+        toolbox: {
+          iconStyle: {
+            color: '#ccc',
+          },
+          feature: {
+            dataZoom: {},
+            saveAsImage: { name: 'twsnmp_ping_histgram' },
+          },
+        },
+        dataZoom: [{}],
+        tooltip: {
+          trigger: 'axis',
+          formatter(params) {
+            const p = params[0]
+            return p.value[0] + 'の回数:' + p.value[1]
+          },
+          axisPointer: {
+            type: 'shadow',
+          },
+        },
+        grid: {
+          left: '10%',
+          right: '10%',
+          top: 30,
+          buttom: 0,
+        },
+        xAxis: {
+          scale: true,
+          name: '応答時間(秒)',
+          min: 0,
+          nameTextStyle: {
+            color: '#ccc',
+            fontSize: 10,
+            margin: 2,
+          },
+          axisLabel: {
+            color: '#ccc',
+            fontSize: 8,
+            margin: 2,
+          },
+        },
+        yAxis: {
+          name: '回数',
+          nameTextStyle: {
+            color: '#ccc',
+            fontSize: 10,
+            margin: 2,
+          },
+          axisLabel: {
+            color: '#ccc',
+            fontSize: 8,
+            margin: 2,
+          },
+        },
+        series: [
+          {
+            color: '#1f78b4',
+            type: 'bar',
+            showSymbol: false,
+            barWidth: '99.3%',
+            data: bins.data,
+          },
+        ],
+      }
+      this.histgram.setOption(option)
+      this.histgram.resize()
+    },
+    show3D() {
+      this.chart3dDialog = true
+      this.$nextTick(() => {
+        this.update3D()
+      })
+    },
+    update3D() {
+      if (this.chart3d) {
+        this.chart3d.dispose()
+      }
+    },
+    showLinear() {
+      this.linearDialog = true
+      this.$nextTick(() => {
+        this.updateLinear()
+      })
+    },
+    updateLinear() {
+      if (this.linear) {
+        this.linear.dispose()
+      }
     },
   },
 }
