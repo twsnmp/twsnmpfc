@@ -58,6 +58,7 @@
           実行
         </v-btn>
         <download-excel
+          v-if="results.length > 0 && !wait"
           :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_PING.csv"
@@ -69,6 +70,7 @@
           </v-btn>
         </download-excel>
         <download-excel
+          v-if="results.length > 0 && !wait"
           :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_PING.xls"
@@ -80,7 +82,7 @@
             Excel
           </v-btn>
         </download-excel>
-        <v-menu v-if="results.length > 0" offset-y>
+        <v-menu v-if="results.length > 0 && !wait" offset-y>
           <template #activator="{ on, attrs }">
             <v-btn color="primary" dark v-bind="attrs" v-on="on">
               <v-icon>mdi-chart-line</v-icon>
@@ -96,16 +98,15 @@
                 <v-list-item-title> ヒストグラム </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-            <v-list-item @click="show3D">
+            <v-list-item v-if="size === 0" @click="show3D">
               <v-list-item-icon>
                 <v-icon>mdi-rotate-3d</v-icon>
-                <v-icon>mdi-chart-scatter-plot</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title> 3Dグラフ </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-            <v-list-item v-if="size === 0" @click="updateLeaner">
+            <v-list-item v-if="size === 0" @click="showLinear">
               <v-list-item-icon>
                 <v-icon>mdi-chart-scatter-plot</v-icon>
               </v-list-item-icon>
@@ -124,7 +125,7 @@
     <v-dialog v-model="histogramDialog" persistent max-width="950px">
       <v-card style="width: 100%">
         <v-card-title>
-          ヒストグラム
+          PING応答のヒストグラム
           <v-spacer></v-spacer>
         </v-card-title>
         <div id="histogram" style="width: 900px; height: 400px"></div>
@@ -156,7 +157,7 @@
     <v-dialog v-model="linearDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
         <v-card-title>
-          回線速度予測
+          PINGによる回線速度予測
           <v-spacer></v-spacer>
         </v-card-title>
         <div id="linear" style="width: 1000px; height: 750px"></div>
@@ -455,6 +456,9 @@ export default {
       }
       const data = []
       this.results.forEach((r) => {
+        if (r.Stat !== 1) {
+          return
+        }
         data.push(r.Time / (1000 * 1000 * 1000))
       })
       const bins = ecStat.histogram(data)
@@ -541,7 +545,7 @@ export default {
       this.histgram.resize()
     },
     show3D() {
-      this.chart3dDialog = true
+      this.chart3DDialog = true
       this.$nextTick(() => {
         this.update3D()
       })
@@ -550,6 +554,137 @@ export default {
       if (this.chart3d) {
         this.chart3d.dispose()
       }
+      let maxRtt = 0.0
+      const data = []
+      this.results.forEach((r) => {
+        if (r.Stat !== 1) {
+          return
+        }
+        const t = new Date(r.TimeStamp * 1000)
+        const rtt = r.Time / (1000 * 1000 * 1000)
+        if (rtt > maxRtt) {
+          maxRtt = rtt
+        }
+        data.push([r.Size, t, rtt])
+      })
+      this.chart3d = echarts.init(document.getElementById('chart3d'))
+      const options = {
+        title: {
+          show: false,
+        },
+        backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+          {
+            offset: 0,
+            color: '#4b5769',
+          },
+          {
+            offset: 1,
+            color: '#404a59',
+          },
+        ]),
+        toolbox: {
+          iconStyle: {
+            color: '#ccc',
+          },
+          feature: {
+            saveAsImage: { name: 'twsnmp_ping_3d' },
+          },
+        },
+        tooltip: {},
+        animationDurationUpdate: 1500,
+        animationEasingUpdate: 'quinticInOut',
+        visualMap: {
+          show: false,
+          min: 0,
+          max: maxRtt,
+          dimension: 2,
+          inRange: {
+            color: ['#e31a1c', '#fb9a99', '#dfdf22', '#1f78b4', '#777'],
+          },
+        },
+        xAxis3D: {
+          type: 'value',
+          name: 'サイズ',
+          nameTextStyle: {
+            color: '#eee',
+            fontSize: 12,
+            margin: 2,
+          },
+          axisLabel: {
+            color: '#eee',
+            fontSize: 10,
+            margin: 2,
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ccc',
+            },
+          },
+        },
+        yAxis3D: {
+          type: 'time',
+          name: '日時',
+          nameTextStyle: {
+            color: '#eee',
+            fontSize: 12,
+            margin: 2,
+          },
+          axisLabel: {
+            color: '#eee',
+            fontSize: 8,
+            formatter(value, index) {
+              const date = new Date(value)
+              return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
+            },
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ccc',
+            },
+          },
+        },
+        zAxis3D: {
+          type: 'value',
+          name: '応答時間(秒)',
+          nameTextStyle: {
+            color: '#eee',
+            fontSize: 12,
+            margin: 2,
+          },
+          axisLabel: {
+            color: '#ccc',
+            fontSize: 8,
+            margin: 2,
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ccc',
+            },
+          },
+        },
+        grid3D: {
+          axisLine: {
+            lineStyle: { color: '#eee' },
+          },
+          axisPointer: {
+            lineStyle: { color: '#eee' },
+          },
+          viewControl: {
+            projection: 'orthographic',
+          },
+        },
+        series: [
+          {
+            name: 'PING分析(3D)',
+            type: 'scatter3D',
+            symbolSize: 3,
+            dimensions: ['サイズ', '日時', '応答時間(秒)'],
+            data,
+          },
+        ],
+      }
+      this.chart3d.setOption(options)
+      this.chart3d.resize()
     },
     showLinear() {
       this.linearDialog = true
