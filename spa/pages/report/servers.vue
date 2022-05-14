@@ -43,6 +43,9 @@
           >
             mdi-file-find
           </v-icon>
+          <v-icon small @click="$router.push({ path: '/ping/' + item.Server })">
+            mdi-check-network
+          </v-icon>
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon v-if="!readOnly" small @click="openDeleteDialog(item)">
             mdi-delete

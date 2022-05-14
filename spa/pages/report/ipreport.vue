@@ -37,6 +37,9 @@
           >
             mdi-file-find
           </v-icon>
+          <v-icon small @click="$router.push({ path: '/ping/' + item.IP })">
+            mdi-check-network
+          </v-icon>
           <v-icon
             v-if="item.MAC"
             small

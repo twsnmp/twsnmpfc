@@ -331,6 +331,14 @@
                   <v-list-item-title>MIBブラウザー</v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
+              <v-list-item @click="showPing()">
+                <v-list-item-icon>
+                  <v-icon>mdi-check-network</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>MIBブラウザー</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
               <v-list-item @click="showVPanelPage()">
                 <v-list-item-icon>
                   <v-icon>mdi-apps-box</v-icon>
@@ -488,6 +496,14 @@
           <v-list-item-icon><v-icon>mdi-eye</v-icon></v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>MIBブラウザー</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="showPing()">
+          <v-list-item-icon>
+            <v-icon>mdi-check-network</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>PING</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-item @click="showNodeDialog = true">
@@ -842,6 +858,9 @@ export default {
     },
     showMIBBr() {
       this.$router.push({ path: '/mibbr/' + this.editNode.ID })
+    },
+    showPing() {
+      this.$router.push({ path: '/ping/' + this.editNode.IP })
     },
     openURL(url) {
       this.openURLDialog = false
