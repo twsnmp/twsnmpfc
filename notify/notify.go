@@ -205,7 +205,7 @@ func rssiClass(rssi []datastore.RSSIEnt) string {
 		s = rssi[len(rssi)-1].Value
 	}
 	if s >= 0 {
-		return "unkown"
+		return "unknown"
 	} else if s > -70 {
 		return "info"
 	} else if s > -80 {

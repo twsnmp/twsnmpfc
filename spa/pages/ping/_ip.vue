@@ -405,7 +405,7 @@ export default {
         case 3:
           return this.$getStateColor('warn')
         default:
-          return this.$getStateColor('unkown')
+          return this.$getStateColor('unknown')
       }
     },
     getStatIcon(s) {
@@ -417,7 +417,7 @@ export default {
         case 3:
           return this.$getStateIconName('warn')
         default:
-          return this.$getStateIconName('unkown')
+          return this.$getStateIconName('unknown')
       }
     },
     getStatName(s) {

@@ -54,7 +54,7 @@ func checkTWPCAPReport(l map[string]interface{}) {
 	case "Monitor":
 		checkMonitor(h, "twpcap", twpcapMap)
 	default:
-		log.Printf("twpcap unkown type=%v", t)
+		log.Printf("twpcap unknown type=%v", t)
 	}
 }
 

@@ -70,7 +70,7 @@ func checkTWWinLogReport(l map[string]interface{}) {
 	case "Task":
 		checkWinTask(h, m)
 	default:
-		log.Printf("twwinlog unkown type=%s", t)
+		log.Printf("twwinlog unknown type=%s", t)
 	}
 }
 

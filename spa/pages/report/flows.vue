@@ -402,7 +402,7 @@
         </v-alert>
         <v-card-text>
           <v-data-table
-            :headers="unkownPortsHeaders"
+            :headers="unknownPortsHeaders"
             :items="unknownPorts"
             sort-by="Count"
             sort-asec
@@ -494,7 +494,7 @@ export default {
       flows3DChartDialog: false,
       countryChartDialog: false,
       over: false,
-      unkownPortsHeaders: [
+      unknownPortsHeaders: [
         { text: '名前', value: 'Name', width: '60%' },
         { text: '回数', value: 'Count', width: '40%' },
       ],

@@ -47,7 +47,7 @@ func checkTWBlueScanReport(l map[string]interface{}) {
 	case "Monitor":
 		checkMonitor(h, "twBlueScan", m)
 	default:
-		log.Printf("twbluescan unkown type=%v m=%v", t, m)
+		log.Printf("twbluescan unknown type=%v m=%v", t, m)
 	}
 }
 

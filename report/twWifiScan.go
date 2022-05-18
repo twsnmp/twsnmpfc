@@ -41,7 +41,7 @@ func checkTWWifiScanReport(l map[string]interface{}) {
 	case "Monitor":
 		checkMonitor(h, "twWifiScan", m)
 	default:
-		log.Printf("twwifiscan unkown type=%v", t)
+		log.Printf("twwifiscan unknown type=%v", t)
 	}
 }
 
