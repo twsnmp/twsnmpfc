@@ -318,10 +318,16 @@
                 cols="8"
               ></v-text-field>
             </v-col>
-            <v-col cols="4">
+            <v-col v-if="filter.Protocol != 1" cols="4">
               <v-text-field
                 v-model="filter.Port"
                 label="ポート番号"
+              ></v-text-field>
+            </v-col>
+            <v-col v-if="filter.Protocol == 1" cols="4">
+              <v-text-field
+                v-model="filter.Port"
+                label="ICMP Type"
               ></v-text-field>
             </v-col>
           </v-row>
@@ -332,10 +338,16 @@
                 label="送信元IPアドレス（正規表現）"
               ></v-text-field>
             </v-col>
-            <v-col cols="4">
+            <v-col v-if="filter.Protocol != 1" cols="4">
               <v-text-field
                 v-model="filter.SrcPort"
                 label="ポート番号"
+              ></v-text-field>
+            </v-col>
+            <v-col v-if="filter.Protocol == 1" cols="4">
+              <v-text-field
+                v-model="filter.SrcPort"
+                label="ICMP Type"
               ></v-text-field>
             </v-col>
             <v-col cols="8">
@@ -344,10 +356,16 @@
                 label="宛先IPアドレス（正規表現）"
               ></v-text-field>
             </v-col>
-            <v-col cols="4">
+            <v-col v-if="filter.Protocol != 1" cols="4">
               <v-text-field
                 v-model="filter.DstPort"
                 label="ポート番号"
+              ></v-text-field>
+            </v-col>
+            <v-col v-if="filter.Protocol == 1" cols="4">
+              <v-text-field
+                v-model="filter.DstPort"
+                label="ICMP Code"
               ></v-text-field>
             </v-col>
           </v-row>

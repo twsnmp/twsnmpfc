@@ -173,15 +173,19 @@ func postNetFlow(c echo.Context) error {
 		if prot == "icmp" {
 			spi = dpi / 256
 			dpi = dpi % 256
+			re.Src = sa
+			re.Dst = da
+			re.Protocol = fmt.Sprintf("icmp %d/%d", spi, dpi)
+		} else {
+			re.Src = fmt.Sprintf("%s:%d", sa, spi)
+			re.Dst = fmt.Sprintf("%s:%d", da, dpi)
+			re.Protocol = prot
 		}
 		re.Time = l.Time
-		re.Src = fmt.Sprintf("%s:%d", sa, spi)
-		re.Dst = fmt.Sprintf("%s:%d", da, dpi)
 		re.SrcIP = sa
 		re.DstIP = da
 		re.SrcPort = spi
 		re.DstPort = dpi
-		re.Protocol = prot
 		re.TCPFlags = tf
 		re.Bytes = int64(bytes)
 		re.Packets = int64(packets)
@@ -317,10 +321,12 @@ func postIPFIX(c echo.Context) error {
 			prot = "icmpv6"
 			sp = float64(int(icmpTypeCode) / 256)
 			dp = float64(int(icmpTypeCode) % 256)
+			pi = 1
 		} else if icmpTypeCode, ok = sl["icmpTypeCodeIPv4"].(float64); ok {
 			prot = "icmpv4"
 			sp = float64(int(icmpTypeCode) / 256)
 			dp = float64(int(icmpTypeCode) % 256)
+			pi = 1
 		} else if pi, ok = sl["protocolIdentifier"].(float64); ok {
 			if sp, ok = sl["sourceTransportPort"].(float64); !ok {
 				return true
@@ -369,13 +375,19 @@ func postIPFIX(c echo.Context) error {
 		spi := int(sp)
 		dpi := int(dp)
 		re.Time = l.Time
-		re.Src = fmt.Sprintf("%s:%d", sa, spi)
-		re.Dst = fmt.Sprintf("%s:%d", da, dpi)
+		if int(pi) == 1 {
+			re.Src = sa
+			re.Dst = da
+			re.Protocol = fmt.Sprintf("%s %d/%d", prot, spi, dpi)
+		} else {
+			re.Src = fmt.Sprintf("%s:%d", sa, spi)
+			re.Dst = fmt.Sprintf("%s:%d", da, dpi)
+			re.Protocol = prot
+		}
 		re.SrcIP = sa
 		re.DstIP = da
 		re.SrcPort = spi
 		re.DstPort = dpi
-		re.Protocol = prot
 		re.TCPFlags = tf
 		re.Bytes = int64(bytes)
 		re.Packets = int64(packets)
