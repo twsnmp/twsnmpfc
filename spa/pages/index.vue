@@ -19,8 +19,16 @@
               href="https://note.com/twsnmp/m/meed0d0ddab5e"
               target="_blank"
               rel="noopener noreferrer"
-              >Noteのマガジン</a
-            >に書いています。<br />
+              >noteのマガジン
+            </a>
+            と
+            <a
+              href="https://zenn.dev/twsnmp/books/twsnmpfc-manual"
+              target="_blank"
+              rel="noopener noreferrer"
+              >ZennのBook
+            </a>
+            に書いています。<br />
             ソースコードは
             <a
               href="https://github.com/twsnmp/twsnmpfc"
