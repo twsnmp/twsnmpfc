@@ -13,7 +13,7 @@
         </v-alert>
         <v-card-text>
           <p>
-            TWSNMP FCはコンテナ環境用のネットワーク管理ソフトです。<br />
+            TWSNMP FCはコンテナ環境で動作するネットワーク管理ソフトです。<br />
             使い方は
             <a
               href="https://note.com/twsnmp/m/meed0d0ddab5e"
@@ -46,7 +46,22 @@
               title="contribute"
             >
               GitHubのissue </a
-            >からお知らせください。
+            >からお知らせください。<br />
+            モバイル版のTWSNMPは
+            <a
+              href="https://apps.apple.com/app/twsnmp-for-mobile/id1630463521"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Apple App Store
+            </a>
+            または
+            <a
+              href="https://play.google.com/store/apps/details?id=jp.co.twsie.twsnmpfm"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Google Play Store
+            </a>
+            からインストールできます。<br />
           </p>
           <p>TWSNMP FCを利用いただきありがとうございます。</p>
           <div class="text-xs-right">
