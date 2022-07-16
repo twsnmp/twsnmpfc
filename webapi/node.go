@@ -236,7 +236,23 @@ func postPing(c echo.Context) error {
 	res.TimeStamp = time.Now().Unix()
 	res.Time = pe.Time
 	res.Size = pe.Size
-	log.Printf("ping req=%#v", req)
-	log.Printf("ping res=%#v", res)
 	return c.JSON(http.StatusOK, res)
+}
+
+type portWebAPI struct {
+	Node     *datastore.NodeEnt
+	TcpPorts []*backend.PortEnt
+	UdpPorts []*backend.PortEnt
+}
+
+func getPortList(c echo.Context) error {
+	id := c.Param("id")
+	r := portWebAPI{}
+	r.Node = datastore.GetNode(id)
+	if r.Node == nil {
+		log.Printf("host resorce node not found id=%s", id)
+		return echo.ErrBadRequest
+	}
+	r.TcpPorts, r.UdpPorts = backend.GetPortList(r.Node)
+	return c.JSON(http.StatusOK, r)
 }

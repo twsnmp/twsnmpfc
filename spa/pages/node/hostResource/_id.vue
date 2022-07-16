@@ -224,7 +224,7 @@
         <download-excel
           :fetch="makeExports"
           type="csv"
-          name="TWSNMP_FC_Host_Resource.xls"
+          name="TWSNMP_FC_Host_Resource.csv"
           :header="exportTitle"
           class="v-btn"
         >

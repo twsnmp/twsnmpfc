@@ -91,7 +91,7 @@
         <download-excel
           :fetch="makeExports"
           type="csv"
-          name="TWSNMP_FC_Port.xls"
+          name="TWSNMP_FC_Port.csv"
           :header="exportTitle"
           class="v-btn"
         >

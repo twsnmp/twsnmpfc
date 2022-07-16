@@ -336,7 +336,7 @@
                   <v-icon>mdi-check-network</v-icon>
                 </v-list-item-icon>
                 <v-list-item-content>
-                  <v-list-item-title>MIBブラウザー</v-list-item-title>
+                  <v-list-item-title>PING</v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
               <v-list-item @click="showVPanelPage()">
@@ -353,6 +353,14 @@
                 </v-list-item-icon>
                 <v-list-item-content>
                   <v-list-item-title>ホストリソース</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item @click="showTcpUdpPortPage()">
+                <v-list-item-icon>
+                  <v-icon>mdi-power-socket-jp</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>TCP/UDPポート</v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
               <v-list-item @click="showNodePollingPage()">
@@ -540,6 +548,14 @@
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>ホストリソース</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="showTcpUdpPortPage()">
+          <v-list-item-icon>
+            <v-icon>mdi-power-socket-jp</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>TCP/UDPポート</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-item v-if="editNode.MAC" @click="doWOL">
@@ -855,6 +871,9 @@ export default {
     },
     showHostResourcePage() {
       this.$router.push({ path: '/node/hostResource/' + this.editNode.ID })
+    },
+    showTcpUdpPortPage() {
+      this.$router.push({ path: '/node/port/' + this.editNode.ID })
     },
     showMIBBr() {
       this.$router.push({ path: '/mibbr/' + this.editNode.ID })

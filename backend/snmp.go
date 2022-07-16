@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -598,4 +599,138 @@ func getDateAndTime(i interface{}) string {
 		return fmt.Sprintf("%d", v)
 	}
 	return "Unknown"
+}
+
+type PortEnt struct {
+	Port    int
+	Address string
+	Process string
+	Descr   string
+}
+
+func GetPortList(n *datastore.NodeEnt) ([]*PortEnt, []*PortEnt) {
+	tcpPorts := []*PortEnt{}
+	udpPorts := []*PortEnt{}
+	processNameMap := make(map[int]string)
+	agent := getSNMPAgent(n)
+	if agent == nil {
+		return tcpPorts, udpPorts
+	}
+	err := agent.Connect()
+	if err != nil {
+		log.Printf("GetPortList err=%v", err)
+		return tcpPorts, udpPorts
+	}
+	defer agent.Conn.Close()
+	_ = agent.Walk(datastore.MIBDB.NameToOID("hrSWRunName"), func(variable gosnmp.SnmpPDU) error {
+		a := strings.Split(datastore.MIBDB.OIDToName(variable.Name), ".")
+		if len(a) != 2 {
+			return nil
+		}
+		processNameMap[getInt(a[1])] = getMIBStringVal(variable.Value)
+		return nil
+	})
+	_ = agent.Walk(datastore.MIBDB.NameToOID("udpEndpointProcess"), func(variable gosnmp.SnmpPDU) error {
+		a := strings.Split(datastore.MIBDB.OIDToName(variable.Name), ".")
+		if len(a) < 2 {
+			return nil
+		}
+		addr := getLocalAddr(a)
+		if addr == "" {
+			return nil
+		}
+		var port int
+		if strings.Contains(addr, ":") {
+			port = getInt(a[19])
+		} else {
+			port = getInt(a[7])
+		}
+		rport := getInt(a[len(a)-2])
+		descr, ok := datastore.GetServiceName(17, port)
+		if !ok && rport > 0 {
+			raddr := getRemoteAddr(a)
+			sv, ok := datastore.GetServiceName(17, rport)
+			if ok {
+				descr = fmt.Sprintf("%s -> %s", sv, raddr)
+			}
+		}
+		pid := int(gosnmp.ToBigInt(variable.Value).Int64())
+		process, ok := processNameMap[pid]
+		if !ok {
+			process = fmt.Sprintf("%d", pid)
+		}
+		udpPorts = append(udpPorts, &PortEnt{
+			Port:    port,
+			Descr:   descr,
+			Address: addr,
+			Process: process,
+		})
+		return nil
+	})
+	_ = agent.Walk(datastore.MIBDB.NameToOID("tcpListenerProcess"), func(variable gosnmp.SnmpPDU) error {
+		a := strings.Split(datastore.MIBDB.OIDToName(variable.Name), ".")
+		if len(a) < 2 {
+			return nil
+		}
+		port := getInt(a[len(a)-1])
+		descr, _ := datastore.GetServiceName(6, port)
+		pid := int(gosnmp.ToBigInt(variable.Value).Int64())
+		process, ok := processNameMap[pid]
+		if !ok {
+			process = fmt.Sprintf("%d", pid)
+		}
+		tcpPorts = append(tcpPorts, &PortEnt{
+			Port:    port,
+			Descr:   descr,
+			Address: getLocalAddr(a),
+			Process: process,
+		})
+		return nil
+	})
+	return tcpPorts, udpPorts
+}
+
+func getInt(s string) int {
+	if i, err := strconv.Atoi(s); err == nil {
+		return i
+	}
+	return 0
+}
+
+func getLocalAddr(a []string) string {
+	switch a[1] {
+	case "1":
+		// IPv4
+		return strings.Join(a[3:4+3], ".")
+	case "2":
+		// IPv6
+		r := ""
+		for i := 3; i < 16+3; i++ {
+			if i != 3 {
+				r += ":"
+			}
+			r += fmt.Sprintf("%02x", getInt(a[i]))
+		}
+		return r
+	}
+	return ""
+}
+
+func getRemoteAddr(a []string) string {
+	switch a[1] {
+	case "1":
+		// IPv4
+		return strings.Join(a[10:4+10], ".")
+	case "2":
+		// IPv6
+		r := ""
+		for i := 22; i < 16+22; i++ {
+			if i != 22 {
+				r += ":"
+			}
+			r += fmt.Sprintf("%02x", getInt(a[i]))
+		}
+		return r
+	}
+	return ""
 }
