@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -45,6 +46,7 @@ func loadExtMIBs(root string) {
 	if MIBDB == nil {
 		return
 	}
+	skipList := []string{}
 	filepath.Walk(root,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -53,12 +55,19 @@ func loadExtMIBs(root string) {
 			if info.IsDir() {
 				return nil
 			}
-			loadExtMIB(filepath.Join(root, path))
+			if loadExtMIB(path) {
+				skipList = append(skipList, path)
+			}
 			return nil
 		})
+	for _, path := range skipList {
+		if loadExtMIB(path) {
+			log.Printf("skip error mib file=%s", path)
+		}
+	}
 }
 
-func loadExtMIB(path string) {
+func loadExtMIB(path string) bool {
 	log.Printf("load ext mib path=%s", path)
 	var nameList []string
 	var mapNameToOID = make(map[string]string)
@@ -67,17 +76,20 @@ func loadExtMIB(path string) {
 	}
 	asn1, err := ioutil.ReadFile(path)
 	if err != nil {
-		return
+		log.Println(err)
+		return false
 	}
 	module, err := parser.Parse(bytes.NewReader(asn1))
 	if err != nil || module == nil {
-		return
+		log.Println(err)
+		return false
 	}
 	if module.Body.Identity != nil {
 		name := module.Body.Identity.Name.String()
 		oid := getOid(&module.Body.Identity.Oid)
 		mapNameToOID[name] = oid
 		nameList = append(nameList, name)
+		log.Printf("module %s=%s", name, oid)
 	}
 	for _, n := range module.Body.Nodes {
 		if n.Name.String() == "" || n.Oid == nil {
@@ -103,9 +115,20 @@ func loadExtMIB(path string) {
 		}
 		mapNameToOID[name] = noid + "." + a[1]
 	}
+	hasSkip := false
+	oidReg := regexp.MustCompile(`^[.0-9]+$`)
 	for _, name := range nameList {
-		_ = MIBDB.Add(name, mapNameToOID[name])
+		oid := mapNameToOID[name]
+		if !oidReg.MatchString(oid) {
+			oid = MIBDB.NameToOID(oid)
+			if oid == ".0.0" {
+				hasSkip = true
+				continue
+			}
+		}
+		_ = MIBDB.Add(name, oid)
 	}
+	return hasSkip
 }
 
 func getOid(oid *parser.Oid) string {
