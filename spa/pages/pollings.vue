@@ -139,42 +139,81 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="editDialog" persistent max-width="500px">
+    <v-dialog v-model="editDialog" persistent max-width="900px">
       <v-card>
         <v-card-title> ポーリング設定 </v-card-title>
         <v-card-text>
-          <v-select
-            v-if="editIndex === -1"
-            v-model="editPolling.NodeID"
-            :items="nodeList"
-            label="ノード"
-          ></v-select>
-          <v-text-field v-model="editPolling.Name" label="名前"></v-text-field>
-          <v-select
-            v-model="editPolling.Level"
-            :items="$levelList"
-            label="レベル"
-          >
-          </v-select>
-          <v-select v-model="editPolling.Type" :items="$typeList" label="種別">
-          </v-select>
-          <v-text-field
-            v-model="editPolling.Mode"
-            label="モード"
-          ></v-text-field>
-          <v-text-field
-            v-model="editPolling.Params"
-            label="パラメータ"
-          ></v-text-field>
-          <v-text-field
-            v-model="editPolling.Filter"
-            label="フィルター"
-          ></v-text-field>
-          <v-select
-            v-model="editPolling.Extractor"
-            :items="extractorList"
-            label="抽出パターン"
-          ></v-select>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-if="editIndex === -1"
+                v-model="editPolling.NodeID"
+                :items="nodeList"
+                label="ノード"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editPolling.Name"
+                label="名前"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="editPolling.Level"
+                :items="$levelList"
+                label="レベル"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="editPolling.Type"
+                :items="$typeList"
+                label="種別"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editPolling.Mode"
+                label="モード"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="editPolling.Params"
+                label="パラメータ"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editPolling.Filter"
+                label="フィルター"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="editPolling.Extractor"
+                :items="extractorList"
+                label="抽出パターン"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="editPolling.LogMode"
+                :items="$logModeList"
+                label="ログモード"
+              >
+              </v-select>
+            </v-col>
+          </v-row>
           <v-textarea
             v-model="editPolling.Script"
             label="判定スクリプト"
@@ -239,12 +278,6 @@
               ></v-text-field>
             </template>
           </v-slider>
-          <v-select
-            v-model="editPolling.LogMode"
-            :items="$logModeList"
-            label="ログモード"
-          >
-          </v-select>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -504,6 +537,7 @@ export default {
         { text: 'SNMP TRAP', value: 'trap' },
         { text: 'NetFlow', value: 'netflow' },
         { text: 'IPFIX', value: 'ipfix' },
+        { text: 'ARP Log', value: 'arp' },
         { text: 'Command', value: 'cmd' },
         { text: 'SSH', value: 'ssh' },
         { text: 'Report', value: 'report' },
@@ -539,7 +573,12 @@ export default {
     if (this.extractorList.length < 1) {
       const groks = await this.$axios.$get('/api/conf/grok')
       if (groks) {
-        this.extractorList = []
+        this.extractorList = [
+          {
+            text: '',
+            ID: '',
+          },
+        ]
         groks.forEach((g) => {
           this.extractorList.push({
             text: g.Name,
