@@ -37,6 +37,9 @@ func syslogd(stopCh chan bool) {
 				s, err := json.Marshal(sl)
 				if err == nil {
 					tag, ok := sl["tag"].(string)
+					if !ok {
+						tag, ok = sl["app_name"].(string)
+					}
 					if ok {
 						switch tag {
 						case "twpcap":
