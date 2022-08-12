@@ -84,7 +84,7 @@ func doPollingLog(pe *datastore.PollingEnt) {
 	keys := []string{}
 	datastore.ForEachLog(st, et, pe.Type, func(l *datastore.LogEnt) bool {
 		msg := ""
-		if pe.Type == "arp" {
+		if pe.Type == "arplog" {
 			msg = l.Log
 		} else {
 			var sl = make(map[string]interface{})

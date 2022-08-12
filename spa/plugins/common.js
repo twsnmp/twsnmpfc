@@ -67,7 +67,7 @@ const typeList = [
   { text: 'SNMP TRAP', value: 'trap' },
   { text: 'NetFlow', value: 'netflow' },
   { text: 'IPFIX', value: 'ipfix' },
-  { text: 'ARP Log', value: 'arp' },
+  { text: 'ARP Log', value: 'arplog' },
   { text: 'Command', value: 'cmd' },
   { text: 'SSH', value: 'ssh' },
   { text: 'Report', value: 'report' },
