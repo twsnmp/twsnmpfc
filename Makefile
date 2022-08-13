@@ -1,7 +1,7 @@
 .PHONY: all test clean zip mac clean_spa docker
 
 ### バージョンの定義
-VERSION     := "v1.12.1"
+VERSION     := "v1.12.2"
 COMMIT      := $(shell git rev-parse --short HEAD)
 
 ### コマンドの定義

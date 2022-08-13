@@ -196,7 +196,6 @@ func postSyslog(c echo.Context) error {
 			if re.Tag, ok = sl["app_name"].(string); !ok {
 				return true
 			}
-			// 022-08-12T15:08:09.822 map[app_name:syslog client:192.168.1.250:53444 facility:16 hostname:ymimacmini.local message: msg_id:TWSNMP priority:134 proc_id:from severity:6 structured_data: timestamp:2022-08-12 15:08:09 +0900 +0900 tls_peer: version:1]
 			re.Message = ""
 			for i, k := range []string{"proc_id", "msg_id", "message", "structured_data"} {
 				if m, ok := sl[k].(string); ok && m != "" {
