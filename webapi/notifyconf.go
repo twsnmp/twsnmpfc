@@ -2,7 +2,6 @@ package webapi
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -29,6 +28,7 @@ func getNotifyConf(c echo.Context) error {
 	r.HTMLMail = datastore.NotifyConf.HTMLMail
 	r.ChatType = datastore.NotifyConf.ChatType
 	r.ChatWebhookURL = datastore.NotifyConf.ChatWebhookURL
+	r.ExecCmd = datastore.NotifyConf.ExecCmd
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -54,6 +54,7 @@ func postNotifyConf(c echo.Context) error {
 	datastore.NotifyConf.HTMLMail = nc.HTMLMail
 	datastore.NotifyConf.ChatType = nc.ChatType
 	datastore.NotifyConf.ChatWebhookURL = nc.ChatWebhookURL
+	datastore.NotifyConf.ExecCmd = nc.ExecCmd
 	if nc.Password != "" {
 		datastore.NotifyConf.Password = nc.Password
 	}
@@ -95,7 +96,7 @@ func postNotifyTest(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
-func postNotifyChartTest(c echo.Context) error {
+func postNotifyChatTest(c echo.Context) error {
 	nc := new(datastore.NotifyConfEnt)
 	if err := c.Bind(nc); err != nil {
 		return echo.ErrBadRequest
@@ -105,7 +106,6 @@ func postNotifyChartTest(c echo.Context) error {
 	}
 	title := fmt.Sprintf("%s（試験メッセージ）", datastore.NotifyConf.Subject)
 	if err := notify.SendChat(nc, title, "info", "テストです。"); err != nil {
-		log.Printf("chat test nc=%#v err=%v", nc, err)
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "user",
 			Level: "warn",
@@ -117,6 +117,27 @@ func postNotifyChartTest(c echo.Context) error {
 		Type:  "user",
 		Level: "info",
 		Event: "試験メッセージ通知を送信しました",
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postNotifyExecTest(c echo.Context) error {
+	nc := new(datastore.NotifyConfEnt)
+	if err := c.Bind(nc); err != nil {
+		return echo.ErrBadRequest
+	}
+	if err := notify.ExecNotifyCmd(nc.ExecCmd, 1); err != nil {
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "user",
+			Level: "warn",
+			Event: fmt.Sprintf("通知コマンド実行の試験に失敗しました err=%v", err),
+		})
+		return echo.ErrBadRequest
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "通知コマンド実行の試験に成功しました",
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

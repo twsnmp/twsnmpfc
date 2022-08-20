@@ -47,6 +47,7 @@ func notifyBackend(ctx context.Context, wg *sync.WaitGroup) {
 				i = 0
 				lastLog = checkNotify(lastLog)
 			}
+			checkExecCmd()
 			if datastore.NotifyConf.Report &&
 				lastSendReport.Day() != time.Now().Day() &&
 				len(datastore.DBStatsLog) > 1 &&

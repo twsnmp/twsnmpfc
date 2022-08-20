@@ -18,6 +18,12 @@
         <v-alert v-model="sent" color="primary" dense dismissible>
           テストメッセージを送信しました
         </v-alert>
+        <v-alert v-model="execFailed" color="error" dense dismissible>
+          通知コマンドの実行に失敗しました
+        </v-alert>
+        <v-alert v-model="execOK" color="primary" dense dismissible>
+          通信コマンドの試験に成功しました
+        </v-alert>
         <v-card-text>
           <v-row dense>
             <v-col>
@@ -178,6 +184,11 @@
               />
             </v-col>
           </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field v-model="notify.ExecCmd" label="コマンド実行" />
+            </v-col>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -187,7 +198,11 @@
           </v-btn>
           <v-btn v-if="notify.ChatType" color="normal" dark @click="chatTest">
             <v-icon>mdi-email-send</v-icon>
-            Chatテスト
+            チャットテスト
+          </v-btn>
+          <v-btn v-if="notify.ExecCmd" color="normal" dark @click="execTest">
+            <v-icon>mdi-run</v-icon>
+            コマンドテスト
           </v-btn>
           <v-btn color="primary" dark @click="submit">
             <v-icon>mdi-content-save</v-icon>
@@ -222,11 +237,14 @@ export default {
         URL: '',
         ChatType: '',
         ChatWebhookURL: '',
+        ExecCmd: '',
       },
       error: false,
       saved: false,
       sent: false,
       failed: false,
+      execFailed: false,
+      execOK: false,
       chatList: [
         { text: '使用しない', value: '' },
         { text: 'Discord', value: 'discord' },
@@ -276,11 +294,24 @@ export default {
           this.failed = true
         })
     },
+    execTest() {
+      this.clearMsg()
+      this.$axios
+        .post('/api/notify/exec/test', this.notify)
+        .then((r) => {
+          this.execOK = true
+        })
+        .catch((e) => {
+          this.execFailed = true
+        })
+    },
     clearMsg() {
       this.saved = false
       this.error = false
       this.sent = false
       this.failed = false
+      this.execOK = false
+      this.execFailed = false
     },
   },
 }

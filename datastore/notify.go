@@ -29,6 +29,7 @@ type NotifyConfEnt struct {
 	HTMLMail           bool
 	ChatType           string
 	ChatWebhookURL     string
+	ExecCmd            string
 }
 
 func SaveNotifyConf() error {
