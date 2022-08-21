@@ -283,7 +283,18 @@
     </v-dialog>
     <v-dialog v-model="treeDialog" persistent max-width="1050px">
       <v-card style="width: 100%">
-        <v-card-title> センサーツリー </v-card-title>
+        <v-card-title>
+          センサーツリー
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="sensorType"
+            :items="sensorTypeList"
+            label="タイプ"
+            single-line
+            hide-details
+            @change="showTree"
+          ></v-select>
+        </v-card-title>
         <div id="tree" style="width: 1050px; height: 750px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -348,6 +359,8 @@ export default {
       procChartDialog: false,
       toggleError: false,
       treeDialog: false,
+      sensorType: '',
+      sensorTypeList: [],
     }
   },
   async fetch() {
@@ -355,6 +368,7 @@ export default {
     if (!r) {
       return
     }
+    const typeMap = {}
     this.sensors = r
     this.sensors.forEach((s) => {
       s.First = this.$timeFormat(
@@ -365,8 +379,16 @@ export default {
         new Date(s.LastTime / (1000 * 1000)),
         '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
+      typeMap[s.Type] = s.Total
       s.MonitorLen = s.Monitors ? s.Monitors.length : 0
       s.StatsLen = s.Stats ? s.Stats.length : 0
+    })
+    this.sensorTypeList = []
+    Object.keys(typeMap).forEach((k) => {
+      if (!this.sensorType || k === 'syslog') {
+        this.sensorType = k
+      }
+      this.sensorTypeList.push({ text: k, value: k })
     })
   },
   computed: {
@@ -433,7 +455,7 @@ export default {
     showTree() {
       this.treeDialog = true
       this.$nextTick(() => {
-        this.$showSensorTree('tree', this.sensors)
+        this.$showSensorTree('tree', this.sensorType, this.sensors)
       })
     },
     formatCount(n) {

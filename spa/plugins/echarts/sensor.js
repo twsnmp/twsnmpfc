@@ -1337,26 +1337,17 @@ const getEnvUnit = (type) => {
   return 'Invalid type=' + type
 }
 
-const showSensorTree = (div, sensors) => {
-  const data = {
-    name: 'TWSNMP',
-    children: [],
-  }
-  let maxTotal = 1
+const showSensorTree = (div, type, sensors) => {
+  const data = { name: type, children: [] }
+  let max = 1
   sensors.forEach((s) => {
-    if (maxTotal < s.Total) {
-      maxTotal = s.Total
+    if (s.Type !== type) {
+      return
     }
-    for (let i = 0; i < data.children.length; i++) {
-      if (data.children[i].name === s.Type) {
-        data.children[i].children.push({ name: s.Host, value: s.Total })
-        return
-      }
+    if (max < s.Total) {
+      max = s.Total
     }
-    data.children.push({
-      name: s.Type,
-      children: [{ name: s.Host, value: s.Total }],
-    })
+    data.children.push({ name: s.Host, value: s.Total })
   })
   if (chart) {
     chart.dispose()
@@ -1385,17 +1376,17 @@ const showSensorTree = (div, sensors) => {
         type: 'tree',
         data: [data],
         top: '1%',
-        left: '25%',
+        left: '20%',
         bottom: '1%',
-        right: '7%',
-        symbolSize: (v) => (v ? (15 * v) / maxTotal + 5 : 5),
+        right: '10%',
+        symbolSize: (v) => (v ? (15 * v) / max + 5 : 5),
         orient: 'RL',
         label: {
           position: 'right',
           verticalAlign: 'middle',
           align: 'left',
           fontSize: 10,
-          color: '#ccc',
+          color: '#fff',
         },
         leaves: {
           label: {
