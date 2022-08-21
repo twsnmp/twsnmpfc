@@ -83,6 +83,10 @@
             Excel
           </v-btn>
         </download-excel>
+        <v-btn color="primary" dark @click="showTree">
+          <v-icon>mdi-shuffle-disabled</v-icon>
+          ツリー
+        </v-btn>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           更新
@@ -277,6 +281,19 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="treeDialog" persistent max-width="1050px">
+      <v-card style="width: 100%">
+        <v-card-title> センサーツリー </v-card-title>
+        <div id="tree" style="width: 1050px; height: 750px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="treeDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -330,6 +347,7 @@ export default {
       netChartDialog: false,
       procChartDialog: false,
       toggleError: false,
+      treeDialog: false,
     }
   },
   async fetch() {
@@ -410,6 +428,12 @@ export default {
       this.procChartDialog = true
       this.$nextTick(() => {
         this.$showSensorProcChart('procChart', this.selected.Monitors)
+      })
+    },
+    showTree() {
+      this.treeDialog = true
+      this.$nextTick(() => {
+        this.$showSensorTree('tree', this.sensors)
       })
     },
     formatCount(n) {

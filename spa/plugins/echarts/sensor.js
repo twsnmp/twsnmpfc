@@ -1337,6 +1337,86 @@ const getEnvUnit = (type) => {
   return 'Invalid type=' + type
 }
 
+const showSensorTree = (div, sensors) => {
+  const data = {
+    name: 'TWSNMP',
+    children: [],
+  }
+  let maxTotal = 1
+  sensors.forEach((s) => {
+    if (maxTotal < s.Total) {
+      maxTotal = s.Total
+    }
+    for (let i = 0; i < data.children.length; i++) {
+      if (data.children[i].name === s.Type) {
+        data.children[i].children.push({ name: s.Host, value: s.Total })
+        return
+      }
+    }
+    data.children.push({
+      name: s.Type,
+      children: [{ name: s.Host, value: s.Total }],
+    })
+  })
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    tooltip: {
+      trigger: 'item',
+      triggerOn: 'mousemove',
+    },
+    series: [
+      {
+        type: 'tree',
+        data: [data],
+        top: '1%',
+        left: '25%',
+        bottom: '1%',
+        right: '7%',
+        symbolSize: (v) => (v ? (15 * v) / maxTotal + 5 : 5),
+        orient: 'RL',
+        label: {
+          position: 'right',
+          verticalAlign: 'middle',
+          align: 'left',
+          fontSize: 10,
+          color: '#ccc',
+        },
+        leaves: {
+          label: {
+            position: 'left',
+            verticalAlign: 'middle',
+            align: 'right',
+          },
+        },
+        emphasis: {
+          focus: 'descendant',
+        },
+        expandAndCollapse: true,
+        animationDuration: 550,
+        animationDurationUpdate: 750,
+      },
+    ],
+  }
+  chart.setOption(options)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showSensorStatsChart', showSensorStatsChart)
   inject('showSensorCpuMemChart', showSensorCpuMemChart)
@@ -1351,4 +1431,5 @@ export default (context, inject) => {
   inject('filterBluetoothDev', filterBluetoothDev)
   inject('filterWifiAP', filterWifiAP)
   inject('filterEnvMon', filterEnvMon)
+  inject('showSensorTree', showSensorTree)
 }
