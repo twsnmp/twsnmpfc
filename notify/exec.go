@@ -7,7 +7,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/Songmu/timeout"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -52,13 +54,21 @@ func ExecNotifyCmd(cmd string, level int) error {
 	}
 	c := filepath.Join(datastore.GetDataStorePath(), "cmd", filepath.Base(cl[0]))
 	strLevel := fmt.Sprintf("%d", level)
+
+	tio := &timeout.Timeout{
+		Duration:  60 * time.Second,
+		KillAfter: 5 * time.Second,
+	}
 	if len(cl) == 1 {
-		return exec.Command(c).Start()
-	}
-	for i, v := range cl {
-		if v == "$level" {
-			cl[i] = strLevel
+		tio.Cmd = exec.Command(c)
+	} else {
+		for i, v := range cl {
+			if v == "$level" {
+				cl[i] = strLevel
+			}
 		}
+		tio.Cmd = exec.Command(c, cl[1:]...)
 	}
-	return exec.Command(c, cl[1:]...).Start()
+	_, _, _, err := tio.Run()
+	return err
 }
