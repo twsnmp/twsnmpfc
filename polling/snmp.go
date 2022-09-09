@@ -100,6 +100,7 @@ func doPollingSnmpSysUpTime(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	result, err := agent.Get(oids)
 	if err != nil {
 		setPollingError("snmpUpTime", pe, err)
+		setPollingState(pe, pe.Level)
 		return
 	}
 	var uptime int64
@@ -111,6 +112,7 @@ func doPollingSnmpSysUpTime(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	}
 	if uptime == 0 {
 		setPollingError("snmpUpTime", pe, fmt.Errorf("uptime==0"))
+		setPollingState(pe, pe.Level)
 		return
 	}
 	if v, ok := pe.Result["sysUpTime"]; ok {
