@@ -99,7 +99,7 @@ func doPollingSnmpSysUpTime(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	oids := []string{datastore.MIBDB.NameToOID("sysUpTime.0")}
 	result, err := agent.Get(oids)
 	if err != nil {
-		setPollingError("snmpUpTime", pe, err)
+		pe.Result["error"] = fmt.Sprintf("%v", err)
 		setPollingState(pe, pe.Level)
 		return
 	}
@@ -111,7 +111,7 @@ func doPollingSnmpSysUpTime(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		}
 	}
 	if uptime == 0 {
-		setPollingError("snmpUpTime", pe, fmt.Errorf("uptime==0"))
+		pe.Result["error"] = fmt.Sprintf("%v", fmt.Errorf("uptime==0"))
 		setPollingState(pe, pe.Level)
 		return
 	}
@@ -121,11 +121,11 @@ func doPollingSnmpSysUpTime(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			delete(pe.Result, "sysUpTime")
 			setPollingError("snmp", pe, fmt.Errorf("sysUpTime not floate64"))
 			return
-
 		}
 		diff := float64(uptime) - lastUptime
 		pe.Result["sysUpTime"] = float64(uptime)
 		pe.Result["deltaSysUpTime"] = diff
+		pe.Result["error"] = ""
 		if lastUptime < float64(uptime) {
 			setPollingState(pe, "normal")
 			return
