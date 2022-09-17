@@ -56,14 +56,17 @@ $(DIST)/twsnmpfc: statik/statik.go $(SRC)
 
 ### pwaのビルド
 pwa/public/build/bundle.js: pwa/src/* pwa/public/*
+	cd pwa && npm install
 	cd pwa && npm run build
 
 ### nuxt.js アプリのビルド
 spa/dist/index.html: spa/*.js* spa/pages/* spa/pages/report/* spa/pages/conf/*  \
     spa/pages/log/* spa/pages/node/*/* spa/pages/polling/* spa/pages/mibbr/* \
     spa/pages/report/*/* spa/layouts/* spa/plugins/* spa/plugins/echarts/*
+	cd spa && npm install
 	cd spa && npm run generate
-statik/statik.go: spa/dist/* conf/* spa/dist/index.html pwa/public/build/bundle.js
+
+statik/statik.go:  spa/dist/index.html pwa/public/build/bundle.js conf/*
 	cp -a conf  spa/dist
 	rm -rf spa/dist/pwa
 	mkdir spa/dist/pwa

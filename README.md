@@ -45,6 +45,38 @@
 
 ## Build
 
+### Build Env
+ビルドするためには、以下の環境が必要です。
+
+- go 1.17
+- node.js npm
+- statik
+- docker(Docker版をビルドする場合)
+
+statikは
+https://github.com/rakyll/statik
+
+です。
+私はMac OSでビルドしていますが、実行ファイルだけならばLinxu(Debian/Ubuntu)や
+Docker環境でビルドできます。
+
+```
+$docker run -it golang:1.17 /bin/bash
+```
+
+で起動したDokcerコンテナ内のLinux環境で
+
+```
+#cd /root
+#git clone https://github.com/twsnmp/twsnmpfc.git
+#cd twsnmpfc
+#./build_setup.sh
+#make
+```
+
+でビルドできると思います。
+
+### Build
 ビルドはmakeで行います。
 ```
 $make
