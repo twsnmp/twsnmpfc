@@ -117,6 +117,7 @@ func DeleteReport(report string, ids []string) error {
 func deleteSyncMap(m *sync.Map, ids []string) {
 	if m == nil {
 		log.Println("delete report err=symc.Map is nil")
+		return
 	}
 	for _, id := range ids {
 		m.Delete(id)
@@ -142,6 +143,7 @@ func ClearReport(r string) error {
 func deleteSyncMapAllData(m *sync.Map) {
 	if m == nil {
 		log.Println("delete all report err=symc.Map is nil")
+		return
 	}
 	m.Range(func(k, v interface{}) bool {
 		m.Delete(k)

@@ -26,6 +26,7 @@ var (
 	twWinLogCh     = make(chan map[string]interface{}, 100)
 	twBlueScanCh   = make(chan map[string]interface{}, 100)
 	twWifiScanCh   = make(chan map[string]interface{}, 100)
+	twSdrPowerCh   = make(chan map[string]interface{}, 100)
 	allowDNS       map[string]bool
 	allowDHCP      map[string]bool
 	allowMail      map[string]bool
@@ -45,6 +46,9 @@ func Start(ctx context.Context, wg *sync.WaitGroup) error {
 	twpcapReportCh = make(chan map[string]interface{}, 100)
 	twWinLogCh = make(chan map[string]interface{}, 100)
 	checkCertCh = make(chan bool, 5)
+	twBlueScanCh = make(chan map[string]interface{}, 100)
+	twWifiScanCh = make(chan map[string]interface{}, 100)
+	twSdrPowerCh = make(chan map[string]interface{}, 100)
 	wg.Add(1)
 	go reportBackend(ctx, wg)
 	return nil
@@ -131,7 +135,8 @@ func UpdateReportConf() {
 
 func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
-	timer := time.NewTicker(time.Minute * 5)
+	timer5Min := time.NewTicker(time.Minute * 5)
+	timer1Min := time.NewTicker(time.Minute * 1)
 	log.Println("start report")
 	datastore.LoadReport()
 	log.Println("load report done")
@@ -144,12 +149,13 @@ func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
 		select {
 		case <-ctx.Done():
 			{
-				timer.Stop()
+				timer5Min.Stop()
+				timer1Min.Stop()
 				datastore.SaveReport(last)
 				log.Printf("stop report")
 				return
 			}
-		case <-timer.C:
+		case <-timer5Min.C:
 			{
 				checkCertCh <- true
 				st := time.Now()
@@ -161,6 +167,8 @@ func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
 				clearIpToNameCache()
 				log.Printf("report timer process dur=%v", time.Since(st))
 			}
+		case <-timer1Min.C:
+			saveSdrPowerReport()
 		case dr := <-deviceReportCh:
 			checkDeviceReport(dr)
 		case ur := <-userReportCh:
@@ -175,6 +183,8 @@ func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
 			checkTWBlueScanReport(l)
 		case l := <-twWifiScanCh:
 			checkTWWifiScanReport(l)
+		case l := <-twSdrPowerCh:
+			checkTWSdrPowerReport(l)
 		case <-checkCertCh:
 			checkCerts()
 		}
@@ -210,6 +220,7 @@ func checkOldReport() {
 	checkOldBlueDevice(safeOld, delOld)
 	checkOldEnvMonitor(delOld)
 	checkOldWifiAP(delOld)
+	checkOldEnvSdrPower(delOld)
 	log.Printf("check old report dur=%v", time.Since(st))
 	oldCheck = false
 }

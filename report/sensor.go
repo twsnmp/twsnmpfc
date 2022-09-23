@@ -179,6 +179,13 @@ func getNumberFromTWLog(s string) int64 {
 	return 0
 }
 
+func getNumberFromTWLogHex(s string) int64 {
+	if c, err := strconv.ParseInt(s, 16, 64); err == nil {
+		return c
+	}
+	return 0
+}
+
 func getFloatFromTWLog(s string) float64 {
 	if f, err := strconv.ParseFloat(s, 64); err == nil {
 		return f

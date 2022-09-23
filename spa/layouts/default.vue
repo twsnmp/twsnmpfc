@@ -141,6 +141,25 @@
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
+          <v-list-group no-action sub-group>
+            <template #activator>
+              <v-list-item-title>環境分析</v-list-item-title>
+            </template>
+            <v-list-item
+              v-for="(item, i) in envMenus"
+              :key="i"
+              :to="item.to"
+              router
+              exact
+            >
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title v-text="item.title" />
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
         </v-list-group>
         <v-list-group no-action prepend-icon="mdi-view-list" :value="false">
           <template #activator>
@@ -323,11 +342,6 @@ export default {
           title: 'Wifi AP',
           to: '/report/wifiAP',
         },
-        {
-          icon: 'mdi-temperature-celsius',
-          title: '環境センサー',
-          to: '/report/envMonitor',
-        },
       ],
       userMenus: [
         {
@@ -422,6 +436,18 @@ export default {
           icon: 'mdi-swap-horizontal',
           title: 'タスク',
           to: '/report/winTask',
+        },
+      ],
+      envMenus: [
+        {
+          icon: 'mdi-temperature-celsius',
+          title: '環境センサー',
+          to: '/report/envMonitor',
+        },
+        {
+          icon: 'mdi-radio-tower',
+          title: '電波強度',
+          to: '/report/sdrpower',
         },
       ],
       logMenus: [

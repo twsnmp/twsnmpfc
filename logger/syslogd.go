@@ -50,6 +50,8 @@ func syslogd(stopCh chan bool) {
 							report.ReportTWBuleScan(sl)
 						case "twWifiScan":
 							report.ReportTWWifiScan(sl)
+						case "twSdrPower":
+							report.ReportTWSdrPower(sl)
 						}
 					}
 					logCh <- &datastore.LogEnt{

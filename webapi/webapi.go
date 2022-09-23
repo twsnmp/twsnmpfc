@@ -212,6 +212,9 @@ func setup(p *WebAPI) {
 	r.DELETE("/report/BlueDevice/:id", deleteBlueDevice)
 	r.GET("/report/EnvMonitor", getEnvMonitor)
 	r.DELETE("/report/EnvMonitor/:id", deleteEnvMonitor)
+	r.GET("/report/sdrPowerKeys", getSdrPowerKeys)
+	r.POST("/report/sdrPowerData", getSdrPowerData)
+	r.POST("/report/sdrPower/delete", deleteSdrPower)
 	// AI
 	r.GET("/report/ailist", getAIList)
 	r.GET("/report/ai/:id", getAIResult)
