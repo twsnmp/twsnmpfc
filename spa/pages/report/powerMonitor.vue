@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
       <v-card-title>
-        環境センサー
+        電力センサー
         <v-spacer></v-spacer>
       </v-card-title>
       <v-alert v-if="$fetchState.error" color="error" dense>
@@ -10,14 +10,12 @@
       </v-alert>
       <v-data-table
         :headers="headers"
-        :items="envMonitor"
+        :items="powerMonitor"
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
-        :items-per-page="conf.itemsPerPage"
-        :sort-by="conf.sortBy"
-        :sort-desc="conf.sortDesc"
-        :options.sync="options"
+        :items-per-page="15"
+        sort-by="RSSI"
         class="log"
       >
         <template #[`item.LastRSSI`]="{ item }">
@@ -36,14 +34,14 @@
           <tr>
             <td></td>
             <td>
-              <v-text-field v-model="conf.address" label="Address">
+              <v-text-field v-model="filter.address" label="Address">
               </v-text-field>
             </td>
             <td>
-              <v-text-field v-model="conf.name" label="Name"></v-text-field>
+              <v-text-field v-model="filter.name" label="Name"></v-text-field>
             </td>
             <td>
-              <v-text-field v-model="conf.host" label="Host"></v-text-field>
+              <v-text-field v-model="filter.host" label="Host"></v-text-field>
             </td>
           </tr>
         </template>
@@ -58,7 +56,7 @@
             </v-btn>
           </template>
           <v-list>
-            <v-list-item @click="openEnv3DChart">
+            <v-list-item @click="open3DChart">
               <v-list-item-icon>
                 <v-icon>mdi-chart-scatter-plot</v-icon>
               </v-list-item-icon>
@@ -68,7 +66,7 @@
             </v-list-item>
           </v-list>
           <v-list>
-            <v-list-item @click="openEnv2DChart">
+            <v-list-item @click="open2DChart">
               <v-list-item-icon>
                 <v-icon>mdi-chart-line</v-icon>
               </v-list-item-icon>
@@ -81,8 +79,7 @@
         <download-excel
           :fetch="makeSensorExports"
           type="csv"
-          name="TWSNMP_FC_Env_Monitor_List.csv"
-          header="TWSNMP FCで作成した環境センサーリスト"
+          name="TWSNMP_FC_Power_Monitor_List.csv"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -93,8 +90,8 @@
         <download-excel
           :fetch="makeSensorExports"
           type="xls"
-          name="TWSNMP_FC_Env_Monitor_List.xls"
-          header="TWSNMP FCで作成した環境センサーリスト"
+          name="TWSNMP_FC_Power_Monitor_List.xls"
+          header="TWSNMP FCで作成した電力センサーリスト"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -130,7 +127,7 @@
     <v-dialog v-model="infoDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
-          <span class="headline">環境センサー情報</span>
+          <span class="headline">電力センサー情報</span>
         </v-card-title>
         <v-simple-table dense>
           <template #default>
@@ -168,7 +165,7 @@
               </tr>
               <tr>
                 <td>データ数</td>
-                <td>{{ selected.EnvData.length }}</td>
+                <td>{{ selected.Data.length }}</td>
               </tr>
               <tr>
                 <td>初回日時</td>
@@ -186,7 +183,7 @@
           <download-excel
             :fetch="makeDataExports"
             type="csv"
-            name="TWSNMP_FC_Env_Data_List.csv"
+            name="TWSNMP_FC_Power_Data_List.csv"
             :header="makeDataHeader"
             class="v-btn"
           >
@@ -198,7 +195,7 @@
           <download-excel
             :fetch="makeDataExports"
             type="xls"
-            name="TWSNMP_FC_Env_Data_List.xls"
+            name="TWSNMP_FC_Power_Data_List.xls"
             :header="makeDataHeader"
             class="v-btn"
           >
@@ -214,48 +211,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="env3DDialog" persistent max-width="1000px">
+    <v-dialog v-model="chartDialog" persistent max-width="1000px">
       <v-card>
         <v-card-title>
           <span class="headline">{{ chartTitle }}</span>
-          <v-spacer></v-spacer>
-          <v-select
-            v-model="selectedType"
-            :items="$envTypeList"
-            label="項目"
-            single-line
-            hide-details
-            @change="change3DType"
-          ></v-select>
         </v-card-title>
-        <div id="env3DChart" style="width: 1000px; height: 600px"></div>
+        <div id="chart" style="width: 1000px; height: 600px"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="normal" @click="env3DDialog = false">
-            <v-icon>mdi-cancel</v-icon>
-            閉じる
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="env2DDialog" persistent max-width="1000px">
-      <v-card>
-        <v-card-title>
-          <span class="headline">{{ chartTitle }}</span>
-          <v-spacer></v-spacer>
-          <v-select
-            v-model="selectedType"
-            :items="$envTypeList"
-            label="項目"
-            single-line
-            hide-details
-            @change="change2DType"
-          ></v-select>
-        </v-card-title>
-        <div id="env2DChart" style="width: 1000px; height: 600px"></div>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="normal" @click="env2DDialog = false">
+          <v-btn color="normal" @click="chartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -276,8 +240,8 @@ export default {
           value: 'Address',
           width: '15%',
           filter: (value) => {
-            if (!this.conf.address) return true
-            return value.includes(this.conf.address)
+            if (!this.filter.address) return true
+            return value.includes(this.filter.address)
           },
         },
         {
@@ -285,8 +249,8 @@ export default {
           value: 'Name',
           width: '15%',
           filter: (value) => {
-            if (!this.conf.name) return true
-            return value.includes(this.conf.name)
+            if (!this.filter.name) return true
+            return value.includes(this.filter.name)
           },
         },
         {
@@ -294,8 +258,8 @@ export default {
           value: 'Host',
           width: '15%',
           filter: (value) => {
-            if (!this.conf.host) return true
-            return value.includes(this.conf.host)
+            if (!this.filter.host) return true
+            return value.includes(this.filter.host)
           },
         },
         { text: 'データ数', value: 'DataCount', width: '10%' },
@@ -303,33 +267,26 @@ export default {
         { text: '最終', value: 'Last', width: '15%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
-      envMonitor: [],
+      powerMonitor: [],
       selected: {},
       deleteDialog: false,
       deleteError: false,
       infoDialog: false,
-      conf: {
+      filter: {
         host: '',
         address: '',
         name: '',
-        sortBy: 'DataCount',
-        sortDesc: false,
-        page: 1,
-        itemsPerPage: 15,
       },
-      options: {},
-      env3DDialog: false,
-      env2DDialog: false,
+      chartDialog: false,
       chartTitle: '',
-      selectedType: 'Temp',
     }
   },
   async fetch() {
-    this.envMonitor = await this.$axios.$get('/api/report/EnvMonitor')
-    if (!this.envMonitor) {
+    this.powerMonitor = await this.$axios.$get('/api/report/PowerMonitor')
+    if (!this.powerMonitor) {
       return
     }
-    this.envMonitor.forEach((e) => {
+    this.powerMonitor.forEach((e) => {
       e.First = this.$timeFormat(
         new Date(e.FirstTime / (1000 * 1000)),
         '{yyyy}/{MM}/{dd} {HH}:{mm}'
@@ -338,39 +295,20 @@ export default {
         new Date(e.LastTime / (1000 * 1000)),
         '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
-      e.DataCount = e.EnvData.length
+      e.DataCount = e.Data.length
       e.LastRSSI =
-        e.EnvData && e.EnvData.length > 0
-          ? e.EnvData[e.EnvData.length - 1].RSSI * 1
-          : 0
+        e.Data && e.Data.length > 0 ? e.Data[e.Data.length - 1].RSSI * 1 : 0
     })
-    if (this.conf.page > 1) {
-      this.options.page = this.conf.page
-      this.conf.page = 1
-    }
   },
   computed: {
     readOnly() {
       return this.$store.state.map.readOnly
     },
   },
-  created() {
-    const c = this.$store.state.report.twsensor.envMonitor
-    if (c && c.sortBy) {
-      Object.assign(this.conf, c)
-    }
-  },
-  beforeDestroy() {
-    this.conf.sortBy = this.options.sortBy[0]
-    this.conf.sortDesc = this.options.sortDesc[0]
-    this.conf.page = this.options.page
-    this.conf.itemsPerPage = this.options.itemsPerPage
-    this.$store.commit('report/twsensor/setEnvMonitor', this.conf)
-  },
   methods: {
     doDelete() {
       this.$axios
-        .delete('/api/report/EnvMonitor/' + this.selected.ID)
+        .delete('/api/report/PowerMonitor/' + this.selected.ID)
         .then((r) => {
           this.$fetch()
         })
@@ -388,46 +326,24 @@ export default {
       this.selected = item
       this.infoDialog = true
     },
-    openEnv3DChart() {
-      this.env3DDialog = true
-      this.change3DType()
-    },
-    change3DType() {
-      if (!this.selectedType) {
-        this.selectedType = 'Temp'
-      }
-      this.chartTitle = this.$getEnvName(this.selectedType)
+    open3DChart() {
+      this.chartDialog = true
+      this.chartTitle = '電力3D'
       this.$nextTick(() => {
-        this.$showEnv3DChart(
-          'env3DChart',
-          this.selectedType,
-          this.envMonitor,
-          this.conf
-        )
+        this.$showPower3DChart('chart', this.powerMonitor, this.filter)
       })
     },
-    openEnv2DChart() {
-      this.env2DDialog = true
-      this.change2DType()
-    },
-    change2DType() {
-      if (!this.selectedType) {
-        this.selectedType = 'Temp'
-      }
-      this.chartTitle = this.$getEnvName(this.selectedType)
+    open2DChart() {
+      this.chartDialog = true
+      this.chartTitle = '電力2D'
       this.$nextTick(() => {
-        this.$showEnv2DChart(
-          'env2DChart',
-          this.selectedType,
-          this.envMonitor,
-          this.conf
-        )
+        this.$showPower2DChart('chart', this.powerMonitor, this.filter)
       })
     },
     makeSensorExports() {
       const exports = []
-      this.envMonitor.forEach((d) => {
-        if (!this.$filterEnvMon(d, this.conf)) {
+      this.powerMonitor.forEach((d) => {
+        if (!this.$filterEnvMon(d, this.filter)) {
           return
         }
         exports.push({
@@ -445,27 +361,22 @@ export default {
     },
     makeDataExports() {
       const exports = []
-      this.selected.EnvData.forEach((d) => {
+      this.selected.Data.forEach((d) => {
         exports.push({
           記録日時: this.$timeFormat(
             new Date(d.Time / (1000 * 1000)),
             '{yyyy}/{MM}/{dd} {HH}:{mm}'
           ),
-          気温: d.Temp,
-          湿度: d.Humidity,
-          照度: d.Illuminance,
-          気圧: d.BarometricPressure,
-          騒音: d.Sound,
-          総揮発性有機化合物: d.ETVOC,
-          二酸化炭素濃度: d.ECo2,
-          電池残量: d.Battery,
+          電力: d.Load,
+          スイッチ: d.Switch,
+          過負荷: d.Over,
         })
       })
       return exports
     },
     makeDataHeader() {
       return (
-        'TWSNMP FCで作成した環境センサー(' + this.selected.Address + ')のデータ'
+        'TWSNMP FCで作成した電力センサー(' + this.selected.Address + ')のデータ'
       )
     },
   },

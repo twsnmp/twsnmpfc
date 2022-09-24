@@ -44,3 +44,22 @@ func deleteEnvMonitor(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
+
+func getPowerMonitor(c echo.Context) error {
+	r := []*datastore.PowerMonitorEnt{}
+	datastore.ForEachPowerMonitor(func(e *datastore.PowerMonitorEnt) bool {
+		r = append(r, e)
+		return true
+	})
+	return c.JSON(http.StatusOK, r)
+}
+
+func deletePowerMonitor(c echo.Context) error {
+	id := c.Param("id")
+	if id == "all" {
+		go datastore.ClearReport("powerMonitor")
+	} else {
+		datastore.DeleteReport("powerMonitor", []string{id})
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}

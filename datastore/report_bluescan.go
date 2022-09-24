@@ -158,3 +158,79 @@ func saveEnvMonitor(b *bbolt.Bucket, last int64) {
 		return true
 	})
 }
+
+type PowerMonitorDataEnt struct {
+	Time   int64
+	Switch bool
+	Over   bool
+	Load   float64
+	RSSI   int
+}
+
+type PowerMonitorEnt struct {
+	ID        string // Host + Address
+	Host      string
+	Name      string
+	Address   string
+	Data      []PowerMonitorDataEnt
+	Count     int64
+	FirstTime int64
+	LastTime  int64
+}
+
+func GetPowerMonitor(id string) *PowerMonitorEnt {
+	if v, ok := powerMonitor.Load(id); ok {
+		return v.(*PowerMonitorEnt)
+	}
+	return nil
+}
+
+func AddPowerMonitor(e *PowerMonitorEnt) {
+	powerMonitor.Store(e.ID, e)
+}
+
+func ForEachPowerMonitor(f func(*PowerMonitorEnt) bool) {
+	powerMonitor.Range(func(k, v interface{}) bool {
+		e := v.(*PowerMonitorEnt)
+		return f(e)
+	})
+}
+
+func loadPowerMonitor(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("powerMonitor"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e PowerMonitorEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				powerMonitor.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func savePowerMonitor(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("powerMonior"))
+	if r == nil {
+		return
+	}
+	powerMonitor.Range(func(k, v interface{}) bool {
+		e, ok := v.(*PowerMonitorEnt)
+		if !ok {
+			return true
+		}
+		if e.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("save powerMonitor report err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("save powerMonitor report err=%v", err)
+		}
+		return true
+	})
+}

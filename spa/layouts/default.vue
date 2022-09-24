@@ -445,6 +445,11 @@ export default {
           to: '/report/envMonitor',
         },
         {
+          icon: 'mdi-power-plug',
+          title: '電力センサー',
+          to: '/report/powerMonitor',
+        },
+        {
           icon: 'mdi-radio-tower',
           title: '電波強度',
           to: '/report/sdrpower',

@@ -410,9 +410,278 @@ const getEnvUnit = (type) => {
   return 'Invalid type=' + type
 }
 
+const showPower3DChart = (div, list, filter) => {
+  const data = []
+  const cat = []
+  let min = 1500
+  let max = 0
+  list.forEach((i) => {
+    if (!i.Data || i.Data.length < 1) {
+      return
+    }
+    if (!filterEnvMon(i, filter)) {
+      return
+    }
+    const id = i.Name ? i.Name : i.Host + ':' + i.Address
+    i.Data.forEach((e) => {
+      data.push([id, e.Time / (1000 * 1000), e.Load, i.Name])
+      min = Math.min(min, e.Load)
+      max = Math.max(max, e.Load)
+    })
+    cat.push(id)
+  })
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const options = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    tooltip: {},
+    animationDurationUpdate: 1500,
+    animationEasingUpdate: 'quinticInOut',
+    visualMap: {
+      show: false,
+      dimension: 2,
+      min,
+      max,
+      inRange: {
+        color: ['#777', '#1f78b4', '#dfdf22', '#fb9a99', '#e31a1c'],
+      },
+    },
+    xAxis3D: {
+      type: 'category',
+      name: 'Host:Address',
+      data: cat,
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#eee',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    yAxis3D: {
+      type: 'time',
+      name: 'Time',
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#eee',
+        fontSize: 8,
+        formatter(value, index) {
+          const date = new Date(value)
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
+        },
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    zAxis3D: {
+      type: 'value',
+      name: '負荷(W)',
+      nameTextStyle: {
+        color: '#eee',
+        fontSize: 12,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    grid3D: {
+      axisLine: {
+        lineStyle: { color: '#eee' },
+      },
+      axisPointer: {
+        lineStyle: { color: '#eee' },
+      },
+      viewControl: {
+        projection: 'orthographic',
+      },
+    },
+    series: [
+      {
+        name: 'Load',
+        type: 'scatter3D',
+        symbolSize: 4,
+        dimensions: ['Host:Address', 'Time', 'Load', 'Level', 'Name'],
+        data,
+      },
+    ],
+  }
+  chart.setOption(options)
+  chart.resize()
+}
+
+const showPower2DChart = (div, list, filter) => {
+  const cat = []
+  const series = []
+  list.forEach((i) => {
+    if (!i.Data || i.Data.length < 1) {
+      return
+    }
+    if (!filterEnvMon(i, filter)) {
+      return
+    }
+    const data = []
+    i.Data.forEach((e) => {
+      const t = new Date(e.Time / (1000 * 1000))
+      const name = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
+      data.push({ name, value: [t, e.Load] })
+    })
+    const id = i.Name ? i.Name : i.Host + ':' + i.Address
+    series.push({
+      name: id,
+      type: 'line',
+      large: true,
+      symbol: 'none',
+      data,
+    })
+    cat.push(id)
+  })
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = {
+    title: {
+      show: false,
+    },
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        dataZoom: {},
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    dataZoom: [{}, {}],
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    grid: {
+      left: '10%',
+      right: '5%',
+      top: 60,
+      buttom: 0,
+    },
+    legend: {
+      data: cat,
+      textStyle: {
+        color: '#ccc',
+        fontSize: 10,
+      },
+    },
+    xAxis: {
+      type: 'time',
+      name: '日時',
+      axisLabel: {
+        color: '#ccc',
+        fontSize: '8px',
+        formatter: (value, index) => {
+          const date = new Date(value)
+          return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
+        },
+      },
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      splitLine: {
+        show: false,
+      },
+    },
+    yAxis: {
+      type: 'value',
+      name: 'W',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+    },
+    series,
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showEnv3DChart', showEnv3DChart)
   inject('showEnv2DChart', showEnv2DChart)
+  inject('showPower3DChart', showPower3DChart)
+  inject('showPower2DChart', showPower2DChart)
   inject('getEnvName', getEnvName)
   inject('envTypeList', envTypeList)
   inject('filterEnvMon', filterEnvMon)

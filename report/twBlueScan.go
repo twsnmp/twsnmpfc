@@ -42,6 +42,8 @@ func checkTWBlueScanReport(l map[string]interface{}) {
 		checkOMRONEnvReport(h, m)
 	case "SwitchBotEnv":
 		checkSwitchBotEnvReport(h, m)
+	case "SwitchBotPlugMini":
+		checkSwitchBotPlugMiniReport(h, m)
 	case "Stats":
 		checkStats(h, "twBlueScan", m)
 	case "Monitor":
@@ -184,6 +186,57 @@ func checkSwitchBotEnvReport(h string, m map[string]string) {
 				Temp:     getFloatFromTWLog(m["temp"]),
 				Humidity: getFloatFromTWLog(m["hum"]),
 				Battery:  int(getNumberFromTWLog(m["bat"])),
+			},
+		},
+		LastTime:  now,
+		FirstTime: now,
+	})
+}
+
+// type=SwitchBotPlugMini,address=%s,name=%s,rssi=%d,sw=%v,over=%v,load=%d
+func checkSwitchBotPlugMiniReport(h string, m map[string]string) {
+	addr, ok := m["address"]
+	if !ok {
+		return
+	}
+	if _, ok := m["load"]; !ok {
+		return
+	}
+	rssi := getNumberFromTWLog(m["rssi"])
+	load := getFloatFromTWLog(m["load"]) / 10.0
+	sw := m["sw"] == "true"
+	over := m["over"] == "true"
+	id := makeID(h + ":" + addr)
+	now := time.Now().UnixNano()
+	e := datastore.GetPowerMonitor(id)
+	if e != nil {
+		e.Count++
+		e.LastTime = time.Now().UnixNano()
+		e.Data = append(e.Data, datastore.PowerMonitorDataEnt{
+			Time:   now,
+			Load:   load,
+			Switch: sw,
+			Over:   over,
+			RSSI:   int(rssi),
+		})
+		if len(e.Data) > MAX_DATA_SIZE {
+			e.Data = e.Data[1:]
+		}
+		return
+	}
+	datastore.AddPowerMonitor(&datastore.PowerMonitorEnt{
+		ID:      id,
+		Host:    h,
+		Address: addr,
+		Name:    m["name"],
+		Count:   1,
+		Data: []datastore.PowerMonitorDataEnt{
+			{
+				Time:   now,
+				Switch: sw,
+				Over:   over,
+				Load:   load,
+				RSSI:   int(rssi),
 			},
 		},
 		LastTime:  now,
