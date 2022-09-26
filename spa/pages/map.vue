@@ -465,8 +465,44 @@
             <v-list-item-title>マップ設定</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item @click="gridDialog = true">
+          <v-list-item-icon><v-icon>mdi-grid</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>グリッド整列</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-menu>
+    <v-dialog v-model="gridDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">グリッド整列</span>
+        </v-card-title>
+        <v-card-text>
+          <v-radio-group v-model="selectedGrid" mandatory>
+            <v-radio label="20" value="20"></v-radio>
+            <v-radio label="40" value="40"></v-radio>
+            <v-radio label="80" value="80"></v-radio>
+            <v-radio label="90" value="90"></v-radio>
+          </v-radio-group>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="grid(false)">
+            <v-icon>mdi-eye</v-icon>
+            テスト
+          </v-btn>
+          <v-btn color="error" @click="grid(true)">
+            <v-icon>mdi-grid</v-icon>
+            実行
+          </v-btn>
+          <v-btn color="normal" @click="gridDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-menu
       v-model="showNodeContextMenu"
       :position-x="x"
@@ -635,6 +671,8 @@ export default {
       wolError: false,
       openURLDialog: false,
       selectedURL: '',
+      gridDialog: false,
+      selectedGrid: 20,
     }
   },
   async fetch() {
@@ -932,6 +970,25 @@ export default {
         .catch((e) => {
           this.wolError = true
         })
+    },
+    async grid(d) {
+      const list = []
+      const g = this.selectedGrid * 1.0
+      for (const id in this.map.Nodes) {
+        this.map.Nodes[id].X =
+          Math.ceil((this.map.Nodes[id].X * 1.0) / g) * this.selectedGrid
+        this.map.Nodes[id].Y =
+          Math.ceil((this.map.Nodes[id].Y * 1.0) / g) * this.selectedGrid
+        list.push({
+          ID: id,
+          X: this.map.Nodes[id].X,
+          Y: this.map.Nodes[id].Y,
+        })
+      }
+      this.gridDialog = false
+      if (d && list.length > 0) {
+        await this.$axios.post('/api/map/update', list)
+      }
     },
   },
 }
