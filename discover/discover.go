@@ -303,12 +303,19 @@ func addFoundNode(dent *discoverInfoEnt) {
 		n.Descr += " / snmp対応"
 	}
 	if len(dent.ServerList) > 0 {
-		n.Descr += " / "
 		sl := []string{}
-		for s := range dent.ServerList {
-			sl = append(sl, s)
+		for _, s := range []string{
+			"http", "https", "pop3", "imap", "smtp", "ssh", "cifs", "nfs",
+			"vnc", "rdp", "ldap", "ldaps", "kerberos",
+		} {
+			if dent.ServerList[s] {
+				sl = append(sl, s)
+			}
 		}
-		n.Descr += strings.Join(sl, ",") + "対応"
+		if len(sl) > 0 {
+			n.Descr += " / "
+			n.Descr += strings.Join(sl, ",") + "対応"
+		}
 	}
 	if err := datastore.AddNode(&n); err != nil {
 		log.Printf("discover err=%v", err)
@@ -599,11 +606,15 @@ func PassiveDiscover() error {
 				time.Sleep(time.Second * 2)
 				continue
 			}
-			next += 300
+			next += 180
 			log.Printf("discover passive now=%d next=%d", Stat.Now, next)
 			Stat.Sent++
 			foundNodeMap := make(map[string]*discoverInfoEnt)
+			ct := time.Now().Add(-time.Hour * 2).UnixNano()
 			datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+				if d.LastTime < ct {
+					return true
+				}
 				if datastore.FindNodeFromIP(d.IP) != nil {
 					return true
 				}
@@ -618,6 +629,9 @@ func PassiveDiscover() error {
 				return true
 			})
 			datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+				if i.LastTime < ct {
+					return true
+				}
 				if datastore.FindNodeFromIP(i.IP) != nil {
 					return true
 				}
@@ -635,6 +649,9 @@ func PassiveDiscover() error {
 				return true
 			})
 			datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
+				if s.LastTime < ct {
+					return true
+				}
 				var ok bool
 				var dent *discoverInfoEnt
 				if dent, ok = foundNodeMap[s.Server]; !ok {
