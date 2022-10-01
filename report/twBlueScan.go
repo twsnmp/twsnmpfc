@@ -256,7 +256,6 @@ func checkOldBlueDevice(safeOld, delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("blueDevice", ids)
-		log.Printf("delete blueDevice=%d", len(ids))
 	}
 }
 
@@ -270,6 +269,5 @@ func checkOldEnvMonitor(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("envMonitor", ids)
-		log.Printf("delete envMonitor=%d", len(ids))
 	}
 }

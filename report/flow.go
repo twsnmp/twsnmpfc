@@ -2,7 +2,6 @@ package report
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"strings"
 	"time"
@@ -384,7 +383,6 @@ func checkOldServers(safeOld, delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("servers", ids)
-		log.Printf("report delete servers=%d", len(ids))
 	}
 }
 
@@ -400,7 +398,6 @@ func checkOldFlows(safeOld, delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("flows", ids)
-		log.Printf("report delete flows=%d", len(ids))
 	}
 }
 

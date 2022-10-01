@@ -100,6 +100,5 @@ func checkOldWifiAP(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("wifiAP", ids)
-		log.Printf("delete wifiAP=%d", len(ids))
 	}
 }

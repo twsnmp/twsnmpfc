@@ -84,6 +84,5 @@ func checkOldEnvSdrPower(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("sdrPower", ids)
-		log.Printf("delete sdrPower=%d", len(ids))
 	}
 }

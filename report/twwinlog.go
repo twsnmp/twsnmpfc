@@ -453,7 +453,6 @@ func checkOldWinEventID(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("winEventID", ids)
-		log.Printf("delete winEventID=%d", len(ids))
 	}
 }
 
@@ -467,7 +466,6 @@ func checkOldWinLogon(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("winLogon", ids)
-		log.Printf("delete winLogon=%d", len(ids))
 	}
 }
 
@@ -481,7 +479,6 @@ func checkOldWinAccount(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("winAccount", ids)
-		log.Printf("delete winAccount=%d", len(ids))
 	}
 }
 
@@ -495,7 +492,6 @@ func checkOldWinKerberos(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("winKerberos", ids)
-		log.Printf("delete winKerberos=%d", len(ids))
 	}
 }
 
@@ -509,7 +505,6 @@ func checkOldWinPrivilege(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("winPrivilege", ids)
-		log.Printf("delete winPrivilege=%d", len(ids))
 	}
 }
 
@@ -523,7 +518,6 @@ func checkOldWinProcess(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("winProcess", ids)
-		log.Printf("delete winProcess=%d", len(ids))
 	}
 }
 
@@ -537,7 +531,6 @@ func checkOldWinTask(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("winTask", ids)
-		log.Printf("delete winTask=%d", len(ids))
 	}
 }
 

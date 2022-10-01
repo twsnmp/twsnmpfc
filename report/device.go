@@ -1,7 +1,6 @@
 package report
 
 import (
-	"log"
 	"net"
 	"strings"
 	"time"
@@ -109,7 +108,6 @@ func checkOldDevices(safeOld, delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("devices", ids)
-		log.Printf("report delete devices=%d", len(ids))
 	}
 }
 

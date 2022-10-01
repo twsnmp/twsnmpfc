@@ -394,7 +394,6 @@ func checkOldEtherType(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("ether", ids)
-		log.Printf("delete etherType=%d", len(ids))
 	}
 }
 
@@ -408,7 +407,6 @@ func checkOldDNSQ(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("dns", ids)
-		log.Printf("delete DNSQ=%d", len(ids))
 	}
 }
 
@@ -424,7 +422,6 @@ func checkOldRadiusFlow(safeOld, delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("radius", ids)
-		log.Printf("report delete radiusFlow=%d", len(ids))
 	}
 }
 
@@ -440,7 +437,6 @@ func checkOldTLSFlow(safeOld, delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("tls", ids)
-		log.Printf("report delete tlsFlow=%d", len(ids))
 	}
 }
 

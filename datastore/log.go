@@ -265,7 +265,11 @@ func SaveLogBuffer(logBuffer []*LogEnt) {
 	if db == nil {
 		return
 	}
+	st := time.Now()
 	db.Batch(func(tx *bbolt.Tx) error {
+		if time.Since(st) > time.Duration(time.Second) {
+			log.Printf("SaveLogBuffer batch over 1sec dur=%v", time.Since(st))
+		}
 		syslog := tx.Bucket([]byte("syslog"))
 		netflow := tx.Bucket([]byte("netflow"))
 		ipfix := tx.Bucket([]byte("ipfix"))
@@ -307,7 +311,7 @@ func SaveLogBuffer(logBuffer []*LogEnt) {
 				oc++
 			}
 		}
-		log.Printf("syslog=%d,netflow=%d,trap=%d,arplog=%d,other=%d", sc, nfc, tc, ac, oc)
+		log.Printf("syslog=%d,netflow=%d,trap=%d,arplog=%d,other=%d,dur=%v", sc, nfc, tc, ac, oc, time.Since(st))
 		return nil
 	})
 }

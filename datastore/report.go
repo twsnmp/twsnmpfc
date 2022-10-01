@@ -3,6 +3,7 @@ package datastore
 import (
 	"log"
 	"sync"
+	"time"
 
 	"go.etcd.io/bbolt"
 )
@@ -101,6 +102,7 @@ func DeleteReport(report string, ids []string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
+	st := time.Now()
 	db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		if b != nil {
@@ -114,6 +116,7 @@ func DeleteReport(report string, ids []string) error {
 		return nil
 	})
 	deleteSyncMap(reportNameToMap[report], ids)
+	log.Printf("DeleteReport report=%s len=%d  dur=%v", report, len(ids), time.Since(st))
 	return nil
 }
 

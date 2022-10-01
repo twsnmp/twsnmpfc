@@ -66,9 +66,7 @@ func logger(ctx context.Context, wg *sync.WaitGroup) {
 			logBuffer = append(logBuffer, l)
 		case <-timer1.C:
 			if len(logBuffer) > 0 {
-				st := time.Now()
 				datastore.SaveLogBuffer(logBuffer)
-				log.Printf("save log len=%d dur=%v", len(logBuffer), time.Since(st))
 				logBuffer = []*datastore.LogEnt{}
 			}
 		case <-timer2.C:

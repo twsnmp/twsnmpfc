@@ -2,7 +2,6 @@ package report
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"time"
 
@@ -157,7 +156,6 @@ func checkOldUsers(delOld int64) {
 	})
 	if len(ids) > 0 {
 		datastore.DeleteReport("users", ids)
-		log.Printf("delete users=%d", len(ids))
 	}
 }
 
