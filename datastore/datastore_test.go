@@ -47,7 +47,7 @@ func TestDataStore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	CloseDataStore()
+	CloseDB()
 	MapConf.MapName = ""
 	err = openDB(backdb)
 	if err != nil {
@@ -56,5 +56,5 @@ func TestDataStore(t *testing.T) {
 	if MapConf.MapName != "Test123" {
 		t.Errorf("Backup MapName = '%s'", MapConf.MapName)
 	}
-	CloseDataStore()
+	CloseDB()
 }

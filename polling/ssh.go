@@ -110,9 +110,6 @@ func sshConnectToHost(pe *datastore.PollingEnt, port string) (*ssh.Client, *ssh.
 		sshConfig.HostKeyCallback =
 			func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 				n.PublicKey = strings.TrimSpace(string(ssh.MarshalAuthorizedKey(key)))
-				if err := datastore.UpdateNode(n); err != nil {
-					return err
-				}
 				return nil
 			}
 		//ssh.InsecureIgnoreHostKey()

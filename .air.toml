@@ -13,7 +13,7 @@ bin = "/tmp/main -datastore ./tmp"
 # Watch these filename extensions.
 include_ext = ["go"]
 # Ignore these filename extensions or directories.
-exclude_dir = ["spa", "conf","Docker","pwa", "dist"]
+exclude_dir = ["spa", "conf","Docker","pwa", "dist","statik"]
 # Watch these directories if you specified.
 include_dir = []
 # Exclude files.
@@ -23,11 +23,11 @@ exclude_unchanged = true
 # This log file places in your tmp_dir.
 log = "air.log"
 # It's not necessary to trigger build each time file changes if it's too frequent.
-delay = 5000 # ms
+delay = 10000 # ms
 # Stop running old binary when build errors occur.
 stop_on_error = true
 # Send Interrupt signal before killing process (windows does not support this feature)
 send_interrupt = true
 # Delay after sending Interrupt signal
-kill_delay = 30000 # ms
+kill_delay = 60000 # ms
 

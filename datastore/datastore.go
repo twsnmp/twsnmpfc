@@ -310,13 +310,32 @@ func initDB() error {
 	})
 }
 
-// CloseDataStore : DBをクローズする
-func CloseDataStore() {
+// CloseDB : DBをクローズする
+func CloseDB() {
 	if db == nil {
 		return
 	}
+	if err := saveAllNodes(); err != nil {
+		log.Printf("saveAllNodes err=%v", err)
+	}
+	if err := saveAllPollings(); err != nil {
+		log.Printf("saveAllPollings err=%v", err)
+	}
 	db.Close()
 	db = nil
+}
+
+// SaveMapData:  24時間毎にマップのデータをDBへ保存する
+func SaveMapData() {
+	if db == nil {
+		return
+	}
+	if err := saveAllNodes(); err != nil {
+		log.Printf("saveAllNodes err=%v", err)
+	}
+	if err := saveAllPollings(); err != nil {
+		log.Printf("saveAllPollings err=%v", err)
+	}
 }
 
 // bboltに保存する場合のキーを時刻から生成する。

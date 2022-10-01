@@ -53,7 +53,7 @@ func AddPolling(p *PollingEnt) error {
 	if err != nil {
 		return err
 	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
+	db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollings"))
 		return b.Put([]byte(p.ID), s)
 	})
@@ -71,42 +71,44 @@ func UpdatePolling(p *PollingEnt) error {
 		return ErrInvalidID
 	}
 	p.LastTime = time.Now().UnixNano()
-	s, err := json.Marshal(p)
-	if err != nil {
-		return err
-	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("pollings"))
-		return b.Put([]byte(p.ID), s)
-	})
 	pollings.Store(p.ID, p)
 	return nil
 }
 
-func DeletePolling(pollingID string) error {
+func DeletePollings(ids []string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	if e, ok := pollings.Load(pollingID); !ok {
-		return ErrInvalidID
-	} else {
-		p := e.(*PollingEnt)
-		SetNodeStateChanged(p.NodeID)
+	for _, id := range ids {
+		if e, ok := pollings.Load(id); ok {
+			p := e.(*PollingEnt)
+			SetNodeStateChanged(p.NodeID)
+			pollings.Delete(id)
+		}
 	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("pollings"))
-		return b.Delete([]byte(pollingID))
-	})
-	pollings.Delete(pollingID)
 	// Delete lines
 	lines.Range(func(_, p interface{}) bool {
 		l := p.(*LineEnt)
-		if l.PollingID1 == pollingID || l.PollingID2 == pollingID {
-			_ = DeleteLine(l.ID)
+		for _, id := range ids {
+			if l.PollingID1 == id || l.PollingID2 == id {
+				_ = DeleteLine(l.ID)
+				return true
+			}
 		}
 		return true
 	})
-	DeleteAIResult(pollingID)
+	db.Batch(func(tx *bbolt.Tx) error {
+		pb := tx.Bucket([]byte("pollings"))
+		aib := tx.Bucket([]byte("ai"))
+		if pb != nil && aib != nil {
+			for _, id := range ids {
+				pb.Delete([]byte(id))
+				aib.Delete([]byte(id))
+			}
+		}
+		return nil
+	})
+	go clearDeletedPollingLogs(ids)
 	return nil
 }
 
@@ -123,6 +125,27 @@ func ForEachPollings(f func(*PollingEnt) bool) {
 	pollings.Range(func(_, p interface{}) bool {
 		return f(p.(*PollingEnt))
 	})
+}
+
+func saveAllPollings() error {
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	st := time.Now()
+	db.Batch(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("pollings"))
+		pollings.Range(func(_, p interface{}) bool {
+			pe := p.(*PollingEnt)
+			s, err := json.Marshal(pe)
+			if err == nil {
+				b.Put([]byte(pe.ID), s)
+			}
+			return true
+		})
+		return nil
+	})
+	log.Printf("saveAllPollings dur=%v", time.Since(st))
+	return nil
 }
 
 func AddPollingLog(p *PollingEnt) error {
@@ -211,8 +234,9 @@ func ClearPollingLog(pollingID string) error {
 	})
 }
 
-// ClearDeletedPollingLogs : ポーリングログの削除をまとめて行う
-func ClearDeletedPollingLogs(ids []string) error {
+// clearDeletedPollingLogs : ポーリングログの削除をまとめて行う
+func clearDeletedPollingLogs(ids []string) error {
+	st := time.Now()
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingLogs"))
 		if b == nil {
@@ -237,7 +261,7 @@ func ClearDeletedPollingLogs(ids []string) error {
 				}
 			}
 		}
-		log.Printf("ClearDeletedPollingLogs del=%d", del)
+		log.Printf("clearDeletedPollingLogs del=%d dur=%v", del, time.Since(st))
 		return nil
 	})
 }

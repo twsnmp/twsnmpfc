@@ -31,9 +31,11 @@ func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 		select {
 		case <-ctx.Done():
 			timer.Stop()
+			newVersionTimer.Stop()
 			log.Println("stop map")
 			return
 		case <-newVersionTimer.C:
+			datastore.SaveMapData()
 			go checkNewVersion()
 		case <-timer.C:
 			change := 0

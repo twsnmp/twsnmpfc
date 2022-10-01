@@ -3,6 +3,7 @@ package datastore
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -94,29 +95,13 @@ func AddNode(n *NodeEnt) error {
 	if err != nil {
 		return err
 	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
+	st := time.Now()
+	db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))
 		return b.Put([]byte(n.ID), s)
 	})
 	nodes.Store(n.ID, n)
-	return nil
-}
-
-func UpdateNode(n *NodeEnt) error {
-	if db == nil {
-		return ErrDBNotOpen
-	}
-	if _, ok := nodes.Load(n.ID); !ok {
-		return ErrInvalidID
-	}
-	s, err := json.Marshal(n)
-	if err != nil {
-		return err
-	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("nodes"))
-		return b.Put([]byte(n.ID), s)
-	})
+	log.Printf("AddNode name=%s dur=%v", n.Name, time.Since(st))
 	return nil
 }
 
@@ -176,9 +161,7 @@ func DeleteNode(nodeID string) error {
 		}
 		return true
 	})
-	for _, k := range delList {
-		DeletePolling(k)
-	}
+	DeletePollings(delList)
 	return nil
 }
 
@@ -235,6 +218,27 @@ func ForEachNodes(f func(*NodeEnt) bool) {
 	nodes.Range(func(_, p interface{}) bool {
 		return f(p.(*NodeEnt))
 	})
+}
+
+func saveAllNodes() error {
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	st := time.Now()
+	db.Batch(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("nodes"))
+		nodes.Range(func(_, p interface{}) bool {
+			pn := p.(*NodeEnt)
+			s, err := json.Marshal(pn)
+			if err == nil {
+				b.Put([]byte(pn.ID), s)
+			}
+			return true
+		})
+		return nil
+	})
+	log.Printf("saveAllNodes dur=%v", time.Since(st))
+	return nil
 }
 
 func CheckNodeAddress(ip, mac, oldmac string) {

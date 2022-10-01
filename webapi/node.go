@@ -32,9 +32,6 @@ func postNodePos(c echo.Context) error {
 		}
 		n.X = nu.X
 		n.Y = nu.Y
-		if err := datastore.UpdateNode(n); err != nil {
-			return echo.ErrBadRequest
-		}
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -93,9 +90,6 @@ func postNodeUpdate(c echo.Context) error {
 	n.URL = nu.URL
 	n.Type = nu.Type
 	n.AddrMode = nu.AddrMode
-	if err := datastore.UpdateNode(n); err != nil {
-		return echo.ErrBadRequest
-	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:     "user",
 		Level:    "info",

@@ -103,7 +103,7 @@ func DeleteReport(report string, ids []string) error {
 		return ErrDBNotOpen
 	}
 	st := time.Now()
-	db.Update(func(tx *bbolt.Tx) error {
+	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		if b != nil {
 			r := b.Bucket([]byte(report))

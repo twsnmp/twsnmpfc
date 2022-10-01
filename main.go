@@ -183,6 +183,7 @@ func main() {
 	webapi.Stop()
 	cancel()
 	wg.Wait()
+	datastore.CloseDB()
 	log.Printf("stop twsnmpfc dur=%v stop=%v", time.Since(st), time.Since(stop))
 }
 

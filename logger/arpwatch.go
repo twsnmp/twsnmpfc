@@ -271,9 +271,6 @@ func checkNodeMAC() {
 					Event:    fmt.Sprintf("MACアドレス変化 %s -> %s", n.MAC, new),
 				})
 				n.MAC = new
-				if err := datastore.UpdateNode(n); err != nil {
-					log.Printf("updateNode err=%v", err)
-				}
 			}
 		}
 		return true
@@ -288,17 +285,13 @@ func checkFixMACMode(n *datastore.NodeEnt) {
 				mac += fmt.Sprintf("(%s)", v)
 			}
 			n.MAC = mac
-			if err := datastore.UpdateNode(n); err != nil {
-				log.Printf("update node err=%v", err)
-			} else {
-				datastore.AddEventLog(&datastore.EventLogEnt{
-					Type:     "system",
-					Level:    "info",
-					NodeID:   n.ID,
-					NodeName: n.Name,
-					Event:    fmt.Sprintf("MACアドレス固定ノードのアドレス取得 %s", n.MAC),
-				})
-			}
+			datastore.AddEventLog(&datastore.EventLogEnt{
+				Type:     "system",
+				Level:    "info",
+				NodeID:   n.ID,
+				NodeName: n.Name,
+				Event:    fmt.Sprintf("MACアドレス固定ノードのアドレス取得 %s", n.MAC),
+			})
 		}
 		return
 	}
@@ -311,17 +304,13 @@ func checkFixMACMode(n *datastore.NodeEnt) {
 		if ip != n.IP {
 			oldIP := n.IP
 			n.IP = ip
-			if err := datastore.UpdateNode(n); err != nil {
-				log.Printf("update node err=%v", err)
-			} else {
-				datastore.AddEventLog(&datastore.EventLogEnt{
-					Type:     "system",
-					Level:    "info",
-					NodeID:   n.ID,
-					NodeName: n.Name,
-					Event:    fmt.Sprintf("MACアドレス固定ノード'%s'のIPアドレスが'%s'から'%s'に変化", n.MAC, oldIP, ip),
-				})
-			}
+			datastore.AddEventLog(&datastore.EventLogEnt{
+				Type:     "system",
+				Level:    "info",
+				NodeID:   n.ID,
+				NodeName: n.Name,
+				Event:    fmt.Sprintf("MACアドレス固定ノード'%s'のIPアドレスが'%s'から'%s'に変化", n.MAC, oldIP, ip),
+			})
 		}
 	}
 }
@@ -354,15 +343,11 @@ func checkFixHostMode(n *datastore.NodeEnt) {
 	}
 	oldIP := n.IP
 	n.IP = hitIP
-	if err := datastore.UpdateNode(n); err != nil {
-		log.Printf("check fixed host err=%v", err)
-	} else {
-		datastore.AddEventLog(&datastore.EventLogEnt{
-			Type:     "system",
-			Level:    "info",
-			NodeID:   n.ID,
-			NodeName: n.Name,
-			Event:    fmt.Sprintf("ホスト名固定ノード'%s'のIPアドレスが'%s'から''%sに変化", n.Name, oldIP, hitIP),
-		})
-	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:     "system",
+		Level:    "info",
+		NodeID:   n.ID,
+		NodeName: n.Name,
+		Event:    fmt.Sprintf("ホスト名固定ノード'%s'のIPアドレスが'%s'から''%sに変化", n.Name, oldIP, hitIP),
+	})
 }
