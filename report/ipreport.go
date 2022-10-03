@@ -32,6 +32,10 @@ func checkIPReport(ip, mac string, t int64) {
 		// MACアドレスが不明なものは記録しないモード
 		return
 	}
+	if datastore.ReportConf.ExcludeIPv6 && strings.Contains(ip, ":") {
+		// IPv6を除外
+		return
+	}
 	i := datastore.GetIPReport(ip)
 	if i != nil {
 		if t < i.LastTime {
