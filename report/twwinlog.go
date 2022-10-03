@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
@@ -443,8 +444,9 @@ func checkWinTask(h string, m map[string]string) {
 	})
 }
 
-func checkOldWinEventID(delOld int64) {
+func checkOldWinEventID() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachWinEventID(func(e *datastore.WinEventIDEnt) bool {
 		if e.LastTime < delOld {
 			ids = append(ids, e.ID)
@@ -456,8 +458,9 @@ func checkOldWinEventID(delOld int64) {
 	}
 }
 
-func checkOldWinLogon(delOld int64) {
+func checkOldWinLogon() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachWinLogon(func(e *datastore.WinLogonEnt) bool {
 		if e.LastTime < delOld {
 			ids = append(ids, e.ID)
@@ -469,8 +472,9 @@ func checkOldWinLogon(delOld int64) {
 	}
 }
 
-func checkOldWinAccount(delOld int64) {
+func checkOldWinAccount() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachWinAccount(func(e *datastore.WinAccountEnt) bool {
 		if e.LastTime < delOld {
 			ids = append(ids, e.ID)
@@ -482,8 +486,9 @@ func checkOldWinAccount(delOld int64) {
 	}
 }
 
-func checkOldWinKerberos(delOld int64) {
+func checkOldWinKerberos() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachWinKerberos(func(e *datastore.WinKerberosEnt) bool {
 		if e.LastTime < delOld {
 			ids = append(ids, e.ID)
@@ -495,8 +500,9 @@ func checkOldWinKerberos(delOld int64) {
 	}
 }
 
-func checkOldWinPrivilege(delOld int64) {
+func checkOldWinPrivilege() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachWinPrivilege(func(e *datastore.WinPrivilegeEnt) bool {
 		if e.LastTime < delOld {
 			ids = append(ids, e.ID)
@@ -508,8 +514,9 @@ func checkOldWinPrivilege(delOld int64) {
 	}
 }
 
-func checkOldWinProcess(delOld int64) {
+func checkOldWinProcess() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachWinProcess(func(e *datastore.WinProcessEnt) bool {
 		if e.LastTime < delOld {
 			ids = append(ids, e.ID)
@@ -521,8 +528,9 @@ func checkOldWinProcess(delOld int64) {
 	}
 }
 
-func checkOldWinTask(delOld int64) {
+func checkOldWinTask() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachWinTask(func(e *datastore.WinTaskEnt) bool {
 		if e.LastTime < delOld {
 			ids = append(ids, e.ID)

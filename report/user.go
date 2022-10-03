@@ -146,8 +146,9 @@ func checkUserClient(client string) bool {
 	return client == name
 }
 
-func checkOldUsers(delOld int64) {
+func checkOldUsers() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
 		if u.LastTime < delOld {
 			ids = append(ids, u.ID)

@@ -244,13 +244,13 @@ func checkSwitchBotPlugMiniReport(h string, m map[string]string) {
 	})
 }
 
-func checkOldBlueDevice(safeOld, delOld int64) {
+func checkOldBlueDevice() {
 	ids := []string{}
+	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachBludeDevice(func(e *datastore.BlueDeviceEnt) bool {
-		if e.LastTime < safeOld {
-			if e.LastTime < delOld || (strings.HasPrefix(e.AddressType, "LE Random(") && e.Name == "" && e.Count < 120) {
-				ids = append(ids, e.ID)
-			}
+		if e.LastTime < delOld || (datastore.ReportConf.AICleanup && e.LastTime < ht && aiCleanup(e.Count, e.FirstTime, e.LastTime)) {
+			ids = append(ids, e.ID)
 		}
 		return true
 	})
@@ -259,8 +259,9 @@ func checkOldBlueDevice(safeOld, delOld int64) {
 	}
 }
 
-func checkOldEnvMonitor(delOld int64) {
+func checkOldEnvMonitor() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachEnvMonitor(func(e *datastore.EnvMonitorEnt) bool {
 		if e.LastTime < delOld {
 			ids = append(ids, e.ID)

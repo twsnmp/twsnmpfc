@@ -117,13 +117,13 @@ func getMACFromIPv6Addr(s string) string {
 	return ""
 }
 
-func checkOldIPReport(safeOld, delOld int64) {
+func checkOldIPReport() {
 	ids := []string{}
+	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
-		if i.LastTime < safeOld {
-			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
-				ids = append(ids, i.IP)
-			}
+		if i.LastTime < delOld || (datastore.ReportConf.AICleanup && i.LastTime < ht && aiCleanup(i.Count, i.FirstTime, i.LastTime)) {
+			ids = append(ids, i.IP)
 		}
 		return true
 	})

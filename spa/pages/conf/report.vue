@@ -125,16 +125,16 @@
             </v-col>
             <v-col>
               <v-slider
-                v-model="report.RetentionTimeForSafe"
-                label="安全なレポートの保持時間(時間)"
+                v-model="report.SensorTimeout"
+                label="センサー異常判定時間(時間)"
                 class="align-center"
-                max="240"
-                min="3"
+                max="24"
+                min="1"
                 hide-details
               >
                 <template #append>
                   <v-text-field
-                    v-model="report.RetentionTimeForSafe"
+                    v-model="report.SensorTimeout"
                     class="mt-0 pt-0"
                     hide-details
                     single-line
@@ -148,22 +148,36 @@
           <v-row dense>
             <v-col>
               <v-switch
+                v-model="report.ExcludeIPv6"
+                label="IPv6アドレスを除外"
+              ></v-switch>
+            </v-col>
+            <v-col>
+              <v-switch
                 v-model="report.IncludeNoMACIP"
                 label="MACアドレスが不明のIPもレポートに記録する"
               ></v-switch>
             </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-switch
+                v-model="report.AICleanup"
+                label="AIクリーンアップ"
+              ></v-switch>
+            </v-col>
             <v-col>
               <v-slider
-                v-model="report.SensorTimeout"
-                label="センサー異常判定時間(時間)"
+                v-model="report.ReportDays"
+                label="レポートの保持日数"
                 class="align-center"
-                max="24"
-                min="1"
+                max="365"
+                min="3"
                 hide-details
               >
                 <template #append>
                   <v-text-field
-                    v-model="report.SensorTimeout"
+                    v-model="report.ReportDays"
                     class="mt-0 pt-0"
                     hide-details
                     single-line
@@ -201,7 +215,9 @@ export default {
         AllowLDAP: '',
         AllowLocalIP: '',
         DropFlowThTCPPacket: 3,
-        RetentionTimeForSafe: 24,
+        ReportDays: 30,
+        AICleanup: false,
+        ExcludeIPv6: false,
         IncludeNoMACIP: false,
       },
       denyCountries: '',

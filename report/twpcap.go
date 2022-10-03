@@ -384,8 +384,9 @@ func ResetTLSFlowsScore() {
 	calcTLSFlowScore()
 }
 
-func checkOldEtherType(delOld int64) {
+func checkOldEtherType() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachEtherType(func(e *datastore.EtherTypeEnt) bool {
 		if e.LastTime < delOld {
 			ids = append(ids, e.ID)
@@ -397,10 +398,12 @@ func checkOldEtherType(delOld int64) {
 	}
 }
 
-func checkOldDNSQ(delOld int64) {
+func checkOldDNSQ() {
 	ids := []string{}
+	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachDNSQ(func(e *datastore.DNSQEnt) bool {
-		if e.LastTime < delOld {
+		if e.LastTime < delOld || (datastore.ReportConf.AICleanup && e.LastTime < ht && aiCleanup(e.Count, e.FirstTime, e.LastTime)) {
 			ids = append(ids, e.ID)
 		}
 		return true
@@ -410,13 +413,12 @@ func checkOldDNSQ(delOld int64) {
 	}
 }
 
-func checkOldRadiusFlow(safeOld, delOld int64) {
+func checkOldRadiusFlow() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachRADIUSFlows(func(i *datastore.RADIUSFlowEnt) bool {
-		if i.LastTime < safeOld {
-			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
-				ids = append(ids, i.ID)
-			}
+		if i.LastTime < delOld {
+			ids = append(ids, i.ID)
 		}
 		return true
 	})
@@ -425,13 +427,13 @@ func checkOldRadiusFlow(safeOld, delOld int64) {
 	}
 }
 
-func checkOldTLSFlow(safeOld, delOld int64) {
+func checkOldTLSFlow() {
 	ids := []string{}
-	datastore.ForEachTLSFlows(func(i *datastore.TLSFlowEnt) bool {
-		if i.LastTime < safeOld {
-			if i.LastTime < delOld || (i.Score > 50.0 && i.LastTime == i.FirstTime) {
-				ids = append(ids, i.ID)
-			}
+	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
+	datastore.ForEachTLSFlows(func(t *datastore.TLSFlowEnt) bool {
+		if t.LastTime < delOld || (datastore.ReportConf.AICleanup && t.LastTime < ht && aiCleanup(t.Count, t.FirstTime, t.LastTime)) {
+			ids = append(ids, t.ID)
 		}
 		return true
 	})

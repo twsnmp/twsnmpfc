@@ -371,13 +371,13 @@ func setServerPenalty(s *datastore.ServerEnt) {
 	}
 }
 
-func checkOldServers(safeOld, delOld int64) {
+func checkOldServers() {
 	ids := []string{}
+	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
-		if s.LastTime < safeOld {
-			if s.LastTime < delOld || s.Score > 50.0 || s.Count < 10 {
-				ids = append(ids, s.ID)
-			}
+		if s.LastTime < delOld || (datastore.ReportConf.AICleanup && s.LastTime < ht && aiCleanup(s.Count, s.FirstTime, s.LastTime)) {
+			ids = append(ids, s.ID)
 		}
 		return true
 	})
@@ -386,13 +386,13 @@ func checkOldServers(safeOld, delOld int64) {
 	}
 }
 
-func checkOldFlows(safeOld, delOld int64) {
+func checkOldFlows() {
 	ids := []string{}
+	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
-		if f.LastTime < safeOld {
-			if f.LastTime < delOld || f.Score > 50.0 || f.Count < 10 {
-				ids = append(ids, f.ID)
-			}
+		if f.LastTime < delOld || (datastore.ReportConf.AICleanup && f.LastTime < ht && aiCleanup(f.Count, f.FirstTime, f.LastTime)) {
+			ids = append(ids, f.ID)
 		}
 		return true
 	})

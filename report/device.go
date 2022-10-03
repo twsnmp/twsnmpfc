@@ -96,13 +96,12 @@ func setDevicePenalty(d *datastore.DeviceEnt) {
 	}
 }
 
-func checkOldDevices(safeOld, delOld int64) {
+func checkOldDevices() {
 	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-		if d.LastTime < safeOld {
-			if d.LastTime < delOld || (d.Score > 50.0 && d.LastTime == d.FirstTime) {
-				ids = append(ids, d.ID)
-			}
+		if d.LastTime < delOld {
+			ids = append(ids, d.ID)
 		}
 		return true
 	})

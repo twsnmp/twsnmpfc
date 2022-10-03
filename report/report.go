@@ -198,29 +198,27 @@ func checkOldReport() {
 		return
 	}
 	oldCheck = true
-	safeOld := time.Now().Add(time.Hour * time.Duration(-1*datastore.ReportConf.RetentionTimeForSafe)).UnixNano()
-	delOld := time.Now().AddDate(0, 0, -datastore.MapConf.LogDays).UnixNano()
 	st := time.Now()
-	checkOldDevices(safeOld, delOld)
-	checkOldServers(safeOld, delOld)
-	checkOldFlows(safeOld, delOld)
-	checkOldIPReport(safeOld, delOld)
-	checkOldUsers(delOld)
-	checkOldEtherType(delOld)
-	checkOldDNSQ(delOld)
-	checkOldRadiusFlow(safeOld, delOld)
-	checkOldTLSFlow(safeOld, delOld)
-	checkOldWinEventID(delOld)
-	checkOldWinLogon(delOld)
-	checkOldWinAccount(delOld)
-	checkOldWinKerberos(delOld)
-	checkOldWinPrivilege(delOld)
-	checkOldWinProcess(delOld)
-	checkOldWinTask(delOld)
-	checkOldBlueDevice(safeOld, delOld)
-	checkOldEnvMonitor(delOld)
-	checkOldWifiAP(delOld)
-	checkOldEnvSdrPower(delOld)
+	checkOldDevices()
+	checkOldServers()
+	checkOldFlows()
+	checkOldIPReport()
+	checkOldUsers()
+	checkOldEtherType()
+	checkOldDNSQ()
+	checkOldRadiusFlow()
+	checkOldTLSFlow()
+	checkOldWinEventID()
+	checkOldWinLogon()
+	checkOldWinAccount()
+	checkOldWinKerberos()
+	checkOldWinPrivilege()
+	checkOldWinProcess()
+	checkOldWinTask()
+	checkOldBlueDevice()
+	checkOldEnvMonitor()
+	checkOldWifiAP()
+	checkOldEnvSdrPower()
 	log.Printf("check old report dur=%v", time.Since(st))
 	oldCheck = false
 }
@@ -663,4 +661,14 @@ func findIPFromArp(mac string) string {
 		return true
 	})
 	return ip
+}
+
+func aiCleanup(c, ft, lt int64) bool {
+	d := (lt - ft) / (24 * 3600 * 1000 * 1000 * 1000)
+	if d <= 1 {
+		// 期間が１日以下
+		return true
+	}
+	// 1日１件以下
+	return c/d < 1
 }

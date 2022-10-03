@@ -9,27 +9,31 @@ import (
 )
 
 type ReportConfEnt struct {
-	DenyCountries        []string
-	DenyServices         []string
-	AllowDNS             string
-	AllowDHCP            string
-	AllowMail            string
-	AllowLDAP            string
-	AllowLocalIP         string
-	JapanOnly            bool
-	DropFlowThTCPPacket  int
-	RetentionTimeForSafe int
-	SensorTimeout        int
-	IncludeNoMACIP       bool
+	DenyCountries       []string
+	DenyServices        []string
+	AllowDNS            string
+	AllowDHCP           string
+	AllowMail           string
+	AllowLDAP           string
+	AllowLocalIP        string
+	JapanOnly           bool
+	DropFlowThTCPPacket int
+	SensorTimeout       int
+	IncludeNoMACIP      bool
+	ExcludeIPv6         bool
+	ReportDays          int
+	AICleanup           bool
 }
 
 var ReportConf ReportConfEnt
 
 // LaodReportConf : レポート設定を読み込む
 func LaodReportConf() error {
-	ReportConf.RetentionTimeForSafe = 24
 	ReportConf.DropFlowThTCPPacket = 3
 	ReportConf.SensorTimeout = 1
+	ReportConf.AICleanup = false
+	ReportConf.ReportDays = 30
+	ReportConf.ExcludeIPv6 = false
 	return db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		v := b.Get([]byte("report"))

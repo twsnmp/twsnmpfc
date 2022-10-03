@@ -45,7 +45,7 @@ func checkTWWifiScanReport(l map[string]interface{}) {
 	}
 }
 
-//type=APInfo,ssid=%s,bssid=%s,rssi=%s,Channel=%s,info=%s,count=%d,change=%d,ft=%s,lt=%s
+// type=APInfo,ssid=%s,bssid=%s,rssi=%s,Channel=%s,info=%s,count=%d,change=%d,ft=%s,lt=%s
 func checkAPInfoReport(h string, m map[string]string) {
 	bssid, ok := m["bssid"]
 	if !ok || bssid == "" {
@@ -90,10 +90,12 @@ func checkAPInfoReport(h string, m map[string]string) {
 	})
 }
 
-func checkOldWifiAP(delOld int64) {
+func checkOldWifiAP() {
 	ids := []string{}
+	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachWifiAP(func(e *datastore.WifiAPEnt) bool {
-		if e.LastTime < delOld {
+		if e.LastTime < delOld || (datastore.ReportConf.AICleanup && e.LastTime < ht && aiCleanup(int64(e.Count), e.FirstTime, e.LastTime)) {
 			ids = append(ids, e.ID)
 		}
 		return true
