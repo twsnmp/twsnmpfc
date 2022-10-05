@@ -83,7 +83,7 @@
           type="csv"
           name="TWSNMP_FC_Addr_Info.csv"
           header="TWSNMP FCによるアドレス調査結果"
-          class="v-btn"
+          class="v-btn ml-0"
         >
           <v-btn color="primary" dark>
             <v-icon>mdi-file-delimited</v-icon>
@@ -97,7 +97,7 @@
           name="TWSNMP_FC_Addr_Info.xls"
           header="TWSNMP FCによるアドレス調査結果"
           worksheet="調査結果"
-          class="v-btn"
+          class="v-btn ml-0 pl-0 pr-1"
         >
           <v-btn color="primary" dark>
             <v-icon>mdi-microsoft-excel</v-icon>
