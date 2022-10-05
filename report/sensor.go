@@ -136,7 +136,7 @@ func setSensorState() {
 			s.State = "normal"
 		}
 		if s.Ignore {
-			s.State = "unknown"
+			s.State = "off"
 		}
 		if oldState != s.State {
 			l := &datastore.EventLogEnt{

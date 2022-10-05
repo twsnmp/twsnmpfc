@@ -34,6 +34,6 @@ func postSensor(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	s.Ignore = !s.Ignore
-	s.State = "unknown"
+	s.State = "off"
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
