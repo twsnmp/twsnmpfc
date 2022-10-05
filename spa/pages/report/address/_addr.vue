@@ -43,6 +43,7 @@
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"
+        @dblclick:row="copy1Info"
       >
         <template #[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{
@@ -184,6 +185,21 @@ export default {
         return
       }
       const s = a.join('\n')
+      navigator.clipboard.writeText(s).then(
+        () => {
+          this.copyDone = true
+        },
+        () => {
+          this.copyError = true
+        }
+      )
+    },
+    copy1Info(me, p) {
+      if (!navigator.clipboard) {
+        this.copyError = true
+        return
+      }
+      const s = p.item.Title + ' ' + p.item.Value
       navigator.clipboard.writeText(s).then(
         () => {
           this.copyDone = true
