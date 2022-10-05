@@ -224,6 +224,7 @@ func checkOldReport() {
 }
 
 func calcScore() {
+	st := time.Now()
 	calcDeviceScore()
 	calcServerScore()
 	calcFlowScore()
@@ -234,6 +235,7 @@ func calcScore() {
 	calcCertScore()
 	calcWinLogonScore()
 	calcWinKerberosScore()
+	log.Printf("calcreport score dur=%v", time.Since(st))
 }
 
 func getMeanSD(xs *[]float64) (float64, float64) {
@@ -456,11 +458,14 @@ type AddrInfoEnt struct {
 	Value string
 }
 
-func GetAddressInfo(addr string) *[]AddrInfoEnt {
+func GetAddressInfo(addr, dnsbl, noCache string) *[]AddrInfoEnt {
+	if addr == "" {
+		return &[]AddrInfoEnt{}
+	}
 	if _, err := net.ParseMAC(addr); err == nil {
 		return getMACInfo(addr)
 	}
-	return getIPInfo(addr)
+	return getIPInfo(addr, dnsbl, noCache)
 }
 
 type ipInfoCache struct {
@@ -526,13 +531,16 @@ var blacklists = []string{
 	"dnsbl.spfbl.net",
 }
 
-func getIPInfo(ip string) *[]AddrInfoEnt {
-	if c, ok := ipInfoCacheMap[ip]; ok {
-		if c.Time > time.Now().Unix()-60*60*24 {
-			return c.IPInfo
+func getIPInfo(ip, dnsbl, noCache string) *[]AddrInfoEnt {
+	if noCache != "true" {
+		if c, ok := ipInfoCacheMap[ip]; ok {
+			if c.Time > time.Now().Unix()-60*60*24 {
+				return c.IPInfo
+			}
 		}
 	}
 	ret := []AddrInfoEnt{}
+	ret = append(ret, AddrInfoEnt{Level: "info", Title: "IPアドレス", Value: ip})
 	if n := datastore.FindNodeFromIP(ip); n != nil {
 		ret = append(ret, AddrInfoEnt{Level: "info", Title: "管理対象ノード", Value: n.Name})
 	} else {
@@ -580,17 +588,19 @@ func getIPInfo(ip string) *[]AddrInfoEnt {
 		ret = append(ret, AddrInfoEnt{Level: "info", Title: "RDAP:Whois Server", Value: ri.Port43})  // Whoisの情報源
 	}()
 	rblMap := &sync.Map{}
-	for i, source := range blacklists {
-		wg.Add(1)
-		go func(i int, source string) {
-			defer wg.Done()
-			rbl := godnsbl.Lookup(source, ip)
-			if len(rbl.Results) > 0 && rbl.Results[0].Listed {
-				rblMap.Store(source, rbl.Results[0].Text)
-			} else {
-				rblMap.Store(source, "")
-			}
-		}(i, source)
+	if dnsbl == "true" {
+		for i, source := range blacklists {
+			wg.Add(1)
+			go func(i int, source string) {
+				defer wg.Done()
+				rbl := godnsbl.Lookup(source, ip)
+				if len(rbl.Results) > 0 && rbl.Results[0].Listed {
+					rblMap.Store(source, rbl.Results[0].Text)
+				} else {
+					rblMap.Store(source, "")
+				}
+			}(i, source)
+		}
 	}
 	wg.Wait()
 	rblMap.Range(func(key, value interface{}) bool {
@@ -613,6 +623,7 @@ func getIPInfo(ip string) *[]AddrInfoEnt {
 func getMACInfo(addr string) *[]AddrInfoEnt {
 	mac := normMACAddr(addr)
 	ret := []AddrInfoEnt{}
+	ret = append(ret, AddrInfoEnt{Level: "info", Title: "MACアドレス", Value: addr})
 	if n := datastore.FindNodeFromMAC(mac); n != nil {
 		ret = append(ret, AddrInfoEnt{Level: "info", Title: "ノード名", Value: n.Name})
 		ret = append(ret, AddrInfoEnt{Level: "info", Title: "IPアドレス", Value: n.IP})

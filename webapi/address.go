@@ -9,5 +9,7 @@ import (
 
 func getAddressInfo(c echo.Context) error {
 	addr := c.Param("addr")
-	return c.JSON(http.StatusOK, report.GetAddressInfo(addr))
+	dnsbl := c.QueryParam("dnsbl")
+	noCache := c.QueryParam("noCache")
+	return c.JSON(http.StatusOK, report.GetAddressInfo(addr, dnsbl, noCache))
 }

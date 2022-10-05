@@ -10,7 +10,30 @@
           label="アドレス"
           single-line
           hide-details
-        ></v-text-field>
+        >
+        </v-text-field>
+        <v-menu v-if="history.length > 0" offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn
+              class="mt-3 ml-2"
+              color="normal"
+              dark
+              v-bind="attrs"
+              v-on="on"
+            >
+              <v-icon>mdi-history</v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item
+              v-for="(a, index) in history"
+              :key="index"
+              @click="addr = a"
+            >
+              <v-list-item-title>{{ a }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </v-card-title>
       <v-data-table
         :headers="headers"
@@ -28,7 +51,19 @@
           {{ $getStateName(item.Level) }}
         </template>
       </v-data-table>
+      <v-snackbar v-model="copyError" absolute centered color="error">
+        コピーできません
+      </v-snackbar>
+      <v-snackbar v-model="copyDone" absolute centered color="primary">
+        コピーしました
+      </v-snackbar>
       <v-card-actions>
+        <v-switch
+          v-model="blackList"
+          class="ml-2"
+          label="DNS Black List"
+        ></v-switch>
+        <v-switch v-model="noCache" class="ml-2" label="No Cache"></v-switch>
         <v-spacer></v-spacer>
         <v-btn color="primary" dark @click="$fetch()">
           <v-icon>mdi-magnify</v-icon>
@@ -38,7 +73,12 @@
           <v-icon>mdi-google-maps</v-icon>
           地図
         </v-btn>
+        <v-btn v-if="info.length > 0" color="info" dark @click="copyInfo()">
+          <v-icon>mdi-content-copy</v-icon>
+          コピー
+        </v-btn>
         <download-excel
+          v-if="info.length > 0"
           :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_Addr_Info.csv"
@@ -51,6 +91,7 @@
           </v-btn>
         </download-excel>
         <download-excel
+          v-if="info.length > 0"
           :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Addr_Info.xls"
@@ -84,6 +125,11 @@ export default {
       ],
       info: [],
       latLong: '',
+      history: [],
+      copyDone: false,
+      copyError: false,
+      blackList: false,
+      noCache: false,
     }
   },
   async fetch() {
@@ -94,7 +140,18 @@ export default {
     if (!this.addr) {
       return
     }
-    this.info = await this.$axios.$get('/api/report/address/' + this.addr)
+    if (!this.history.includes(this.addr)) {
+      this.history.push(this.addr)
+    }
+    let url = '/api/report/address/' + this.addr
+    if (this.blackList) {
+      url += '?dnsbl=true'
+    }
+    if (this.noCache) {
+      url += this.blackList ? '&' : '?'
+      url += 'noCache=true'
+    }
+    this.info = await this.$axios.$get(url)
     if (this.info) {
       this.info.forEach((e) => {
         if (e.Title === '位置' && e.Value.includes(',')) {
@@ -113,6 +170,28 @@ export default {
       }
       const url = `https://www.google.com/maps/search/?api=1&query=${this.latLong}`
       window.open(url, '_blank')
+    },
+    copyInfo() {
+      if (!navigator.clipboard) {
+        this.copyError = true
+        return
+      }
+      const a = []
+      this.info.forEach((e) => {
+        a.push(e.Title + ',' + e.Value)
+      })
+      if (a.length < 1) {
+        return
+      }
+      const s = a.join('\n')
+      navigator.clipboard.writeText(s).then(
+        () => {
+          this.copyDone = true
+        },
+        () => {
+          this.copyError = true
+        }
+      )
     },
     makeExports() {
       const exports = []
