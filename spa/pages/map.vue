@@ -724,7 +724,7 @@ export default {
     },
     pollingList(id, lineMode) {
       const l = []
-      if (!this.map.Nodes[id]) {
+      if (!this.map.Nodes[id] || !this.map.Pollings[id]) {
         return l
       }
       let nodeName = ''
