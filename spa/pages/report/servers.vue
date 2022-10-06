@@ -347,7 +347,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="addNodeDialog" persistent max-width="500px">
+    <v-dialog v-model="addNodeDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
           <span class="headline">ノード追加</span>
@@ -356,37 +356,66 @@
           ノードを追加できません。
         </v-alert>
         <v-card-text>
-          <v-text-field v-model="node.Name" label="名前"></v-text-field>
-          <v-text-field v-model="node.IP" label="IPアドレス"></v-text-field>
-          <v-select v-model="node.Icon" :items="$iconList" label="アイコン">
-          </v-select>
-          <v-select
-            v-model="node.AddrMode"
-            :items="$addrModeList"
-            label="アドレスモード"
-          >
-          </v-select>
-          <v-select
-            v-model="node.SnmpMode"
-            :items="$snmpModeList"
-            label="SNMPモード"
-          >
-          </v-select>
-          <v-text-field
-            v-model="node.Community"
-            label="Community"
-          ></v-text-field>
-          <v-text-field
-            v-model="node.User"
-            autocomplete="username"
-            label="ユーザー"
-          ></v-text-field>
-          <v-text-field
-            v-model="node.Password"
-            autocomplete="new-password"
-            type="password"
-            label="パスワード"
-          ></v-text-field>
+          <v-row dense>
+            <v-col>
+              <v-text-field v-model="node.Name" label="名前"></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field v-model="node.IP" label="IPアドレス"></v-text-field>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="node.AddrMode"
+                :items="$addrModeList"
+                label="アドレスモード"
+              >
+              </v-select>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select v-model="node.Icon" :items="$iconList" label="アイコン">
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-icon x-large style="magin-top: 10px; margin-left: 10px">
+                {{ $getIconName(node.Icon) }}
+              </v-icon>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="node.SnmpMode"
+                :items="$snmpModeList"
+                label="SNMPモード"
+              >
+              </v-select>
+            </v-col>
+            <v-col v-if="node.SnmpMode == ''">
+              <v-text-field
+                v-model="node.Community"
+                label="Community"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="node.User"
+                autocomplete="username"
+                label="ユーザー"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="node.Password"
+                autocomplete="new-password"
+                type="password"
+                label="パスワード"
+              ></v-text-field>
+            </v-col>
+          </v-row>
           <v-text-field v-model="node.PublicKey" label="公開鍵"></v-text-field>
           <v-text-field v-model="node.URL" label="URL"></v-text-field>
           <v-text-field v-model="node.Descr" label="説明"></v-text-field>
