@@ -15,6 +15,7 @@
         :sort-by="conf.sortBy"
         :sort-desc="conf.sortDesc"
         :options.sync="options"
+        @dblclick:row="copyIP"
       >
         <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.Score)">{{
@@ -119,6 +120,12 @@
           更新
         </v-btn>
       </v-card-actions>
+      <v-snackbar v-model="copyError" absolute centered color="error">
+        コピーできません
+      </v-snackbar>
+      <v-snackbar v-model="copyDone" absolute centered color="primary">
+        コピーしました
+      </v-snackbar>
     </v-card>
     <v-dialog v-model="deleteDialog" persistent max-width="500px">
       <v-card>
@@ -403,6 +410,8 @@ export default {
       node: {},
       addNodeDialog: false,
       addNodeError: false,
+      copyDone: false,
+      copyError: false,
       conf: {
         mac: '',
         name: '',
@@ -538,6 +547,21 @@ export default {
         .catch((e) => {
           this.addNodeError = true
         })
+    },
+    copyIP(me, p) {
+      if (!navigator.clipboard) {
+        this.copyError = true
+        return
+      }
+      const s = p.item.IP
+      navigator.clipboard.writeText(s).then(
+        () => {
+          this.copyDone = true
+        },
+        () => {
+          this.copyError = true
+        }
+      )
     },
     makeExports() {
       const exports = []
