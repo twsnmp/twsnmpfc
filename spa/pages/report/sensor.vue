@@ -152,7 +152,7 @@
               </tr>
               <tr>
                 <td>リソースモニタ数</td>
-                <td>{{ formatCount(selected.MonitorLen) }}</td>
+                <td>{{ formatCount(selected.MonitorsLen) }}</td>
               </tr>
               <tr>
                 <td>初回日時</td>
@@ -168,7 +168,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-menu
-            v-if="selected.MonitorLen > 0 || selected.StatsLen > 0"
+            v-if="selected.MonitorsLen > 0 || selected.StatsLen > 0"
             offset-y
           >
             <template #activator="{ on, attrs }">
@@ -187,7 +187,7 @@
                 </v-list-item-content>
               </v-list-item>
               <v-list-item
-                v-if="selected.MonitorLen > 0"
+                v-if="selected.MonitorsLen > 0"
                 @click="openCpuMemChart"
               >
                 <v-list-item-icon><v-icon>mdi-gauge</v-icon></v-list-item-icon>
@@ -195,14 +195,17 @@
                   <v-list-item-title>CPU/Memory</v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
-              <v-list-item v-if="selected.MonitorLen > 0" @click="openNetChart">
+              <v-list-item
+                v-if="selected.MonitorsLen > 0"
+                @click="openNetChart"
+              >
                 <v-list-item-icon><v-icon>mdi-lan</v-icon></v-list-item-icon>
                 <v-list-item-content>
                   <v-list-item-title>通信量</v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
               <v-list-item
-                v-if="selected.MonitorLen > 0"
+                v-if="selected.MonitorsLen > 0"
                 @click="openProcChart"
               >
                 <v-list-item-icon>
@@ -380,8 +383,6 @@ export default {
         '{yyyy}/{MM}/{dd} {HH}:{mm}'
       )
       typeMap[s.Type] = s.Total
-      s.MonitorLen = s.Monitors ? s.Monitors.length : 0
-      s.StatsLen = s.Stats ? s.Stats.length : 0
     })
     this.sensorTypeList = []
     Object.keys(typeMap).forEach((k) => {
@@ -428,28 +429,52 @@ export default {
       this.selected = item
       this.infoDialog = true
     },
-    openStatsChart() {
+    async openStatsChart() {
+      const r = await this.$axios.$get(
+        '/api/report/sensor/stats/' + this.selected.ID
+      )
+      if (!r) {
+        return
+      }
       this.statsChartDialog = true
       this.$nextTick(() => {
-        this.$showSensorStatsChart('statsChart', this.selected.Stats)
+        this.$showSensorStatsChart('statsChart', r)
       })
     },
-    openCpuMemChart() {
+    async openCpuMemChart() {
+      const r = await this.$axios.$get(
+        '/api/report/sensor/monitors/' + this.selected.ID
+      )
+      if (!r) {
+        return
+      }
       this.cpuMemChartDialog = true
       this.$nextTick(() => {
-        this.$showSensorCpuMemChart('cpuMemChart', this.selected.Monitors)
+        this.$showSensorCpuMemChart('cpuMemChart', r)
       })
     },
-    openNetChart() {
+    async openNetChart() {
+      const r = await this.$axios.$get(
+        '/api/report/sensor/monitors/' + this.selected.ID
+      )
+      if (!r) {
+        return
+      }
       this.netChartDialog = true
       this.$nextTick(() => {
-        this.$showSensorNetChart('netChart', this.selected.Monitors)
+        this.$showSensorNetChart('netChart', r)
       })
     },
-    openProcChart() {
+    async openProcChart() {
+      const r = await this.$axios.$get(
+        '/api/report/sensor/monitors/' + this.selected.ID
+      )
+      if (!r) {
+        return
+      }
       this.procChartDialog = true
       this.$nextTick(() => {
-        this.$showSensorProcChart('procChart', this.selected.Monitors)
+        this.$showSensorProcChart('procChart', r)
       })
     },
     showTree() {
@@ -474,7 +499,7 @@ export default {
           回数: e.Total,
           送信数: e.Send,
           統計履歴数: e.StatsLen,
-          リソースモニタ数: e.MonitorLen,
+          リソースモニタ数: e.MonitorsLen,
           初回日時: e.First,
           最終日時: e.Last,
         })

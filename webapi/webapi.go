@@ -188,6 +188,8 @@ func setup(p *WebAPI) {
 	r.DELETE("/report/cert/:id", deleteCert)
 	r.POST("/report/cert/reset", resetCert)
 	r.GET("/report/sensors", getSensors)
+	r.GET("/report/sensor/stats/:id", getSensorStats)
+	r.GET("/report/sensor/monitors/:id", getSensorMonitors)
 	r.POST("/report/sensor/:id", postSensor)
 	r.DELETE("/report/sensor/:id", deleteSensor)
 	r.GET("/report/WinEventIDs", getWinEventID)
