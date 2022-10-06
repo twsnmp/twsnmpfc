@@ -142,6 +142,10 @@ const mapMain = (p5) => {
         p5.fill('rgba(23,23,23,0.9)')
         p5.stroke(getStateColor(nodes[k].State))
         p5.rect(-24, -24, 48, 48)
+      } else {
+        p5.fill('rgba(23,23,23,0.9)')
+        p5.stroke('rgba(23,23,23,0.9)')
+        p5.rect(-12, -12, 24, 24)
       }
       p5.textFont('Material Design Icons')
       p5.textSize(32)
