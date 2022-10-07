@@ -264,9 +264,10 @@ func makeServer(p *WebAPI) *http.Server {
 	}
 	sv.Addr = fmt.Sprintf(":%s", p.Port)
 	if !p.UseTLS {
+		log.Println("not tls")
 		return sv
 	}
-	if cert, err := getServerCert(p); err != nil {
+	if cert, err := getServerCert(p); err == nil {
 		sv.TLSConfig = &tls.Config{
 			Certificates: []tls.Certificate{cert},
 			CipherSuites: []uint16{
@@ -277,6 +278,8 @@ func makeServer(p *WebAPI) *http.Server {
 			PreferServerCipherSuites: true,
 			InsecureSkipVerify:       true,
 		}
+	} else {
+		log.Printf("getServerCert err=%v", err)
 	}
 	return sv
 }
@@ -292,6 +295,7 @@ func getServerCert(p *WebAPI) (tls.Certificate, error) {
 			keyPem = []byte(security.GetRawKeyPem(string(keyPem), p.Password))
 			cert, err := tls.X509KeyPair(certPem, keyPem)
 			if err == nil {
+				log.Println("use old cert")
 				return cert, nil
 			}
 		}
@@ -312,6 +316,7 @@ func getServerCert(p *WebAPI) (tls.Certificate, error) {
 	if err := ioutil.WriteFile(cpath, certPem, 0600); err != nil {
 		return cert, err
 	}
+	log.Println("new cert")
 	return cert, nil
 }
 
