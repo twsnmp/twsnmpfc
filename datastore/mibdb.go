@@ -81,8 +81,13 @@ func loadExtMIB(path string) bool {
 	}
 	module, err := parser.Parse(bytes.NewReader(asn1))
 	if err != nil || module == nil {
-		log.Println(err)
-		return false
+		log.Printf("loadExtMIB err=%v", err)
+		asn1 = rfc2mib(asn1)
+		module, err = parser.Parse(bytes.NewReader(asn1))
+		if err != nil || module == nil {
+			log.Printf("try rfc2mib loadExtMIB err=%v", err)
+			return false
+		}
 	}
 	if module.Body.Identity != nil {
 		name := module.Body.Identity.Name.String()
@@ -206,4 +211,70 @@ func makeMibTreeList() {
 	if mibTreeRoot != nil {
 		MIBTree = append(MIBTree, mibTreeRoot.Children...)
 	}
+}
+
+func rfc2mib(b []byte) []byte {
+	// Remove all carriage returns from the input data
+	rp := strings.NewReplacer("\r", "")
+	all := rp.Replace(string(b))
+
+	// Extract headers/footers from the document
+	regPageBreak := regexp.MustCompile(`[^\n]*\n+\f\n+[^\n]*`)
+	all = regPageBreak.ReplaceAllString(all, "\n\n")
+
+	// Replace all occurances of 3 or more newlines with two newlines
+	// (ie., at most one blank line between paragraphs/sections/etc.)
+	regOver3nl := regexp.MustCompile(`\n{3,}`)
+	all = regOver3nl.ReplaceAllString(all, "\n\n")
+
+	regMODULEStart := regexp.MustCompile(`\s*([A-Z]+[-A-Za-z0-9]+)+\s+DEFINITIONS\s+\w*\s*::=\s+BEGIN\s*`)
+	regMACROStart := regexp.MustCompile(`\s*([A-Z]+[-A-Za-z0-9]+)+\s+MACRO\s+::=\s+BEGIN\s*`)
+	regEnd := regexp.MustCompile(`\s*END\s*`)
+	regComment := regexp.MustCompile(`\s*(--\s+.*)$`)
+	lines := strings.Split(all, "\n")
+	depth := 0
+	quoted := false
+	mibLines := []string{}
+	for _, l := range lines {
+		if depth == 0 {
+			if regMODULEStart.MatchString(l) {
+				mibLines = append(mibLines, l)
+				depth = 1
+			}
+			continue
+		}
+		mibLines = append(mibLines, l)
+		if quoted {
+			a := strings.Split(l, `"`)
+			if len(a) == 1 {
+				continue
+			}
+			if len(a)%2 == 0 {
+				quoted = false
+			}
+			continue
+		} else {
+			a := strings.Split(l, `"`)
+			if len(a) == 2 {
+				quoted = true
+				continue
+			}
+			if len(a) != 1 {
+				continue
+			}
+		}
+		// Remove Comment
+		l = regComment.ReplaceAllString(l, "")
+		if regMACROStart.MatchString(l) {
+			depth++
+			continue
+		}
+		if regEnd.MatchString(l) {
+			depth--
+			if depth == 0 {
+				return []byte(strings.Join(mibLines, "\n") + "\n")
+			}
+		}
+	}
+	return []byte("")
 }
