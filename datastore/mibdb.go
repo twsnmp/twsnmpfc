@@ -17,13 +17,27 @@ import (
 	gomibdb "github.com/twsnmp/go-mibdb"
 )
 
+type MIBInfo struct {
+	OID         string
+	Status      string
+	Type        string
+	Enum        string
+	Defval      string
+	Units       string
+	Index       string
+	Description string
+}
+
 type MIBTreeEnt struct {
-	OID      string        `json:"oid"`
-	Name     string        `json:"name"`
+	OID      string `json:"oid"`
+	Name     string `json:"name"`
+	MIBInfo  *MIBInfo
 	Children []*MIBTreeEnt `json:"children"`
 }
 
 var MIBTree = []*MIBTreeEnt{}
+
+var MIBInfoMap = make(map[string]MIBInfo)
 
 func loadMIBDB(f io.ReadCloser) {
 	if f == nil {
@@ -65,6 +79,7 @@ func loadExtMIBs(root string) {
 			log.Printf("skip error mib file=%s", path)
 		}
 	}
+	checkMIBInfoMap()
 }
 
 func loadExtMIB(path string) bool {
@@ -103,6 +118,7 @@ func loadExtMIB(path string) bool {
 		name := n.Name.String()
 		mapNameToOID[name] = getOid(n.Oid)
 		nameList = append(nameList, name)
+		setMIBInfo(mapNameToOID[name], &n)
 	}
 	for _, name := range nameList {
 		oid, ok := mapNameToOID[name]
@@ -149,6 +165,74 @@ func getOid(oid *parser.Oid) string {
 	return ret
 }
 
+func setMIBInfo(oid string, n *parser.Node) {
+	if n == nil {
+		return
+	}
+	if n.NotificationType != nil {
+		MIBInfoMap[oid] = MIBInfo{
+			OID:         oid,
+			Status:      n.NotificationType.Status.ToSmi().String(),
+			Type:        "Notification",
+			Description: n.NotificationType.Description,
+		}
+		return
+	}
+	if n.TrapType != nil {
+		MIBInfoMap[oid] = MIBInfo{
+			OID:         oid,
+			Status:      "current",
+			Type:        "Notification",
+			Description: n.TrapType.Description,
+		}
+	}
+	if n.ObjectType == nil || n.ObjectType.Syntax.Type == nil {
+		return
+	}
+	enum := []string{}
+	for _, e := range n.ObjectType.Syntax.Type.Enum {
+		enum = append(enum, fmt.Sprintf("%s:%s ", e.Value, e.Name))
+	}
+	defval := ""
+	if n.ObjectType.Defval != nil {
+		defval = *n.ObjectType.Defval
+	}
+	index := []string{}
+	for _, i := range n.ObjectType.Index {
+		index = append(index, i.Name.String())
+	}
+
+	MIBInfoMap[oid] = MIBInfo{
+		OID:         oid,
+		Status:      n.ObjectType.Status.ToSmi().String(),
+		Type:        n.ObjectType.Syntax.Type.Name.String(),
+		Enum:        strings.Join(enum, ","),
+		Defval:      defval,
+		Units:       n.ObjectType.Units,
+		Index:       strings.Join(index, ","),
+		Description: n.ObjectType.Description,
+	}
+}
+
+func checkMIBInfoMap() {
+	delList := []string{}
+	addList := []MIBInfo{}
+	for oid, info := range MIBInfoMap {
+		noid := MIBDB.NameToOID(oid)
+		if noid != oid {
+			delList = append(delList, oid)
+			info.OID = noid
+			addList = append(addList, info)
+		}
+	}
+	for _, d := range delList {
+		delete(MIBInfoMap, d)
+	}
+	for _, a := range addList {
+		MIBInfoMap[a.OID] = a
+	}
+}
+
 var (
 	mibTreeMAP  = map[string]*MIBTreeEnt{}
 	mibTreeRoot *MIBTreeEnt
@@ -156,6 +240,10 @@ var (
 
 func addToMibTree(oid, name, poid string) {
 	n := &MIBTreeEnt{Name: name, OID: oid, Children: []*MIBTreeEnt{}}
+	if i, ok := MIBInfoMap[oid]; ok {
+		n.MIBInfo = &i
+		log.Printf("addMinTree MIBInfo=%v", n.MIBInfo)
+	}
 	if poid == "" {
 		mibTreeRoot = n
 	} else {

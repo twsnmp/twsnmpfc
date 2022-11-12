@@ -95,8 +95,8 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="mibTreeDialog" persistent width="600px">
-      <v-card max-height="90%">
+    <v-dialog v-model="mibTreeDialog" persistent width="800px">
+      <v-card max-height="95%">
         <v-card-title> MIBツリー </v-card-title>
         <v-card-text>
           <v-text-field
@@ -107,7 +107,7 @@
             v-model="searchMIBTree"
             label="オブジェクト名の検索"
           ></v-text-field>
-          <div style="height: 300px; overflow: auto">
+          <div style="height: 350px; overflow: auto">
             <v-treeview
               :items="mibtree"
               item-key="oid"
@@ -116,7 +116,28 @@
               activatable
               dense
               @update:active="selectMIB"
-            ></v-treeview>
+            >
+              <template #prepend="{ item, open }">
+                <v-icon v-if="item.children.length > 0">
+                  {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
+                </v-icon>
+                <v-icon v-else :color="getIconColor(item.MIBInfo)">
+                  {{ getMIBIcon(item.MIBInfo) }}
+                </v-icon>
+              </template>
+              <template #label="{ item }">
+                {{
+                  item.MIBInfo
+                    ? `${item.name}(${item.oid}: ${item.MIBInfo.Type} )`
+                    : `${item.name}(${item.oid})`
+                }}
+              </template>
+            </v-treeview>
+          </div>
+          <div style="height: 160px; overflow: auto">
+            <pre style="margin: 10px; background-color: #333">{{
+              mibInfoText
+            }}</pre>
           </div>
         </v-card-text>
         <v-card-actions>
@@ -171,6 +192,7 @@ export default {
       options: {},
       tableMode: false,
       exportHeader: '',
+      mibInfoText: '',
     }
   },
   async fetch() {
@@ -332,6 +354,22 @@ export default {
     findMIB(oid, list) {
       for (let i = 0; i < list.length; i++) {
         if (list[i].oid === oid) {
+          this.mibInfoText = ''
+          if (list[i].MIBInfo) {
+            this.mibInfoText += `OID  : ${list[i].MIBInfo.OID}\n`
+            this.mibInfoText += `Stats: ${list[i].MIBInfo.Status}\n`
+            this.mibInfoText += `Type : ${list[i].MIBInfo.Type}\n`
+            this.mibInfoText += list[i].MIBInfo.Units
+              ? `Units : ${list[i].MIBInfo.Units}\n`
+              : ''
+            this.mibInfoText += list[i].MIBInfo.Index
+              ? `Index : ${list[i].MIBInfo.Index}\n`
+              : ''
+            this.mibInfoText += list[i].MIBInfo.Defval
+              ? `DefVal : ${list[i].MIBInfo.Defval}\n`
+              : ''
+            this.mibInfoText += `Description :\n${list[i].MIBInfo.Description}\n`
+          }
           return list[i].name
         }
         if (list[i].children) {
@@ -369,6 +407,42 @@ export default {
         }
       })
       return exports
+    },
+    getMIBIcon(mibInfo) {
+      if (mibInfo) {
+        if (mibInfo.Type.startsWith('Counter')) {
+          return 'mdi-counter'
+        }
+        if (mibInfo.Type.startsWith('ObjectIdent')) {
+          return 'mdi-file-tree'
+        }
+        if (mibInfo.Type.startsWith('Time')) {
+          return 'mdi-clock'
+        }
+        if (mibInfo.Type.startsWith('Int')) {
+          return 'mdi-counter'
+        }
+        if (mibInfo.Type.includes('String')) {
+          return 'mdi-code-string'
+        }
+        if (mibInfo.Type.startsWith('Gau')) {
+          return 'mdi-speedometer'
+        }
+        if (
+          mibInfo.Type.startsWith('Trap') ||
+          mibInfo.Type.startsWith('Noti')
+        ) {
+          return 'mdi-alert-circle'
+        }
+        return 'mdi-information'
+      }
+      return 'mdi-folder'
+    },
+    getIconColor(mibInfo) {
+      if (mibInfo && mibInfo.Type.startsWith('Noti')) {
+        return 'red'
+      }
+      return ''
     },
   },
 }
