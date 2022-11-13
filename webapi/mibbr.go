@@ -32,6 +32,7 @@ type mibGetReqWebAPI struct {
 	NodeID string
 	Name   string
 	OID    string
+	Raw    bool
 }
 
 type mibEnt struct {
@@ -141,23 +142,37 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 			value = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
 		case gosnmp.TimeTicks:
 			t := gosnmp.ToBigInt(variable.Value).Uint64()
-			if t > (24 * 3600 * 100) {
-				d := t / (24 * 3600 * 100)
-				t -= d * (24 * 3600 * 100)
-				value = fmt.Sprintf("%d(%d days, %v)", t, d, time.Duration(t*10*uint64(time.Millisecond)))
+			if p.Raw {
+				value = fmt.Sprintf("%d", t)
 			} else {
-				value = fmt.Sprintf("%d(%v)", t, time.Duration(t*10*uint64(time.Millisecond)))
+				if t > (24 * 3600 * 100) {
+					d := t / (24 * 3600 * 100)
+					t -= d * (24 * 3600 * 100)
+					value = fmt.Sprintf("%d(%d days, %v)", t, d, time.Duration(t*10*uint64(time.Millisecond)))
+				} else {
+					value = fmt.Sprintf("%d(%v)", t, time.Duration(t*10*uint64(time.Millisecond)))
+				}
 			}
 		default:
 			v := int(gosnmp.ToBigInt(variable.Value).Uint64())
-			vname := ""
-			mi := datastore.FindMIBInfo(name)
-			if mi != nil && mi.Enum != "" {
-				if vn, ok := mi.EnumMap[v]; ok {
-					vname = "(" + vn + ")"
+			if p.Raw {
+				value = fmt.Sprintf("%d", v)
+			} else {
+				apend := ""
+				mi := datastore.FindMIBInfo(name)
+				if mi != nil {
+					if mi.Enum != "" {
+						if vn, ok := mi.EnumMap[v]; ok {
+							apend = "(" + vn + ")"
+						}
+					} else {
+						if mi.Units != "" {
+							apend = " " + mi.Units
+						}
+					}
 				}
+				value = fmt.Sprintf("%d%s", gosnmp.ToBigInt(variable.Value).Uint64(), apend)
 			}
-			value = fmt.Sprintf("%d%s", gosnmp.ToBigInt(variable.Value).Uint64(), vname)
 		}
 		ret = append(ret, &mibEnt{
 			Name:  name,

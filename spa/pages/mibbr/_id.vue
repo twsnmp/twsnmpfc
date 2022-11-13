@@ -55,6 +55,7 @@
         </template>
       </v-data-table>
       <v-card-actions>
+        <v-switch v-model="mibget.Raw" label="生データ"></v-switch>
         <v-spacer></v-spacer>
         <v-btn color="info" dark @click="mibTreeDialog = true">
           <v-icon>mdi-file-tree</v-icon>
@@ -172,6 +173,7 @@ export default {
         NodeID: '',
         Name: '',
         OID: '',
+        Raw: false,
       },
       search: '',
       headers: [],
