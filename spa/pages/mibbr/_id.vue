@@ -211,6 +211,7 @@ export default {
     if (c && c.itemsPerPage) {
       Object.assign(this.conf, c)
       this.history = c.history.split(',')
+      this.history = this.history.filter((e) => e !== '')
     }
   },
   beforeDestroy() {
@@ -247,9 +248,8 @@ export default {
             this.showTable()
           }
           this.wait = false
-          if (!this.history.includes(this.mibget.Name)) {
-            this.history.push(this.mibget.Name)
-          }
+          this.history = this.history.filter((e) => e !== this.mibget.Name)
+          this.history.unshift(this.mibget.Name)
         })
         .catch((e) => {
           this.error = true
