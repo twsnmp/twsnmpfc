@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -26,6 +27,7 @@ type MIBInfo struct {
 	Units       string
 	Index       string
 	Description string
+	enumMap     map[int]string
 }
 
 type MIBTreeEnt struct {
@@ -39,7 +41,28 @@ var MIBTree = []*MIBTreeEnt{}
 
 var MIBInfoMap = make(map[string]MIBInfo)
 
-func loadMIBDB(f io.ReadCloser) {
+func loadMIBDB(fs http.FileSystem) {
+	// 名前とOIDだけの定義の読み込み（互換性）
+	if r, err := os.Open(filepath.Join(dspath, "mib.txt")); err == nil {
+		loadMIBDBNameOnly(r)
+	} else {
+		if r, err := fs.Open("/conf/mib.txt"); err == nil {
+			loadMIBDBNameOnly(r)
+		}
+	}
+	// 組み込みのMIB定義を読み込む
+	loadMIBsFromFS(fs)
+	// 拡張MIBの読み込み
+	loadExtMIBs(filepath.Join(dspath, "extmibs"))
+	// MIB情報をOIDで検索できるようにする
+	checkMIBInfoMap()
+	// MIB2の説明を翻訳版に入れ替え
+	setMIB2Descr(fs)
+	// MIBツリーを作成する
+	makeMibTreeList()
+}
+
+func loadMIBDBNameOnly(f io.ReadCloser) {
 	if f == nil {
 		return
 	}
@@ -56,6 +79,102 @@ func loadMIBDB(f io.ReadCloser) {
 	}
 }
 
+var mibs = `AGENTX-MIB.txt
+BRIDGE-MIB.txt
+DISMAN-EVENT-MIB.txt
+DISMAN-SCHEDULE-MIB.txt
+DISMAN-SCRIPT-MIB.txt
+EtherLike-MIB.txt
+HCNUM-TC.txt
+HOST-RESOURCES-MIB.txt
+HOST-RESOURCES-TYPES.txt
+IANA-ADDRESS-FAMILY-NUMBERS-MIB.txt
+IANA-LANGUAGE-MIB.txt
+IANA-RTPROTO-MIB.txt
+IANAifType-MIB.txt
+IF-INVERTED-STACK-MIB.txt
+IF-MIB.txt
+INET-ADDRESS-MIB.txt
+IP-FORWARD-MIB.txt
+IP-MIB.txt
+IPV6-FLOW-LABEL-MIB.txt
+IPV6-ICMP-MIB.txt
+IPV6-MIB.txt
+IPV6-TC.txt
+IPV6-TCP-MIB.txt
+IPV6-UDP-MIB.txt
+NET-SNMP-AGENT-MIB.txt
+NET-SNMP-EXAMPLES-MIB.txt
+NET-SNMP-EXTEND-MIB.txt
+NET-SNMP-MIB.txt
+NET-SNMP-PASS-MIB.txt
+NET-SNMP-TC.txt
+NET-SNMP-VACM-MIB.txt
+NOTIFICATION-LOG-MIB.txt
+RFC-1215.txt
+RFC1155-SMI.txt
+RFC1213-MIB.txt
+RMON-MIB.txt
+SCTP-MIB.txt
+SMUX-MIB.txt
+SNMP-COMMUNITY-MIB.txt
+SNMP-FRAMEWORK-MIB.txt
+SNMP-MPD-MIB.txt
+SNMP-NOTIFICATION-MIB.txt
+SNMP-PROXY-MIB.txt
+SNMP-TARGET-MIB.txt
+SNMP-USER-BASED-SM-MIB.txt
+SNMP-USM-AES-MIB.txt
+SNMP-USM-DH-OBJECTS-MIB.txt
+SNMP-VIEW-BASED-ACM-MIB.txt
+SNMPv2-CONF.txt
+SNMPv2-MIB.txt
+SNMPv2-SMI.txt
+SNMPv2-TC.txt
+SNMPv2-TM.txt
+TCP-MIB.txt
+TRANSPORT-ADDRESS-MIB.txt
+TUNNEL-MIB.txt
+UCD-DEMO-MIB.txt
+UCD-DISKIO-MIB.txt
+UCD-DLMOD-MIB.txt
+UCD-IPFWACC-MIB.txt
+UCD-SNMP-MIB.txt
+UDP-MIB.txt`
+
+func loadMIBsFromFS(fs http.FileSystem) {
+	skipList := []string{}
+	for _, m := range strings.Split(mibs, "\n") {
+		m = strings.TrimSpace(m)
+		if m == "" {
+			continue
+		}
+		path := "/conf/mibs/" + m
+		log.Printf("load mib path=%s", path)
+		if r, err := fs.Open(path); err == nil {
+			if asn1, err := io.ReadAll(r); err == nil {
+				if !loadExtMIB(asn1) {
+					skipList = append(skipList, path)
+				}
+			} else {
+				log.Println(err)
+			}
+		} else {
+			log.Println(err)
+		}
+	}
+	for _, path := range skipList {
+		log.Printf("retry to load mib path=%s", path)
+		if r, err := fs.Open(path); err == nil {
+			if asn1, err := io.ReadAll(r); err == nil {
+				if loadExtMIB(asn1) {
+					log.Printf("skip error mib file=%s", path)
+				}
+			}
+		}
+	}
+}
+
 func loadExtMIBs(root string) {
 	if MIBDB == nil {
 		return
@@ -69,30 +188,31 @@ func loadExtMIBs(root string) {
 			if info.IsDir() {
 				return nil
 			}
-			if loadExtMIB(path) {
-				skipList = append(skipList, path)
+			log.Printf("load ext mib path=%s", path)
+			if asn1, err := os.ReadFile(path); err == nil {
+				if loadExtMIB(asn1) {
+					skipList = append(skipList, path)
+				}
+			} else {
+				log.Printf("load ext mib err=%v", err)
 			}
 			return nil
 		})
 	for _, path := range skipList {
-		if loadExtMIB(path) {
-			log.Printf("skip error mib file=%s", path)
+		log.Printf("retry to load ext mib path=%s", path)
+		if asn1, err := os.ReadFile(path); err == nil {
+			if loadExtMIB(asn1) {
+				log.Printf("skip error mib file=%s", path)
+			}
 		}
 	}
-	checkMIBInfoMap()
 }
 
-func loadExtMIB(path string) bool {
-	log.Printf("load ext mib path=%s", path)
+func loadExtMIB(asn1 []byte) bool {
 	var nameList []string
 	var mapNameToOID = make(map[string]string)
 	for _, name := range MIBDB.GetNameList() {
 		mapNameToOID[name] = MIBDB.NameToOID(name)
-	}
-	asn1, err := ioutil.ReadFile(path)
-	if err != nil {
-		log.Println(err)
-		return false
 	}
 	module, err := parser.Parse(bytes.NewReader(asn1))
 	if err != nil || module == nil {
@@ -190,8 +310,12 @@ func setMIBInfo(oid string, n *parser.Node) {
 		return
 	}
 	enum := []string{}
+	enumMap := make(map[int]string)
 	for _, e := range n.ObjectType.Syntax.Type.Enum {
 		enum = append(enum, fmt.Sprintf("%s:%s ", e.Value, e.Name))
+		if i, err := strconv.Atoi(e.Value); err == nil {
+			enumMap[i] = string(e.Name)
+		}
 	}
 	defval := ""
 	if n.ObjectType.Defval != nil {
@@ -211,9 +335,11 @@ func setMIBInfo(oid string, n *parser.Node) {
 		Units:       n.ObjectType.Units,
 		Index:       strings.Join(index, ","),
 		Description: n.ObjectType.Description,
+		enumMap:     enumMap,
 	}
 }
 
+// checkMIBInfoMap : MIB情報を数値のOIDをキーとしたMAPへ変換する
 func checkMIBInfoMap() {
 	delList := []string{}
 	addList := []MIBInfo{}
@@ -233,16 +359,55 @@ func checkMIBInfoMap() {
 	}
 }
 
+func setMIB2Descr(fs http.FileSystem) {
+	r, err := fs.Open("/conf/mib2descr.txt")
+	if err != nil {
+		return
+	}
+	rg := regexp.MustCompile(`^#(\S+)`)
+	all, err := io.ReadAll(r)
+	if err != nil {
+		return
+	}
+	name := ""
+	descr := []string{}
+	for _, l := range strings.Split(string(all), "\n") {
+		m := rg.FindStringSubmatch(l)
+		if len(m) > 1 {
+			if name != "" && len(descr) > 0 {
+				replaceMIBDescr(name, descr)
+			}
+			name = m[1]
+			descr = []string{}
+		} else {
+			strings.ReplaceAll(l, `"`, "")
+			descr = append(descr, l)
+		}
+	}
+	if name != "" && len(descr) > 0 {
+		replaceMIBDescr(name, descr)
+	}
+}
+
+func replaceMIBDescr(name string, descr []string) {
+	oid := MIBDB.NameToOID(name)
+	if e, ok := MIBInfoMap[oid]; ok {
+		log.Printf("set MIB Descr %s", name)
+		e.Description = strings.Join(descr, "\n")
+		MIBInfoMap[oid] = e
+	}
+}
+
 var (
 	mibTreeMAP  = map[string]*MIBTreeEnt{}
 	mibTreeRoot *MIBTreeEnt
 )
 
+// addToMibTree : MIBツリーへ追加
 func addToMibTree(oid, name, poid string) {
 	n := &MIBTreeEnt{Name: name, OID: oid, Children: []*MIBTreeEnt{}}
 	if i, ok := MIBInfoMap[oid]; ok {
 		n.MIBInfo = &i
-		log.Printf("addMinTree MIBInfo=%v", n.MIBInfo)
 	}
 	if poid == "" {
 		mibTreeRoot = n

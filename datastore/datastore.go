@@ -144,17 +144,7 @@ func loadDataFromFS(fs http.FileSystem) error {
 		return err
 	}
 	// MIBDB
-	if r, err := os.Open(filepath.Join(dspath, "mib.txt")); err == nil {
-		loadMIBDB(r)
-	} else {
-		if r, err := fs.Open("/conf/mib.txt"); err == nil {
-			loadMIBDB(r)
-		} else {
-			return err
-		}
-	}
-	// 拡張MIBの読み込み
-	loadExtMIBs(filepath.Join(dspath, "extmibs"))
+	loadMIBDB(fs)
 	// サービスの定義ファイル、ユーザー指定があれば利用、なければ内蔵
 	if r, err := os.Open(filepath.Join(dspath, "services.txt")); err == nil {
 		loadServiceMap(r)
@@ -165,7 +155,6 @@ func loadDataFromFS(fs http.FileSystem) error {
 			return err
 		}
 	}
-	makeMibTreeList()
 	// OUIの定義
 	if r, err := os.Open(filepath.Join(dspath, "mac-vendors-export.csv")); err == nil {
 		loadOUIMap(r)
