@@ -119,7 +119,10 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 			if mi != nil {
 				switch mi.Type {
 				case "PhysAddress", "OctetString":
-					a := getMIBStringVal(variable.Value)
+					a, ok := variable.Value.([]uint8)
+					if !ok {
+						a = []uint8(getMIBStringVal(variable.Value))
+					}
 					mac := []string{}
 					for _, m := range a {
 						mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))

@@ -213,6 +213,23 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 
 		case gosnmp.OctetString:
 			v := getMIBStringVal(variable.Value)
+			mi := datastore.FindMIBInfo(n)
+			if mi != nil {
+				switch mi.Type {
+				case "PhysAddress", "OctetString":
+					a, ok := variable.Value.([]uint8)
+					if !ok {
+						a = []uint8(getMIBStringVal(variable.Value))
+					}
+					mac := []string{}
+					for _, m := range a {
+						mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
+					}
+					v = strings.Join(mac, ":")
+				case "DisplayString":
+				default:
+				}
+			}
 			vm.Set(vn, v)
 			lr[n] = v
 		case gosnmp.ObjectIdentifier:
@@ -310,13 +327,23 @@ func doPollingSnmpCount(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		s := ""
 		switch variable.Type {
 		case gosnmp.OctetString:
-			if strings.Contains(datastore.MIBDB.OIDToName(variable.Name), "ifPhysAd") {
-				a := getMIBStringVal(variable.Value)
-				if len(a) > 5 {
-					s = fmt.Sprintf("%02X:%02X:%02X:%02X:%02X:%02X", a[0], a[1], a[2], a[3], a[4], a[5])
+			s = getMIBStringVal(variable.Value)
+			mi := datastore.FindMIBInfo(variable.Name)
+			if mi != nil {
+				switch mi.Type {
+				case "PhysAddress", "OctetString":
+					a, ok := variable.Value.([]uint8)
+					if !ok {
+						a = []uint8(getMIBStringVal(variable.Value))
+					}
+					mac := []string{}
+					for _, m := range a {
+						mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
+					}
+					s = strings.Join(mac, ":")
+				case "DisplayString":
+				default:
 				}
-			} else {
-				s = getMIBStringVal(variable.Value)
 			}
 		case gosnmp.ObjectIdentifier:
 			s = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
