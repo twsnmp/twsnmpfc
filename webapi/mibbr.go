@@ -2,6 +2,7 @@ package webapi
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -114,18 +115,46 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 		value := ""
 		switch variable.Type {
 		case gosnmp.OctetString:
-			if strings.Contains(datastore.MIBDB.OIDToName(variable.Name), "ifPhysAd") {
-				a := getMIBStringVal(variable.Value)
-				if len(a) > 5 {
-					value = fmt.Sprintf("%02X:%02X:%02X:%02X:%02X:%02X", a[0], a[1], a[2], a[3], a[4], a[5])
+			mi := datastore.FindMIBInfo(name)
+			if mi != nil {
+				switch mi.Type {
+				case "PhysAddress", "OctetString":
+					a := getMIBStringVal(variable.Value)
+					mac := []string{}
+					for _, m := range a {
+						mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
+					}
+					value = strings.Join(mac, ":")
+				case "DisplayString":
+					value = getMIBStringVal(variable.Value)
+				default:
+					log.Printf("%s=%s:%v:%v", name, mi.Type, variable.Type, variable.Value)
+					value = getMIBStringVal(variable.Value)
 				}
 			} else {
 				value = getMIBStringVal(variable.Value)
 			}
 		case gosnmp.ObjectIdentifier:
 			value = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
+		case gosnmp.TimeTicks:
+			t := gosnmp.ToBigInt(variable.Value).Uint64()
+			if t > (24 * 3600 * 100) {
+				d := t / (24 * 3600 * 100)
+				t -= d * (24 * 3600 * 100)
+				value = fmt.Sprintf("%d(%d days, %v)", t, d, time.Duration(t*10*uint64(time.Millisecond)))
+			} else {
+				value = fmt.Sprintf("%d(%v)", t, time.Duration(t*10*uint64(time.Millisecond)))
+			}
 		default:
-			value = fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Uint64())
+			v := int(gosnmp.ToBigInt(variable.Value).Uint64())
+			vname := ""
+			mi := datastore.FindMIBInfo(name)
+			if mi != nil && mi.Enum != "" {
+				if vn, ok := mi.EnumMap[v]; ok {
+					vname = "(" + vn + ")"
+				}
+			}
+			value = fmt.Sprintf("%d%s", gosnmp.ToBigInt(variable.Value).Uint64(), vname)
 		}
 		ret = append(ret, &mibEnt{
 			Name:  name,

@@ -27,7 +27,7 @@ type MIBInfo struct {
 	Units       string
 	Index       string
 	Description string
-	enumMap     map[int]string
+	EnumMap     map[int]string
 }
 
 type MIBTreeEnt struct {
@@ -40,6 +40,18 @@ type MIBTreeEnt struct {
 var MIBTree = []*MIBTreeEnt{}
 
 var MIBInfoMap = make(map[string]MIBInfo)
+
+func FindMIBInfo(name string) *MIBInfo {
+	a := strings.SplitN(name, ".", 2)
+	if len(a) == 2 {
+		name = a[0]
+	}
+	oid := MIBDB.NameToOID(name)
+	if i, ok := MIBInfoMap[oid]; ok {
+		return &i
+	}
+	return nil
+}
 
 func loadMIBDB(fs http.FileSystem) {
 	// 名前とOIDだけの定義の読み込み（互換性）
@@ -335,7 +347,7 @@ func setMIBInfo(oid string, n *parser.Node) {
 		Units:       n.ObjectType.Units,
 		Index:       strings.Join(index, ","),
 		Description: n.ObjectType.Description,
-		enumMap:     enumMap,
+		EnumMap:     enumMap,
 	}
 }
 
@@ -392,7 +404,6 @@ func setMIB2Descr(fs http.FileSystem) {
 func replaceMIBDescr(name string, descr []string) {
 	oid := MIBDB.NameToOID(name)
 	if e, ok := MIBInfoMap[oid]; ok {
-		log.Printf("set MIB Descr %s", name)
 		e.Description = strings.Join(descr, "\n")
 		MIBInfoMap[oid] = e
 	}
