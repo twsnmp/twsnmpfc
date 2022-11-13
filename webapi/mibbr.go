@@ -129,6 +129,32 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 						mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
 					}
 					value = strings.Join(mac, ":")
+				case "BITS":
+					a, ok := variable.Value.([]uint8)
+					if !ok {
+						a = []uint8(getMIBStringVal(variable.Value))
+					}
+					hex := []string{}
+					ap := []string{}
+					bit := 0
+					for _, m := range a {
+						hex = append(hex, fmt.Sprintf("%02X", m&0x00ff))
+						if mi.Enum != "" {
+							for i := 0; i < 8; i++ {
+								if (m & 0x80) == 0x80 {
+									if n, ok := mi.EnumMap[bit]; ok {
+										ap = append(ap, fmt.Sprintf("%s(%d)", n, bit))
+									}
+								}
+								m <<= 1
+								bit++
+							}
+						}
+					}
+					value = strings.Join(hex, " ")
+					if len(ap) > 0 {
+						value += " " + strings.Join(ap, " ")
+					}
 				case "DisplayString":
 					value = getMIBStringVal(variable.Value)
 				default:
