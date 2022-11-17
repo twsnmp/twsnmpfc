@@ -54,18 +54,17 @@
           </tr>
         </template>
       </v-data-table>
+      <v-snackbar v-model="copyError" absolute centered color="error">
+        コピーできません
+      </v-snackbar>
+      <v-snackbar v-model="copyDone" absolute centered color="primary">
+        コピーしました
+      </v-snackbar>
       <v-card-actions>
         <v-switch v-model="mibget.Raw" label="生データ"></v-switch>
         <v-spacer></v-spacer>
-        <v-btn color="info" dark @click="mibTreeDialog = true">
-          <v-icon>mdi-file-tree</v-icon>
-          MIBツリー
-        </v-btn>
-        <v-btn v-if="mibget.Name" color="primary" dark @click="doMIBGet">
-          <v-icon>mdi-file-find</v-icon>
-          取得
-        </v-btn>
         <download-excel
+          v-if="mibs.length > 0"
           :fetch="makeExports"
           type="csv"
           name="TWSNMP_FC_MIB.csv"
@@ -78,6 +77,7 @@
           </v-btn>
         </download-excel>
         <download-excel
+          v-if="mibs.length > 0"
           :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_MIB.xls"
@@ -90,6 +90,18 @@
             Excel
           </v-btn>
         </download-excel>
+        <v-btn v-if="mibs.length > 0" color="primary" dark @click="copyMIB">
+          <v-icon>mdi-copy</v-icon>
+          コピー
+        </v-btn>
+        <v-btn color="info" dark @click="mibTreeDialog = true">
+          <v-icon>mdi-file-tree</v-icon>
+          MIBツリー
+        </v-btn>
+        <v-btn v-if="mibget.Name" color="primary" dark @click="doMIBGet">
+          <v-icon>mdi-file-find</v-icon>
+          取得
+        </v-btn>
         <v-btn color="normal" dark @click="$router.go(-1)">
           <v-icon>mdi-arrow-left</v-icon>
           戻る
@@ -197,6 +209,8 @@ export default {
       tableMode: false,
       exportHeader: '',
       mibInfoText: '',
+      copyError: false,
+      copyDone: false,
     }
   },
   async fetch() {
@@ -450,6 +464,54 @@ export default {
         return 'red'
       }
       return ''
+    },
+    copyMIB() {
+      if (!navigator.clipboard) {
+        this.copyError = true
+        return
+      }
+      const list = []
+      const l = []
+      if (this.tableMode) {
+        this.headers.forEach((h) => {
+          l.push(h.value)
+        })
+        list.push(l.join('\t'))
+      } else {
+        list.push('インデックス,名前,値')
+      }
+      this.items.forEach((e) => {
+        if (this.tableMode) {
+          if (this.conf.search) {
+            const s = Object.values(e).join(' ')
+            if (!s.includes(this.conf.search)) {
+              return
+            }
+          }
+          l.length = 0
+          this.headers.forEach((h) => {
+            l.push(e[h.value])
+          })
+          list.push(l.join('\t'))
+        } else {
+          if (this.conf.name && !e.Name.includes(this.conf.name)) {
+            return
+          }
+          if (this.conf.value && !e.Value.includes(this.conf.value)) {
+            return
+          }
+          list.push([e.Index, e.Name, e.Value].join('\t'))
+        }
+      })
+      const s = list.join('\n')
+      navigator.clipboard.writeText(s).then(
+        () => {
+          this.copyDone = true
+        },
+        () => {
+          this.copyError = true
+        }
+      )
     },
   },
 }
