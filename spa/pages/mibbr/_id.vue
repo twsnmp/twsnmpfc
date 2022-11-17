@@ -116,6 +116,7 @@
               hoverable
               activatable
               dense
+              :open.sync="conf.mibTreeOpen"
               @update:active="selectMIB"
             >
               <template #prepend="{ item, open }">
@@ -188,6 +189,7 @@ export default {
         value: '',
         search: '',
         history: '',
+        mibTreeOpen: [],
         itemsPerPage: 15,
       },
       history: [],
@@ -212,6 +214,9 @@ export default {
       Object.assign(this.conf, c)
       this.history = c.history.split(',')
       this.history = this.history.filter((e) => e !== '')
+      if (!this.conf.mibTreeOpen) {
+        this.conf.mibTreeOpen = []
+      }
     }
   },
   beforeDestroy() {
