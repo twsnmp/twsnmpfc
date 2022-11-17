@@ -52,6 +52,7 @@ export default {
     '@/plugins/echarts/sdrpower.js',
     '@/plugins/echarts/winlog.js',
     '@/plugins/echarts/hostResource.js',
+    '@/plugins/echarts/rmon.js',
     '@/plugins/brain.js',
     '@/plugins/vpanel.js',
   ],

@@ -139,7 +139,7 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 					bit := 0
 					for _, m := range a {
 						hex = append(hex, fmt.Sprintf("%02X", m&0x00ff))
-						if mi.Enum != "" {
+						if !p.Raw && mi.Enum != "" {
 							for i := 0; i < 8; i++ {
 								if (m & 0x80) == 0x80 {
 									if n, ok := mi.EnumMap[bit]; ok {

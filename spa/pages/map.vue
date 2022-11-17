@@ -355,6 +355,14 @@
                   <v-list-item-title>ホストリソース</v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
+              <v-list-item @click="showRMONPage()">
+                <v-list-item-icon>
+                  <v-icon>mdi-minus-network</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>RMON管理</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
               <v-list-item @click="showTcpUdpPortPage()">
                 <v-list-item-icon>
                   <v-icon>mdi-power-socket-jp</v-icon>
@@ -584,6 +592,14 @@
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>ホストリソース</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="showRMONPage()">
+          <v-list-item-icon>
+            <v-icon>mdi-minus-network</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>RMON管理</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-item @click="showTcpUdpPortPage()">
@@ -909,6 +925,9 @@ export default {
     },
     showHostResourcePage() {
       this.$router.push({ path: '/node/hostResource/' + this.editNode.ID })
+    },
+    showRMONPage() {
+      this.$router.push({ path: '/node/rmon/' + this.editNode.ID })
     },
     showTcpUdpPortPage() {
       this.$router.push({ path: '/node/port/' + this.editNode.ID })

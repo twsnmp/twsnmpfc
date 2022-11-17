@@ -250,3 +250,21 @@ func getPortList(c echo.Context) error {
 	r.TcpPorts, r.UdpPorts = backend.GetPortList(r.Node)
 	return c.JSON(http.StatusOK, r)
 }
+
+type rmonWebAPI struct {
+	Node *datastore.NodeEnt
+	RMON *backend.RMONEnt
+}
+
+func getRMON(c echo.Context) error {
+	id := c.Param("id")
+	t := c.Param("type")
+	ret := new(rmonWebAPI)
+	ret.Node = datastore.GetNode(id)
+	if ret.Node == nil {
+		log.Printf("rmon node not found id=%s", id)
+		return echo.ErrBadRequest
+	}
+	ret.RMON = backend.GetRMON(ret.Node, t)
+	return c.JSON(http.StatusOK, ret)
+}
