@@ -56,11 +56,52 @@
               <template #[`item.etherStatsPkts1024to1518Octets`]="{ item }">
                 {{ formatCount(item.etherStatsPkts1024to1518Octets) }}
               </template>
-              <template #[`item.etherStatsError`]="{ item }">
+              <template #[`item.etherStatsErrors`]="{ item }">
                 <span
-                  :class="item.etherStatsError > 0 ? 'red--text' : 'gray--text'"
+                  :class="
+                    item.etherStatsErrors > 0 ? 'red--text' : 'gray--text'
+                  "
                 >
-                  {{ formatCount(item.etherStatsError) }}
+                  {{ formatCount(item.etherStatsErrors) }}
+                </span>
+              </template>
+            </v-data-table>
+          </v-tab-item>
+          <v-tab-item key="history">
+            <v-data-table
+              :headers="historyHeaders"
+              :items="history"
+              sort-by="Index"
+              sort-asc
+              dense
+              :loading="$fetchState.pending"
+              loading-text="Loading... Please wait"
+            >
+              <template #[`item.etherHistoryOctets`]="{ item }">
+                {{ formatBytes(item.etherHistoryOctets) }}
+              </template>
+              <template #[`item.etherHistoryDropEvents`]="{ item }">
+                {{ formatCount(item.etherHistoryDropEvents) }}
+              </template>
+              <template #[`item.etherHistoryPkts`]="{ item }">
+                {{ formatCount(item.etherHistoryPkts) }}
+              </template>
+              <template #[`item.etherHistoryBroadcastPkts`]="{ item }">
+                {{ formatCount(item.etherHistoryBroadcastPkts) }}
+              </template>
+              <template #[`item.etherHistoryMulticastPkts`]="{ item }">
+                {{ formatCount(item.etherHistoryMulticastPkts) }}
+              </template>
+              <template #[`item.etherStatsPkts64Octets`]="{ item }">
+                {{ formatCount(item.etherStatsPkts64Octets) }}
+              </template>
+              <template #[`item.etherHistoryErrors`]="{ item }">
+                <span
+                  :class="
+                    item.etherHistoryErrors > 0 ? 'red--text' : 'gray--text'
+                  "
+                >
+                  {{ formatCount(item.etherHistoryErrors) }}
                 </span>
               </template>
             </v-data-table>
@@ -157,7 +198,7 @@ export default {
         { text: 'パケット数', value: 'etherStatsPkts', width: '9%' },
         { text: 'BCast', value: 'etherStatsBroadcastPkts', width: '7%' },
         { text: 'MCast', value: 'etherStatsMulticastPkts', width: '7%' },
-        { text: 'エラー', value: 'etherStatsError', width: '7%' },
+        { text: 'エラー', value: 'etherStatsErrors', width: '7%' },
         { text: '=64', value: 'etherStatsPkts64Octets', width: '7%' },
         { text: '65-127', value: 'etherStatsPkts65to127Octets', width: '7%' },
         { text: '128-255', value: 'etherStatsPkts128to255Octets', width: '7%' },
@@ -172,6 +213,18 @@ export default {
           value: 'etherStatsPkts1024to1518Octets',
           width: '7%',
         },
+      ],
+      history: [],
+      historyHeaders: [
+        { text: 'Index', value: 'Index', width: '15%' },
+        { text: '開始時刻', value: 'etherHistoryIntervalStart', width: '15%' },
+        { text: 'ドロップ', value: 'etherHistoryDropEvents', width: '10%' },
+        { text: 'バイト数', value: 'etherHistoryOctets', width: '10%' },
+        { text: 'パケット数', value: 'etherHistoryPkts', width: '10%' },
+        { text: 'BCast', value: 'etherHistoryBroadcastPkts', width: '10%' },
+        { text: 'MCast', value: 'etherHistoryMulticastPkts', width: '10%' },
+        { text: 'エラー', value: 'etherHistoryErrors', width: '10%' },
+        { text: '帯域', value: 'etherHistoryUtilization', width: '10%' },
       ],
       editDialog: false,
       hasTh: false,
@@ -209,7 +262,8 @@ export default {
         this.setStatisticsData(r.RMON.MIBs)
         return
       case 1: // 'history',
-        break
+        this.setHistoryData(r.RMON.MIBs)
+        return
       case 2: // 'host',
         break
       case 3: // 'matrix',
@@ -231,7 +285,12 @@ export default {
   },
   methods: {
     changeTab(t) {
-      this.$fetch()
+      if (
+        (t === 0 && this.statistics.length < 1) ||
+        (t === 1 && this.history.length < 1)
+      ) {
+        this.$fetch()
+      }
     },
     setStatisticsData(mibs) {
       this.statistics = []
@@ -249,7 +308,7 @@ export default {
             (m.etherStatsHighCapacityPkts || m.etherStatsPkts || 0) * 1,
           etherStatsBroadcastPkts: (m.etherStatsBroadcastPkts || 0) * 1,
           etherStatsMulticastPkts: (m.etherStatsMulticastPkts || 0) * 1,
-          etherStatsError: error,
+          etherStatsErrors: error,
           etherStatsPkts64Octets:
             (m.etherStatsHighCapacityPkts64Octets ||
               m.etherStatsPkts64Octets ||
@@ -277,6 +336,31 @@ export default {
         })
       })
     },
+    setHistoryData(mibs) {
+      this.history = []
+      Object.keys(mibs).forEach((index) => {
+        if (!index.includes('.')) {
+          return
+        }
+        const m = mibs[index]
+        let error = (m.etherHistoryCRCAlignErrors || 0) * 1
+        error += (m.etherHistoryUndersizePkts || 0) * 1
+        error += (m.etherHistoryOversizePkts || 0) * 1
+        this.history.push({
+          Index: index,
+          etherHistoryIntervalStart: (m.etherHistoryIntervalStart || 0) * 1,
+          etherHistoryDropEvents: (m.etherHistoryDropEvents || 0) * 1,
+          etherHistoryOctets:
+            (m.etherHistoryHighCapacityOctets || m.etherHistoryOctets || 0) * 1,
+          etherHistoryPkts:
+            (m.etherHistoryHighCapacityPkts || m.etherHistoryPkts || 0) * 1,
+          etherHistoryBroadcastPkts: (m.etherHistoryBroadcastPkts || 0) * 1,
+          etherHistoryMulticastPkts: (m.etherHistoryMulticastPkts || 0) * 1,
+          etherHistoryErrors: error,
+          etherHistoryUtilization: (m.etherHistoryUtilization || 0) * 1,
+        })
+      })
+    },
     makeExports() {
       const exports = []
       switch (this.tab) {
@@ -298,6 +382,23 @@ export default {
               サイズ256_511: e.etherStatsPkts256to511Octets,
               サイズ512_1023: e.etherStatsPkts512to1023Octets,
               サイズ1024_1518: e.etherStatsPkts1024to1518Octets,
+            })
+          })
+          break
+        case 1:
+          this.exportTitle = this.node.Name + 'のRMON統計履歴'
+          this.exportSheet = 'RMON統計履歴'
+          this.statistics.forEach((e) => {
+            exports.push({
+              Index: e.Index,
+              開始時刻: e.etherHistoryIntervalStart,
+              ドロップ数: e.etherHistoryDropEvents,
+              バイト数: e.etherHistoryOctets,
+              パケット数: e.etherHistoryPkts,
+              ブロードキャスト: e.etherHistoryBroadcastPkts,
+              マルチキャスト: e.etherHistoryMulticastPkts,
+              エラー: e.etherHistoryErrors,
+              帯域: e.etherHistoryUtilization,
             })
           })
           break
