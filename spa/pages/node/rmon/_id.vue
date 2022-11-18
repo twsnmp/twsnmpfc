@@ -6,7 +6,7 @@
         <v-tabs v-model="tab" @change="changeTab">
           <v-tab key="statistics">統計</v-tab>
           <v-tab key="history">統計履歴</v-tab>
-          <v-tab key="host">ホストリスト</v-tab>
+          <v-tab key="hostTimeTable">ホストリスト</v-tab>
           <v-tab key="matrix">マトリックス</v-tab>
           <v-tab key="protocolDist">プロトコル別</v-tab>
           <v-tab key="addressMap">アドレスマップ</v-tab>
@@ -106,6 +106,45 @@
               </template>
             </v-data-table>
           </v-tab-item>
+          <v-tab-item key="hostTimeTable">
+            <v-data-table
+              :headers="hostsHeaders"
+              :items="hosts"
+              sort-by="hostTimeCreationOrder"
+              sort-asc
+              dense
+              :loading="$fetchState.pending"
+              loading-text="Loading... Please wait"
+            >
+              <template #[`item.hostTimeInOctets`]="{ item }">
+                {{ formatBytes(item.hostTimeInOctets) }}
+              </template>
+              <template #[`item.hostTimeOutOctets`]="{ item }">
+                {{ formatBytes(item.hostTimeOutOctets) }}
+              </template>
+              <template #[`item.hostTimeInPkts`]="{ item }">
+                {{ formatCount(item.hostTimeInPkts) }}
+              </template>
+              <template #[`item.hostTimeOutPkts`]="{ item }">
+                {{ formatCount(item.hostTimeOutPkts) }}
+              </template>
+              <template #[`item.hostTimeOutBroadcastPkts`]="{ item }">
+                {{ formatCount(item.hostTimeOutBroadcastPkts) }}
+              </template>
+              <template #[`item.hostTimeOutMulticastPkts`]="{ item }">
+                {{ formatCount(item.hostTimeOutMulticastPkts) }}
+              </template>
+              <template #[`item.hostTimeOutErrors`]="{ item }">
+                <span
+                  :class="
+                    item.hostTimeOutErrors > 0 ? 'red--text' : 'gray--text'
+                  "
+                >
+                  {{ formatCount(item.hostTimeOutErrors) }}
+                </span>
+              </template>
+            </v-data-table>
+          </v-tab-item>
         </v-tabs-items>
       </v-card-text>
       <v-card-actions>
@@ -181,7 +220,7 @@ export default {
       rmonTypes: [
         'statistics',
         'history',
-        'host',
+        'hostTimeTable',
         'matrix',
         'protocolDist',
         'addressMap',
@@ -226,6 +265,20 @@ export default {
         { text: 'エラー', value: 'etherHistoryErrors', width: '10%' },
         { text: '帯域', value: 'etherHistoryUtilization', width: '10%' },
       ],
+      hosts: [],
+      hostsHeaders: [
+        { text: '作成順', value: 'hostTimeCreationOrder', width: '8%' },
+        { text: '最終確認', value: 'hostTimeIndex', width: '8%' },
+        { text: 'MACアドレス', value: 'hostTimeAddress', width: '12%' },
+        { text: '受信パケット', value: 'hostTimeInPkts', width: '8%' },
+        { text: '受信バイト', value: 'hostTimeInOctets', width: '8%' },
+        { text: '送信パケット', value: 'hostTimeOutPkts', width: '8%' },
+        { text: '送信バイト', value: 'hostTimeOutOctets', width: '8%' },
+        { text: '送信エラー', value: 'hostTimeOutErrors', width: '8%' },
+        { text: 'BCast', value: 'hostTimeOutBroadcastPkts', width: '8%' },
+        { text: 'MCast', value: 'hostTimeOutMulticastPkts', width: '8%' },
+        { text: 'ベンダー', value: 'Vendor', width: '16%' },
+      ],
       editDialog: false,
       hasTh: false,
       addError: false,
@@ -264,8 +317,9 @@ export default {
       case 1: // 'history',
         this.setHistoryData(r.RMON.MIBs)
         return
-      case 2: // 'host',
-        break
+      case 2: // 'hosts',
+        this.setHostsData(r.RMON.MIBs)
+        return
       case 3: // 'matrix',
         break
       case 4: // 'protocolDist',
@@ -287,7 +341,8 @@ export default {
     changeTab(t) {
       if (
         (t === 0 && this.statistics.length < 1) ||
-        (t === 1 && this.history.length < 1)
+        (t === 1 && this.history.length < 1) ||
+        (t === 2 && this.hosts.length < 1)
       ) {
         this.$fetch()
       }
@@ -361,6 +416,28 @@ export default {
         })
       })
     },
+    setHostsData(mibs) {
+      this.hosts = []
+      Object.keys(mibs).forEach((index) => {
+        if (!index.includes('.')) {
+          return
+        }
+        const m = mibs[index]
+        this.hosts.push({
+          hostTimeCreationOrder: (m.hostTimeCreationOrder || 0) * 1,
+          hostTimeIndex: (m.hostTimeIndex || 0) * 1,
+          hostTimeAddress: m.hostTimeAddress || '',
+          Vendor: m.Vendor || '',
+          hostTimeInPkts: (m.hostTimeInPkts || 0) * 1,
+          hostTimeOutPkts: (m.hostTimeOutPkts || 0) * 1,
+          hostTimeInOctets: (m.hostTimeInOctets || 0) * 1,
+          hostTimeOutOctets: (m.hostTimeOutOctets || 0) * 1,
+          hostTimeOutErrors: (m.hostTimeOutErrors || 0) * 1,
+          hostTimeOutBroadcastPkts: (m.hostTimeOutBroadcastPkts || 0) * 1,
+          hostTimeOutMulticastPkts: (m.hostTimeOutMulticastPkts || 0) * 1,
+        })
+      })
+    },
     makeExports() {
       const exports = []
       switch (this.tab) {
@@ -399,6 +476,25 @@ export default {
               マルチキャスト: e.etherHistoryMulticastPkts,
               エラー: e.etherHistoryErrors,
               帯域: e.etherHistoryUtilization,
+            })
+          })
+          break
+        case 2:
+          this.exportTitle = this.node.Name + 'のRMONホストリスト'
+          this.exportSheet = 'RMONホストリスト'
+          this.statistics.forEach((e) => {
+            exports.push({
+              作成順: e.hostTimeCreationOrder,
+              最終確認: e.hostTimeIndex,
+              MACアドレス: e.hostTimeAddress,
+              受信パケット: e.hostTimeInPkts,
+              受信バイト: e.hostTimeInOctets,
+              送信パケット: e.hostTimeOutPkts,
+              送信バイト: e.hostTimeOutOctets,
+              送信エラー: e.hostTimeOutErrors,
+              BCast: e.hostTimeOutBroadcastPkts,
+              MCast: e.hostTimeOutMulticastPkts,
+              ベンダー: e.Vendor,
             })
           })
           break

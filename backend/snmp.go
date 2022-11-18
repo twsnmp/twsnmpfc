@@ -802,6 +802,7 @@ func GetRMON(n *datastore.NodeEnt, t string) *RMONEnt {
 		name := a[0]
 		index := a[1]
 		value := ""
+		vendor := ""
 		switch variable.Type {
 		case gosnmp.OctetString:
 			mi := datastore.FindMIBInfo(name)
@@ -817,6 +818,7 @@ func GetRMON(n *datastore.NodeEnt, t string) *RMONEnt {
 						mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
 					}
 					value = strings.Join(mac, ":")
+					vendor = datastore.FindVendor(value)
 				case "BITS":
 					a, ok := variable.Value.([]uint8)
 					if !ok {
@@ -852,6 +854,9 @@ func GetRMON(n *datastore.NodeEnt, t string) *RMONEnt {
 			ret.MIBs[index] = make(map[string]string)
 		}
 		ret.MIBs[index][name] = value
+		if vendor != "" {
+			ret.MIBs[index]["Vendor"] = vendor
+		}
 		return nil
 	})
 	return ret
