@@ -243,21 +243,37 @@ export default {
         this.statistics.push({
           Index: index,
           etherStatsDataSource: m.etherStatsDataSource || '',
-          etherStatsOctets: (m.etherStatsOctets || 0) * 1,
-          etherStatsPkts: (m.etherStatsPkts || 0) * 1,
+          etherStatsOctets:
+            (m.etherStatsHighCapacityOctets || m.etherStatsOctets || 0) * 1,
+          etherStatsPkts:
+            (m.etherStatsHighCapacityPkts || m.etherStatsPkts || 0) * 1,
           etherStatsBroadcastPkts: (m.etherStatsBroadcastPkts || 0) * 1,
           etherStatsMulticastPkts: (m.etherStatsMulticastPkts || 0) * 1,
           etherStatsError: error,
-          etherStatsPkts64Octets: (m.etherStatsPkts64Octets || 0) * 1,
-          etherStatsPkts65to127Octets: (m.etherStatsPkts65to127Octets || 0) * 1,
+          etherStatsPkts64Octets:
+            (m.etherStatsHighCapacityPkts64Octets ||
+              m.etherStatsPkts64Octets ||
+              0) * 1,
+          etherStatsPkts65to127Octets:
+            (m.etherStatsHighCapacityPkts65to127Octets ||
+              m.etherStatsPkts65to127Octets ||
+              0) * 1,
           etherStatsPkts128to255Octets:
-            (m.etherStatsPkts128to255Octets || 0) * 1,
+            (m.etherStatsHighCapacityPkts128to255Octets ||
+              m.etherStatsPkts128to255Octets ||
+              0) * 1,
           etherStatsPkts256to511Octets:
-            (m.etherStatsPkts256to511Octets || 0) * 1,
+            (m.etherStatsHighCapacityPkts256to511Octets ||
+              m.etherStatsPkts256to511Octets ||
+              0) * 1,
           etherStatsPkts512to1023Octets:
-            (m.etherStatsPkts512to1023Octets || 0) * 1,
+            (m.etherStatsHighCapacityPkts512to1023Octets ||
+              m.etherStatsPkts512to1023Octets ||
+              0) * 1,
           etherStatsPkts1024to1518Octets:
-            (m.etherStatsPkts1024to1518Octets || 0) * 1,
+            (m.etherStatsHighCapacityPkts1024to1518Octets ||
+              m.etherStatsPkts1024to1518Octets ||
+              0) * 1,
         })
       })
     },
