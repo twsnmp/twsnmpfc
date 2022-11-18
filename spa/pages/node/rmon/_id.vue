@@ -3,7 +3,7 @@
     <v-card min-width="1100px" width="100%">
       <v-card-title> RMON管理 - {{ node.Name }} </v-card-title>
       <v-card-text>
-        <v-tabs v-model="tab">
+        <v-tabs v-model="tab" @change="changeTab">
           <v-tab key="statistics">統計</v-tab>
           <v-tab key="history">統計履歴</v-tab>
           <v-tab key="host">ホストリスト</v-tab>
@@ -230,6 +230,9 @@ export default {
     console.log(r)
   },
   methods: {
+    changeTab(t) {
+      this.$fetch()
+    },
     setStatisticsData(mibs) {
       this.statistics = []
       Object.keys(mibs).forEach((index) => {
