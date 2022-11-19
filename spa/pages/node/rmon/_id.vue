@@ -9,7 +9,7 @@
           <v-tab key="hostTimeTable">ホストリスト</v-tab>
           <v-tab key="matrixSDTable">マトリックス</v-tab>
           <v-tab key="protocolDistStatsTable">プロトコル別</v-tab>
-          <v-tab key="addressMap">アドレスマップ</v-tab>
+          <v-tab key="addressMapTable">アドレスマップ</v-tab>
           <v-tab key="nlHost">IPホスト</v-tab>
           <v-tab key="nlMatrix">IPマトリックス</v-tab>
           <v-tab key="alHost">ALホスト</v-tab>
@@ -188,6 +188,23 @@
               </template>
             </v-data-table>
           </v-tab-item>
+          <v-tab-item key="addressMapTable">
+            <v-data-table
+              :headers="addressMapHeaders"
+              :items="addressMap"
+              sort-by="addressMapPhysicalAddress"
+              sort-asc
+              dense
+              :loading="$fetchState.pending"
+              loading-text="Loading... Please wait"
+            >
+              <template #[`item.Changed`]="{ item }">
+                <span :class="item.Changed != 0 ? 'red--text' : 'gray--text'">
+                  {{ item.Changed == 0 ? '' : item.Changed }}
+                </span>
+              </template>
+            </v-data-table>
+          </v-tab-item>
         </v-tabs-items>
       </v-card-text>
       <v-card-actions>
@@ -266,7 +283,7 @@ export default {
         'hostTimeTable',
         'matrixSDTable',
         'protocolDistStatsTable',
-        'addressMap',
+        'addressMapTable',
         'nlHost',
         'nlMatrix',
         'alHost',
@@ -332,9 +349,22 @@ export default {
       ],
       protocol: [],
       protocolHeaders: [
-        { text: 'プロトコル名', value: 'Protocol', width: '80%' },
-        { text: 'パケット', value: 'protocolDistStatsPkts', width: '10%' },
-        { text: 'バイト', value: 'protocolDistStatsOctets', width: '10%' },
+        { text: 'プロトコル名', value: 'Protocol', width: '60%' },
+        { text: 'パケット', value: 'protocolDistStatsPkts', width: '20%' },
+        { text: 'バイト', value: 'protocolDistStatsOctets', width: '20%' },
+      ],
+      addressMap: [],
+      addressMapHeaders: [
+        { text: '変化', value: 'Changed', width: '10%' },
+        { text: 'IPアドレス', value: 'addressMapNetworkAddress', width: '20%' },
+        {
+          text: 'MACアドレス',
+          value: 'addressMapPhysicalAddress',
+          width: '20%',
+        },
+        { text: 'ベンダー', value: 'Vendor', width: '30%' },
+        { text: '登録', value: 'addressMapTimeMark', width: '10%' },
+        { text: '最終変化', value: 'addressMapLastChange', width: '10%' },
       ],
       editDialog: false,
       hasTh: false,
@@ -383,8 +413,9 @@ export default {
       case 4: // 'protocolDistStatsTable',
         this.setProtocolData(r.RMON.MIBs, r.RMON.ProtocolDir)
         return
-      case 5: // 'addressMap',
-        break
+      case 5: // 'addressMapTable',
+        this.setAddressMapData(r.RMON.MIBs)
+        return
       case 6: // 'nlHost',
         break
       case 7: // 'nlMatrix',
@@ -403,7 +434,8 @@ export default {
         (t === 1 && this.history.length < 1) ||
         (t === 2 && this.hosts.length < 1) ||
         (t === 3 && this.matrix.length < 1) ||
-        (t === 4 && this.protocol.length < 1)
+        (t === 4 && this.protocol.length < 1) ||
+        (t === 5 && this.addressMap.length < 1)
       ) {
         this.$fetch()
       }
@@ -531,6 +563,26 @@ export default {
         })
       })
     },
+    setAddressMapData(mibs) {
+      this.addressMap = []
+      Object.keys(mibs).forEach((index) => {
+        const i = index.split('.')
+        if (i.length < 1 + 1 + 5 + 12) {
+          return
+        }
+        const m = mibs[index]
+        const ft = i[0] * 1
+        const lc = (m.addressMapLastChange || 0) * 1
+        this.addressMap.push({
+          addressMapTimeMark: ft,
+          addressMapNetworkAddress: [i[3], i[4], i[5], i[6]].join('.'),
+          addressMapPhysicalAddress: m.addressMapPhysicalAddress || '',
+          Vendor: m.Vendor || '',
+          addressMapLastChange: lc,
+          Changed: lc - ft,
+        })
+      })
+    },
     makeExports() {
       const exports = []
       switch (this.tab) {
@@ -612,6 +664,20 @@ export default {
               プロトコル名: e.Protocol,
               パケット: e.protocolDistStatsPkts,
               バイト: e.protocolDistStatsOctets,
+            })
+          })
+          break
+        case 5:
+          this.exportTitle = this.node.Name + 'のRMONアドレスマップ'
+          this.exportSheet = 'RMONアドレスマップ'
+          this.statistics.forEach((e) => {
+            exports.push({
+              変化: e.Changed,
+              IPアドレス: e.addressMapNetworkAddress,
+              MACアドレス: e.addressMapPhysicalAddress,
+              ベンダー: e.Vendor,
+              登録: e.addressMapTimeMark,
+              最終変化: e.addressMapLastChange,
             })
           })
           break

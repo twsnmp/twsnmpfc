@@ -787,7 +787,6 @@ func GetRMON(n *datastore.NodeEnt, t string) *RMONEnt {
 	}
 	defer agent.Conn.Close()
 	if t == "protocolDistStatsTable" ||
-		t == "addressMap" ||
 		t == "nlHost" ||
 		t == "nlMatrix" ||
 		t == "alHost" ||
