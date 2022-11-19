@@ -7,7 +7,7 @@
           <v-tab key="statistics">統計</v-tab>
           <v-tab key="history">統計履歴</v-tab>
           <v-tab key="hostTimeTable">ホストリスト</v-tab>
-          <v-tab key="matrix">マトリックス</v-tab>
+          <v-tab key="matrixSDTable">マトリックス</v-tab>
           <v-tab key="protocolDist">プロトコル別</v-tab>
           <v-tab key="addressMap">アドレスマップ</v-tab>
           <v-tab key="nlHost">IPホスト</v-tab>
@@ -145,6 +145,31 @@
               </template>
             </v-data-table>
           </v-tab-item>
+          <v-tab-item key="matrixSDTable">
+            <v-data-table
+              :headers="matrixHeaders"
+              :items="matrix"
+              sort-by="matrixSDSourceAddress"
+              sort-asc
+              dense
+              :loading="$fetchState.pending"
+              loading-text="Loading... Please wait"
+            >
+              <template #[`item.matrixSDOctets`]="{ item }">
+                {{ formatBytes(item.matrixSDOctets) }}
+              </template>
+              <template #[`item.matrixSDPkts`]="{ item }">
+                {{ formatCount(item.matrixSDPkts) }}
+              </template>
+              <template #[`item.matrixSDErrors`]="{ item }">
+                <span
+                  :class="item.matrixSDErrors > 0 ? 'red--text' : 'gray--text'"
+                >
+                  {{ formatCount(item.matrixSDErrors) }}
+                </span>
+              </template>
+            </v-data-table>
+          </v-tab-item>
         </v-tabs-items>
       </v-card-text>
       <v-card-actions>
@@ -221,7 +246,7 @@ export default {
         'statistics',
         'history',
         'hostTimeTable',
-        'matrix',
+        'matrixSDTable',
         'protocolDist',
         'addressMap',
         'nlHost',
@@ -279,6 +304,14 @@ export default {
         { text: 'MCast', value: 'hostTimeOutMulticastPkts', width: '8%' },
         { text: 'ベンダー', value: 'Vendor', width: '16%' },
       ],
+      matrix: [],
+      matrixHeaders: [
+        { text: '送信元', value: 'matrixSDSourceAddress', width: '8%' },
+        { text: '宛先', value: 'matrixSDDestAddress', width: '8%' },
+        { text: 'パケット', value: 'matrixSDPkts', width: '8%' },
+        { text: 'バイト', value: 'matrixSDOctets', width: '8%' },
+        { text: 'エラー', value: 'matrixSDErrors', width: '8%' },
+      ],
       editDialog: false,
       hasTh: false,
       addError: false,
@@ -320,8 +353,9 @@ export default {
       case 2: // 'hosts',
         this.setHostsData(r.RMON.MIBs)
         return
-      case 3: // 'matrix',
-        break
+      case 3: // 'matrixSDTable',
+        this.setMatrixData(r.RMON.MIBs)
+        return
       case 4: // 'protocolDist',
         break
       case 5: // 'addressMap',
@@ -342,7 +376,8 @@ export default {
       if (
         (t === 0 && this.statistics.length < 1) ||
         (t === 1 && this.history.length < 1) ||
-        (t === 2 && this.hosts.length < 1)
+        (t === 2 && this.hosts.length < 1) ||
+        (t === 3 && this.matrix.length < 1)
       ) {
         this.$fetch()
       }
@@ -438,6 +473,22 @@ export default {
         })
       })
     },
+    setMatrixData(mibs) {
+      this.matrix = []
+      Object.keys(mibs).forEach((index) => {
+        if (!index.includes('.')) {
+          return
+        }
+        const m = mibs[index]
+        this.matrix.push({
+          matrixSDSourceAddress: m.matrixSDSourceAddress || '',
+          matrixSDDestAddress: m.matrixSDDestAddress || '',
+          matrixSDPkts: (m.matrixSDPkts || 0) * 1,
+          matrixSDOctets: (m.matrixSDOctets || 0) * 1,
+          matrixSDErrors: (m.matrixSDErrors || 0) * 1,
+        })
+      })
+    },
     makeExports() {
       const exports = []
       switch (this.tab) {
@@ -495,6 +546,19 @@ export default {
               BCast: e.hostTimeOutBroadcastPkts,
               MCast: e.hostTimeOutMulticastPkts,
               ベンダー: e.Vendor,
+            })
+          })
+          break
+        case 3:
+          this.exportTitle = this.node.Name + 'のRMONマトリックス'
+          this.exportSheet = 'RMONマトリックス'
+          this.statistics.forEach((e) => {
+            exports.push({
+              送信元: e.matrixSDSourceAddress,
+              宛先: e.matrixSDDestAddress,
+              パケット: e.matrixSDPkts,
+              バイト: e.matrixSDOctets,
+              エラー: e.matrixSDErrors,
             })
           })
           break
