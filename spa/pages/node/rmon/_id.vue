@@ -8,7 +8,7 @@
           <v-tab key="history">統計履歴</v-tab>
           <v-tab key="hostTimeTable">ホストリスト</v-tab>
           <v-tab key="matrixSDTable">マトリックス</v-tab>
-          <v-tab key="protocolDist">プロトコル別</v-tab>
+          <v-tab key="protocolDistStatsTable">プロトコル別</v-tab>
           <v-tab key="addressMap">アドレスマップ</v-tab>
           <v-tab key="nlHost">IPホスト</v-tab>
           <v-tab key="nlMatrix">IPマトリックス</v-tab>
@@ -170,6 +170,24 @@
               </template>
             </v-data-table>
           </v-tab-item>
+          <v-tab-item key="protocolDistStatsTable">
+            <v-data-table
+              :headers="protocolHeaders"
+              :items="protocol"
+              sort-by="protocolDistStatsOctets"
+              sort-asc
+              dense
+              :loading="$fetchState.pending"
+              loading-text="Loading... Please wait"
+            >
+              <template #[`item.protocolDistStatsOctets`]="{ item }">
+                {{ formatBytes(item.protocolDistStatsOctets) }}
+              </template>
+              <template #[`item.protocolDistStatsPkts`]="{ item }">
+                {{ formatCount(item.protocolDistStatsPkts) }}
+              </template>
+            </v-data-table>
+          </v-tab-item>
         </v-tabs-items>
       </v-card-text>
       <v-card-actions>
@@ -247,7 +265,7 @@ export default {
         'history',
         'hostTimeTable',
         'matrixSDTable',
-        'protocolDist',
+        'protocolDistStatsTable',
         'addressMap',
         'nlHost',
         'nlMatrix',
@@ -312,6 +330,12 @@ export default {
         { text: 'バイト', value: 'matrixSDOctets', width: '8%' },
         { text: 'エラー', value: 'matrixSDErrors', width: '8%' },
       ],
+      protocol: [],
+      protocolHeaders: [
+        { text: 'プロトコル名', value: 'Protocol', width: '80%' },
+        { text: 'パケット', value: 'protocolDistStatsPkts', width: '10%' },
+        { text: 'バイト', value: 'protocolDistStatsOctets', width: '10%' },
+      ],
       editDialog: false,
       hasTh: false,
       addError: false,
@@ -356,8 +380,9 @@ export default {
       case 3: // 'matrixSDTable',
         this.setMatrixData(r.RMON.MIBs)
         return
-      case 4: // 'protocolDist',
-        break
+      case 4: // 'protocolDistStatsTable',
+        this.setProtocolData(r.RMON.MIBs, r.RMON.ProtocolDir)
+        return
       case 5: // 'addressMap',
         break
       case 6: // 'nlHost',
@@ -377,7 +402,8 @@ export default {
         (t === 0 && this.statistics.length < 1) ||
         (t === 1 && this.history.length < 1) ||
         (t === 2 && this.hosts.length < 1) ||
-        (t === 3 && this.matrix.length < 1)
+        (t === 3 && this.matrix.length < 1) ||
+        (t === 4 && this.protocol.length < 1)
       ) {
         this.$fetch()
       }
@@ -489,6 +515,22 @@ export default {
         })
       })
     },
+    setProtocolData(mibs, protocolDir) {
+      this.protocol = []
+      Object.keys(mibs).forEach((index) => {
+        const i = index.split('.', 2)
+        if (i.length !== 2) {
+          return
+        }
+        const name = protocolDir[i[1] * 1] || 'Unknown'
+        const m = mibs[index]
+        this.protocol.push({
+          Protocol: name,
+          protocolDistStatsPkts: (m.protocolDistStatsPkts || 0) * 1,
+          protocolDistStatsOctets: (m.protocolDistStatsOctets || 0) * 1,
+        })
+      })
+    },
     makeExports() {
       const exports = []
       switch (this.tab) {
@@ -550,8 +592,8 @@ export default {
           })
           break
         case 3:
-          this.exportTitle = this.node.Name + 'のRMONマトリックス'
-          this.exportSheet = 'RMONマトリックス'
+          this.exportTitle = this.node.Name + 'のRMONホストマトリックス'
+          this.exportSheet = 'RMONホストマトリックス'
           this.statistics.forEach((e) => {
             exports.push({
               送信元: e.matrixSDSourceAddress,
@@ -559,6 +601,17 @@ export default {
               パケット: e.matrixSDPkts,
               バイト: e.matrixSDOctets,
               エラー: e.matrixSDErrors,
+            })
+          })
+          break
+        case 4:
+          this.exportTitle = this.node.Name + 'のRMONプロトコル別'
+          this.exportSheet = 'RMONプロトコル別'
+          this.statistics.forEach((e) => {
+            exports.push({
+              プロトコル名: e.Protocol,
+              パケット: e.protocolDistStatsPkts,
+              バイト: e.protocolDistStatsOctets,
             })
           })
           break

@@ -757,7 +757,7 @@ func getRMONProtocolDir(id string, agent *gosnmp.GoSNMP) map[int]string {
 		return nil
 	})
 	_ = agent.Walk(datastore.MIBDB.NameToOID("protocolDirDescr"), func(variable gosnmp.SnmpPDU) error {
-		a := strings.Split(datastore.MIBDB.OIDToName(variable.Name), ".")
+		a := strings.SplitN(datastore.MIBDB.OIDToName(variable.Name), ".", 2)
 		if len(a) != 2 {
 			return nil
 		}
@@ -786,7 +786,7 @@ func GetRMON(n *datastore.NodeEnt, t string) *RMONEnt {
 		return ret
 	}
 	defer agent.Conn.Close()
-	if t == "protocolDist" ||
+	if t == "protocolDistStatsTable" ||
 		t == "addressMap" ||
 		t == "nlHost" ||
 		t == "nlMatrix" ||
