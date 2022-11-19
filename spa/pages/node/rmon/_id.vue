@@ -10,7 +10,7 @@
           <v-tab key="matrixSDTable">マトリックス</v-tab>
           <v-tab key="protocolDistStatsTable">プロトコル別</v-tab>
           <v-tab key="addressMapTable">アドレスマップ</v-tab>
-          <v-tab key="nlHost">IPホスト</v-tab>
+          <v-tab key="nlHostTable">IPホスト</v-tab>
           <v-tab key="nlMatrix">IPマトリックス</v-tab>
           <v-tab key="alHost">ALホスト</v-tab>
           <v-tab key="alMatrix">ALマトリックス</v-tab>
@@ -205,6 +205,33 @@
               </template>
             </v-data-table>
           </v-tab-item>
+          <v-tab-item key="nlHostTable">
+            <v-data-table
+              :headers="nlHostsHeaders"
+              :items="nlHosts"
+              sort-by="nlHostCreateTime"
+              sort-asc
+              dense
+              :loading="$fetchState.pending"
+              loading-text="Loading... Please wait"
+            >
+              <template #[`item.nlHostInPkts`]="{ item }">
+                {{ formatCount(item.nlHostInPkts) }}
+              </template>
+              <template #[`item.nlHostOutPkts`]="{ item }">
+                {{ formatCount(item.nlHostOutPkts) }}
+              </template>
+              <template #[`item.nlHostInOctets`]="{ item }">
+                {{ formatBytes(item.nlHostInOctets) }}
+              </template>
+              <template #[`item.nlHostOutOctets`]="{ item }">
+                {{ formatBytes(item.nlHostOutOctets) }}
+              </template>
+              <template #[`item.nlHostOutMacNonUnicastPkts`]="{ item }">
+                {{ formatCount(item.nlHostOutMacNonUnicastPkts) }}
+              </template>
+            </v-data-table>
+          </v-tab-item>
         </v-tabs-items>
       </v-card-text>
       <v-card-actions>
@@ -284,7 +311,7 @@ export default {
         'matrixSDTable',
         'protocolDistStatsTable',
         'addressMapTable',
-        'nlHost',
+        'nlHostTable',
         'nlMatrix',
         'alHost',
         'alMatrix',
@@ -366,6 +393,22 @@ export default {
         { text: '登録', value: 'addressMapTimeMark', width: '10%' },
         { text: '最終変化', value: 'addressMapLastChange', width: '10%' },
       ],
+      nlHosts: [],
+      nlHostsHeaders: [
+        { text: '作成順', value: 'nlHostCreateTime', width: '10%' },
+        { text: '最終確認', value: 'nlHostTimeMark', width: '10%' },
+        { text: 'IPアドレス', value: 'nlHostAddress', width: '15%' },
+        { text: '受信パケット', value: 'nlHostInPkts', width: '10%' },
+        { text: '受信バイト', value: 'nlHostInOctets', width: '10%' },
+        { text: '送信パケット', value: 'nlHostOutPkts', width: '10%' },
+        { text: '送信バイト', value: 'nlHostOutOctets', width: '10%' },
+        {
+          text: 'ユニキャスト以外',
+          value: 'nlHostOutMacNonUnicastPkts',
+          width: '15%',
+        },
+        { text: '期間', value: 'Dur', width: '10%' },
+      ],
       editDialog: false,
       hasTh: false,
       addError: false,
@@ -416,8 +459,9 @@ export default {
       case 5: // 'addressMapTable',
         this.setAddressMapData(r.RMON.MIBs)
         return
-      case 6: // 'nlHost',
-        break
+      case 6: // 'nlHostTable',
+        this.setNlHostsData(r.RMON.MIBs)
+        return
       case 7: // 'nlMatrix',
         break
       case 8: // 'alHost',
@@ -435,7 +479,8 @@ export default {
         (t === 2 && this.hosts.length < 1) ||
         (t === 3 && this.matrix.length < 1) ||
         (t === 4 && this.protocol.length < 1) ||
-        (t === 5 && this.addressMap.length < 1)
+        (t === 5 && this.addressMap.length < 1) ||
+        (t === 6 && this.nlHosts.length < 1)
       ) {
         this.$fetch()
       }
@@ -583,6 +628,29 @@ export default {
         })
       })
     },
+    setNlHostsData(mibs) {
+      this.nlHosts = []
+      Object.keys(mibs).forEach((index) => {
+        const i = index.split('.')
+        if (i.length < 1 + 1 + 1 + 5) {
+          return
+        }
+        const m = mibs[index]
+        const tm = i[1] * 1
+        const ct = (m.nlHostCreateTime || 0) * 1
+        this.nlHosts.push({
+          nlHostTimeMark: tm,
+          nlHostAddress: [i[4], i[5], i[6], i[7]].join('.'),
+          nlHostInPkts: (m.nlHostInPkts || 0) * 1,
+          nlHostOutPkts: (m.nlHostOutPkts || 0) * 1,
+          nlHostInOctets: (m.nlHostInOctets || 0) * 1,
+          nlHostOutOctets: (m.nlHostOutOctets || 0) * 1,
+          nlHostOutMacNonUnicastPkts: (m.nlHostOutMacNonUnicastPkts || 0) * 1,
+          nlHostCreateTime: ct,
+          Dur: tm - ct,
+        })
+      })
+    },
     makeExports() {
       const exports = []
       switch (this.tab) {
@@ -678,6 +746,23 @@ export default {
               ベンダー: e.Vendor,
               登録: e.addressMapTimeMark,
               最終変化: e.addressMapLastChange,
+            })
+          })
+          break
+        case 6:
+          this.exportTitle = this.node.Name + 'のRMONのIPアドレスリスト'
+          this.exportSheet = 'RMONのIPアドレスリスト'
+          this.statistics.forEach((e) => {
+            exports.push({
+              作成順: e.nlHostCreateTime,
+              最終確認: e.nlHostTimeMark,
+              IPアドレス: e.nlHostAddress,
+              受信パケット: e.nlHostInPkts,
+              受信バイト: e.nlHostInOctets,
+              送信パケット: e.hostTimeOutPkts,
+              送信バイト: e.nlHostOutOctets,
+              ユニキャスト以外: e.nlHostOutMacNonUnicastPkts,
+              期間: e.Dur,
             })
           })
           break
