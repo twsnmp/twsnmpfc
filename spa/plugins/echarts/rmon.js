@@ -2,12 +2,8 @@ import * as echarts from 'echarts'
 
 let chart
 
-const showRMONStatisticsChart = (div, type, list) => {
-  if (chart) {
-    chart.dispose()
-  }
-  chart = echarts.init(document.getElementById(div))
-  const option = {
+const baseChartOption = (type) => {
+  return {
     backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
       {
         offset: 0,
@@ -29,7 +25,7 @@ const showRMONStatisticsChart = (div, type, list) => {
         color: '#ccc',
       },
       feature: {
-        saveAsImage: { name: 'twsnmp_rmon_statistics_' + type },
+        saveAsImage: { name: 'twsnmp_rmon_' + type },
       },
     },
     tooltip: {
@@ -47,7 +43,7 @@ const showRMONStatisticsChart = (div, type, list) => {
     },
     xAxis: {
       type: 'value',
-      name: type === 'bytes' ? 'Bytes' : 'Packtes',
+      name: type.includes('bytes') ? 'Bytes' : 'Packtes',
       nameTextStyle: {
         color: '#ccc',
         fontSize: 10,
@@ -81,6 +77,14 @@ const showRMONStatisticsChart = (div, type, list) => {
     },
     series: [],
   }
+}
+
+const showRMONStatisticsChart = (div, type, list) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = baseChartOption('statistics_' + type)
   option.yAxis.data = list.map((x) => x.etherStatsDataSource)
   switch (type) {
     case 'packtes':
@@ -166,6 +170,64 @@ const showRMONStatisticsChart = (div, type, list) => {
   chart.resize()
 }
 
+const showRMONHistoryChart = (div, type, list) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = baseChartOption('history_' + type)
+  option.yAxis.data = list.map((x) => x.Index)
+  switch (type) {
+    case 'packtes':
+      option.series = [
+        {
+          name: 'パケット数',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherHistoryPkts),
+        },
+        {
+          name: 'ブロードキャスト',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherHistoryBroadcastPkts),
+        },
+        {
+          name: 'マルチキャスト',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherHistoryMulticastPkts),
+        },
+        {
+          name: 'エラー',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherHistoryErrors),
+        },
+        {
+          name: 'ドロップ',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherHistoryDropEvents),
+        },
+      ]
+      break
+    case 'bytes':
+      option.series = [
+        {
+          name: 'バイト数',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherHistoryOctets),
+        },
+      ]
+      break
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showRMONStatisticsChart', showRMONStatisticsChart)
+  inject('showRMONHistoryChart', showRMONHistoryChart)
 }
