@@ -12,8 +12,8 @@
           <v-tab key="addressMapTable">アドレスマップ</v-tab>
           <v-tab key="nlHostTable">IPホスト</v-tab>
           <v-tab key="nlMatrixSDTable">IPマトリックス</v-tab>
-          <v-tab key="alHost">ALホスト</v-tab>
-          <v-tab key="alMatrix">ALマトリックス</v-tab>
+          <v-tab key="alHostTable">ALホスト</v-tab>
+          <v-tab key="alMatrixSDTable">ALマトリックス</v-tab>
         </v-tabs>
         <v-tabs-items v-model="tab">
           <v-tab-item key="statistics">
@@ -250,6 +250,48 @@
               </template>
             </v-data-table>
           </v-tab-item>
+          <v-tab-item key="alHostTable">
+            <v-data-table
+              :headers="alHostsHeaders"
+              :items="alHosts"
+              sort-by="alHostCreateTime"
+              sort-asc
+              dense
+              :loading="$fetchState.pending"
+              loading-text="Loading... Please wait"
+            >
+              <template #[`item.alHostInPkts`]="{ item }">
+                {{ formatCount(item.alHostInPkts) }}
+              </template>
+              <template #[`item.alHostOutPkts`]="{ item }">
+                {{ formatCount(item.alHostOutPkts) }}
+              </template>
+              <template #[`item.alHostInOctets`]="{ item }">
+                {{ formatBytes(item.alHostInOctets) }}
+              </template>
+              <template #[`item.alHostOutOctets`]="{ item }">
+                {{ formatBytes(item.alHostOutOctets) }}
+              </template>
+            </v-data-table>
+          </v-tab-item>
+          <v-tab-item key="alMatrixSDTable">
+            <v-data-table
+              :headers="alMatrixHeaders"
+              :items="alMatrix"
+              sort-by="alMatrixSDCreateTime"
+              sort-asc
+              dense
+              :loading="$fetchState.pending"
+              loading-text="Loading... Please wait"
+            >
+              <template #[`item.alMatrixSDOctets`]="{ item }">
+                {{ formatBytes(item.alMatrixSDOctets) }}
+              </template>
+              <template #[`item.alMatrixSDPkts`]="{ item }">
+                {{ formatCount(item.alMatrixSDPkts) }}
+              </template>
+            </v-data-table>
+          </v-tab-item>
         </v-tabs-items>
       </v-card-text>
       <v-card-actions>
@@ -331,8 +373,8 @@ export default {
         'addressMapTable',
         'nlHostTable',
         'nlMatrixSDTable',
-        'alHost',
-        'alMatrix',
+        'alHostTable',
+        'alMatrixSDTable',
       ],
       statistics: [],
       statisticsHeaders: [
@@ -437,6 +479,29 @@ export default {
         { text: 'バイト', value: 'nlMatrixSDOctets', width: '10%' },
         { text: '期間', value: 'Dur', width: '10%' },
       ],
+      alHosts: [],
+      alHostsHeaders: [
+        { text: '初回', value: 'alHostCreateTime', width: '10%' },
+        { text: '最終', value: 'alHostTimeMark', width: '10%' },
+        { text: 'IPアドレス', value: 'alHostAddress', width: '20%' },
+        { text: 'プロトコル', value: 'Protocol', width: '10%' },
+        { text: '受信パケット', value: 'alHostInPkts', width: '10%' },
+        { text: '受信バイト', value: 'alHostInOctets', width: '10%' },
+        { text: '送信パケット', value: 'alHostOutPkts', width: '10%' },
+        { text: '送信バイト', value: 'alHostOutOctets', width: '10%' },
+        { text: '期間', value: 'Dur', width: '10%' },
+      ],
+      alMatrix: [],
+      alMatrixHeaders: [
+        { text: '初回', value: 'alMatrixSDCreateTime', width: '10%' },
+        { text: '最終', value: 'alMatrixSDTimeMark', width: '10%' },
+        { text: '送信元', value: 'alMatrixSDSourceAddress', width: '20%' },
+        { text: '宛先', value: 'alMatrixSDDestAddress', width: '20%' },
+        { text: 'プロトコル', value: 'Protocol', width: '10%' },
+        { text: 'パケット', value: 'alMatrixSDPkts', width: '10%' },
+        { text: 'バイト', value: 'alMatrixSDOctets', width: '10%' },
+        { text: '期間', value: 'Dur', width: '10%' },
+      ],
       editDialog: false,
       hasTh: false,
       addError: false,
@@ -493,12 +558,12 @@ export default {
       case 7: // 'nlMatrixSDTable',
         this.setNlMatrixData(r.RMON.MIBs)
         return
-      case 8: // 'alHost',
-        break
-      case 9: // 'alMatrix',
-        break
+      case 8: // 'alHostTable',
+        this.setAlHostsData(r.RMON.MIBs, r.RMON.ProtocolDir)
+        return
+      case 9: // 'alMatrixSDTable',
+        this.setAlMatrixData(r.RMON.MIBs, r.RMON.ProtocolDir)
     }
-    console.log(r)
   },
   methods: {
     changeTab(t) {
@@ -510,7 +575,9 @@ export default {
         (t === 4 && this.protocol.length < 1) ||
         (t === 5 && this.addressMap.length < 1) ||
         (t === 6 && this.nlHosts.length < 1) ||
-        (t === 7 && this.nlMatrix.length < 1)
+        (t === 7 && this.nlMatrix.length < 1) ||
+        (t === 8 && this.alHosts.length < 1) ||
+        (t === 9 && this.alMatrix.length < 1)
       ) {
         this.$fetch()
       }
@@ -629,10 +696,10 @@ export default {
         if (i.length !== 2) {
           return
         }
-        const name = protocolDir[i[1] * 1] || 'Unknown'
+        const protocol = protocolDir[i[1] * 1] || 'Unknown'
         const m = mibs[index]
         this.protocol.push({
-          Protocol: name,
+          Protocol: protocol,
           protocolDistStatsPkts: (m.protocolDistStatsPkts || 0) * 1,
           protocolDistStatsOctets: (m.protocolDistStatsOctets || 0) * 1,
         })
@@ -702,6 +769,53 @@ export default {
         })
       })
     },
+    setAlHostsData(mibs, protocolDir) {
+      this.alHosts = []
+      Object.keys(mibs).forEach((index) => {
+        const i = index.split('.')
+        if (i.length < 1 + 1 + 1 + 5 + 1) {
+          return
+        }
+        const m = mibs[index]
+        const tm = i[1] * 1
+        const ct = (m.alHostCreateTime || 0) * 1
+        const protocol = protocolDir[i[8] * 1] || 'Unknown'
+        this.alHosts.push({
+          Protocol: protocol,
+          alHostTimeMark: tm,
+          alHostAddress: [i[4], i[5], i[6], i[7]].join('.'),
+          alHostInPkts: (m.alHostInPkts || 0) * 1,
+          alHostOutPkts: (m.alHostOutPkts || 0) * 1,
+          alHostInOctets: (m.alHostInOctets || 0) * 1,
+          alHostOutOctets: (m.alHostOutOctets || 0) * 1,
+          alHostCreateTime: ct,
+          Dur: tm - ct,
+        })
+      })
+    },
+    setAlMatrixData(mibs, protocolDir) {
+      this.alMatrix = []
+      Object.keys(mibs).forEach((index) => {
+        const i = index.split('.')
+        if (i.length < 1 + 1 + 1 + 5 + 5 + 1) {
+          return
+        }
+        const m = mibs[index]
+        const tm = i[1] * 1
+        const ct = (m.nlMatrixSDCreateTime || 0) * 1
+        const protocol = protocolDir[i[13] * 1] || 'Unknown'
+        this.alMatrix.push({
+          Protocol: protocol,
+          alMatrixSDTimeMark: tm,
+          alMatrixSDSourceAddress: [i[4], i[5], i[6], i[7]].join('.'),
+          alMatrixSDDestAddress: [i[9], i[10], i[11], i[12]].join('.'),
+          alMatrixSDPkts: (m.alMatrixSDPkts || 0) * 1,
+          alMatrixSDOctets: (m.alMatrixSDOctets || 0) * 1,
+          alMatrixSDCreateTime: ct,
+          Dur: tm - ct,
+        })
+      })
+    },
     makeExports() {
       const exports = []
       switch (this.tab) {
@@ -729,7 +843,7 @@ export default {
         case 1:
           this.exportTitle = this.node.Name + 'のRMON統計履歴'
           this.exportSheet = 'RMON統計履歴'
-          this.statistics.forEach((e) => {
+          this.history.forEach((e) => {
             exports.push({
               Index: e.Index,
               開始時刻: e.etherHistoryIntervalStart,
@@ -746,7 +860,7 @@ export default {
         case 2:
           this.exportTitle = this.node.Name + 'のRMONホストリスト'
           this.exportSheet = 'RMONホストリスト'
-          this.statistics.forEach((e) => {
+          this.hosts.forEach((e) => {
             exports.push({
               作成順: e.hostTimeCreationOrder,
               最終確認: e.hostTimeIndex,
@@ -765,7 +879,7 @@ export default {
         case 3:
           this.exportTitle = this.node.Name + 'のRMONホストマトリックス'
           this.exportSheet = 'RMONホストマトリックス'
-          this.statistics.forEach((e) => {
+          this.matrix.forEach((e) => {
             exports.push({
               送信元: e.matrixSDSourceAddress,
               宛先: e.matrixSDDestAddress,
@@ -778,7 +892,7 @@ export default {
         case 4:
           this.exportTitle = this.node.Name + 'のRMONプロトコル別'
           this.exportSheet = 'RMONプロトコル別'
-          this.statistics.forEach((e) => {
+          this.protocol.forEach((e) => {
             exports.push({
               プロトコル名: e.Protocol,
               パケット: e.protocolDistStatsPkts,
@@ -789,7 +903,7 @@ export default {
         case 5:
           this.exportTitle = this.node.Name + 'のRMONアドレスマップ'
           this.exportSheet = 'RMONアドレスマップ'
-          this.statistics.forEach((e) => {
+          this.addressMap.forEach((e) => {
             exports.push({
               変化: e.Changed,
               IPアドレス: e.addressMapNetworkAddress,
@@ -803,14 +917,14 @@ export default {
         case 6:
           this.exportTitle = this.node.Name + 'のRMONのIPアドレスリスト'
           this.exportSheet = 'RMONのIPアドレスリスト'
-          this.statistics.forEach((e) => {
+          this.nlHosts.forEach((e) => {
             exports.push({
               初回: e.nlHostCreateTime,
               最終: e.nlHostTimeMark,
               IPアドレス: e.nlHostAddress,
               受信パケット: e.nlHostInPkts,
               受信バイト: e.nlHostInOctets,
-              送信パケット: e.hostTimeOutPkts,
+              送信パケット: e.nlHostOutPkts,
               送信バイト: e.nlHostOutOctets,
               ユニキャスト以外: e.nlHostOutMacNonUnicastPkts,
               期間: e.Dur,
@@ -820,7 +934,7 @@ export default {
         case 7:
           this.exportTitle = this.node.Name + 'のRMONのIPマトリックス'
           this.exportSheet = 'RMONのIPマトリックス'
-          this.statistics.forEach((e) => {
+          this.nlMatrix.forEach((e) => {
             exports.push({
               初回: e.nlMatrixSDCreateTime,
               最終: e.nlMatrixSDTimeMark,
@@ -828,6 +942,40 @@ export default {
               宛先: e.nlMatrixSDDestAddress,
               パケット: e.nlMatrixSDPkts,
               バイト: e.nlMatrixSDOctets,
+              期間: e.Dur,
+            })
+          })
+          break
+        case 8:
+          this.exportTitle =
+            this.node.Name + 'のRMONのプロトコル別アドレスリスト'
+          this.exportSheet = 'RMONのプロトコル別アドレスリスト'
+          this.alHosts.forEach((e) => {
+            exports.push({
+              初回: e.alHostCreateTime,
+              最終: e.alHostTimeMark,
+              IPアドレス: e.alHostAddress,
+              プロトコル: e.Protocol,
+              受信パケット: e.alHostInPkts,
+              受信バイト: e.alHostInOctets,
+              送信パケット: e.alHostOutPkts,
+              送信バイト: e.alHostOutOctets,
+              期間: e.Dur,
+            })
+          })
+          break
+        case 9:
+          this.exportTitle = this.node.Name + 'のRMONのプロトコル別マトリックス'
+          this.exportSheet = 'RMONのプロトコル別マトリックス'
+          this.alMatrix.forEach((e) => {
+            exports.push({
+              初回: e.alMatrixSDCreateTime,
+              最終: e.alMatrixSDTimeMark,
+              送信元: e.alMatrixSDSourceAddress,
+              宛先: e.alMatrixSDDestAddress,
+              プロトコル: e.Protocol,
+              パケット: e.alMatrixSDPkts,
+              バイト: e.alMatrixSDOctets,
               期間: e.Dur,
             })
           })

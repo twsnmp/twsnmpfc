@@ -787,8 +787,8 @@ func GetRMON(n *datastore.NodeEnt, t string) *RMONEnt {
 	}
 	defer agent.Conn.Close()
 	if t == "protocolDistStatsTable" ||
-		t == "alHost" ||
-		t == "alMatrix" {
+		t == "alHostTable" ||
+		t == "alMatrixSDTable" {
 		ret.ProtocolDir = getRMONProtocolDir(n.ID, agent)
 	}
 	_ = agent.Walk(datastore.MIBDB.NameToOID(t), func(variable gosnmp.SnmpPDU) error {
