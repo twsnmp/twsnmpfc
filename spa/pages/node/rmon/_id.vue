@@ -303,6 +303,38 @@
               グラフと集計
             </v-btn>
           </template>
+          <v-list v-if="tab == 0 && statistics.length > 0">
+            <v-list-item
+              @click="showStatisticsChart('packtes', '統計情報パケット数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar-stacked</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>統計情報パケット数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item
+              @click="showStatisticsChart('bytes', '統計情報バイト数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>統計情報バイト数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item
+              @click="showStatisticsChart('size', '統計情報サイズ別')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-format-align-left</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>統計情報サイズ別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
         </v-menu>
         <download-excel
           :fetch="makeExports"
@@ -982,6 +1014,13 @@ export default {
           break
       }
       return exports
+    },
+    showStatisticsChart(type, title) {
+      this.chartTitle = title
+      this.chartDialog = true
+      this.$nextTick(() => {
+        this.$showRMONStatisticsChart('chart', type, this.statistics)
+      })
     },
     formatCount(n) {
       return numeral(n).format('0,0')

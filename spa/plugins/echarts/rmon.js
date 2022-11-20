@@ -2,12 +2,10 @@ import * as echarts from 'echarts'
 
 let chart
 
-const showRMONBarChart = (div, type, xAxis, list, max) => {
+const showRMONStatisticsChart = (div, type, list) => {
   if (chart) {
     chart.dispose()
   }
-  const yellow = max ? max * 0.8 : 80
-  const red = max ? max * 0.9 : 90
   chart = echarts.init(document.getElementById(div))
   const option = {
     backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
@@ -20,12 +18,18 @@ const showRMONBarChart = (div, type, xAxis, list, max) => {
         color: '#404a59',
       },
     ]),
+    legend: {
+      textStyle: {
+        color: '#ccc',
+        fontSize: 10,
+      },
+    },
     toolbox: {
       iconStyle: {
         color: '#ccc',
       },
       feature: {
-        saveAsImage: { name: 'twsnmp_' + type },
+        saveAsImage: { name: 'twsnmp_rmon_statistics_' + type },
       },
     },
     tooltip: {
@@ -43,7 +47,7 @@ const showRMONBarChart = (div, type, xAxis, list, max) => {
     },
     xAxis: {
       type: 'value',
-      name: xAxis,
+      name: type === 'bytes' ? 'Bytes' : 'Packtes',
       nameTextStyle: {
         color: '#ccc',
         fontSize: 10,
@@ -75,137 +79,93 @@ const showRMONBarChart = (div, type, xAxis, list, max) => {
       },
       data: [],
     },
-    series: [
-      {
-        name: type,
-        type: 'bar',
-        itemStyle: {
-          color: (p) => {
-            return p.value > red ? '#c00' : p.value > yellow ? '#cc0' : '#0cc'
-          },
-        },
-        data: [],
-      },
-    ],
+    series: [],
   }
-  if (!list) {
-    return
-  }
-  list.forEach((e) => {
-    option.yAxis.data.push(e.Name)
-    option.series[0].data.push(e.Value)
-  })
-  chart.setOption(option)
-  chart.resize()
-}
-
-const showRMONSummary = (div, data) => {
-  if (chart) {
-    chart.dispose()
-  }
-  chart = echarts.init(document.getElementById(div))
-  const gaugeData = [
-    {
-      value: data.CPU.toFixed(1),
-      name: 'CPU',
-      title: {
-        offsetCenter: ['-40%', '80%'],
-      },
-      detail: {
-        offsetCenter: ['-40%', '95%'],
-      },
-    },
-    {
-      value: data.Mem.toFixed(1),
-      name: 'Mem',
-      title: {
-        offsetCenter: ['0%', '80%'],
-      },
-      detail: {
-        offsetCenter: ['0%', '95%'],
-      },
-    },
-    {
-      value: data.VM.toFixed(1),
-      name: 'VM',
-      title: {
-        offsetCenter: ['40%', '80%'],
-      },
-      detail: {
-        offsetCenter: ['40%', '95%'],
-      },
-    },
-  ]
-  const option = {
-    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
-      {
-        offset: 0,
-        color: '#4b5769',
-      },
-      {
-        offset: 1,
-        color: '#404a59',
-      },
-    ]),
-    toolbox: {
-      iconStyle: {
-        color: '#ccc',
-      },
-      feature: {
-        saveAsImage: { name: 'twsnmp_hr' },
-      },
-    },
-    color: ['#4575b4', '#abd9e9', '#FAC858'],
-    series: [
-      {
-        type: 'gauge',
-        anchor: {
-          show: true,
-          showAbove: true,
-          size: 18,
-          itemStyle: {
-            color: '#FAC858',
-          },
+  option.yAxis.data = list.map((x) => x.etherStatsDataSource)
+  switch (type) {
+    case 'packtes':
+      option.series = [
+        {
+          name: 'パケット数',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherStatsPkts),
         },
-        pointer: {
-          icon: 'path://M2.9,0.7L2.9,0.7c1.4,0,2.6,1.2,2.6,2.6v115c0,1.4-1.2,2.6-2.6,2.6l0,0c-1.4,0-2.6-1.2-2.6-2.6V3.3C0.3,1.9,1.4,0.7,2.9,0.7z',
-          width: 8,
-          length: '80%',
-          offsetCenter: [0, '8%'],
+        {
+          name: 'ブロードキャスト',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherStatsBroadcastPkts),
         },
-        progress: {
-          show: true,
-          overlap: true,
-          roundCap: true,
+        {
+          name: 'マルチキャスト',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherStatsMulticastPkts),
         },
-        axisLine: {
-          roundCap: true,
+        {
+          name: 'エラー',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherStatsErrors),
         },
-        axisLabel: {
-          color: '#ccc',
+      ]
+      break
+    case 'bytes':
+      option.series = [
+        {
+          name: 'バイト数',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherStatsOctets),
         },
-        data: gaugeData,
-        title: {
-          fontSize: 12,
-          color: '#ccc',
+      ]
+      break
+    case 'size':
+      option.series = [
+        {
+          name: '=64',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherStatsPkts64Octets),
         },
-        detail: {
-          width: 40,
-          height: 14,
-          fontSize: 12,
-          color: '#fff',
-          backgroundColor: 'auto',
-          borderRadius: 3,
-          formatter: '{value}%',
+        {
+          name: '65-127',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherStatsPkts65to127Octets),
         },
-      },
-    ],
+        {
+          name: '128-255',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherStatsPkts128to255Octets),
+        },
+        {
+          name: '256-511',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherStatsPkts256to511Octets),
+        },
+        {
+          name: '512-1023',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherStatsPkts512to1023Octets),
+        },
+        {
+          name: '1024-1518',
+          type: 'bar',
+          stack: 'packets',
+          data: list.map((x) => x.etherStatsPkts1024to1518Octets),
+        },
+      ]
+      break
   }
   chart.setOption(option)
   chart.resize()
 }
 
 export default (context, inject) => {
-  inject('showRMONBarChart', showRMONBarChart)
-  inject('showRMONSummary', showRMONSummary)
+  inject('showRMONStatisticsChart', showRMONStatisticsChart)
 }
