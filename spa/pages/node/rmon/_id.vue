@@ -355,6 +355,26 @@
               </v-list-item-content>
             </v-list-item>
           </v-list>
+          <v-list v-if="tab == 2 && hosts.length > 0">
+            <v-list-item
+              @click="showHostsChart('packtes', 'ホスト別パケット数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar-stacked</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>ホスト別パケット数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showHostsChart('bytes', 'ホスト別バイト数')">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>ホスト別バイト数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
         </v-menu>
         <download-excel
           :fetch="makeExports"
@@ -1047,6 +1067,13 @@ export default {
       this.chartDialog = true
       this.$nextTick(() => {
         this.$showRMONHistoryChart('chart', type, this.history)
+      })
+    },
+    showHostsChart(type, title) {
+      this.chartTitle = title
+      this.chartDialog = true
+      this.$nextTick(() => {
+        this.$showRMONHostsChart('chart', type, this.hosts)
       })
     },
     formatCount(n) {

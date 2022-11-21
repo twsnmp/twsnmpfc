@@ -227,7 +227,91 @@ const showRMONHistoryChart = (div, type, list) => {
   chart.resize()
 }
 
+const showRMONHostsChart = (div, type, list) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = baseChartOption('hosts_' + type)
+  let topN = []
+  switch (type) {
+    case 'packtes':
+      topN = list
+        .slice()
+        .sort(
+          (a, b) =>
+            b.hostTimeOutPkts +
+            b.hostTimeInPkts -
+            (a.hostTimeOutPkts + a.hostTimeInPkts)
+        )
+        .slice(0, 20)
+      option.yAxis.data = topN.map((x) => x.hostTimeAddress)
+      option.series = [
+        {
+          name: '送信パケット数',
+          type: 'bar',
+          stack: 'packets',
+          data: topN.map((x) => x.hostTimeOutPkts),
+        },
+        {
+          name: 'ブロードキャスト',
+          type: 'bar',
+          stack: 'packets',
+          data: topN.map((x) => x.hostTimeOutBroadcastPkts),
+        },
+        {
+          name: 'マルチキャスト',
+          type: 'bar',
+          stack: 'packets',
+          data: topN.map((x) => x.hostTimeOutMulticastPkts),
+        },
+        {
+          name: 'エラー',
+          type: 'bar',
+          stack: 'packets',
+          data: topN.map((x) => x.hostTimeOutErrors),
+        },
+        {
+          name: '受信パケット数',
+          type: 'bar',
+          stack: 'packets',
+          data: topN.map((x) => x.hostTimeInPkts),
+        },
+      ]
+      break
+    case 'bytes':
+      topN = list
+        .slice()
+        .sort(
+          (a, b) =>
+            b.hostTimeInOctets +
+            b.hostTimeOutOctets -
+            (a.hostTimeInOctets + a.hostTimeOutOctets)
+        )
+        .slice(0, 20)
+      option.yAxis.data = topN.map((x) => x.hostTimeAddress)
+      option.series = [
+        {
+          name: '受信バイト数',
+          type: 'bar',
+          stack: 'bytes',
+          data: topN.map((x) => x.hostTimeInOctets),
+        },
+        {
+          name: '送信バイト数',
+          type: 'bar',
+          stack: 'bytes',
+          data: topN.map((x) => x.hostTimeOutOctets),
+        },
+      ]
+      break
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showRMONStatisticsChart', showRMONStatisticsChart)
   inject('showRMONHistoryChart', showRMONHistoryChart)
+  inject('showRMONHostsChart', showRMONHostsChart)
 }
