@@ -419,6 +419,116 @@
               </v-list-item-content>
             </v-list-item>
           </v-list>
+          <v-list v-if="tab == 5 && addressMap.length > 0">
+            <v-list-item @click="showAddressMapChart('map', 'アドレスマップ')">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar-stacked</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>ヒートマップ</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item
+              @click="showAddressMapChart('graph', 'アドレスマップ(グラフ）')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>グラフ</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list v-if="tab == 6 && nlHosts.length > 0">
+            <v-list-item
+              @click="showNlHostsChart('packtes', 'IPホスト別パケット数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar-stacked</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>パケット数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item
+              @click="showNlHostsChart('bytes', 'IPホスト別バイト数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>バイト数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list v-if="tab == 7 && nlMatrix.length > 0">
+            <v-list-item
+              @click="
+                showNlMatrixChart('packtes', 'IPマトリックス別パケット数')
+              "
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar-stacked</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>パケット数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item
+              @click="showNlMatrixChart('bytes', 'IPマトリックス別バイト数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>バイト数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list v-if="tab == 8 && alHosts.length > 0">
+            <v-list-item
+              @click="showAlHostsChart('packtes', 'ALホスト別パケット数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar-stacked</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>パケット数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item
+              @click="showAlHostsChart('bytes', 'ALホスト別バイト数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>バイト数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list v-if="tab == 9 && alMatrix.length > 0">
+            <v-list-item
+              @click="showAlMatrixChart('packtes', 'ALホスト別パケット数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar-stacked</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>パケット数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item
+              @click="showAlMatrixChart('bytes', 'ALホスト別バイト数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>バイト数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
         </v-menu>
         <download-excel
           :fetch="makeExports"
@@ -1115,6 +1225,41 @@ export default {
       this.chartDialog = true
       this.$nextTick(() => {
         this.$showRMONProtocolChart('chart', type, this.protocol)
+      })
+    },
+    showAddressMapChart(type, title) {
+      this.chartTitle = title
+      this.chartDialog = true
+      this.$nextTick(() => {
+        this.$showRMONAddressMapChart('chart', type, this.addressMap)
+      })
+    },
+    showNlHostsChart(type, title) {
+      this.chartTitle = title
+      this.chartDialog = true
+      this.$nextTick(() => {
+        this.$showRMONNlHostsChart('chart', type, this.nlHosts)
+      })
+    },
+    showNlMatrixChart(type, title) {
+      this.chartTitle = title
+      this.chartDialog = true
+      this.$nextTick(() => {
+        this.$showRMONNlMatrixChart('chart', type, this.nlMatrix)
+      })
+    },
+    showAlHostsChart(type, title) {
+      this.chartTitle = title
+      this.chartDialog = true
+      this.$nextTick(() => {
+        this.$showRMONAlHostsChart('chart', type, this.alHosts)
+      })
+    },
+    showAlMatrixChart(type, title) {
+      this.chartTitle = title
+      this.chartDialog = true
+      this.$nextTick(() => {
+        this.$showRMONAlMatrixChart('chart', type, this.alMatrix)
       })
     },
     formatCount(n) {
