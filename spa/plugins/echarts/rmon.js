@@ -176,7 +176,11 @@ const showRMONHistoryChart = (div, type, list) => {
   }
   chart = echarts.init(document.getElementById(div))
   const option = baseChartOption('history_' + type)
-  option.yAxis.data = list.map((x) => x.Index)
+  const tmp = list
+    .slice()
+    .sort((a, b) => a.etherHistoryIntervalStart - b.etherHistoryIntervalStart)
+    .reverse()
+  option.yAxis.data = tmp.map((x) => x.Index)
   switch (type) {
     case 'packtes':
       option.series = [
@@ -184,31 +188,31 @@ const showRMONHistoryChart = (div, type, list) => {
           name: 'パケット数',
           type: 'bar',
           stack: 'packets',
-          data: list.map((x) => x.etherHistoryPkts),
+          data: tmp.map((x) => x.etherHistoryPkts),
         },
         {
           name: 'ブロードキャスト',
           type: 'bar',
           stack: 'packets',
-          data: list.map((x) => x.etherHistoryBroadcastPkts),
+          data: tmp.map((x) => x.etherHistoryBroadcastPkts),
         },
         {
           name: 'マルチキャスト',
           type: 'bar',
           stack: 'packets',
-          data: list.map((x) => x.etherHistoryMulticastPkts),
+          data: tmp.map((x) => x.etherHistoryMulticastPkts),
         },
         {
           name: 'エラー',
           type: 'bar',
           stack: 'packets',
-          data: list.map((x) => x.etherHistoryErrors),
+          data: tmp.map((x) => x.etherHistoryErrors),
         },
         {
           name: 'ドロップ',
           type: 'bar',
           stack: 'packets',
-          data: list.map((x) => x.etherHistoryDropEvents),
+          data: tmp.map((x) => x.etherHistoryDropEvents),
         },
       ]
       break
@@ -218,7 +222,7 @@ const showRMONHistoryChart = (div, type, list) => {
           name: 'バイト数',
           type: 'bar',
           stack: 'packets',
-          data: list.map((x) => x.etherHistoryOctets),
+          data: tmp.map((x) => x.etherHistoryOctets),
         },
       ]
       break
@@ -245,6 +249,7 @@ const showRMONHostsChart = (div, type, list) => {
             (a.hostTimeOutPkts + a.hostTimeInPkts)
         )
         .slice(0, 20)
+        .reverse()
       option.yAxis.data = topN.map((x) => x.hostTimeAddress)
       option.series = [
         {
@@ -289,6 +294,7 @@ const showRMONHostsChart = (div, type, list) => {
             (a.hostTimeInOctets + a.hostTimeOutOctets)
         )
         .slice(0, 20)
+        .reverse()
       option.yAxis.data = topN.map((x) => x.hostTimeAddress)
       option.series = [
         {
@@ -310,8 +316,65 @@ const showRMONHostsChart = (div, type, list) => {
   chart.resize()
 }
 
+const showRMONMatrixChart = (div, type, list) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = baseChartOption('hosts_' + type)
+  let topN = []
+  switch (type) {
+    case 'packtes':
+      topN = list
+        .slice()
+        .sort((a, b) => b.matrixSDPkts - a.matrixSDPkts)
+        .slice(0, 20)
+        .reverse()
+      option.yAxis.data = topN.map(
+        (x) => x.matrixSDSourceAddress + '=>' + x.matrixSDDestAddress
+      )
+      option.series = [
+        {
+          name: 'パケット数',
+          type: 'bar',
+          stack: 'packets',
+          data: topN.map((x) => x.matrixSDPkts),
+        },
+        {
+          name: 'エラー',
+          type: 'bar',
+          stack: 'packets',
+          color: 'red',
+          data: topN.map((x) => x.matrixSDErrors),
+        },
+      ]
+      break
+    case 'bytes':
+      topN = list
+        .slice()
+        .sort((a, b) => b.matrixSDOctets - a.matrixSDOctets)
+        .slice(0, 20)
+        .reverse()
+      option.yAxis.data = topN.map(
+        (x) => x.matrixSDSourceAddress + '=>' + x.matrixSDDestAddress
+      )
+      option.series = [
+        {
+          name: 'バイト数',
+          type: 'bar',
+          stack: 'bytes',
+          data: topN.map((x) => x.matrixSDOctets),
+        },
+      ]
+      break
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showRMONStatisticsChart', showRMONStatisticsChart)
   inject('showRMONHistoryChart', showRMONHistoryChart)
   inject('showRMONHostsChart', showRMONHostsChart)
+  inject('showRMONMatrixChart', showRMONMatrixChart)
 }

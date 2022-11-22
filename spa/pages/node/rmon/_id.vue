@@ -311,7 +311,7 @@
                 <v-icon>mdi-chart-bar-stacked</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>統計情報パケット数</v-list-item-title>
+                <v-list-item-title>パケット数</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item
@@ -321,7 +321,7 @@
                 <v-icon>mdi-chart-bar</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>統計情報バイト数</v-list-item-title>
+                <v-list-item-title>バイト数</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item
@@ -331,7 +331,7 @@
                 <v-icon>mdi-format-align-left</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>統計情報サイズ別</v-list-item-title>
+                <v-list-item-title>サイズ別</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -343,15 +343,15 @@
                 <v-icon>mdi-chart-bar-stacked</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>統計履歴パケット数</v-list-item-title>
+                <v-list-item-title>パケット数</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-            <v-list-item @click="showHistroyChart('bytes', '統計履歴バイト数')">
+            <v-list-item @click="showHistoryChart('bytes', '統計履歴バイト数')">
               <v-list-item-icon>
                 <v-icon>mdi-chart-bar</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>統計履歴バイト数</v-list-item-title>
+                <v-list-item-title>バイト数</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -363,7 +363,7 @@
                 <v-icon>mdi-chart-bar-stacked</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>ホスト別パケット数</v-list-item-title>
+                <v-list-item-title>パケット数</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="showHostsChart('bytes', 'ホスト別バイト数')">
@@ -371,7 +371,29 @@
                 <v-icon>mdi-chart-bar</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>ホスト別バイト数</v-list-item-title>
+                <v-list-item-title>バイト数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list v-if="tab == 3 && matrix.length > 0">
+            <v-list-item
+              @click="showMatrixChart('packtes', 'マトリックス別パケット数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar-stacked</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>パケット数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item
+              @click="showMatrixChart('bytes', 'マトリックス別バイト数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>バイト数</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -1074,6 +1096,13 @@ export default {
       this.chartDialog = true
       this.$nextTick(() => {
         this.$showRMONHostsChart('chart', type, this.hosts)
+      })
+    },
+    showMatrixChart(type, title) {
+      this.chartTitle = title
+      this.chartDialog = true
+      this.$nextTick(() => {
+        this.$showRMONMatrixChart('chart', type, this.matrix)
       })
     },
     formatCount(n) {
