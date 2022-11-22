@@ -397,6 +397,28 @@
               </v-list-item-content>
             </v-list-item>
           </v-list>
+          <v-list v-if="tab == 4 && protocol.length > 0">
+            <v-list-item
+              @click="showProtocolChart('packtes', 'プロトコル別パケット数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar-stacked</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>パケット数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item
+              @click="showProtocolChart('bytes', 'プロトコル別バイト数')"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>バイト数</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
         </v-menu>
         <download-excel
           :fetch="makeExports"
@@ -596,23 +618,6 @@ export default {
         { text: 'バイト', value: 'alMatrixSDOctets', width: '10%' },
         { text: '期間', value: 'Dur', width: '10%' },
       ],
-      editDialog: false,
-      hasTh: false,
-      addError: false,
-      thValue: '',
-      polling: {
-        NodeID: '',
-        Name: '',
-        Level: 'low',
-        Type: '',
-        Mode: '',
-        Filter: '',
-        Script: '',
-        Timeout: 3,
-        Retry: 1,
-        LogMode: 1,
-        PollInt: 60,
-      },
       exportTitle: '',
       exportSheet: '',
       chartTitle: '',
@@ -1103,6 +1108,13 @@ export default {
       this.chartDialog = true
       this.$nextTick(() => {
         this.$showRMONMatrixChart('chart', type, this.matrix)
+      })
+    },
+    showProtocolChart(type, title) {
+      this.chartTitle = title
+      this.chartDialog = true
+      this.$nextTick(() => {
+        this.$showRMONProtocolChart('chart', type, this.protocol)
       })
     },
     formatCount(n) {

@@ -321,7 +321,7 @@ const showRMONMatrixChart = (div, type, list) => {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
-  const option = baseChartOption('hosts_' + type)
+  const option = baseChartOption('matrix_' + type)
   let topN = []
   switch (type) {
     case 'packtes':
@@ -372,9 +372,55 @@ const showRMONMatrixChart = (div, type, list) => {
   chart.resize()
 }
 
+const showRMONProtocolChart = (div, type, list) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = baseChartOption('protocol_' + type)
+  let topN = []
+  switch (type) {
+    case 'packtes':
+      topN = list
+        .slice()
+        .sort((a, b) => b.protocolDistStatsPkts - a.protocolDistStatsPkts)
+        .slice(0, 20)
+        .reverse()
+      option.yAxis.data = topN.map((x) => x.Protocol)
+      option.series = [
+        {
+          name: 'パケット数',
+          type: 'bar',
+          stack: 'packets',
+          data: topN.map((x) => x.protocolDistStatsPkts),
+        },
+      ]
+      break
+    case 'bytes':
+      topN = list
+        .slice()
+        .sort((a, b) => b.protocolDistStatsOctets - a.protocolDistStatsOctets)
+        .slice(0, 20)
+        .reverse()
+      option.yAxis.data = topN.map((x) => x.Protocol)
+      option.series = [
+        {
+          name: 'バイト数',
+          type: 'bar',
+          stack: 'bytes',
+          data: topN.map((x) => x.protocolDistStatsOctets),
+        },
+      ]
+      break
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showRMONStatisticsChart', showRMONStatisticsChart)
   inject('showRMONHistoryChart', showRMONHistoryChart)
   inject('showRMONHostsChart', showRMONHostsChart)
   inject('showRMONMatrixChart', showRMONMatrixChart)
+  inject('showRMONProtocolChart', showRMONProtocolChart)
 }
