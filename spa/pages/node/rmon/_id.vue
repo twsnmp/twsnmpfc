@@ -420,22 +420,28 @@
             </v-list-item>
           </v-list>
           <v-list v-if="tab == 5 && addressMap.length > 0">
-            <v-list-item @click="showAddressMapChart('map', 'アドレスマップ')">
+            <v-list-item
+              @click="
+                showAddressMapChart('force', 'アドレスマップ(力学モデル)')
+              "
+            >
               <v-list-item-icon>
-                <v-icon>mdi-chart-bar-stacked</v-icon>
+                <v-icon>mdi-merge</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>ヒートマップ</v-list-item-title>
+                <v-list-item-title>力学モデル</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item
-              @click="showAddressMapChart('graph', 'アドレスマップ(グラフ）')"
+              @click="
+                showAddressMapChart('circular', 'アドレスマップ(円形モデル)')
+              "
             >
               <v-list-item-icon>
-                <v-icon>mdi-chart-bar</v-icon>
+                <v-icon>mdi-chart-donut</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title>グラフ</v-list-item-title>
+                <v-list-item-title>円形モデル</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>

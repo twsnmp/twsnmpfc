@@ -417,16 +417,6 @@ const showRMONProtocolChart = (div, type, list) => {
   chart.resize()
 }
 
-const showRMONAddressMapChart = (div, type, list) => {
-  if (chart) {
-    chart.dispose()
-  }
-  chart = echarts.init(document.getElementById(div))
-  const option = baseChartOption('p_' + type)
-  chart.setOption(option)
-  chart.resize()
-}
-
 const showRMONNlHostsChart = (div, type, list) => {
   if (chart) {
     chart.dispose()
@@ -667,15 +657,159 @@ const showRMONAlMatrixChart = (div, type, list) => {
   chart.resize()
 }
 
+const isLocalIP = (ip) => {
+  return (
+    ip.startsWith('192.168') || ip.startsWith('10.') || ip.startsWith('172.16.')
+  )
+}
+
+const showRMONAddressMapChart = (div, type, list) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const categories = [
+    { name: 'MAC' },
+    { name: 'ローカルIP' },
+    { name: 'グローバルIP' },
+    { name: '重複?IP' },
+  ]
+  const option = {
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    grid: {
+      left: '7%',
+      right: '5%',
+      bottom: '5%',
+      containLabel: true,
+    },
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_rmon_addressmap' },
+      },
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: (params) => {
+        return params.name + '<br/>' + params.value
+      },
+      textStyle: {
+        fontSize: 10,
+      },
+      position: 'right',
+    },
+    legend: [
+      {
+        orient: 'vertical',
+        top: 50,
+        right: 20,
+        textStyle: {
+          fontSize: 10,
+          color: '#ccc',
+        },
+        data: categories.map(function (a) {
+          return a.name
+        }),
+      },
+    ],
+    color: ['#1f78b4', '#11cc00', '#cccc00', '#e31a1c'],
+    animationDurationUpdate: 1500,
+    animationEasingUpdate: 'quinticInOut',
+    series: [
+      {
+        type: 'graph',
+        layout: type || 'force',
+        symbolSize: 8,
+        categories,
+        roam: true,
+        force: {
+          repulsion: 50,
+          edgeLength: 10,
+        },
+        label: {
+          show: false,
+        },
+        data: [],
+        links: [],
+        lineStyle: {
+          width: 1,
+          curveness: 0,
+        },
+      },
+    ],
+  }
+  const nodes = {}
+  list.forEach((m) => {
+    const mac = m.addressMapPhysicalAddress
+    const ip = m.addressMapNetworkAddress
+    if (!nodes[mac]) {
+      nodes[mac] = {
+        name: mac,
+        category: 'MAC',
+        draggable: true,
+        value: 1,
+        label: {
+          show: false,
+        },
+      }
+    } else {
+      nodes[mac].value++
+      if (nodes[mac].value > 50) {
+        if (!isLocalIP(ip)) {
+          return
+        }
+      }
+    }
+    if (!nodes[ip]) {
+      nodes[ip] = {
+        name: ip,
+        category: isLocalIP(ip) ? 'ローカルIP' : 'グローバルIP',
+        draggable: true,
+        value: 1,
+        label: {
+          show: false,
+        },
+      }
+    } else {
+      nodes[ip].value++
+      nodes[ip].category = '重複IP'
+    }
+    option.series[0].links.push({
+      source: mac,
+      target: ip,
+      value: ':',
+      lineStyle: {
+        color: '#ddd',
+      },
+    })
+  })
+  for (const k in nodes) {
+    option.series[0].data.push(nodes[k])
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showRMONStatisticsChart', showRMONStatisticsChart)
   inject('showRMONHistoryChart', showRMONHistoryChart)
   inject('showRMONHostsChart', showRMONHostsChart)
   inject('showRMONMatrixChart', showRMONMatrixChart)
   inject('showRMONProtocolChart', showRMONProtocolChart)
-  inject('showRMONAddressMapChart', showRMONAddressMapChart)
   inject('showRMONNlHostsChart', showRMONNlHostsChart)
   inject('showRMONNlMatrixChart', showRMONNlMatrixChart)
   inject('showRMONAlHostsChart', showRMONAlHostsChart)
   inject('showRMONAlMatrixChart', showRMONAlMatrixChart)
+  inject('showRMONAddressMapChart', showRMONAddressMapChart)
 }
