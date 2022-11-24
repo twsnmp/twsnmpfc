@@ -143,6 +143,25 @@
                   {{ formatCount(item.hostTimeOutErrors) }}
                 </span>
               </template>
+              <template #[`body.append`]>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td>
+                    <v-text-field
+                      v-model="hostsFilter.hostTimeAddress"
+                      label="MAC"
+                    ></v-text-field>
+                  </td>
+                  <td colspan="7"></td>
+                  <td>
+                    <v-text-field
+                      v-model="hostsFilter.Vendor"
+                      label="Vendor"
+                    ></v-text-field>
+                  </td>
+                </tr>
+              </template>
             </v-data-table>
           </v-tab-item>
           <v-tab-item key="matrixSDTable">
@@ -168,6 +187,23 @@
                   {{ formatCount(item.matrixSDErrors) }}
                 </span>
               </template>
+              <template #[`body.append`]>
+                <tr>
+                  <td>
+                    <v-text-field
+                      v-model="matrixFilter.matrixSDSourceAddress"
+                      label="Source"
+                    ></v-text-field>
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model="matrixFilter.matrixSDDestAddress"
+                      label="Dest"
+                    ></v-text-field>
+                  </td>
+                  <td colspan="3"></td>
+                </tr>
+              </template>
             </v-data-table>
           </v-tab-item>
           <v-tab-item key="protocolDistStatsTable">
@@ -186,6 +222,17 @@
               <template #[`item.protocolDistStatsPkts`]="{ item }">
                 {{ formatCount(item.protocolDistStatsPkts) }}
               </template>
+              <template #[`body.append`]>
+                <tr>
+                  <td>
+                    <v-text-field
+                      v-model="protocolFilter"
+                      label="Protocol"
+                    ></v-text-field>
+                  </td>
+                  <td colspan="2"></td>
+                </tr>
+              </template>
             </v-data-table>
           </v-tab-item>
           <v-tab-item key="addressMapTable">
@@ -202,6 +249,31 @@
                 <span :class="item.Changed != 0 ? 'red--text' : 'gray--text'">
                   {{ item.Changed == 0 ? '' : item.Changed }}
                 </span>
+              </template>
+              <template #[`body.append`]>
+                <td></td>
+                <tr>
+                  <td></td>
+                  <td>
+                    <v-text-field
+                      v-model="addressMapFilter.addressMapNetworkAddress"
+                      label="IP"
+                    ></v-text-field>
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model="addressMapFilter.addressMapPhysicalAddress"
+                      label="MAC"
+                    ></v-text-field>
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model="addressMapFilter.Vendor"
+                      label="Vendor"
+                    ></v-text-field>
+                  </td>
+                  <td colspan="2"></td>
+                </tr>
               </template>
             </v-data-table>
           </v-tab-item>
@@ -230,6 +302,19 @@
               <template #[`item.nlHostOutMacNonUnicastPkts`]="{ item }">
                 {{ formatCount(item.nlHostOutMacNonUnicastPkts) }}
               </template>
+              <template #[`body.append`]>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td>
+                    <v-text-field
+                      v-model="nlHostsFilter"
+                      label="IP"
+                    ></v-text-field>
+                  </td>
+                  <td colspan="6"></td>
+                </tr>
+              </template>
             </v-data-table>
           </v-tab-item>
           <v-tab-item key="nlMatrixSDTable">
@@ -247,6 +332,25 @@
               </template>
               <template #[`item.nlMatrixSDPkts`]="{ item }">
                 {{ formatCount(item.nlMatrixSDPkts) }}
+              </template>
+              <template #[`body.append`]>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td>
+                    <v-text-field
+                      v-model="nlMatrixFilter.nlMatrixSDSourceAddressc"
+                      label="Source"
+                    ></v-text-field>
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model="nlMatrixFilter.nlMatrixSDDestAddress"
+                      label="Dest"
+                    ></v-text-field>
+                  </td>
+                  <td colspan="3"></td>
+                </tr>
               </template>
             </v-data-table>
           </v-tab-item>
@@ -272,6 +376,25 @@
               <template #[`item.alHostOutOctets`]="{ item }">
                 {{ formatBytes(item.alHostOutOctets) }}
               </template>
+              <template #[`body.append`]>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td>
+                    <v-text-field
+                      v-model="alHostsFilter.alHostAddress"
+                      label="IP"
+                    ></v-text-field>
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model="alHostsFilter.Protocol"
+                      label="Protocol"
+                    ></v-text-field>
+                  </td>
+                  <td colspan="5"></td>
+                </tr>
+              </template>
             </v-data-table>
           </v-tab-item>
           <v-tab-item key="alMatrixSDTable">
@@ -289,6 +412,31 @@
               </template>
               <template #[`item.alMatrixSDPkts`]="{ item }">
                 {{ formatCount(item.alMatrixSDPkts) }}
+              </template>
+              <template #[`body.append`]>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td>
+                    <v-text-field
+                      v-model="alMatrixFilter.alMatrixSDSourceAddress"
+                      label="Source"
+                    ></v-text-field>
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model="alMatrixFilter.alMatrixSDDestAddress"
+                      label="Dest"
+                    ></v-text-field>
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model="alMatrixFilter.Protocol"
+                      label="Protocol"
+                    ></v-text-field>
+                  </td>
+                  <td colspan="3"></td>
+                </tr>
               </template>
             </v-data-table>
           </v-tab-item>
@@ -645,10 +793,22 @@ export default {
         { text: '帯域', value: 'etherHistoryUtilization', width: '10%' },
       ],
       hosts: [],
+      hostsFilter: {
+        hostTimeAddress: '',
+        Vendor: '',
+      },
       hostsHeaders: [
         { text: '作成順', value: 'hostTimeCreationOrder', width: '8%' },
         { text: '最終確認', value: 'hostTimeIndex', width: '8%' },
-        { text: 'MACアドレス', value: 'hostTimeAddress', width: '12%' },
+        {
+          text: 'MACアドレス',
+          value: 'hostTimeAddress',
+          width: '12%',
+          filter: (value) => {
+            if (!this.hostsFilter.hostTimeAddress) return true
+            return value.includes(this.hostsFilter.hostTimeAddress)
+          },
+        },
         { text: '受信パケット', value: 'hostTimeInPkts', width: '8%' },
         { text: '受信バイト', value: 'hostTimeInOctets', width: '8%' },
         { text: '送信パケット', value: 'hostTimeOutPkts', width: '8%' },
@@ -656,40 +816,115 @@ export default {
         { text: '送信エラー', value: 'hostTimeOutErrors', width: '8%' },
         { text: 'BCast', value: 'hostTimeOutBroadcastPkts', width: '8%' },
         { text: 'MCast', value: 'hostTimeOutMulticastPkts', width: '8%' },
-        { text: 'ベンダー', value: 'Vendor', width: '16%' },
+        {
+          text: 'ベンダー',
+          value: 'Vendor',
+          width: '16%',
+          filter: (value) => {
+            if (!this.hostsFilter.Vendor) return true
+            return value.includes(this.hostsFilter.Vendor)
+          },
+        },
       ],
       matrix: [],
+      matrixFilter: {
+        matrixSDSourceAddress: '',
+        matrixSDDestAddress: '',
+      },
       matrixHeaders: [
-        { text: '送信元', value: 'matrixSDSourceAddress', width: '8%' },
-        { text: '宛先', value: 'matrixSDDestAddress', width: '8%' },
+        {
+          text: '送信元',
+          value: 'matrixSDSourceAddress',
+          width: '8%',
+          filter: (value) => {
+            if (!this.matrixFilter.matrixSDSourceAddress) return true
+            return value.includes(this.matrixFilter.matrixSDSourceAddress)
+          },
+        },
+        {
+          text: '宛先',
+          value: 'matrixSDDestAddress',
+          width: '8%',
+          filter: (value) => {
+            if (!this.matrixFilter.matrixSDDestAddress) return true
+            return value.includes(this.matrixFilter.matrixSDDestAddress)
+          },
+        },
         { text: 'パケット', value: 'matrixSDPkts', width: '8%' },
         { text: 'バイト', value: 'matrixSDOctets', width: '8%' },
         { text: 'エラー', value: 'matrixSDErrors', width: '8%' },
       ],
       protocol: [],
+      protocolFilter: '',
       protocolHeaders: [
-        { text: 'プロトコル名', value: 'Protocol', width: '60%' },
+        {
+          text: 'プロトコル',
+          value: 'Protocol',
+          width: '60%',
+          filter: (value) => {
+            if (!this.protocolFilter) return true
+            return value.includes(this.protocolFilter)
+          },
+        },
         { text: 'パケット', value: 'protocolDistStatsPkts', width: '20%' },
         { text: 'バイト', value: 'protocolDistStatsOctets', width: '20%' },
       ],
       addressMap: [],
+      addressMapFilter: {
+        addressMapNetworkAddress: '',
+        addressMapPhysicalAddress: '',
+        Vendor: '',
+      },
       addressMapHeaders: [
         { text: '変化', value: 'Changed', width: '10%' },
-        { text: 'IPアドレス', value: 'addressMapNetworkAddress', width: '20%' },
+        {
+          text: 'IPアドレス',
+          value: 'addressMapNetworkAddress',
+          width: '20%',
+          filter: (value) => {
+            if (!this.addressMapFilter.addressMapNetworkAddress) return true
+            return value.includes(
+              this.addressMapFilter.addressMapNetworkAddress
+            )
+          },
+        },
         {
           text: 'MACアドレス',
           value: 'addressMapPhysicalAddress',
           width: '20%',
+          filter: (value) => {
+            if (!this.addressMapFilter.addressMapPhysicalAddress) return true
+            return value.includes(
+              this.addressMapFilter.addressMapPhysicalAddress
+            )
+          },
         },
-        { text: 'ベンダー', value: 'Vendor', width: '30%' },
+        {
+          text: 'ベンダー',
+          value: 'Vendor',
+          width: '30%',
+          filter: (value) => {
+            if (!this.addressMapFilter.Vendor) return true
+            return value.includes(this.addressMapFilter.Vendor)
+          },
+        },
         { text: '登録', value: 'addressMapTimeMark', width: '10%' },
         { text: '最終変化', value: 'addressMapLastChange', width: '10%' },
       ],
       nlHosts: [],
+      nlHostsFilter: '',
       nlHostsHeaders: [
         { text: '初回', value: 'nlHostCreateTime', width: '10%' },
         { text: '最終', value: 'nlHostTimeMark', width: '10%' },
-        { text: 'IPアドレス', value: 'nlHostAddress', width: '15%' },
+        {
+          text: 'IPアドレス',
+          value: 'nlHostAddress',
+          width: '15%',
+          filter: (value) => {
+            if (!this.nlHostsFilter) return true
+            return value.includes(this.nlHostsFilter)
+          },
+        },
         { text: '受信パケット', value: 'nlHostInPkts', width: '10%' },
         { text: '受信バイト', value: 'nlHostInOctets', width: '10%' },
         { text: '送信パケット', value: 'nlHostOutPkts', width: '10%' },
@@ -702,21 +937,61 @@ export default {
         { text: '期間', value: 'Dur', width: '10%' },
       ],
       nlMatrix: [],
+      nlMatrixFilter: {
+        nlMatrixSDSourceAddressc: '',
+        nlMatrixSDDestAddress: '',
+      },
       nlMatrixHeaders: [
         { text: '初回', value: 'nlMatrixSDCreateTime', width: '10%' },
         { text: '最終', value: 'nlMatrixSDTimeMark', width: '10%' },
-        { text: '送信元', value: 'nlMatrixSDSourceAddress', width: '25%' },
-        { text: '宛先', value: 'nlMatrixSDDestAddress', width: '25%' },
+        {
+          text: '送信元',
+          value: 'nlMatrixSDSourceAddress',
+          width: '25%',
+          filter: (value) => {
+            if (!this.nlMatrixFilter.nlMatrixSDSourceAddressc) return true
+            return value.includes(this.nlMatrixFilter.nlMatrixSDSourceAddressc)
+          },
+        },
+        {
+          text: '宛先',
+          value: 'nlMatrixSDDestAddress',
+          width: '25%',
+          filter: (value) => {
+            if (!this.nlMatrixFilter.nlMatrixSDDestAddress) return true
+            return value.includes(this.nlMatrixFilter.nlMatrixSDDestAddress)
+          },
+        },
         { text: 'パケット', value: 'nlMatrixSDPkts', width: '10%' },
         { text: 'バイト', value: 'nlMatrixSDOctets', width: '10%' },
         { text: '期間', value: 'Dur', width: '10%' },
       ],
       alHosts: [],
+      alHostsFilter: {
+        alHostAddress: '',
+        Protocol: '',
+      },
       alHostsHeaders: [
         { text: '初回', value: 'alHostCreateTime', width: '10%' },
         { text: '最終', value: 'alHostTimeMark', width: '10%' },
-        { text: 'IPアドレス', value: 'alHostAddress', width: '20%' },
-        { text: 'プロトコル', value: 'Protocol', width: '10%' },
+        {
+          text: 'IPアドレス',
+          value: 'alHostAddress',
+          width: '20%',
+          filter: (value) => {
+            if (!this.alHostsFilter.alHostAddress) return true
+            return value.includes(this.alHostsFilter.alHostAddress)
+          },
+        },
+        {
+          text: 'プロトコル',
+          value: 'Protocol',
+          width: '10%',
+          filter: (value) => {
+            if (!this.alHostsFilter.Protocol) return true
+            return value.includes(this.alHostsFilter.Protocol)
+          },
+        },
         { text: '受信パケット', value: 'alHostInPkts', width: '10%' },
         { text: '受信バイト', value: 'alHostInOctets', width: '10%' },
         { text: '送信パケット', value: 'alHostOutPkts', width: '10%' },
@@ -724,12 +999,41 @@ export default {
         { text: '期間', value: 'Dur', width: '10%' },
       ],
       alMatrix: [],
+      alMatrixFilter: {
+        alMatrixSDSourceAddress: '',
+        alMatrixSDDestAddress: '',
+        Protocol: '',
+      },
       alMatrixHeaders: [
         { text: '初回', value: 'alMatrixSDCreateTime', width: '10%' },
         { text: '最終', value: 'alMatrixSDTimeMark', width: '10%' },
-        { text: '送信元', value: 'alMatrixSDSourceAddress', width: '20%' },
-        { text: '宛先', value: 'alMatrixSDDestAddress', width: '20%' },
-        { text: 'プロトコル', value: 'Protocol', width: '10%' },
+        {
+          text: '送信元',
+          value: 'alMatrixSDSourceAddress',
+          width: '20%',
+          filter: (value) => {
+            if (!this.alMatrixFilter.alMatrixSDSourceAddress) return true
+            return value.includes(this.alMatrixFilter.alMatrixSDSourceAddress)
+          },
+        },
+        {
+          text: '宛先',
+          value: 'alMatrixSDDestAddress',
+          width: '20%',
+          filter: (value) => {
+            if (!this.alMatrixFilter.alMatrixSDDestAddress) return true
+            return value.includes(this.alMatrixFilter.alMatrixSDDestAddress)
+          },
+        },
+        {
+          text: 'プロトコル',
+          value: 'Protocol',
+          width: '10%',
+          filter: (value) => {
+            if (!this.alMatrixFilter.Protocol) return true
+            return value.includes(this.alMatrixFilter.Protocol)
+          },
+        },
         { text: 'パケット', value: 'alMatrixSDPkts', width: '10%' },
         { text: 'バイト', value: 'alMatrixSDOctets', width: '10%' },
         { text: '期間', value: 'Dur', width: '10%' },
