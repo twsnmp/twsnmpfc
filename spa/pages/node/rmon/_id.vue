@@ -887,6 +887,9 @@ export default {
               this.addressMapFilter.addressMapNetworkAddress
             )
           },
+          sort: (a, b) => {
+            return this.$cmpIP(a, b)
+          },
         },
         {
           text: 'MACアドレス',
@@ -924,6 +927,9 @@ export default {
             if (!this.nlHostsFilter) return true
             return value.includes(this.nlHostsFilter)
           },
+          sort: (a, b) => {
+            return this.$cmpIP(a, b)
+          },
         },
         { text: '受信パケット', value: 'nlHostInPkts', width: '10%' },
         { text: '受信バイト', value: 'nlHostInOctets', width: '10%' },
@@ -952,6 +958,9 @@ export default {
             if (!this.nlMatrixFilter.nlMatrixSDSourceAddressc) return true
             return value.includes(this.nlMatrixFilter.nlMatrixSDSourceAddressc)
           },
+          sort: (a, b) => {
+            return this.$cmpIP(a, b)
+          },
         },
         {
           text: '宛先',
@@ -960,6 +969,9 @@ export default {
           filter: (value) => {
             if (!this.nlMatrixFilter.nlMatrixSDDestAddress) return true
             return value.includes(this.nlMatrixFilter.nlMatrixSDDestAddress)
+          },
+          sort: (a, b) => {
+            return this.$cmpIP(a, b)
           },
         },
         { text: 'パケット', value: 'nlMatrixSDPkts', width: '10%' },
@@ -981,6 +993,9 @@ export default {
           filter: (value) => {
             if (!this.alHostsFilter.alHostAddress) return true
             return value.includes(this.alHostsFilter.alHostAddress)
+          },
+          sort: (a, b) => {
+            return this.$cmpIP(a, b)
           },
         },
         {
@@ -1015,6 +1030,9 @@ export default {
             if (!this.alMatrixFilter.alMatrixSDSourceAddress) return true
             return value.includes(this.alMatrixFilter.alMatrixSDSourceAddress)
           },
+          sort: (a, b) => {
+            return this.$cmpIP(a, b)
+          },
         },
         {
           text: '宛先',
@@ -1023,6 +1041,9 @@ export default {
           filter: (value) => {
             if (!this.alMatrixFilter.alMatrixSDDestAddress) return true
             return value.includes(this.alMatrixFilter.alMatrixSDDestAddress)
+          },
+          sort: (a, b) => {
+            return this.$cmpIP(a, b)
           },
         },
         {
