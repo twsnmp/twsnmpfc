@@ -231,17 +231,23 @@ const showRMONHistoryChart = (div, type, list) => {
   chart.resize()
 }
 
-const showRMONHostsChart = (div, type, list) => {
+const showRMONHostsChart = (div, type, list, filter) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
   const option = baseChartOption('hosts_' + type)
-  let topN = []
+  let topN = list
+    .slice()
+    .filter(
+      (x) =>
+        (!filter.hostTimeAddress ||
+          x.hostTimeAddress.includes(filter.hostTimeAddress)) &&
+        (!filter.Vendor || x.Vendor.includes(filter.Vendor))
+    )
   switch (type) {
     case 'packtes':
-      topN = list
-        .slice()
+      topN = topN
         .sort(
           (a, b) =>
             b.hostTimeOutPkts +
@@ -285,8 +291,7 @@ const showRMONHostsChart = (div, type, list) => {
       ]
       break
     case 'bytes':
-      topN = list
-        .slice()
+      topN = topN
         .sort(
           (a, b) =>
             b.hostTimeInOctets +
@@ -316,17 +321,24 @@ const showRMONHostsChart = (div, type, list) => {
   chart.resize()
 }
 
-const showRMONMatrixChart = (div, type, list) => {
+const showRMONMatrixChart = (div, type, list, filter) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
   const option = baseChartOption('matrix_' + type)
-  let topN = []
+  let topN = list
+    .slice()
+    .filter(
+      (x) =>
+        (!filter.matrixSDSourceAddress ||
+          x.matrixSDSourceAddress.includes(filter.matrixSDSourceAddress)) &&
+        (!filter.matrixSDDestAddress ||
+          x.matrixSDDestAddress.includes(filter.matrixSDDestAddress))
+    )
   switch (type) {
     case 'packtes':
-      topN = list
-        .slice()
+      topN = topN
         .sort((a, b) => b.matrixSDPkts - a.matrixSDPkts)
         .slice(0, 20)
         .reverse()
@@ -350,8 +362,7 @@ const showRMONMatrixChart = (div, type, list) => {
       ]
       break
     case 'bytes':
-      topN = list
-        .slice()
+      topN = topN
         .sort((a, b) => b.matrixSDOctets - a.matrixSDOctets)
         .slice(0, 20)
         .reverse()
@@ -372,17 +383,16 @@ const showRMONMatrixChart = (div, type, list) => {
   chart.resize()
 }
 
-const showRMONProtocolChart = (div, type, list) => {
+const showRMONProtocolChart = (div, type, list, filter) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
   const option = baseChartOption('protocol_' + type)
-  let topN = []
+  let topN = list.slice().filter((x) => !filter || x.Protocol.includes(filter))
   switch (type) {
     case 'packtes':
-      topN = list
-        .slice()
+      topN = topN
         .sort((a, b) => b.protocolDistStatsPkts - a.protocolDistStatsPkts)
         .slice(0, 20)
         .reverse()
@@ -397,8 +407,7 @@ const showRMONProtocolChart = (div, type, list) => {
       ]
       break
     case 'bytes':
-      topN = list
-        .slice()
+      topN = topN
         .sort((a, b) => b.protocolDistStatsOctets - a.protocolDistStatsOctets)
         .slice(0, 20)
         .reverse()
@@ -417,17 +426,18 @@ const showRMONProtocolChart = (div, type, list) => {
   chart.resize()
 }
 
-const showRMONNlHostsChart = (div, type, list) => {
+const showRMONNlHostsChart = (div, type, list, filter) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
   const option = baseChartOption('nlHosts_' + type)
-  let topN = []
+  let topN = list
+    .slice()
+    .filter((x) => !filter || x.nlHostAddress.includes(filter))
   switch (type) {
     case 'packtes':
-      topN = list
-        .slice()
+      topN = topN
         .sort(
           (a, b) =>
             b.nlHostInPkts + b.nlHostOutPkts - a.nlHostInPkts - a.nlHostOutPkts
@@ -451,8 +461,7 @@ const showRMONNlHostsChart = (div, type, list) => {
       ]
       break
     case 'bytes':
-      topN = list
-        .slice()
+      topN = topN
         .sort(
           (a, b) =>
             b.nlHostInOctets +
@@ -483,17 +492,24 @@ const showRMONNlHostsChart = (div, type, list) => {
   chart.resize()
 }
 
-const showRMONNlMatrixChart = (div, type, list) => {
+const showRMONNlMatrixChart = (div, type, list, filter) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
   const option = baseChartOption('nlMaatrix_' + type)
-  let topN = []
+  let topN = list
+    .slice()
+    .filter(
+      (x) =>
+        (!filter.nlMatrixSDSourceAddress ||
+          x.nlMatrixSDSourceAddress.includes(filter.nlMatrixSDSourceAddress)) &&
+        (!filter.nlMatrixSDDestAddress ||
+          x.nlMatrixSDDestAddress.includes(filter.nlMatrixSDDestAddress))
+    )
   switch (type) {
     case 'packtes':
-      topN = list
-        .slice()
+      topN = topN
         .sort((a, b) => b.nlMatrixSDPkts - a.nlMatrixSDPkts)
         .slice(0, 20)
         .reverse()
@@ -510,8 +526,7 @@ const showRMONNlMatrixChart = (div, type, list) => {
       ]
       break
     case 'bytes':
-      topN = list
-        .slice()
+      topN = topN
         .sort((a, b) => b.nlMatrixSDOctets - a.nlMatrixSDOctets)
         .slice(0, 20)
         .reverse()
@@ -532,17 +547,23 @@ const showRMONNlMatrixChart = (div, type, list) => {
   chart.resize()
 }
 
-const showRMONAlHostsChart = (div, type, list) => {
+const showRMONAlHostsChart = (div, type, list, filter) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
   const option = baseChartOption('alHosts_' + type)
-  let topN = []
+  let topN = list
+    .slice()
+    .filter(
+      (x) =>
+        (!filter.alHostAddress ||
+          x.alHostAddress.includes(filter.alHostAddress)) &&
+        (!filter.Protocol || x.Protocol.includes(filter.Protocol))
+    )
   switch (type) {
     case 'packtes':
-      topN = list
-        .slice()
+      topN = topN
         .sort(
           (a, b) =>
             b.alHostInPkts + b.alHostOutPkts - a.alHostInPkts - a.alHostOutPkts
@@ -566,8 +587,7 @@ const showRMONAlHostsChart = (div, type, list) => {
       ]
       break
     case 'bytes':
-      topN = list
-        .slice()
+      topN = topN
         .sort(
           (a, b) =>
             b.alHostInOctets +
@@ -598,17 +618,25 @@ const showRMONAlHostsChart = (div, type, list) => {
   chart.resize()
 }
 
-const showRMONAlMatrixChart = (div, type, list) => {
+const showRMONAlMatrixChart = (div, type, list, filter) => {
   if (chart) {
     chart.dispose()
   }
   chart = echarts.init(document.getElementById(div))
   const option = baseChartOption('alMatrix_' + type)
-  let topN = []
+  let topN = list
+    .slice()
+    .filter(
+      (x) =>
+        (!filter.alMatrixSDSourceAddress ||
+          x.alMatrixSDSourceAddress.includes(filter.alMatrixSDSourceAddress)) &&
+        (!filter.alMatrixSDDestAddress ||
+          x.alMatrixSDDestAddress.includes(filter.alMatrixSDDestAddress)) &&
+        (!filter.Protocol || x.Protocol.includes(filter.Protocol))
+    )
   switch (type) {
     case 'packtes':
-      topN = list
-        .slice()
+      topN = topN
         .sort((a, b) => b.alMatrixSDPkts - a.alMatrixSDPkts)
         .slice(0, 20)
         .reverse()
@@ -630,8 +658,7 @@ const showRMONAlMatrixChart = (div, type, list) => {
       ]
       break
     case 'bytes':
-      topN = list
-        .slice()
+      topN = topN
         .sort((a, b) => b.alMatrixSDOctets - a.alMatrixSDOctets)
         .slice(0, 20)
         .reverse()
@@ -663,7 +690,7 @@ const isLocalIP = (ip) => {
   )
 }
 
-const showRMONAddressMapChart = (div, type, list) => {
+const showRMONAddressMapChart = (div, type, list, filter) => {
   if (chart) {
     chart.dispose()
   }
@@ -750,50 +777,64 @@ const showRMONAddressMapChart = (div, type, list) => {
     ],
   }
   const nodes = {}
-  list.forEach((m) => {
-    const mac = m.addressMapPhysicalAddress
-    const ip = m.addressMapNetworkAddress
-    if (!nodes[mac]) {
-      nodes[mac] = {
-        name: mac,
-        category: 'MAC',
-        draggable: true,
-        value: 1,
-        label: {
-          show: false,
-        },
-      }
-    } else {
-      nodes[mac].value++
-      if (nodes[mac].value > 50) {
-        if (!isLocalIP(ip)) {
-          return
+  list
+    .slice()
+    .filter(
+      (x) =>
+        (!filter.addressMapNetworkAddress ||
+          x.addressMapNetworkAddress.includes(
+            filter.addressMapNetworkAddress
+          )) &&
+        (!filter.addressMapPhysicalAddress ||
+          x.addressMapPhysicalAddress.includes(
+            filter.addressMapPhysicalAddress
+          )) &&
+        (!filter.Vendor || x.Vendor.includes(filter.Vendor))
+    )
+    .forEach((m) => {
+      const mac = m.addressMapPhysicalAddress
+      const ip = m.addressMapNetworkAddress
+      if (!nodes[mac]) {
+        nodes[mac] = {
+          name: mac,
+          category: 'MAC',
+          draggable: true,
+          value: 1,
+          label: {
+            show: false,
+          },
+        }
+      } else {
+        nodes[mac].value++
+        if (nodes[mac].value > 50) {
+          if (!isLocalIP(ip)) {
+            return
+          }
         }
       }
-    }
-    if (!nodes[ip]) {
-      nodes[ip] = {
-        name: ip,
-        category: isLocalIP(ip) ? 'ローカルIP' : 'グローバルIP',
-        draggable: true,
-        value: 1,
-        label: {
-          show: false,
-        },
+      if (!nodes[ip]) {
+        nodes[ip] = {
+          name: ip,
+          category: isLocalIP(ip) ? 'ローカルIP' : 'グローバルIP',
+          draggable: true,
+          value: 1,
+          label: {
+            show: false,
+          },
+        }
+      } else {
+        nodes[ip].value++
+        nodes[ip].category = '重複IP'
       }
-    } else {
-      nodes[ip].value++
-      nodes[ip].category = '重複IP'
-    }
-    option.series[0].links.push({
-      source: mac,
-      target: ip,
-      value: ':',
-      lineStyle: {
-        color: '#ddd',
-      },
+      option.series[0].links.push({
+        source: mac,
+        target: ip,
+        value: ':',
+        lineStyle: {
+          color: '#ddd',
+        },
+      })
     })
-  })
   for (const k in nodes) {
     option.series[0].data.push(nodes[k])
   }

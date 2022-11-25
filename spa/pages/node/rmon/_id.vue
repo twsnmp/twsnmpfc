@@ -339,7 +339,7 @@
                   <td></td>
                   <td>
                     <v-text-field
-                      v-model="nlMatrixFilter.nlMatrixSDSourceAddressc"
+                      v-model="nlMatrixFilter.nlMatrixSDSourceAddress"
                       label="Source"
                     ></v-text-field>
                   </td>
@@ -944,7 +944,7 @@ export default {
       ],
       nlMatrix: [],
       nlMatrixFilter: {
-        nlMatrixSDSourceAddressc: '',
+        nlMatrixSDSourceAddress: '',
         nlMatrixSDDestAddress: '',
       },
       nlMatrixHeaders: [
@@ -955,8 +955,8 @@ export default {
           value: 'nlMatrixSDSourceAddress',
           width: '25%',
           filter: (value) => {
-            if (!this.nlMatrixFilter.nlMatrixSDSourceAddressc) return true
-            return value.includes(this.nlMatrixFilter.nlMatrixSDSourceAddressc)
+            if (!this.nlMatrixFilter.nlMatrixSDSourceAddress) return true
+            return value.includes(this.nlMatrixFilter.nlMatrixSDSourceAddress)
           },
           sort: (a, b) => {
             return this.$cmpIP(a, b)
@@ -1538,9 +1538,9 @@ export default {
           this.exportSheet = 'RMONのIPマトリックス'
           this.nlMatrix.forEach((e) => {
             if (
-              this.nlMatrixFilter.nlMatrixSDSourceAddressc &&
-              !e.nlMatrixSDSourceAddressc.includes(
-                this.nlMatrixFilter.nlMatrixSDSourceAddressc
+              this.nlMatrixFilter.nlMatrixSDSourceAddress &&
+              !e.nlMatrixSDSourceAddress.includes(
+                this.nlMatrixFilter.nlMatrixSDSourceAddress
               )
             ) {
               return
@@ -1653,56 +1653,86 @@ export default {
       this.chartTitle = title
       this.chartDialog = true
       this.$nextTick(() => {
-        this.$showRMONHostsChart('chart', type, this.hosts)
+        this.$showRMONHostsChart('chart', type, this.hosts, this.hostsFilter)
       })
     },
     showMatrixChart(type, title) {
       this.chartTitle = title
       this.chartDialog = true
       this.$nextTick(() => {
-        this.$showRMONMatrixChart('chart', type, this.matrix)
+        this.$showRMONMatrixChart('chart', type, this.matrix, this.matrixFilter)
       })
     },
     showProtocolChart(type, title) {
       this.chartTitle = title
       this.chartDialog = true
       this.$nextTick(() => {
-        this.$showRMONProtocolChart('chart', type, this.protocol)
+        this.$showRMONProtocolChart(
+          'chart',
+          type,
+          this.protocol,
+          this.protocolFilter
+        )
       })
     },
     showAddressMapChart(type, title) {
       this.chartTitle = title
       this.chartDialog = true
       this.$nextTick(() => {
-        this.$showRMONAddressMapChart('chart', type, this.addressMap)
+        this.$showRMONAddressMapChart(
+          'chart',
+          type,
+          this.addressMap,
+          this.addressMapFilter
+        )
       })
     },
     showNlHostsChart(type, title) {
       this.chartTitle = title
       this.chartDialog = true
       this.$nextTick(() => {
-        this.$showRMONNlHostsChart('chart', type, this.nlHosts)
+        this.$showRMONNlHostsChart(
+          'chart',
+          type,
+          this.nlHosts,
+          this.nlHostsFilter
+        )
       })
     },
     showNlMatrixChart(type, title) {
       this.chartTitle = title
       this.chartDialog = true
       this.$nextTick(() => {
-        this.$showRMONNlMatrixChart('chart', type, this.nlMatrix)
+        this.$showRMONNlMatrixChart(
+          'chart',
+          type,
+          this.nlMatrix,
+          this.nlMatrixFilter
+        )
       })
     },
     showAlHostsChart(type, title) {
       this.chartTitle = title
       this.chartDialog = true
       this.$nextTick(() => {
-        this.$showRMONAlHostsChart('chart', type, this.alHosts)
+        this.$showRMONAlHostsChart(
+          'chart',
+          type,
+          this.alHosts,
+          this.alHostsFilter
+        )
       })
     },
     showAlMatrixChart(type, title) {
       this.chartTitle = title
       this.chartDialog = true
       this.$nextTick(() => {
-        this.$showRMONAlMatrixChart('chart', type, this.alMatrix)
+        this.$showRMONAlMatrixChart(
+          'chart',
+          type,
+          this.alMatrix,
+          this.alMatrixFilter
+        )
       })
     },
     formatCount(n) {
