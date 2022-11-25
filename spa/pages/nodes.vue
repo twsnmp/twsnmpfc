@@ -78,6 +78,9 @@
               <v-text-field v-model="conf.ip" label="ip"></v-text-field>
             </td>
             <td>
+              <v-text-field v-model="conf.mac" label="mac"></v-text-field>
+            </td>
+            <td>
               <v-text-field v-model="conf.descr" label="descr"></v-text-field>
             </td>
             <td></td>
@@ -256,7 +259,7 @@ export default {
         {
           text: '状態',
           value: 'State',
-          width: '12%',
+          width: '8%',
           filter: (value) => {
             if (!this.conf.state) return true
             return this.conf.state === value
@@ -265,7 +268,7 @@ export default {
         {
           text: '名前',
           value: 'Name',
-          width: '23%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.name) return true
             return value.includes(this.conf.name)
@@ -274,7 +277,7 @@ export default {
         {
           text: 'IPアドレス',
           value: 'IP',
-          width: '15%',
+          width: '12%',
           filter: (value) => {
             if (!this.conf.ip) return true
             return value.includes(this.conf.ip)
@@ -284,21 +287,31 @@ export default {
           },
         },
         {
+          text: 'MACアドレス',
+          value: 'MAC',
+          width: '25%',
+          filter: (value) => {
+            if (!this.conf.mac) return true
+            return value.includes(this.conf.mac)
+          },
+        },
+        {
           text: '説明',
           value: 'Descr',
-          width: '35%',
+          width: '30%',
           filter: (value) => {
             if (!this.conf.descr) return true
             return value.includes(this.conf.descr)
           },
         },
-        { text: '操作', value: 'actions', width: '15%' },
+        { text: '操作', value: 'actions', width: '13%' },
       ],
       nodes: [],
       conf: {
         state: '',
         name: '',
         ip: '',
+        mac: '',
         descr: '',
         sortBy: 'State',
         sortDesc: false,
@@ -412,6 +425,9 @@ export default {
         return false
       }
       if (this.conf.ip && !e.IP.includes(this.conf.ip)) {
+        return false
+      }
+      if (this.conf.mac && !e.MAC.includes(this.conf.mac)) {
         return false
       }
       if (this.conf.descr && !e.Descr.includes(this.conf.descr)) {
