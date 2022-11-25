@@ -1401,6 +1401,18 @@ export default {
           this.exportTitle = this.node.Name + 'のRMONホストリスト'
           this.exportSheet = 'RMONホストリスト'
           this.hosts.forEach((e) => {
+            if (
+              this.hostsFilter.hostTimeAddress &&
+              !e.hostTimeAddress.includes(this.hostsFilter.hostTimeAddress)
+            ) {
+              return
+            }
+            if (
+              this.hostsFilter.Vendor &&
+              !e.Vendor.includes(this.hostsFilter.Vendor)
+            ) {
+              return
+            }
             exports.push({
               作成順: e.hostTimeCreationOrder,
               最終確認: e.hostTimeIndex,
@@ -1420,6 +1432,22 @@ export default {
           this.exportTitle = this.node.Name + 'のRMONホストマトリックス'
           this.exportSheet = 'RMONホストマトリックス'
           this.matrix.forEach((e) => {
+            if (
+              this.matrixFilter.matrixSDSourceAddress &&
+              !e.matrixSDSourceAddress.includes(
+                this.matrixFilter.matrixSDSourceAddress
+              )
+            ) {
+              return
+            }
+            if (
+              this.matrixFilter.matrixSDDestAddress &&
+              !e.matrixSDDestAddress.includes(
+                this.matrixFilter.matrixSDDestAddress
+              )
+            ) {
+              return
+            }
             exports.push({
               送信元: e.matrixSDSourceAddress,
               宛先: e.matrixSDDestAddress,
@@ -1433,6 +1461,12 @@ export default {
           this.exportTitle = this.node.Name + 'のRMONプロトコル別'
           this.exportSheet = 'RMONプロトコル別'
           this.protocol.forEach((e) => {
+            if (
+              this.protocolFilter &&
+              !e.Protocol.includes(this.protocolFilter)
+            ) {
+              return
+            }
             exports.push({
               プロトコル名: e.Protocol,
               パケット: e.protocolDistStatsPkts,
@@ -1444,6 +1478,28 @@ export default {
           this.exportTitle = this.node.Name + 'のRMONアドレスマップ'
           this.exportSheet = 'RMONアドレスマップ'
           this.addressMap.forEach((e) => {
+            if (
+              this.addressMapFilter.addressMapNetworkAddress &&
+              !e.addressMapNetworkAddress.includes(
+                this.addressMapFilter.addressMapNetworkAddress
+              )
+            ) {
+              return
+            }
+            if (
+              this.addressMapFilter.addressMapPhysicalAddress &&
+              !e.addressMapPhysicalAddress.includes(
+                this.addressMapFilter.addressMapPhysicalAddress
+              )
+            ) {
+              return
+            }
+            if (
+              this.addressMapFilter.Vendor &&
+              !e.Vendor.includes(this.addressMapFilter.Vendor)
+            ) {
+              return
+            }
             exports.push({
               変化: e.Changed,
               IPアドレス: e.addressMapNetworkAddress,
@@ -1458,6 +1514,12 @@ export default {
           this.exportTitle = this.node.Name + 'のRMONのIPアドレスリスト'
           this.exportSheet = 'RMONのIPアドレスリスト'
           this.nlHosts.forEach((e) => {
+            if (
+              this.nlHostsFilter &&
+              !e.nlHostAddress.includes(this.nlHostsFilter)
+            ) {
+              return
+            }
             exports.push({
               初回: e.nlHostCreateTime,
               最終: e.nlHostTimeMark,
@@ -1475,6 +1537,22 @@ export default {
           this.exportTitle = this.node.Name + 'のRMONのIPマトリックス'
           this.exportSheet = 'RMONのIPマトリックス'
           this.nlMatrix.forEach((e) => {
+            if (
+              this.nlMatrixFilter.nlMatrixSDSourceAddressc &&
+              !e.nlMatrixSDSourceAddressc.includes(
+                this.nlMatrixFilter.nlMatrixSDSourceAddressc
+              )
+            ) {
+              return
+            }
+            if (
+              this.nlMatrixFilter.nlMatrixSDDestAddress &&
+              !e.nlMatrixSDDestAddress.includes(
+                this.nlMatrixFilter.nlMatrixSDDestAddress
+              )
+            ) {
+              return
+            }
             exports.push({
               初回: e.nlMatrixSDCreateTime,
               最終: e.nlMatrixSDTimeMark,
@@ -1491,6 +1569,18 @@ export default {
             this.node.Name + 'のRMONのプロトコル別アドレスリスト'
           this.exportSheet = 'RMONのプロトコル別アドレスリスト'
           this.alHosts.forEach((e) => {
+            if (
+              this.alHostsFilter.alHostAddress &&
+              !e.alHostAddress.includes(this.alHostsFilter.alHostAddress)
+            ) {
+              return
+            }
+            if (
+              this.alHostsFilter.Protocol &&
+              !e.Protocol.includes(this.alHostsFilter.Protocol)
+            ) {
+              return
+            }
             exports.push({
               初回: e.alHostCreateTime,
               最終: e.alHostTimeMark,
@@ -1508,6 +1598,28 @@ export default {
           this.exportTitle = this.node.Name + 'のRMONのプロトコル別マトリックス'
           this.exportSheet = 'RMONのプロトコル別マトリックス'
           this.alMatrix.forEach((e) => {
+            if (
+              this.alMatrixFilter.alMatrixSDSourceAddress &&
+              !e.alMatrixSDSourceAddress.includes(
+                this.alMatrixFilter.alMatrixSDSourceAddress
+              )
+            ) {
+              return
+            }
+            if (
+              this.alMatrixFilter.alMatrixSDDestAddress &&
+              !e.alMatrixSDDestAddress.includes(
+                this.alMatrixFilter.alMatrixSDDestAddress
+              )
+            ) {
+              return
+            }
+            if (
+              this.alMatrixFilter.Protocol &&
+              !e.Protocol.includes(this.alMatrixFilter.Protocol)
+            ) {
+              return
+            }
             exports.push({
               初回: e.alMatrixSDCreateTime,
               最終: e.alMatrixSDTimeMark,
