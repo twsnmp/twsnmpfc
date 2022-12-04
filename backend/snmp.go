@@ -737,6 +737,8 @@ func getRemoteAddr(a []string) string {
 
 type RMONEnt struct {
 	ProtocolDir map[int]string
+	SysUptime   int64
+	LocalTime   int64
 	MIBs        map[string]map[string]string
 }
 
@@ -770,6 +772,22 @@ func getRMONProtocolDir(id string, agent *gosnmp.GoSNMP) map[int]string {
 	return ret
 }
 
+func getSysUptime(agent *gosnmp.GoSNMP) int64 {
+	oids := []string{datastore.MIBDB.NameToOID("sysUpTime.0")}
+	result, err := agent.Get(oids)
+	if err != nil {
+		return 0
+	}
+	var uptime int64
+	for _, variable := range result.Variables {
+		if variable.Name == datastore.MIBDB.NameToOID("sysUpTime.0") {
+			uptime = int64(gosnmp.ToBigInt(variable.Value).Uint64())
+			break
+		}
+	}
+	return uptime
+}
+
 func GetRMON(n *datastore.NodeEnt, t string) *RMONEnt {
 	ret := &RMONEnt{
 		ProtocolDir: make(map[int]string),
@@ -791,6 +809,8 @@ func GetRMON(n *datastore.NodeEnt, t string) *RMONEnt {
 		t == "alMatrixSDTable" {
 		ret.ProtocolDir = getRMONProtocolDir(n.ID, agent)
 	}
+	ret.SysUptime = getSysUptime(agent)
+	ret.LocalTime = time.Now().Unix()
 	_ = agent.Walk(datastore.MIBDB.NameToOID(t), func(variable gosnmp.SnmpPDU) error {
 		a := strings.SplitN(datastore.MIBDB.OIDToName(variable.Name), ".", 2)
 		if len(a) != 2 {

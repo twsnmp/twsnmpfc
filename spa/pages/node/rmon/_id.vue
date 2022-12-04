@@ -71,7 +71,7 @@
             <v-data-table
               :headers="historyHeaders"
               :items="history"
-              sort-by="Index"
+              sort-by="etherHistoryIntervalStart"
               sort-asc
               dense
               :loading="$fetchState.pending"
@@ -251,8 +251,8 @@
                 </span>
               </template>
               <template #[`body.append`]>
-                <td></td>
                 <tr>
+                  <td></td>
                   <td></td>
                   <td>
                     <v-text-field
@@ -302,9 +302,11 @@
               <template #[`item.nlHostOutMacNonUnicastPkts`]="{ item }">
                 {{ formatCount(item.nlHostOutMacNonUnicastPkts) }}
               </template>
+              <template #[`item.Dur`]="{ item }">
+                {{ formatDur(item.Dur) }}
+              </template>
               <template #[`body.append`]>
                 <tr>
-                  <td></td>
                   <td></td>
                   <td>
                     <v-text-field
@@ -332,6 +334,9 @@
               </template>
               <template #[`item.nlMatrixSDPkts`]="{ item }">
                 {{ formatCount(item.nlMatrixSDPkts) }}
+              </template>
+              <template #[`item.Dur`]="{ item }">
+                {{ formatDur(item.Dur) }}
               </template>
               <template #[`body.append`]>
                 <tr>
@@ -376,9 +381,11 @@
               <template #[`item.alHostOutOctets`]="{ item }">
                 {{ formatBytes(item.alHostOutOctets) }}
               </template>
+              <template #[`item.Dur`]="{ item }">
+                {{ formatDur(item.Dur) }}
+              </template>
               <template #[`body.append`]>
                 <tr>
-                  <td></td>
                   <td></td>
                   <td>
                     <v-text-field
@@ -413,9 +420,11 @@
               <template #[`item.alMatrixSDPkts`]="{ item }">
                 {{ formatCount(item.alMatrixSDPkts) }}
               </template>
+              <template #[`item.Dur`]="{ item }">
+                {{ formatDur(item.Dur) }}
+              </template>
               <template #[`body.append`]>
                 <tr>
-                  <td></td>
                   <td></td>
                   <td>
                     <v-text-field
@@ -782,7 +791,6 @@ export default {
       ],
       history: [],
       historyHeaders: [
-        { text: 'Index', value: 'Index', width: '15%' },
         { text: '開始時刻', value: 'etherHistoryIntervalStart', width: '15%' },
         { text: 'ドロップ', value: 'etherHistoryDropEvents', width: '10%' },
         { text: 'バイト数', value: 'etherHistoryOctets', width: '10%' },
@@ -905,20 +913,19 @@ export default {
         {
           text: 'ベンダー',
           value: 'Vendor',
-          width: '30%',
+          width: '20%',
           filter: (value) => {
             if (!this.addressMapFilter.Vendor) return true
             return value.includes(this.addressMapFilter.Vendor)
           },
         },
-        { text: '登録', value: 'addressMapTimeMark', width: '10%' },
-        { text: '最終変化', value: 'addressMapLastChange', width: '10%' },
+        { text: '登録', value: 'addressMapTimeMark', width: '15%' },
+        { text: '最終変化', value: 'addressMapLastChange', width: '15%' },
       ],
       nlHosts: [],
       nlHostsFilter: '',
       nlHostsHeaders: [
-        { text: '初回', value: 'nlHostCreateTime', width: '10%' },
-        { text: '最終', value: 'nlHostTimeMark', width: '10%' },
+        { text: '登録', value: 'nlHostCreateTime', width: '15%' },
         {
           text: 'IPアドレス',
           value: 'nlHostAddress',
@@ -940,7 +947,7 @@ export default {
           value: 'nlHostOutMacNonUnicastPkts',
           width: '15%',
         },
-        { text: '期間', value: 'Dur', width: '10%' },
+        { text: '期間', value: 'Dur', width: '15%' },
       ],
       nlMatrix: [],
       nlMatrixFilter: {
@@ -948,8 +955,7 @@ export default {
         nlMatrixSDDestAddress: '',
       },
       nlMatrixHeaders: [
-        { text: '初回', value: 'nlMatrixSDCreateTime', width: '10%' },
-        { text: '最終', value: 'nlMatrixSDTimeMark', width: '10%' },
+        { text: '登録', value: 'nlMatrixSDCreateTime', width: '15%' },
         {
           text: '送信元',
           value: 'nlMatrixSDSourceAddress',
@@ -976,7 +982,7 @@ export default {
         },
         { text: 'パケット', value: 'nlMatrixSDPkts', width: '10%' },
         { text: 'バイト', value: 'nlMatrixSDOctets', width: '10%' },
-        { text: '期間', value: 'Dur', width: '10%' },
+        { text: '期間', value: 'Dur', width: '15%' },
       ],
       alHosts: [],
       alHostsFilter: {
@@ -984,8 +990,7 @@ export default {
         Protocol: '',
       },
       alHostsHeaders: [
-        { text: '初回', value: 'alHostCreateTime', width: '10%' },
-        { text: '最終', value: 'alHostTimeMark', width: '10%' },
+        { text: '登録', value: 'alHostCreateTime', width: '15%' },
         {
           text: 'IPアドレス',
           value: 'alHostAddress',
@@ -1011,7 +1016,7 @@ export default {
         { text: '受信バイト', value: 'alHostInOctets', width: '10%' },
         { text: '送信パケット', value: 'alHostOutPkts', width: '10%' },
         { text: '送信バイト', value: 'alHostOutOctets', width: '10%' },
-        { text: '期間', value: 'Dur', width: '10%' },
+        { text: '期間', value: 'Dur', width: '15%' },
       ],
       alMatrix: [],
       alMatrixFilter: {
@@ -1020,12 +1025,11 @@ export default {
         Protocol: '',
       },
       alMatrixHeaders: [
-        { text: '初回', value: 'alMatrixSDCreateTime', width: '10%' },
-        { text: '最終', value: 'alMatrixSDTimeMark', width: '10%' },
+        { text: '登録', value: 'alMatrixSDCreateTime', width: '15%' },
         {
           text: '送信元',
           value: 'alMatrixSDSourceAddress',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.alMatrixFilter.alMatrixSDSourceAddress) return true
             return value.includes(this.alMatrixFilter.alMatrixSDSourceAddress)
@@ -1037,7 +1041,7 @@ export default {
         {
           text: '宛先',
           value: 'alMatrixSDDestAddress',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.alMatrixFilter.alMatrixSDDestAddress) return true
             return value.includes(this.alMatrixFilter.alMatrixSDDestAddress)
@@ -1049,7 +1053,7 @@ export default {
         {
           text: 'プロトコル',
           value: 'Protocol',
-          width: '10%',
+          width: '20%',
           filter: (value) => {
             if (!this.alMatrixFilter.Protocol) return true
             return value.includes(this.alMatrixFilter.Protocol)
@@ -1057,7 +1061,7 @@ export default {
         },
         { text: 'パケット', value: 'alMatrixSDPkts', width: '10%' },
         { text: 'バイト', value: 'alMatrixSDOctets', width: '10%' },
-        { text: '期間', value: 'Dur', width: '10%' },
+        { text: '期間', value: 'Dur', width: '15%' },
       ],
       exportTitle: '',
       exportSheet: '',
@@ -1073,6 +1077,8 @@ export default {
       return
     }
     this.node = r.Node
+    this.sysUptime = r.RMON.SysUptime
+    this.localTime = r.RMON.LocalTime
     switch (this.tab) {
       case 0: // 'statistics',
         this.setStatisticsData(r.RMON.MIBs)
@@ -1173,12 +1179,12 @@ export default {
           return
         }
         const m = mibs[index]
+        const st = (m.etherHistoryIntervalStart || 0) * 1
         let error = (m.etherHistoryCRCAlignErrors || 0) * 1
         error += (m.etherHistoryUndersizePkts || 0) * 1
         error += (m.etherHistoryOversizePkts || 0) * 1
         this.history.push({
-          Index: index,
-          etherHistoryIntervalStart: (m.etherHistoryIntervalStart || 0) * 1,
+          etherHistoryIntervalStart: this.sysUptimeToLocalTime(st),
           etherHistoryDropEvents: (m.etherHistoryDropEvents || 0) * 1,
           etherHistoryOctets:
             (m.etherHistoryHighCapacityOctets || m.etherHistoryOctets || 0) * 1,
@@ -1256,14 +1262,18 @@ export default {
         const ft = i[0] * 1
         const lc = (m.addressMapLastChange || 0) * 1
         this.addressMap.push({
-          addressMapTimeMark: ft,
+          addressMapTimeMark: this.sysUptimeToLocalTime(ft),
           addressMapNetworkAddress: [i[3], i[4], i[5], i[6]].join('.'),
           addressMapPhysicalAddress: m.addressMapPhysicalAddress || '',
           Vendor: m.Vendor || '',
-          addressMapLastChange: lc,
+          addressMapLastChange: this.sysUptimeToLocalTime(lc),
           Changed: lc - ft,
         })
       })
+    },
+    sysUptimeToLocalTime(sut) {
+      const t = new Date(this.localTime * 1000 - (this.sysUptime - sut) * 10)
+      return this.$timeFormat(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
     },
     setNlHostsData(mibs) {
       this.nlHosts = []
@@ -1273,18 +1283,16 @@ export default {
           return
         }
         const m = mibs[index]
-        const tm = i[1] * 1
         const ct = (m.nlHostCreateTime || 0) * 1
         this.nlHosts.push({
-          nlHostTimeMark: tm,
           nlHostAddress: [i[4], i[5], i[6], i[7]].join('.'),
           nlHostInPkts: (m.nlHostInPkts || 0) * 1,
           nlHostOutPkts: (m.nlHostOutPkts || 0) * 1,
           nlHostInOctets: (m.nlHostInOctets || 0) * 1,
           nlHostOutOctets: (m.nlHostOutOctets || 0) * 1,
           nlHostOutMacNonUnicastPkts: (m.nlHostOutMacNonUnicastPkts || 0) * 1,
-          nlHostCreateTime: ct,
-          Dur: tm - ct,
+          nlHostCreateTime: this.sysUptimeToLocalTime(ct),
+          Dur: this.sysUptime - ct,
         })
       })
     },
@@ -1296,16 +1304,14 @@ export default {
           return
         }
         const m = mibs[index]
-        const tm = i[1] * 1
         const ct = (m.nlMatrixSDCreateTime || 0) * 1
         this.nlMatrix.push({
-          nlMatrixSDTimeMark: tm,
           nlMatrixSDSourceAddress: [i[4], i[5], i[6], i[7]].join('.'),
           nlMatrixSDDestAddress: [i[9], i[10], i[11], i[12]].join('.'),
           nlMatrixSDPkts: (m.nlMatrixSDPkts || 0) * 1,
           nlMatrixSDOctets: (m.nlMatrixSDOctets || 0) * 1,
-          nlMatrixSDCreateTime: ct,
-          Dur: tm - ct,
+          nlMatrixSDCreateTime: this.sysUptimeToLocalTime(ct),
+          Dur: this.sysUptime - ct,
         })
       })
     },
@@ -1317,19 +1323,17 @@ export default {
           return
         }
         const m = mibs[index]
-        const tm = i[1] * 1
         const ct = (m.alHostCreateTime || 0) * 1
         const protocol = protocolDir[i[8] * 1] || 'Unknown'
         this.alHosts.push({
           Protocol: protocol,
-          alHostTimeMark: tm,
           alHostAddress: [i[4], i[5], i[6], i[7]].join('.'),
           alHostInPkts: (m.alHostInPkts || 0) * 1,
           alHostOutPkts: (m.alHostOutPkts || 0) * 1,
           alHostInOctets: (m.alHostInOctets || 0) * 1,
           alHostOutOctets: (m.alHostOutOctets || 0) * 1,
-          alHostCreateTime: ct,
-          Dur: tm - ct,
+          alHostCreateTime: this.sysUptimeToLocalTime(ct),
+          Dur: this.sysUptime - ct,
         })
       })
     },
@@ -1341,18 +1345,16 @@ export default {
           return
         }
         const m = mibs[index]
-        const tm = i[1] * 1
-        const ct = (m.nlMatrixSDCreateTime || 0) * 1
+        const ct = (m.alMatrixSDCreateTime || 0) * 1
         const protocol = protocolDir[i[13] * 1] || 'Unknown'
         this.alMatrix.push({
           Protocol: protocol,
-          alMatrixSDTimeMark: tm,
           alMatrixSDSourceAddress: [i[4], i[5], i[6], i[7]].join('.'),
           alMatrixSDDestAddress: [i[9], i[10], i[11], i[12]].join('.'),
           alMatrixSDPkts: (m.alMatrixSDPkts || 0) * 1,
           alMatrixSDOctets: (m.alMatrixSDOctets || 0) * 1,
-          alMatrixSDCreateTime: ct,
-          Dur: tm - ct,
+          alMatrixSDCreateTime: this.sysUptimeToLocalTime(ct),
+          Dur: this.sysUptime - ct,
         })
       })
     },
@@ -1385,7 +1387,6 @@ export default {
           this.exportSheet = 'RMON統計履歴'
           this.history.forEach((e) => {
             exports.push({
-              Index: e.Index,
               開始時刻: e.etherHistoryIntervalStart,
               ドロップ数: e.etherHistoryDropEvents,
               バイト数: e.etherHistoryOctets,
@@ -1521,8 +1522,7 @@ export default {
               return
             }
             exports.push({
-              初回: e.nlHostCreateTime,
-              最終: e.nlHostTimeMark,
+              登録: e.nlHostCreateTime,
               IPアドレス: e.nlHostAddress,
               受信パケット: e.nlHostInPkts,
               受信バイト: e.nlHostInOctets,
@@ -1554,8 +1554,7 @@ export default {
               return
             }
             exports.push({
-              初回: e.nlMatrixSDCreateTime,
-              最終: e.nlMatrixSDTimeMark,
+              登録: e.nlMatrixSDCreateTime,
               送信元: e.nlMatrixSDSourceAddress,
               宛先: e.nlMatrixSDDestAddress,
               パケット: e.nlMatrixSDPkts,
@@ -1582,8 +1581,7 @@ export default {
               return
             }
             exports.push({
-              初回: e.alHostCreateTime,
-              最終: e.alHostTimeMark,
+              登録: e.alHostCreateTime,
               IPアドレス: e.alHostAddress,
               プロトコル: e.Protocol,
               受信パケット: e.alHostInPkts,
@@ -1621,8 +1619,7 @@ export default {
               return
             }
             exports.push({
-              初回: e.alMatrixSDCreateTime,
-              最終: e.alMatrixSDTimeMark,
+              登録: e.alMatrixSDCreateTime,
               送信元: e.alMatrixSDSourceAddress,
               宛先: e.alMatrixSDDestAddress,
               プロトコル: e.Protocol,
@@ -1743,6 +1740,15 @@ export default {
     },
     formatBytes(n) {
       return numeral(n).format('0.000b')
+    },
+    formatDur(d) {
+      let sec = d / 100
+      if (sec > 3600 * 24) {
+        const days = Math.round(sec / (3600 * 24))
+        sec = sec % (3600 * 24)
+        return days + 'days ' + numeral(sec).format('00:00:00')
+      }
+      return numeral(sec).format('00:00:00')
     },
   },
 }
