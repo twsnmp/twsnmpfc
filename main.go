@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -153,6 +154,7 @@ func main() {
 	if err = notify.Start(ctx, wg); err != nil {
 		log.Fatalf("start notify err=%v", err)
 	}
+	quit := make(chan os.Signal, 1)
 	log.Println("call webapi.Start")
 	w := &webapi.WebAPI{
 		Statik:        http.FileServer(statikFS),
@@ -164,13 +166,16 @@ func main() {
 		Password:      password,
 		Version:       fmt.Sprintf("%s(%s)", version, commit),
 		DataStorePath: dataStorePath,
+		QuitSignal:    quit,
 	}
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go webapi.Start(w)
 	if local {
 		time.Sleep(3 * time.Second)
 		openURL(fmt.Sprintf("http://127.0.0.1:%s", port))
+	}
+	if runtime.GOOS == "windows" {
+		go stopper(quit)
 	}
 	sig := <-quit
 	stop := time.Now()
@@ -204,4 +209,39 @@ func openURL(url string) error {
 		return err
 	}
 	return err
+}
+
+func stopper(sig chan os.Signal) {
+	udpAddr := &net.UDPAddr{
+		IP:   net.ParseIP("127.0.0.1"),
+		Port: 8080,
+	}
+	var l *net.UDPConn
+	var err error
+	for i := 8080; i < 8180; i++ {
+		udpAddr.Port = i
+		l, err = net.ListenUDP("udp", udpAddr)
+		if err == nil {
+			log.Printf("stopper port=%d", i)
+			break
+		}
+		log.Println(err)
+	}
+	if l == nil {
+		log.Println(err)
+		return
+	}
+	defer l.Close()
+	for {
+		b := make([]byte, 256)
+		n, _, err := l.ReadFrom(b)
+		if err == nil && n > 0 {
+			rpid := string(b[:n])
+			fmt.Printf("%d '%s' '%d'", n, rpid, os.Getpid())
+			pid := fmt.Sprintf("%d", os.Getpid())
+			if pid == rpid {
+				sig <- os.Interrupt
+			}
+		}
+	}
 }

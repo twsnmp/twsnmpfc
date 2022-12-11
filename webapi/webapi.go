@@ -31,6 +31,7 @@ type WebAPI struct {
 	Password      string
 	DataStorePath string
 	Version       string
+	QuitSignal    chan os.Signal
 }
 
 type selectEntWebAPI struct {
@@ -79,6 +80,7 @@ func setup(p *WebAPI) {
 	r := e.Group("/api")
 	r.Use(middleware.JWT([]byte(p.Password)))
 	r.POST("/feedback", postFeedback)
+	r.POST("/stop", postStop)
 	r.GET("/checkupdate", getCheckUpdate)
 	r.GET("/me", getMe)
 	r.GET("/conf/map", getMapConf)
@@ -330,4 +332,13 @@ func (v *twsnmpfcValidator) Validate(i interface{}) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return nil
+}
+
+func postStop(c echo.Context) error {
+	api := c.Get("api").(*WebAPI)
+	go func() {
+		time.Sleep(5 * time.Second)
+		api.QuitSignal <- os.Interrupt
+	}()
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

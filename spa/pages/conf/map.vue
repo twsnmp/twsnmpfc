@@ -263,6 +263,10 @@
             <v-icon>mdi-database-marker</v-icon>
             GeoIPデータベース
           </v-btn>
+          <v-btn color="error" dark @click="stopDialog = true">
+            <v-icon>mdi-stop</v-icon>
+            停止
+          </v-btn>
           <v-btn color="primary" dark @click="submit">
             <v-icon>mdi-content-save</v-icon>
             保存
@@ -380,6 +384,33 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="stopDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">TWSNMP FC停止</span>
+        </v-card-title>
+        <v-alert v-model="stopError" color="error" dense dismissible>
+          TWSNMP FCを停止できません。
+        </v-alert>
+        <v-alert v-model="stopDone" color="error" dense dismissible>
+          TWSNMP FCは５秒後に停止します。
+        </v-alert>
+        <v-card-text>
+          <p>TWSNMP FCを停止しますか？</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn v-if="mapconf.GeoIPInfo" color="error" @click="stop">
+            <v-icon>mdi-stop</v-icon>
+            実行
+          </v-btn>
+          <v-btn color="normal" @click="stopDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -433,6 +464,9 @@ export default {
       geoipDeleteError: false,
       geoipDialog: false,
       geoipFile: null,
+      stopDialog: false,
+      stopError: false,
+      stopDone: false,
     }
   },
   async fetch() {
@@ -453,6 +487,14 @@ export default {
         .catch((e) => {
           this.error = true
         })
+    },
+    stop() {
+      this.$axios
+        .post('/api/stop', {})
+        .then((r) => {
+          this.stopDone = true
+        })
+        .catch(() => (this.stopError = true))
     },
     selectFile(f) {
       this.backImage.File = f
