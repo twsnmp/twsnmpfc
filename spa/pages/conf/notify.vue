@@ -77,18 +77,25 @@
             </v-col>
           </v-row>
           <v-row dense>
-            <v-col>
+            <v-col cols="8">
               <v-text-field v-model="notify.Subject" label="件名" required />
             </v-col>
             <v-col>
+              <v-switch
+                v-model="notify.AddNodeName"
+                label="ノード名を含める"
+                dense
+              ></v-switch>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col cols="8">
               <v-text-field
                 v-model="notify.URL"
                 label="メール文面に含めるTWSNMP FCのURL"
                 required
               />
             </v-col>
-          </v-row>
-          <v-row dense>
             <v-col>
               <v-switch
                 v-model="notify.HTMLMail"
@@ -96,7 +103,9 @@
                 dense
               ></v-switch>
             </v-col>
-            <v-col>
+          </v-row>
+          <v-row dense>
+            <v-col cols="5">
               <v-slider
                 v-model="notify.Interval"
                 label="送信間隔(分)"
@@ -117,11 +126,10 @@
                 </template>
               </v-slider>
             </v-col>
-          </v-row>
-          <v-row dense>
-            <v-col>
+            <v-col cols="3">
               <v-select
                 v-model="notify.Level"
+                class="ml-3 mr-3"
                 :items="$levelList"
                 label="レベル"
               >
@@ -226,6 +234,7 @@ export default {
         MailTo: '',
         MailFrom: '',
         Subject: '',
+        AddNodeName: false,
         Interval: 5,
         Level: '',
         Report: false,

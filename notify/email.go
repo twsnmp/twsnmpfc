@@ -32,9 +32,9 @@ func sendNotifyMail(list []*datastore.EventLogEnt) {
 	if nl == 3 {
 		return
 	}
-	failure, repair := getNotifyBody(list, nl)
-	if failure != "" {
-		err := sendMail(datastore.NotifyConf.Subject+"(障害)", failure)
+	nd := getNotifyData(list, nl)
+	if nd.failureBody != "" {
+		err := sendMail(nd.failureSubject, nd.failureBody)
 		r := ""
 		if err != nil {
 			log.Printf("send mail err=%v", err)
@@ -46,8 +46,8 @@ func sendNotifyMail(list []*datastore.EventLogEnt) {
 			Event: fmt.Sprintf("通知メール送信 %s", r),
 		})
 	}
-	if repair != "" {
-		err := sendMail(datastore.NotifyConf.Subject+"(復帰)", repair)
+	if nd.repairBody != "" {
+		err := sendMail(nd.repairSubject, nd.repairBody)
 		r := ""
 		if err != nil {
 			log.Printf("send mail err=%v", err)

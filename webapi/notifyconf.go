@@ -17,6 +17,7 @@ func getNotifyConf(c echo.Context) error {
 	r.MailTo = datastore.NotifyConf.MailTo
 	r.MailFrom = datastore.NotifyConf.MailFrom
 	r.Subject = datastore.NotifyConf.Subject
+	r.AddNodeName = datastore.NotifyConf.AddNodeName
 	r.Interval = datastore.NotifyConf.Interval
 	r.Level = datastore.NotifyConf.Level
 	r.Report = datastore.NotifyConf.Report
@@ -43,6 +44,7 @@ func postNotifyConf(c echo.Context) error {
 	datastore.NotifyConf.MailTo = nc.MailTo
 	datastore.NotifyConf.MailFrom = nc.MailFrom
 	datastore.NotifyConf.Subject = nc.Subject
+	datastore.NotifyConf.AddNodeName = nc.AddNodeName
 	datastore.NotifyConf.Interval = nc.Interval
 	datastore.NotifyConf.Level = nc.Level
 	datastore.NotifyConf.Report = nc.Report

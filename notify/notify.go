@@ -85,8 +85,17 @@ func checkNotify(lastLog string) string {
 	return lastLog
 }
 
-// getNotifyBody : 通知メールの本文を作成する
-func getNotifyBody(list []*datastore.EventLogEnt, nl int) (string, string) {
+type notifyData struct {
+	failureSubject string
+	failureBody    string
+	repairSubject  string
+	repairBody     string
+}
+
+// getNotifyData : 通知メールの本文と件名を作成する
+func getNotifyData(list []*datastore.EventLogEnt, nl int) notifyData {
+	fNodeMap := make(map[string]int)
+	rNodeMap := make(map[string]int)
 	failure := []*datastore.EventLogEnt{}
 	repair := []*datastore.EventLogEnt{}
 	ti := time.Now().Add(time.Duration(-datastore.NotifyConf.Interval) * time.Minute).UnixNano()
@@ -104,6 +113,7 @@ func getNotifyBody(list []*datastore.EventLogEnt, nl int) (string, string) {
 			if np > nl {
 				continue
 			}
+			rNodeMap[l.NodeName] = np
 			repair = append(repair, l)
 			continue
 		}
@@ -111,16 +121,44 @@ func getNotifyBody(list []*datastore.EventLogEnt, nl int) (string, string) {
 		if np > nl {
 			continue
 		}
+		fNodeMap[l.NodeName] = np
 		failure = append(failure, l)
 	}
 	f, r := "", ""
+	fs, rs := "", ""
 	if len(failure) > 0 {
 		f = eventLogListToString(false, failure)
+		fs = datastore.NotifyConf.Subject + "(障害)"
+		if datastore.NotifyConf.AddNodeName {
+			fs += ":" + getNodes(fNodeMap)
+		}
 	}
 	if len(repair) > 0 {
 		r = eventLogListToString(true, repair)
+		rs = datastore.NotifyConf.Subject + "(復帰)"
+		if datastore.NotifyConf.AddNodeName {
+			rs += ":" + getNodes(rNodeMap)
+		}
 	}
-	return f, r
+	return notifyData{
+		failureSubject: fs,
+		failureBody:    f,
+		repairSubject:  rs,
+		repairBody:     r,
+	}
+}
+
+func getNodes(m map[string]int) string {
+	nodes := []string{}
+	l := 0
+	for n := range m {
+		nodes = append(nodes, n)
+		l += len(n)
+		if l > 1000 {
+			break
+		}
+	}
+	return strings.Join(nodes, ",")
 }
 
 // eventLogListToString : イベントログを通知メールの本文に変換する

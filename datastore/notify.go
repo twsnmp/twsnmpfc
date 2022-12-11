@@ -18,6 +18,7 @@ type NotifyConfEnt struct {
 	MailTo             string
 	MailFrom           string
 	Subject            string
+	AddNodeName        bool
 	Interval           int
 	Level              string
 	Report             bool
