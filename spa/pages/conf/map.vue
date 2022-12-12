@@ -393,14 +393,14 @@
           TWSNMP FCを停止できません。
         </v-alert>
         <v-alert v-model="stopDone" color="error" dense dismissible>
-          TWSNMP FCは５秒後に停止します。
+          TWSNMP FCは5秒後に停止します。
         </v-alert>
         <v-card-text>
           <p>TWSNMP FCを停止しますか？</p>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn v-if="mapconf.GeoIPInfo" color="error" @click="stop">
+          <v-btn color="error" @click="stop">
             <v-icon>mdi-stop</v-icon>
             実行
           </v-btn>
