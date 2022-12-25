@@ -294,6 +294,10 @@
                 {{ $getIconName(node.Icon) }}
               </v-icon>
             </v-col>
+            <v-col>
+              <v-switch v-model="node.AutoAck" label="復帰時に自動確認" dense>
+              </v-switch>
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col>
@@ -531,6 +535,7 @@ export default {
         URL: '',
         Type: '',
         AddrMode: '',
+        AutoAck: false,
       }
       this.addNodeDialog = true
     },

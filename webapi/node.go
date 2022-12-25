@@ -90,6 +90,7 @@ func postNodeUpdate(c echo.Context) error {
 	n.URL = nu.URL
 	n.Type = nu.Type
 	n.AddrMode = nu.AddrMode
+	n.AutoAck = nu.AutoAck
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:     "user",
 		Level:    "info",

@@ -99,7 +99,13 @@ func updateNodeState(n *datastore.NodeEnt) {
 			return true
 		}
 		if s == "repair" {
-			n.State = "repair"
+			// 復帰時に自動確認
+			if !n.AutoAck {
+				n.State = "repair"
+			} else {
+				p.State = "normal"
+				s = "normal"
+			}
 		}
 		if n.State == "repair" || n.State != "unknown" {
 			return true

@@ -167,6 +167,14 @@
                 {{ $getIconName(editNode.Icon) }}
               </v-icon>
             </v-col>
+            <v-col>
+              <v-switch
+                v-model="editNode.AutoAck"
+                label="復帰時に自動確認"
+                dense
+              >
+              </v-switch>
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col>

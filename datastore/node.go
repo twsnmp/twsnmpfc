@@ -29,6 +29,7 @@ type NodeEnt struct {
 	URL       string
 	Type      string
 	AddrMode  string
+	AutoAck   bool
 }
 
 func loadMapData() error {
