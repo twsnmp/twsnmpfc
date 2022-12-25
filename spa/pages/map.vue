@@ -175,7 +175,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="lineDialog" persistent max-width="500px">
+    <v-dialog v-model="lineDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
           <span class="headline">ライン編集</span>
@@ -184,42 +184,91 @@
           ラインの保存に失敗しました
         </v-alert>
         <v-card-text>
-          <v-text-field
-            v-model="editLine.NodeName1"
-            label="ノード１"
-            disabled
-          ></v-text-field>
-          <v-select
-            v-model="editLine.PollingID1"
-            :items="pollingList1"
-            label="ポーリング"
-          >
-          </v-select>
-          <v-text-field
-            v-model="editLine.NodeName2"
-            label="ノード２"
-            disabled
-          ></v-text-field>
-          <v-select
-            v-model="editLine.PollingID2"
-            :items="pollingList2"
-            label="ポーリング"
-          >
-          </v-select>
-          <v-select
-            v-model="editLine.PollingID"
-            :items="linePollingList"
-            label="情報のためのポーリング"
-          >
-          </v-select>
-          <v-text-field v-model="editLine.Info" label="情報"></v-text-field>
-          <v-select
-            v-model="editLine.Width"
-            :items="lineWidthList"
-            label="ラインの太さ"
-          >
-          </v-select>
-          <v-text-field v-model="editLine.Port" label="ポート"></v-text-field>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="editLine.NodeName1"
+                label="ノード１"
+                disabled
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editLine.NodeName2"
+                label="ノード２"
+                disabled
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col style="height: 160px; overflow: auto">
+              <v-list dense>
+                <v-list-item-group
+                  v-model="selectedLinePolling1"
+                  color="primary"
+                >
+                  <v-list-item v-for="(item, i) in pollingList1" :key="i">
+                    <v-list-item-icon>
+                      <v-icon :color="$getStateColor(item.state)">
+                        {{ $getStateIconName(item.state) }}
+                      </v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                      <v-list-item-title v-text="item.text"></v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list-item-group>
+              </v-list>
+            </v-col>
+            <v-col style="height: 160px; overflow: auto">
+              <v-list dense>
+                <v-list-item-group
+                  v-model="selectedLinePolling2"
+                  color="primary"
+                >
+                  <v-list-item v-for="(item, i) in pollingList2" :key="i">
+                    <v-list-item-icon>
+                      <v-icon :color="$getStateColor(item.state)">
+                        {{ $getStateIconName(item.state) }}
+                      </v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                      <v-list-item-title v-text="item.text"></v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list-item-group>
+              </v-list>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="editLine.PollingID"
+                :items="linePollingList"
+                label="情報のためのポーリング"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-text-field v-model="editLine.Info" label="情報"></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="editLine.Width"
+                :items="lineWidthList"
+                label="ラインの太さ"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editLine.Port"
+                label="ポート"
+              ></v-text-field>
+            </v-col>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -659,6 +708,8 @@ export default {
         Info: '',
         Port: '',
       },
+      selectedLinePolling1: 0,
+      selectedLinePolling2: 0,
       editNode: {},
       nodeList: [],
       deleteNodes: [],
@@ -759,11 +810,26 @@ export default {
         if (!lineMode || p.Mode === 'traffic') {
           l.push({
             text: nodeName + p.Name,
+            state: p.State,
             value: p.ID,
           })
         }
       })
       return l
+    },
+    getPollingIndex(nid, pid) {
+      if (!this.map.Pollings[nid]) {
+        return -1
+      }
+      let i = 0
+      let sel = -1
+      this.map.Pollings[nid].forEach((p) => {
+        if (p.ID === pid) {
+          sel = i
+        }
+        i++
+      })
+      return sel
     },
     callback(r) {
       if (
@@ -849,6 +915,14 @@ export default {
         PollingID: '',
         Info: '',
       }
+      this.selectedLinePolling1 = this.getPollingIndex(
+        this.editLine.NodeID1,
+        this.editLine.PollingID1
+      )
+      this.selectedLinePolling2 = this.getPollingIndex(
+        this.editLine.NodeID2,
+        this.editLine.PollingID2
+      )
       this.editLine.NodeName1 = this.nodeName(this.editLine.NodeID1)
       this.editLine.NodeName2 = this.nodeName(this.editLine.NodeID2)
       this.lineDialog = true
@@ -952,6 +1026,28 @@ export default {
       window.open(url, '_blank')
     },
     addLine() {
+      if (
+        this.map.Pollings[this.editLine.NodeID1] &&
+        this.selectedLinePolling1 >= 0 &&
+        this.selectedLinePolling1 <
+          this.map.Pollings[this.editLine.NodeID1].length
+      ) {
+        this.editLine.PollingID1 =
+          this.map.Pollings[this.editLine.NodeID1][this.selectedLinePolling1].ID
+      } else {
+        this.editLine.PollingID1 = ''
+      }
+      if (
+        this.map.Pollings[this.editLine.NodeID2] &&
+        this.selectedLinePolling2 >= 0 &&
+        this.selectedLinePolling2 <
+          this.map.Pollings[this.editLine.NodeID2].length
+      ) {
+        this.editLine.PollingID2 =
+          this.map.Pollings[this.editLine.NodeID2][this.selectedLinePolling2].ID
+      } else {
+        this.editLine.PollingID2 = ''
+      }
       this.lineError = false
       this.$axios
         .post('/api/line/add', this.editLine)

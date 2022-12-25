@@ -34,15 +34,17 @@ func postLine(c echo.Context) error {
 		log.Printf("post line err=%v", err)
 		return echo.ErrBadRequest
 	}
-	if lu.PollingID1 == "" || lu.PollingID2 == "" {
-		log.Printf("post line err=bad id")
-		return echo.ErrBadRequest
+	lu.State1 = "unknown"
+	if lu.PollingID1 != "" {
+		if p := datastore.GetPolling(lu.PollingID1); p != nil {
+			lu.State1 = p.State
+		}
 	}
-	if p := datastore.GetPolling(lu.PollingID1); p != nil {
-		lu.State1 = p.State
-	}
-	if p := datastore.GetPolling(lu.PollingID2); p != nil {
-		lu.State2 = p.State
+	lu.State2 = lu.State1
+	if lu.PollingID2 != "" {
+		if p := datastore.GetPolling(lu.PollingID2); p != nil {
+			lu.State2 = p.State
+		}
 	}
 	l := datastore.GetLine(lu.ID)
 	if l == nil {

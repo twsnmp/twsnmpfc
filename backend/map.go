@@ -118,15 +118,16 @@ func updateNodeState(n *datastore.NodeEnt) {
 func updateLineState() bool {
 	hasLineInfo := false
 	datastore.ForEachLines(func(l *datastore.LineEnt) bool {
+		l.State1 = "unknown"
 		if p := datastore.GetPolling(l.PollingID1); p != nil {
 			l.State1 = p.State
-		} else {
-			l.State1 = "unknown"
 		}
+		l.State2 = l.State1
 		if p := datastore.GetPolling(l.PollingID2); p != nil {
 			l.State2 = p.State
-		} else {
-			l.State2 = "unknown"
+			if l.PollingID1 == "" {
+				l.State1 = l.State2
+			}
 		}
 		if l.PollingID != "" {
 			if p := datastore.GetPolling(l.PollingID); p != nil {
