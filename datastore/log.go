@@ -247,12 +247,12 @@ func saveLogList(list []*EventLogEnt) {
 	}
 	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("logs"))
-		for _, e := range list {
+		for i, e := range list {
 			s, err := json.Marshal(e)
 			if err != nil {
 				return err
 			}
-			err = b.Put([]byte(fmt.Sprintf("%016x", e.Time)), s)
+			err = b.Put([]byte(fmt.Sprintf("%016x", e.Time+int64(i))), s)
 			if err != nil {
 				return err
 			}
@@ -280,8 +280,8 @@ func SaveLogBuffer(logBuffer []*LogEnt) {
 		tc := 0
 		ac := 0
 		oc := 0
-		for _, l := range logBuffer {
-			k := fmt.Sprintf("%016x", l.Time)
+		for i, l := range logBuffer {
+			k := fmt.Sprintf("%016x", l.Time+int64(i))
 			s, err := json.Marshal(l)
 			if err != nil {
 				return err
