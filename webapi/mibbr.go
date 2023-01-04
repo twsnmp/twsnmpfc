@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -44,16 +45,34 @@ func postMIBBr(c echo.Context) error {
 	api := c.Get("api").(*WebAPI)
 	p := new(mibGetReqWebAPI)
 	if err := c.Bind(p); err != nil {
+		log.Printf("MIBBR err=%v", err)
 		return echo.ErrBadRequest
 	}
 	r, err := snmpWalk(api, p)
 	if err != nil {
+		log.Printf("MIBBR err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if len(r) < 1 {
+		log.Println("MIBBR not found")
 		return echo.ErrNotFound
 	}
 	return c.JSON(http.StatusOK, r)
+}
+
+func nameToOID(name string) string {
+	oid := datastore.MIBDB.NameToOID(name)
+	if oid == ".0.0" {
+		if name == "iso" || name == "org" ||
+			name == "dod" || name == "internet" ||
+			name == ".1" || name == ".1.3" || name == ".1.3.6" {
+			return ".1.3.6.1"
+		}
+		if matched, _ := regexp.MatchString(`\.[0-9.]+`, name); matched {
+			return name
+		}
+	}
+	return oid
 }
 
 func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
@@ -110,8 +129,9 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 	if err != nil {
 		return ret, err
 	}
+	log.Println(nameToOID(p.Name))
 	defer agent.Conn.Close()
-	err = agent.Walk(datastore.MIBDB.NameToOID(p.Name), func(variable gosnmp.SnmpPDU) error {
+	err = agent.Walk(nameToOID(p.Name), func(variable gosnmp.SnmpPDU) error {
 		name := datastore.MIBDB.OIDToName(variable.Name)
 		value := ""
 		switch variable.Type {
@@ -158,7 +178,6 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 				case "DisplayString":
 					value = getMIBStringVal(variable.Value)
 				default:
-					log.Printf("%s=%s:%v:%v", name, mi.Type, variable.Type, variable.Value)
 					value = getMIBStringVal(variable.Value)
 				}
 			} else {
