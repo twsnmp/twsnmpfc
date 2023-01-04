@@ -51,6 +51,9 @@ func postMIBBr(c echo.Context) error {
 	r, err := snmpWalk(api, p)
 	if err != nil {
 		log.Printf("MIBBR err=%v", err)
+		if len(r) > 0 {
+			return c.JSON(http.StatusContinue, r)
+		}
 		return echo.ErrBadRequest
 	}
 	if len(r) < 1 {
@@ -129,9 +132,12 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 	if err != nil {
 		return ret, err
 	}
-	log.Println(nameToOID(p.Name))
+	et := time.Now().Unix() + (3 * 60)
 	defer agent.Conn.Close()
 	err = agent.Walk(nameToOID(p.Name), func(variable gosnmp.SnmpPDU) error {
+		if et < time.Now().Unix() {
+			return fmt.Errorf("timeout")
+		}
 		name := datastore.MIBDB.OIDToName(variable.Name)
 		value := ""
 		switch variable.Type {
