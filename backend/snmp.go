@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/twsnmp/gosnmp"
+	"github.com/gosnmp/gosnmp"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 

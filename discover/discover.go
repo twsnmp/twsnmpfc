@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gosnmp/gosnmp"
 	"github.com/signalsciences/ipv4"
-	"github.com/twsnmp/gosnmp"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/ping"
 	"github.com/twsnmp/twsnmpfc/polling"

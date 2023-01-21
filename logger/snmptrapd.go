@@ -12,7 +12,7 @@ import (
 	"net"
 	"time"
 
-	gosnmp "github.com/twsnmp/gosnmp"
+	gosnmp "github.com/gosnmp/gosnmp"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
 )

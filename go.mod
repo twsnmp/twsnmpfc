@@ -10,6 +10,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/gosnmp/gosnmp v1.35.0
 	github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/mdlayher/netx v0.0.0-20200512211805-669a06fde734
@@ -25,7 +26,6 @@ require (
 	github.com/tehmaze/netflow v0.0.0-20170921210347-852af103667f
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
 	github.com/twsnmp/golof v1.0.0
-	github.com/twsnmp/gosnmp v1.32.2
 	github.com/twsnmp/rdap v0.9.1
 	github.com/vjeantet/grok v1.0.1
 	github.com/vmware/govmomi v0.24.0

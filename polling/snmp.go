@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
+	gosnmp "github.com/gosnmp/gosnmp"
 	"github.com/robertkrimen/otto"
-	gosnmp "github.com/twsnmp/gosnmp"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 

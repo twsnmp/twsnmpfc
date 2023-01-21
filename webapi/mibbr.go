@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gosnmp/gosnmp"
 	"github.com/labstack/echo/v4"
-	"github.com/twsnmp/gosnmp"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
