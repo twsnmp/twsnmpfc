@@ -227,6 +227,8 @@ func setup(p *WebAPI) {
 	r.GET("/report/ai/:id", getAIResult)
 	r.DELETE("/report/ai/:id", deleteAIResult)
 	r.GET("/monitor", getMonitor)
+	r.GET("/mibmods", getMibMods)
+	r.GET("/mibtree", getMibTree)
 	// Mobile API
 	m := e.Group("/mobile")
 	m.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
@@ -245,6 +247,14 @@ func setup(p *WebAPI) {
 
 func getMonitor(c echo.Context) error {
 	return c.JSON(http.StatusOK, backend.MonitorDataes)
+}
+
+func getMibMods(c echo.Context) error {
+	return c.JSON(http.StatusOK, datastore.MIBModules)
+}
+
+func getMibTree(c echo.Context) error {
+	return c.JSON(http.StatusOK, datastore.MIBTree)
 }
 
 func middle(p *WebAPI) echo.MiddlewareFunc {

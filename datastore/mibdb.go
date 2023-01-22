@@ -37,9 +37,19 @@ type MIBTreeEnt struct {
 	Children []*MIBTreeEnt `json:"children"`
 }
 
+// 読み込んだMIBのリスト
+type MIBModuleEnt struct {
+	Type  string // int | ext
+	File  string
+	Name  string
+	Error string
+}
+
 var MIBTree = []*MIBTreeEnt{}
 
 var MIBInfoMap = make(map[string]MIBInfo)
+
+var MIBModules = []*MIBModuleEnt{}
 
 func FindMIBInfo(name string) *MIBInfo {
 	a := strings.SplitN(name, ".", 2)
@@ -167,7 +177,7 @@ func loadMIBsFromFS(fs http.FileSystem) {
 		log.Printf("load mib path=%s", path)
 		if r, err := fs.Open(path); err == nil {
 			if asn1, err := io.ReadAll(r); err == nil {
-				if !loadExtMIB(asn1) {
+				if !loadExtMIB(asn1, "int", path) {
 					skipList = append(skipList, path)
 				}
 			} else {
@@ -181,7 +191,7 @@ func loadMIBsFromFS(fs http.FileSystem) {
 		log.Printf("retry to load mib path=%s", path)
 		if r, err := fs.Open(path); err == nil {
 			if asn1, err := io.ReadAll(r); err == nil {
-				if loadExtMIB(asn1) {
+				if loadExtMIB(asn1, "int", path) {
 					log.Printf("skip error mib file=%s", path)
 				}
 			}
@@ -204,7 +214,7 @@ func loadExtMIBs(root string) {
 			}
 			log.Printf("load ext mib path=%s", path)
 			if asn1, err := os.ReadFile(path); err == nil {
-				if loadExtMIB(asn1) {
+				if loadExtMIB(asn1, "ext", path) {
 					skipList = append(skipList, path)
 				}
 			} else {
@@ -215,14 +225,14 @@ func loadExtMIBs(root string) {
 	for _, path := range skipList {
 		log.Printf("retry to load ext mib path=%s", path)
 		if asn1, err := os.ReadFile(path); err == nil {
-			if loadExtMIB(asn1) {
+			if loadExtMIB(asn1, "ext", path) {
 				log.Printf("skip error mib file=%s", path)
 			}
 		}
 	}
 }
 
-func loadExtMIB(asn1 []byte) bool {
+func loadExtMIB(asn1 []byte, fileType, file string) bool {
 	var nameList []string
 	var mapNameToOID = make(map[string]string)
 	for _, name := range MIBDB.GetNameList() {
@@ -231,10 +241,24 @@ func loadExtMIB(asn1 []byte) bool {
 	module, err := parser.Parse(bytes.NewReader(asn1))
 	if err != nil || module == nil {
 		log.Printf("loadExtMIB err=%v", err)
+		modErr := err
+		mod := "Unknown"
+		if module != nil {
+			mod = string(module.Name)
+		}
 		asn1 = rfc2mib(asn1)
 		module, err = parser.Parse(bytes.NewReader(asn1))
 		if err != nil || module == nil {
 			log.Printf("try rfc2mib loadExtMIB err=%v", err)
+			if module != nil {
+				mod = string(module.Name)
+			}
+			MIBModules = append(MIBModules, &MIBModuleEnt{
+				File:  file,
+				Type:  fileType,
+				Name:  mod,
+				Error: modErr.Error() + "\t" + err.Error(),
+			})
 			return false
 		}
 	}
@@ -282,6 +306,13 @@ func loadExtMIB(asn1 []byte) bool {
 			}
 		}
 		_ = MIBDB.Add(name, oid)
+	}
+	if !hasSkip {
+		MIBModules = append(MIBModules, &MIBModuleEnt{
+			File: file,
+			Type: fileType,
+			Name: string(module.Name),
+		})
 	}
 	return hasSkip
 }

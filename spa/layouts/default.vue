@@ -524,6 +524,11 @@ export default {
           to: '/conf/datastore',
         },
         {
+          icon: 'mdi-format-list-checks',
+          title: 'MIB管理',
+          to: '/conf/mib',
+        },
+        {
           icon: 'mdi-finance',
           title: 'モニター',
           to: '/conf/monitor',
