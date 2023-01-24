@@ -25,7 +25,7 @@ func doPollingPing(pe *datastore.PollingEnt) {
 			size = i
 		}
 	}
-	r := ping.DoPing(n.IP, pe.Timeout, pe.Retry, size)
+	r := ping.DoPing(n.IP, pe.Timeout, pe.Retry, size, 0)
 	if r.Stat == ping.PingOK {
 		pe.Result["rtt"] = float64(r.Time)
 		delete(pe.Result, "error")
@@ -48,13 +48,13 @@ func doPollingCheckLineCond(pe *datastore.PollingEnt) {
 	rtt := []float64{}
 	fail := 0
 	for i := 0; i < 20; i++ {
-		r64 := ping.DoPing(n.IP, pe.Timeout, pe.Retry, 64)
+		r64 := ping.DoPing(n.IP, pe.Timeout, pe.Retry, 64, 0)
 		if r64.Stat != ping.PingOK {
 			lastError = fmt.Sprintf("%v", r64.Error)
 			fail += 1
 			continue
 		}
-		r1364 := ping.DoPing(n.IP, pe.Timeout, pe.Retry, 1364)
+		r1364 := ping.DoPing(n.IP, pe.Timeout, pe.Retry, 1364, 0)
 		if r1364.Stat != ping.PingOK {
 			lastError = fmt.Sprintf("%v", r1364.Error)
 			fail += 1

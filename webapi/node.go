@@ -210,6 +210,7 @@ func getHostResource(c echo.Context) error {
 type PingReq struct {
 	IP   string
 	Size int
+	TTL  int
 }
 
 type PingRes struct {
@@ -217,6 +218,10 @@ type PingRes struct {
 	TimeStamp int64
 	Time      int64
 	Size      int
+	SendTTL   int
+	RecvTTL   int
+	RecvSrc   string
+	Loc       string
 }
 
 func postPing(c echo.Context) error {
@@ -226,11 +231,17 @@ func postPing(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	res := new(PingRes)
-	pe := ping.DoPing(req.IP, 3, 0, req.Size)
+	pe := ping.DoPing(req.IP, 3, 0, req.Size, req.TTL)
 	res.Stat = int(pe.Stat)
 	res.TimeStamp = time.Now().Unix()
 	res.Time = pe.Time
 	res.Size = pe.Size
+	res.RecvSrc = pe.RecvSrc
+	res.RecvTTL = pe.RecvTTL
+	res.SendTTL = req.TTL
+	if pe.RecvSrc != "" {
+		res.Loc = datastore.GetLoc(pe.RecvSrc)
+	}
 	return c.JSON(http.StatusOK, res)
 }
 

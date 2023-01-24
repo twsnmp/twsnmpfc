@@ -123,7 +123,7 @@ func ActiveDiscover() error {
 				if datastore.FindNodeFromIP(ipstr) != nil {
 					return
 				}
-				r := ping.DoPing(ipstr, datastore.DiscoverConf.Timeout, datastore.DiscoverConf.Retry, 64)
+				r := ping.DoPing(ipstr, datastore.DiscoverConf.Timeout, datastore.DiscoverConf.Retry, 64, 0)
 				if r.Stat == ping.PingOK {
 					dent := discoverInfoEnt{
 						IP:          ipstr,

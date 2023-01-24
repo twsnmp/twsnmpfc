@@ -33,6 +33,7 @@ const (
 	PingOK
 	PingTimeout
 	PingOtherError
+	PingTimeExceeded
 )
 
 var (
@@ -48,6 +49,8 @@ type PingEnt struct {
 	Timeout  int
 	Retry    int
 	Size     int
+	SendTTL  int
+	RecvTTL  int
 	ipaddr   *net.IPAddr
 	id       int
 	sequence int
@@ -56,6 +59,7 @@ type PingEnt struct {
 	Time     int64
 	lastSend int64
 	Error    error
+	RecvSrc  string
 	done     chan bool
 }
 
@@ -83,9 +87,9 @@ func Start(ctx context.Context, wg *sync.WaitGroup, mode string) error {
 }
 
 // DoPing : pingの実行
-func DoPing(ip string, timeout, retry, size int) *PingEnt {
+func DoPing(ip string, timeout, retry, size, ttl int) *PingEnt {
 	var err error
-	var pe = newPingEnt(ip, timeout, retry, size)
+	var pe = newPingEnt(ip, timeout, retry, size, ttl)
 	if pe.ipaddr, err = net.ResolveIPAddr("ip", ip); err != nil {
 		pe.Stat = PingOtherError
 		return pe
@@ -95,7 +99,7 @@ func DoPing(ip string, timeout, retry, size int) *PingEnt {
 	return pe
 }
 
-func newPingEnt(ip string, timeout, retry, size int) *PingEnt {
+func newPingEnt(ip string, timeout, retry, size, ttl int) *PingEnt {
 	pingMutex.Lock()
 	defer pingMutex.Unlock()
 	return &PingEnt{
@@ -104,6 +108,7 @@ func newPingEnt(ip string, timeout, retry, size int) *PingEnt {
 		Timeout:  timeout,
 		Retry:    retry,
 		Size:     size,
+		SendTTL:  ttl,
 		sequence: 0,
 		id:       randGen.Intn(math.MaxInt16),
 		Tracker:  randGen.Int63n(math.MaxInt64),
@@ -116,6 +121,10 @@ func (p *PingEnt) sendICMP(conn *icmp.PacketConn) error {
 	var dst net.Addr = p.ipaddr
 	if pingMode == "udp" {
 		dst = &net.UDPAddr{IP: p.ipaddr.IP, Zone: p.ipaddr.Zone}
+	}
+	ipcon := conn.IPv4PacketConn()
+	if ipcon != nil && p.SendTTL > 0 && p.SendTTL < 256 {
+		ipcon.SetTTL(p.SendTTL)
 	}
 	t := append(timeToBytes(time.Now()), intToBytes(p.Tracker)...)
 	if remainSize := p.Size - timeSliceLength - trackerLength; remainSize > 0 {
@@ -168,6 +177,7 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 		return
 	}
 	defer conn.Close()
+	conn.IPv4PacketConn().SetControlMessage(ipv4.FlagTTL, true)
 	for {
 		select {
 		case <-ctx.Done():
@@ -229,16 +239,22 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 				}
 				continue
 			}
-			if tracker, tm, err := processPacket(&packet{bytes: bytes, nbytes: n, ttl: ttl}); err == nil {
+			if tracker, tm, te, err := processPacket(&packet{bytes: bytes, nbytes: n, ttl: ttl}); err == nil {
 				if p, ok := pingMap[tracker]; ok {
 					sa := strings.Split(src.String(), ":")
-					if p.Target != sa[0] {
+					if p.Target != sa[0] && !te {
 						log.Printf("ping target=%s src=%s", p.Target, src.String())
 						continue
 					}
 					delete(pingMap, tracker)
-					p.Stat = PingOK
+					if te {
+						p.Stat = PingTimeExceeded
+					} else {
+						p.Stat = PingOK
+					}
 					p.Time = tm
+					p.RecvTTL = ttl
+					p.RecvSrc = sa[0]
 					p.Error = nil
 					p.done <- true
 				}
@@ -247,27 +263,59 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 	}
 }
 
-func processPacket(recv *packet) (int64, int64, error) {
-	receivedAt := time.Now()
-	var m *icmp.Message
-	var err error
-	if m, err = icmp.ParseMessage(protocolICMP, recv.bytes); err != nil {
-		return -1, -1, fmt.Errorf("error parsing icmp message: %s", err.Error())
+func processIcmpTimeExceeded(b []byte) (int64, int64, bool, error) {
+	iph, err := ipv4.ParseHeader(b)
+	if err != nil {
+		log.Println(err)
+		return -1, -1, false, err
 	}
-	if m.Type != ipv4.ICMPTypeEchoReply {
-		return -1, -1, fmt.Errorf("icmp message type error type=%v", m)
+	if iph.Len+timeSliceLength+8 > len(b) {
+		return -1, -1, false, fmt.Errorf("icmp time exceeded legth error")
+	}
+	var m *icmp.Message
+	if m, err = icmp.ParseMessage(protocolICMP, b[iph.Len:]); err != nil {
+		return -1, -1, false, fmt.Errorf("error parsing icmp message in timeexceeded : %v", err)
+	}
+	if m.Type != ipv4.ICMPTypeEcho {
+		log.Printf("not echo %v", m)
+		return -1, -1, false, fmt.Errorf("icmp message type in timeexedded error type=%v", m)
 	}
 	switch pkt := m.Body.(type) {
 	case *icmp.Echo:
 		if len(pkt.Data) < timeSliceLength+trackerLength {
-			return -1, -1, fmt.Errorf("insufficient data received; got: %d %v", len(pkt.Data), pkt.Data)
+			return -1, -1, false, fmt.Errorf("insufficient data received; got: %d %v", len(pkt.Data), pkt.Data)
+		}
+		receivedAt := time.Now()
+		tracker := bytesToInt(pkt.Data[timeSliceLength:])
+		timestamp := bytesToTime(pkt.Data[:timeSliceLength])
+		return tracker, receivedAt.Sub(timestamp).Nanoseconds(), true, nil
+	}
+	return -1, -1, false, fmt.Errorf("not icmp echo")
+}
+
+func processPacket(recv *packet) (int64, int64, bool, error) {
+	receivedAt := time.Now()
+	var m *icmp.Message
+	var err error
+	if m, err = icmp.ParseMessage(protocolICMP, recv.bytes); err != nil {
+		return -1, -1, false, fmt.Errorf("error parsing icmp message: %s", err.Error())
+	}
+	if m.Type != ipv4.ICMPTypeEchoReply && m.Type != ipv4.ICMPTypeTimeExceeded {
+		return -1, -1, false, fmt.Errorf("icmp message type error type=%v", m)
+	}
+	switch pkt := m.Body.(type) {
+	case *icmp.Echo:
+		if len(pkt.Data) < timeSliceLength+trackerLength {
+			return -1, -1, false, fmt.Errorf("insufficient data received; got: %d %v", len(pkt.Data), pkt.Data)
 		}
 		tracker := bytesToInt(pkt.Data[timeSliceLength:])
 		timestamp := bytesToTime(pkt.Data[:timeSliceLength])
-		return tracker, receivedAt.Sub(timestamp).Nanoseconds(), nil
+		return tracker, receivedAt.Sub(timestamp).Nanoseconds(), false, nil
+	case *icmp.TimeExceeded:
+		return processIcmpTimeExceeded(pkt.Data)
 	default:
 		// Very bad, not sure how this can happen
-		return -1, -1, fmt.Errorf("invalid icmp echo reply; type: '%T', '%v'", pkt, pkt)
+		return -1, -1, false, fmt.Errorf("invalid icmp echo reply; type: '%T', '%v'", pkt, pkt)
 	}
 }
 

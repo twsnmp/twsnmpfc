@@ -19,14 +19,14 @@ func TestPing(t *testing.T) {
 	if ip, ok = os.LookupEnv("OK_IP"); !ok {
 		ip = "192.168.1.1"
 	}
-	r := DoPing(ip, 1, 1, 12)
+	r := DoPing(ip, 1, 1, 12, 0)
 	if r.Stat != PingOK {
 		t.Errorf("ping stat = %d", r.Stat)
 	}
 	if ip, ok = os.LookupEnv("NG_IP"); !ok {
 		ip = "192.168.1.33"
 	}
-	r = DoPing(ip, 1, 1, 12)
+	r = DoPing(ip, 1, 1, 12, 0)
 	if r.Stat == PingOK {
 		t.Errorf("ping stat = %d", r.Stat)
 	}

@@ -43,7 +43,7 @@ func arpWatch(stopCh chan bool) {
 		case <-pinger.C:
 			if len(localCheckAddrs) > 0 {
 				a := localCheckAddrs[0]
-				ping.DoPing(a, 1, 0, 64)
+				ping.DoPing(a, 1, 0, 64, 0)
 				localCheckAddrs[0] = ""
 				localCheckAddrs = localCheckAddrs[1:]
 			}

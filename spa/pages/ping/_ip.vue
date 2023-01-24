@@ -23,6 +23,15 @@
           label="サイズ"
           dense
         ></v-select>
+        <v-select
+          v-model="ttl"
+          :items="ttlList"
+          single-line
+          hide-details
+          append-icon="mdi-clock"
+          label="TTL"
+          dense
+        ></v-select>
       </v-card-title>
       <v-alert v-model="error" color="error" dense dismissible>
         PINGを実行できませんでした
@@ -184,9 +193,11 @@ export default {
       ip: '',
       size: 0,
       count: 10,
+      ttl: 64,
       pingReq: {
         size: 0,
         count: 0,
+        ttl: 64,
       },
       countList: [
         { text: '連続', value: 0 },
@@ -208,11 +219,27 @@ export default {
         { text: '1024', value: 1024 },
         { text: '1500', value: 1500 },
       ],
+      ttlList: [
+        { text: 'トレースルート', value: 0 },
+        { text: '1', value: 1 },
+        { text: '2', value: 2 },
+        { text: '4', value: 4 },
+        { text: '8', value: 8 },
+        { text: '16', value: 16 },
+        { text: '32', value: 32 },
+        { text: '64', value: 64 },
+        { text: '128', value: 128 },
+        { text: '254', value: 254 },
+      ],
       headers: [
-        { text: '結果', value: 'Stat', width: '20%' },
-        { text: '時刻', value: 'TimeStamp', width: '50%' },
-        { text: '応答時間', value: 'Time', width: '20%' },
+        { text: '結果', value: 'Stat', width: '10%' },
+        { text: '時刻', value: 'TimeStamp', width: '20%' },
+        { text: '応答時間', value: 'Time', width: '10%' },
         { text: 'サイズ', value: 'Size', width: '10%' },
+        { text: '送信TTL', value: 'SendTTL', width: '10%' },
+        { text: '受信TTL', value: 'RecvTTL', width: '10%' },
+        { text: '応答送信IP', value: 'RecvSrc', width: '20%' },
+        { text: '位置', value: 'Loc', width: '10%' },
       ],
       results: [],
       error: false,
@@ -250,6 +277,13 @@ export default {
       this.wait = true
       this.pingReq.count = 0
       this.pingReq.size = this.size
+      if (this.ttl === 0) {
+        this.pingReq.ttl = 1
+        this.count = 0
+        this.size = 64
+      } else {
+        this.pingReq.ttl = this.ttl
+      }
       this.results = []
       this._doPing()
     },
@@ -366,6 +400,7 @@ export default {
       const r = await this.$axios.$post('/api/ping', {
         IP: this.ip,
         Size: this.pingReq.size,
+        TTL: this.pingReq.ttl,
       })
       if (!r) {
         this.error = true
@@ -373,7 +408,7 @@ export default {
       }
       this.pingReq.count++
       this.results.push(r)
-      if (this.chart && r.Stat === 1) {
+      if (this.chart && (r.Stat === 1 || r.Stat === 4)) {
         const t = new Date(r.TimeStamp * 1000)
         const ts = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
         this.chartOption.series[0].data.push({
@@ -391,6 +426,13 @@ export default {
           // サイズを変更するモード
           this.pingReq.size += 100
         }
+        if (this.ttl === 0 && this.ttl < 254) {
+          this.pingReq.ttl++
+          if (r.Stat === 1) {
+            this.wait = false
+            return
+          }
+        }
         this.timer = setTimeout(() => this._doPing(), 1000)
       } else {
         this.wait = false
@@ -404,6 +446,8 @@ export default {
           return this.$getStateColor('error')
         case 3:
           return this.$getStateColor('warn')
+        case 4:
+          return this.$getStateColor('info')
         default:
           return this.$getStateColor('unknown')
       }
@@ -416,6 +460,8 @@ export default {
           return this.$getStateIconName('error')
         case 3:
           return this.$getStateIconName('warn')
+        case 4:
+          return this.$getStateIconName('info')
         default:
           return this.$getStateIconName('unknown')
       }
@@ -428,6 +474,8 @@ export default {
           return 'タイムアウト'
         case 3:
           return 'エラー'
+        case 4:
+          return '経路ルータ'
         default:
           return '不明'
       }
@@ -443,9 +491,14 @@ export default {
       const exports = []
       this.results.forEach((r) => {
         exports.push({
+          状態: this.getStatName(r.Stat),
           時刻: this.getTimeStamp(r.TimeStamp),
           応答時間: this.getTime(r.Time),
           サイズ: r.Size,
+          送信TTL: r.SendTTL,
+          受信TTL: r.Size,
+          応答元IP: r.RecvSrc,
+          応答元位置: r.Loc,
         })
       })
       return exports
