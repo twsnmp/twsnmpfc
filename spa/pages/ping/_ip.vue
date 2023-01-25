@@ -2,13 +2,12 @@
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
       <v-card-title>
-        PING - {{ ip }}
+        PING
         <v-spacer></v-spacer>
-        <v-text-field v-model="ip" label="IP" />
+        <v-text-field v-model="ip" label="IP又はホスト名" />
         <v-select
           v-model="count"
           :items="countList"
-          single-line
           hide-details
           append-icon="mdi-repeat"
           label="回数"
@@ -17,7 +16,6 @@
         <v-select
           v-model="size"
           :items="sizeList"
-          single-line
           hide-details
           append-icon="mdi-poll"
           label="サイズ"
@@ -26,7 +24,6 @@
         <v-select
           v-model="ttl"
           :items="ttlList"
-          single-line
           hide-details
           append-icon="mdi-clock"
           label="TTL"
@@ -99,7 +96,7 @@
             </v-btn>
           </template>
           <v-list>
-            <v-list-item @click="showHistogram">
+            <v-list-item v-if="size !== 0 && ttl !== 0" @click="showHistogram">
               <v-list-item-icon
                 ><v-icon>mdi-chart-histogram</v-icon>
               </v-list-item-icon>
@@ -121,6 +118,14 @@
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title>回線速度予測</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item v-if="ttl === 0" @click="showWorld">
+              <v-list-item-icon>
+                <v-icon>mdi-map-marker</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>位置情報</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -179,13 +184,27 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="worldDialog" persistent max-width="1050px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          トレースルートの経路分析
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <div id="world" style="width: 1000px; height: 750px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="worldDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
 <script>
 import * as echarts from 'echarts'
-import * as ecStat from 'echarts-stat'
-import * as numeral from 'numeral'
 
 export default {
   data() {
@@ -233,13 +252,13 @@ export default {
       ],
       headers: [
         { text: '結果', value: 'Stat', width: '10%' },
-        { text: '時刻', value: 'TimeStamp', width: '20%' },
+        { text: '時刻', value: 'TimeStamp', width: '15%' },
         { text: '応答時間', value: 'Time', width: '10%' },
         { text: 'サイズ', value: 'Size', width: '10%' },
         { text: '送信TTL', value: 'SendTTL', width: '10%' },
         { text: '受信TTL', value: 'RecvTTL', width: '10%' },
-        { text: '応答送信IP', value: 'RecvSrc', width: '20%' },
-        { text: '位置', value: 'Loc', width: '10%' },
+        { text: '応答送信IP', value: 'RecvSrc', width: '15%' },
+        { text: '位置', value: 'Loc', width: '20%' },
       ],
       results: [],
       error: false,
@@ -249,11 +268,9 @@ export default {
       chart: undefined,
       chartOption: {},
       histogramDialog: false,
-      histgram: undefined,
       chart3DDialog: false,
-      chart3D: undefined,
       linearDialog: false,
-      lenear: undefined,
+      worldDialog: false,
     }
   },
   created() {
@@ -272,6 +289,8 @@ export default {
     startPing() {
       if (this.chart) {
         this.chartOption.series[0].data = []
+        this.chartOption.series[1].data = []
+        this.chartOption.series[2].data = []
       }
       this.stop = false
       this.wait = true
@@ -291,107 +310,7 @@ export default {
       this.stop = true
     },
     showChart() {
-      this.chartOption = {
-        title: {
-          show: false,
-        },
-        backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
-          {
-            offset: 0,
-            color: '#4b5769',
-          },
-          {
-            offset: 1,
-            color: '#404a59',
-          },
-        ]),
-        toolbox: {
-          iconStyle: {
-            color: '#ccc',
-          },
-          feature: {
-            dataZoom: {},
-            saveAsImage: { name: 'twsnmp_ping' },
-          },
-        },
-        dataZoom: [{}],
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'shadow',
-          },
-        },
-        grid: {
-          left: '10%',
-          right: '10%',
-          top: 60,
-          buttom: 0,
-        },
-        legend: {
-          data: [''],
-          textStyle: {
-            color: '#ccc',
-            fontSize: 10,
-          },
-        },
-        xAxis: {
-          type: 'time',
-          name: '日時',
-          nameTextStyle: {
-            color: '#ccc',
-            fontSize: 10,
-            margin: 2,
-          },
-          axisLabel: {
-            color: '#ccc',
-            fontSize: '8px',
-            formatter(value, index) {
-              const date = new Date(value)
-              return echarts.time.format(
-                date,
-                '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'
-              )
-            },
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#ccc',
-            },
-          },
-          splitLine: {
-            show: false,
-          },
-        },
-        yAxis: [
-          {
-            type: 'value',
-            name: '応答時間(秒)',
-            nameTextStyle: {
-              color: '#ccc',
-              fontSize: 10,
-              margin: 2,
-            },
-            axisLabel: {
-              color: '#ccc',
-              fontSize: 8,
-              margin: 2,
-            },
-            axisLine: {
-              lineStyle: {
-                color: '#ccc',
-              },
-            },
-          },
-        ],
-        series: [
-          {
-            color: '#1f78b4',
-            type: 'line',
-            showSymbol: false,
-            data: [],
-          },
-        ],
-      }
+      this.chartOption = this.$getPingChartOption()
       this.chart = echarts.init(document.getElementById('chart'))
       this.chart.setOption(this.chartOption)
       this.chart.resize()
@@ -414,6 +333,14 @@ export default {
         this.chartOption.series[0].data.push({
           ts,
           value: [t, r.Time / (1000 * 1000 * 1000)],
+        })
+        this.chartOption.series[1].data.push({
+          ts,
+          value: [t, r.SendTTL],
+        })
+        this.chartOption.series[2].data.push({
+          ts,
+          value: [t, r.RecvTTL],
         })
         this.chart.setOption(this.chartOption)
         this.chart.resize()
@@ -510,98 +437,7 @@ export default {
       })
     },
     updateHistogram() {
-      if (this.histgram) {
-        this.histgram.dispose()
-      }
-      const data = []
-      this.results.forEach((r) => {
-        if (r.Stat !== 1) {
-          return
-        }
-        data.push(r.Time / (1000 * 1000 * 1000))
-      })
-      const bins = ecStat.histogram(data)
-      this.histgram = echarts.init(document.getElementById('histogram'))
-      const option = {
-        title: {
-          show: false,
-        },
-        backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
-          {
-            offset: 0,
-            color: '#4b5769',
-          },
-          {
-            offset: 1,
-            color: '#404a59',
-          },
-        ]),
-        toolbox: {
-          iconStyle: {
-            color: '#ccc',
-          },
-          feature: {
-            dataZoom: {},
-            saveAsImage: { name: 'twsnmp_ping_histgram' },
-          },
-        },
-        dataZoom: [{}],
-        tooltip: {
-          trigger: 'axis',
-          formatter(params) {
-            const p = params[0]
-            return p.value[0] + 'の回数:' + p.value[1]
-          },
-          axisPointer: {
-            type: 'shadow',
-          },
-        },
-        grid: {
-          left: '10%',
-          right: '10%',
-          top: 30,
-          buttom: 0,
-        },
-        xAxis: {
-          scale: true,
-          name: '応答時間(秒)',
-          min: 0,
-          nameTextStyle: {
-            color: '#ccc',
-            fontSize: 10,
-            margin: 2,
-          },
-          axisLabel: {
-            color: '#ccc',
-            fontSize: 8,
-            margin: 2,
-          },
-        },
-        yAxis: {
-          name: '回数',
-          nameTextStyle: {
-            color: '#ccc',
-            fontSize: 10,
-            margin: 2,
-          },
-          axisLabel: {
-            color: '#ccc',
-            fontSize: 8,
-            margin: 2,
-          },
-        },
-        series: [
-          {
-            color: '#1f78b4',
-            type: 'bar',
-            showSymbol: false,
-            barWidth: '99.3%',
-            data: bins.data,
-          },
-        ],
-      }
-      this.histgram.setOption(option)
-      this.histgram.resize()
+      this.$showPingHistgram('histogram', this.results)
     },
     show3D() {
       this.chart3DDialog = true
@@ -610,148 +446,7 @@ export default {
       })
     },
     update3D() {
-      if (this.chart3d) {
-        this.chart3d.dispose()
-      }
-      let maxRtt = 0.0
-      const data = []
-      this.results.forEach((r) => {
-        if (r.Stat !== 1) {
-          return
-        }
-        const t = new Date(r.TimeStamp * 1000)
-        const rtt = r.Time / (1000 * 1000 * 1000)
-        if (rtt > maxRtt) {
-          maxRtt = rtt
-        }
-        data.push([r.Size, t, rtt])
-      })
-      this.chart3d = echarts.init(document.getElementById('chart3d'))
-      const options = {
-        title: {
-          show: false,
-        },
-        backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
-          {
-            offset: 0,
-            color: '#4b5769',
-          },
-          {
-            offset: 1,
-            color: '#404a59',
-          },
-        ]),
-        toolbox: {
-          iconStyle: {
-            color: '#ccc',
-          },
-          feature: {
-            saveAsImage: { name: 'twsnmp_ping_3d' },
-          },
-        },
-        tooltip: {},
-        animationDurationUpdate: 1500,
-        animationEasingUpdate: 'quinticInOut',
-        visualMap: {
-          show: false,
-          min: 0,
-          max: maxRtt,
-          dimension: 2,
-          inRange: {
-            color: [
-              '#1710c0',
-              '#0b9df0',
-              '#00fea8',
-              '#00ff0d',
-              '#f5f811',
-              '#f09a09',
-              '#fe0300',
-            ],
-          },
-        },
-        xAxis3D: {
-          type: 'value',
-          name: 'サイズ',
-          nameTextStyle: {
-            color: '#eee',
-            fontSize: 12,
-            margin: 2,
-          },
-          axisLabel: {
-            color: '#eee',
-            fontSize: 10,
-            margin: 2,
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#ccc',
-            },
-          },
-        },
-        yAxis3D: {
-          type: 'time',
-          name: '日時',
-          nameTextStyle: {
-            color: '#eee',
-            fontSize: 12,
-            margin: 2,
-          },
-          axisLabel: {
-            color: '#eee',
-            fontSize: 8,
-            formatter(value, index) {
-              const date = new Date(value)
-              return echarts.time.format(date, '{yyyy}/{MM}/{dd} {HH}:{mm}')
-            },
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#ccc',
-            },
-          },
-        },
-        zAxis3D: {
-          type: 'value',
-          name: '応答時間(秒)',
-          nameTextStyle: {
-            color: '#eee',
-            fontSize: 12,
-            margin: 2,
-          },
-          axisLabel: {
-            color: '#ccc',
-            fontSize: 8,
-            margin: 2,
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#ccc',
-            },
-          },
-        },
-        grid3D: {
-          axisLine: {
-            lineStyle: { color: '#eee' },
-          },
-          axisPointer: {
-            lineStyle: { color: '#eee' },
-          },
-          viewControl: {
-            projection: 'orthographic',
-          },
-        },
-        series: [
-          {
-            name: 'PING分析(3D)',
-            type: 'scatter3D',
-            symbolSize: 10,
-            dimensions: ['サイズ', '日時', '応答時間(秒)'],
-            data,
-          },
-        ],
-      }
-      this.chart3d.setOption(options)
-      this.chart3d.resize()
+      this.$showPing3DChart('chart3d', this.results)
     },
     showLinear() {
       this.linearDialog = true
@@ -760,140 +455,16 @@ export default {
       })
     },
     updateLinear() {
-      if (this.linear) {
-        this.linear.dispose()
-      }
-      this.linear = echarts.init(document.getElementById('linear'))
-      const data = []
-      this.results.forEach((r) => {
-        if (r.Stat !== 1) {
-          return
-        }
-        data.push([r.Size, r.Time / (1000 * 1000 * 1000)])
+      this.$showPingLinearChart('linear', this.results)
+    },
+    showWorld() {
+      this.worldDialog = true
+      this.$nextTick(() => {
+        this.updateWorld()
       })
-      const reg = ecStat.regression('linear', data)
-      const speed =
-        numeral(
-          reg.parameter.gradient ? 1.0 / reg.parameter.gradient : 0.0
-        ).format('0.00a') + 'bps'
-      const delay = reg.parameter.intercept.toFixed(6) + `sec`
-      const option = {
-        title: {
-          show: false,
-        },
-        backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
-          {
-            offset: 0,
-            color: '#4b5769',
-          },
-          {
-            offset: 1,
-            color: '#404a59',
-          },
-        ]),
-        toolbox: {
-          iconStyle: {
-            color: '#ccc',
-          },
-          feature: {
-            dataZoom: {},
-            saveAsImage: { name: 'twsnmp_ping_size' },
-          },
-        },
-        dataZoom: [{}],
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'shadow',
-          },
-        },
-        grid: {
-          left: '10%',
-          right: '10%',
-          top: 40,
-          buttom: 0,
-        },
-        xAxis: {
-          type: 'value',
-          name: 'サイズ',
-          nameTextStyle: {
-            color: '#ccc',
-            fontSize: 10,
-            margin: 2,
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#ccc',
-            },
-          },
-          splitLine: {
-            show: false,
-          },
-        },
-        yAxis: [
-          {
-            type: 'value',
-            name: '応答時間(秒)',
-            nameTextStyle: {
-              color: '#ccc',
-              fontSize: 10,
-              margin: 2,
-            },
-            axisLine: {
-              lineStyle: {
-                color: '#ccc',
-              },
-            },
-            axisLabel: {
-              color: '#ccc',
-              fontSize: 8,
-              margin: 2,
-            },
-          },
-        ],
-        series: [
-          {
-            name: 'scatter',
-            type: 'scatter',
-            label: {
-              emphasis: {
-                show: true,
-              },
-            },
-            data,
-          },
-          {
-            name: 'line',
-            type: 'line',
-            showSymbol: false,
-            data: reg.points,
-            markPoint: {
-              itemStyle: {
-                normal: {
-                  color: 'transparent',
-                },
-              },
-              label: {
-                normal: {
-                  show: true,
-                  formatter: `回線速度=${speed} 遅延=${delay}`,
-                  textStyle: {
-                    color: '#eee',
-                    fontSize: 12,
-                  },
-                },
-              },
-              data: [
-                {
-                  coord: reg.points[reg.points.length - 1],
-                },
-              ],
-            },
-          },
-        ],
-      }
-      this.linear.setOption(option)
-      this.linear.resize()
+    },
+    updateWorld() {
+      this.$showPingMapChart('world', this.results)
     },
   },
 }

@@ -53,6 +53,7 @@ export default {
     '@/plugins/echarts/winlog.js',
     '@/plugins/echarts/hostResource.js',
     '@/plugins/echarts/rmon.js',
+    '@/plugins/echarts/ping.js',
     '@/plugins/brain.js',
     '@/plugins/vpanel.js',
   ],

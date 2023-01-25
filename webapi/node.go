@@ -3,7 +3,9 @@ package webapi
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -230,8 +232,22 @@ func postPing(c echo.Context) error {
 		log.Println(err)
 		return echo.ErrBadRequest
 	}
+	ipreg := regexp.MustCompile(`^[0-9.]+$`)
+	if !ipreg.MatchString(req.IP) {
+		if ips, err := net.LookupIP(req.IP); err == nil {
+			for _, ip := range ips {
+				if ip.IsGlobalUnicast() {
+					s := ip.To4().String()
+					if ipreg.MatchString(s) {
+						req.IP = s
+						break
+					}
+				}
+			}
+		}
+	}
 	res := new(PingRes)
-	pe := ping.DoPing(req.IP, 3, 0, req.Size, req.TTL)
+	pe := ping.DoPing(req.IP, 2, 0, req.Size, req.TTL)
 	res.Stat = int(pe.Stat)
 	res.TimeStamp = time.Now().Unix()
 	res.Time = pe.Time
