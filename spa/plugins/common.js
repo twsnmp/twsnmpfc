@@ -53,6 +53,8 @@ const filterEventTypeList = [
   { text: 'システム', value: 'system' },
   { text: 'ポーリング', value: 'polling' },
   { text: 'AI分析', value: 'ai' },
+  { text: '稼働率', value: 'oprate' },
+  { text: 'ARP監視', value: 'arpwatch' },
 ]
 
 const typeList = [

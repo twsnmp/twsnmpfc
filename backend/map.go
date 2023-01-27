@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -27,6 +28,7 @@ func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 	timer := time.NewTicker(time.Second * 10)
 	newVersionTimer := time.NewTicker(time.Hour * 24)
 	i := 6
+	checkOR := false
 	for {
 		select {
 		case <-ctx.Done():
@@ -49,6 +51,7 @@ func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 			})
 			if change > 0 {
 				hasLineInfo = updateLineState()
+				checkOR = true
 			}
 			i++
 			if i > 5 {
@@ -57,12 +60,39 @@ func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 				}
 				datastore.UpdateDBStats()
 				datastore.CheckDBBackup()
+				if checkOR {
+					checkOperationRate()
+					checkOR = false
+				}
 				i = 0
 			}
 		}
 	}
 }
 
+func checkOperationRate() {
+	total := 0
+	down := 0
+	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
+		total++
+		switch n.State {
+		case "normal":
+		case "repair":
+		case "unknown":
+		default:
+			down++
+		}
+		return true
+	})
+
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "oprate",
+		Level: "info",
+		Event: fmt.Sprintf("ノード数=%d,障害ノード=%d,稼働率=%.2f%%", total, down, 100.0*float64(total-down)/float64(total)),
+	})
+}
+
+// clearPollingState : 復帰状態のポーリング状態を不明にして、再ポーリングする
 func clearPollingState() {
 	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
 		if p.State == "repair" {

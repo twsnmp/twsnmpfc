@@ -33,7 +33,7 @@ func arpWatch(stopCh chan bool) {
 	checkArpTable()
 	makeLoacalCheckAddrs()
 	timer := time.NewTicker(time.Second * 300)
-	pinger := time.NewTicker(time.Second * 3)
+	pinger := time.NewTicker(time.Second * 5)
 	for {
 		select {
 		case <-stopCh:
@@ -55,8 +55,6 @@ func arpWatch(stopCh chan bool) {
 		}
 	}
 }
-
-var lastLocalAddressUsage = 0.0
 
 func makeLoacalCheckAddrs() {
 	ifs, err := net.Interfaces()
@@ -117,13 +115,11 @@ func makeLoacalCheckAddrs() {
 	lau := 0.0
 	if localIPCount > 0 {
 		lau = 100.0 * float64(localHitCount) / float64(localIPCount)
-	}
-	if lastLocalAddressUsage == lau {
+	} else {
 		return
 	}
-	lastLocalAddressUsage = lau
 	datastore.AddEventLog(&datastore.EventLogEnt{
-		Type:  "system",
+		Type:  "arpwatch",
 		Level: "info",
 		Event: fmt.Sprintf("ARP監視 ローカルアドレス使用量 %d/%d %.2f%%", localHitCount, localIPCount, lau),
 	})

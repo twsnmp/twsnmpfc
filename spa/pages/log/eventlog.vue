@@ -74,6 +74,56 @@
             Excel
           </v-btn>
         </download-excel>
+        <v-menu v-if="logs" offset-y>
+          <template #activator="{ on, attrs }">
+            <v-btn color="primary" dark v-bind="attrs" v-on="on">
+              <v-icon>mdi-chart-line</v-icon>
+              グラフと集計
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="showStateChart">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-arc</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> 状態別 </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showNodeChart">
+              <v-list-item-icon
+                ><v-icon>mdi-format-list-numbered</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> ノード別 </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showHeatmap">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-histogram</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> ヒートマップ </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showOperationRate">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-line</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> 稼働率 </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showArpWatch">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-line</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> ARP監視 </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
           再検索
@@ -233,6 +283,21 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="chartDialog" persistent max-width="950px">
+      <v-card style="width: 100%">
+        <v-card-title>
+          {{ chartTitle }}
+        </v-card-title>
+        <div id="chart" style="width: 900px; height: 500px"></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="chartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -329,6 +394,8 @@ export default {
         { text: '復帰', value: 'repair' },
         { text: '不明', value: 'unknown' },
       ],
+      chartDialog: false,
+      chartTitle: '',
     }
   },
   async fetch() {
@@ -409,6 +476,41 @@ export default {
         return false
       }
       return true
+    },
+    showStateChart() {
+      this.chartDialog = true
+      this.chartTitle = '状態別'
+      this.$nextTick(() => {
+        this.$showEventLogStateChart('chart', this.logs)
+      })
+    },
+    showNodeChart() {
+      this.chartDialog = true
+      this.chartTitle = 'ノード別'
+      this.$nextTick(() => {
+        this.$showEventLogNodeChart('chart', this.logs)
+      })
+    },
+    showHeatmap() {
+      this.chartDialog = true
+      this.chartTitle = 'ログ数ヒートマップ'
+      this.$nextTick(() => {
+        this.$showEventLogHeatmap('chart', this.logs)
+      })
+    },
+    showOperationRate() {
+      this.chartDialog = true
+      this.chartTitle = '稼働率'
+      this.$nextTick(() => {
+        this.$showEventLogTimeChart('chart', 'oprate', this.logs)
+      })
+    },
+    showArpWatch() {
+      this.chartDialog = true
+      this.chartTitle = 'ARP監視ローカルアドレス使用率'
+      this.$nextTick(() => {
+        this.$showEventLogTimeChart('chart', 'arpwatch', this.logs)
+      })
     },
   },
 }
