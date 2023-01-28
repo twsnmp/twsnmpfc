@@ -57,10 +57,16 @@
             <td>
               <v-text-field v-model="conf.vendor" label="vendor"></v-text-field>
             </td>
-            <td colspan="3">
+            <td colspan="1">
               <v-switch
                 v-model="conf.excludeVM"
                 label="仮想マシンを除外"
+              ></v-switch>
+            </td>
+            <td colspan="2">
+              <v-switch
+                v-model="conf.emptyNodeID"
+                label="マップ未登録"
               ></v-switch>
             </td>
           </tr>
@@ -371,7 +377,10 @@ export default {
           text: '名前',
           value: 'Name',
           width: '15%',
-          filter: (value) => {
+          filter: (value, search, item) => {
+            if (this.conf.emptyNodeID) {
+              if (item.NodeID) return false
+            }
             if (!this.conf.name) return true
             return value.includes(this.conf.name)
           },
@@ -422,6 +431,7 @@ export default {
         ip: '',
         vendor: '',
         excludeVM: false,
+        emptyNodeID: false,
         sortBy: 'Score',
         sortDesc: false,
         page: 1,
