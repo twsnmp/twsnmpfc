@@ -182,6 +182,14 @@
                 <v-list-item-title>FFT分析(3D)</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="showHeatmap">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-histogram</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> ヒートマップ </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <v-btn color="normal" dark @click="doFilter()">
@@ -708,6 +716,23 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="heatmapDialog" persistent max-width="1050px">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> {{ title }} - ヒートマップ </span>
+        </v-card-title>
+        <v-card-text>
+          <div id="heatmap" style="width: 1000px; height: 600px"></div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="heatmapDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -891,6 +916,7 @@ export default {
       fft3DDialog: false,
       type: 'netflow',
       title: 'NetFlow',
+      heatmapDialog: false,
     }
   },
   async fetch() {
@@ -1104,6 +1130,12 @@ export default {
       this.topListTitle = 'IPフロー別通信量'
       this.$nextTick(() => {
         this.$showNetFlowTop('topList', this.topList, this.topListType)
+      })
+    },
+    showHeatmap() {
+      this.heatmapDialog = true
+      this.$nextTick(() => {
+        this.$showLogHeatmap('heatmap', this.logs)
       })
     },
     updateTopList() {

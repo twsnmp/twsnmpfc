@@ -2,7 +2,7 @@ import * as echarts from 'echarts'
 
 let chart
 
-const showEventLogHeatmap = (div, logs) => {
+const showLogHeatmap = (div, logs) => {
   if (chart) {
     chart.dispose()
   }
@@ -585,6 +585,6 @@ const showEventLogNodeChart = (div, logs) => {
 export default (context, inject) => {
   inject('showEventLogStateChart', showEventLogStateChart)
   inject('showEventLogNodeChart', showEventLogNodeChart)
-  inject('showEventLogHeatmap', showEventLogHeatmap)
   inject('showEventLogTimeChart', showEventLogTimeChart)
+  inject('showLogHeatmap', showLogHeatmap)
 }

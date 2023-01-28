@@ -495,7 +495,7 @@ export default {
       this.chartDialog = true
       this.chartTitle = 'ログ数ヒートマップ'
       this.$nextTick(() => {
-        this.$showEventLogHeatmap('chart', this.logs)
+        this.$showLogHeatmap('chart', this.logs)
       })
     },
     showOperationRate() {
