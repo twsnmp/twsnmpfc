@@ -178,7 +178,7 @@
     "Type": "snmp",
     "Mode": "stats",
     "Params": "hrProcessorLoad",
-    "Script": "avg > 90.0",
+    "Script": "avg < 90.0",
     "Level": "low",
     "Descr": "CPU平均使用率",
     "AutoMode": ""
@@ -188,7 +188,7 @@
     "Type": "snmp",
     "Mode": "get",
     "Params": "hrStorageSize.$i,hrStorageUsed.$i",
-    "Script": "rate=hrStorageSize > 0 ? 100.0*(hrStorageUsed/hrStorageSize):0.0;rate > 90.0",
+    "Script": "rate=hrStorageSize > 0 ? 100.0*(hrStorageUsed/hrStorageSize):0.0;rate < 90.0",
     "Level": "low",
     "Descr": "ストレージ使用率",
     "AutoMode": "index:hrStorageSize"
