@@ -511,13 +511,13 @@ const showPingLinearChart = (div, results) => {
   if (chart) {
     chart.dispose()
   }
-  this.linear = echarts.init(document.getElementById('linear'))
+  chart = echarts.init(document.getElementById(div))
   const data = []
-  this.results.forEach((r) => {
+  results.forEach((r) => {
     if (r.Stat !== 1) {
       return
     }
-    data.push([r.Size, r.Time / (1000 * 1000 * 1000)])
+    data.push([r.Size * 8, r.Time / (1000 * 1000 * 1000)])
   })
   const reg = ecStat.regression('linear', data)
   const speed =
