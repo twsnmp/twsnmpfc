@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/ping"
 )
 
 func doPollingPing(pe *datastore.PollingEnt) {
-	if pe.Params == "line" {
+	if pe.Mode == "line" {
 		doPollingCheckLineCond(pe)
 		return
 	}
@@ -20,18 +21,37 @@ func doPollingPing(pe *datastore.PollingEnt) {
 		return
 	}
 	size := 64
+	ttl := 0
 	if pe.Params != "" {
-		if i, err := strconv.Atoi(pe.Params); err == nil {
-			size = i
+		if strings.Contains(pe.Params, "=") {
+			a := strings.Split(pe.Params, ",")
+			for _, s := range a {
+				b := strings.SplitN(s, "=", 2)
+				if len(b) == 2 {
+					if i, err := strconv.Atoi(b[1]); err == nil {
+						if b[0] == "ttl" && i > 0 && i < 256 {
+							ttl = i
+						} else if b[0] == "size" && i >= 0 && i < 3000 {
+							size = i
+						}
+					}
+				}
+			}
+		} else {
+			if i, err := strconv.Atoi(pe.Params); err == nil {
+				size = i
+			}
 		}
 	}
-	r := ping.DoPing(n.IP, pe.Timeout, pe.Retry, size, 0)
+	r := ping.DoPing(n.IP, pe.Timeout, pe.Retry, size, ttl)
 	if r.Stat == ping.PingOK {
 		pe.Result["rtt"] = float64(r.Time)
+		pe.Result["ttl"] = float64(r.RecvTTL)
 		delete(pe.Result, "error")
 		setPollingState(pe, "normal")
 	} else {
 		pe.Result["rtt"] = 0.0
+		pe.Result["ttl"] = 0.0
 		pe.Result["error"] = fmt.Sprintf("%v", r.Error)
 		setPollingState(pe, pe.Level)
 	}
@@ -47,6 +67,7 @@ func doPollingCheckLineCond(pe *datastore.PollingEnt) {
 	speed := []float64{}
 	rtt := []float64{}
 	fail := 0
+	ttl := 0
 	for i := 0; i < 20; i++ {
 		r64 := ping.DoPing(n.IP, pe.Timeout, pe.Retry, 64, 0)
 		if r64.Stat != ping.PingOK {
@@ -64,6 +85,7 @@ func doPollingCheckLineCond(pe *datastore.PollingEnt) {
 			fail += 1
 			continue
 		}
+		ttl = r64.RecvTTL
 		a := float64(64.0-1364.0) / float64(r64.Time-r1364.Time)
 		b := float64(r64.Time) - a*float64(64.0)
 		s := a * (8.0 * 1000.0) //Mbps
@@ -80,6 +102,7 @@ func doPollingCheckLineCond(pe *datastore.PollingEnt) {
 	if len(speed) < 3 {
 		pe.Result["error"] = lastError
 		pe.Result["rtt"] = 0.0
+		pe.Result["ttl"] = ttl
 		pe.Result["rtt_cv"] = 0.0
 		pe.Result["speed"] = 0.0
 		pe.Result["speed_cv"] = 0.0
@@ -91,6 +114,7 @@ func doPollingCheckLineCond(pe *datastore.PollingEnt) {
 	rm, rcv := calcMeanCV(rtt)
 	pe.Result["rtt"] = rm
 	pe.Result["rtt_cv"] = rcv
+	pe.Result["ttl"] = ttl
 	sm, scv := calcMeanCV(speed)
 	pe.Result["speed"] = sm
 	pe.Result["speed_cv"] = scv

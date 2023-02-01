@@ -7,12 +7,12 @@
     "AutoMode": ""
   },
   {
-    "Name": "サイズ指定PING",
+    "Name": "パラメータ指定PING",
     "Type": "ping",
-    "Mode": "size",
-    "Params": "サイズを指定",
+    "Mode": "",
+    "Params": "size=1300,ttl=128",
     "Level": "low",
-    "Descr": "PINGパケットのサイズを指定",
+    "Descr": "PINGパケットのサイズとTTLを指定",
     "AutoMode": "disable"
   },
   {
@@ -21,7 +21,7 @@
     "Mode": "line",
     "Level": "low",
     "Descr": "回線速度、遅延、それぞれの変動係数を測定",
-    "AutoMode": ""
+    "AutoMode": "disable"
   },
   {
     "Name": "SNMP再起動監視",
