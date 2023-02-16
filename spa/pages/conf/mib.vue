@@ -48,6 +48,7 @@
           ></v-text-field>
           <div style="height: 500px; overflow: auto">
             <v-treeview
+              ref="tree"
               :items="mibtree"
               item-key="oid"
               :search="searchMIBTree"
@@ -88,6 +89,15 @@
         </v-snackbar>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn
+            v-if="searchMIBTree.length > 2"
+            color="normal"
+            dark
+            @click="openCloseMibTree"
+          >
+            <v-icon>mdi-file-tree</v-icon>
+            {{ mibTreeOpened ? 'MIBツリーを閉じる' : 'MIBツリーを開く' }}
+          </v-btn>
           <v-btn color="normal" dark @click="mibTreeDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
@@ -132,6 +142,7 @@ export default {
       mibInfoText: '',
       copyError: false,
       copyDone: false,
+      mibTreeOpened: false,
     }
   },
   async fetch() {
@@ -223,6 +234,12 @@ export default {
           this.copyError = true
         }
       )
+    },
+    openCloseMibTree() {
+      this.mibTreeOpened = !this.mibTreeOpened
+      if (this.$refs.tree) {
+        this.$refs.tree.updateAll(this.mibTreeOpened)
+      }
     },
   },
 }
