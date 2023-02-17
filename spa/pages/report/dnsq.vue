@@ -399,7 +399,7 @@ export default {
         }
         exports.push({
           ホスト: d.Host,
-          サーバー: d.Host,
+          サーバー: d.Server,
           タイプ: d.Type,
           名前: d.Name,
           回数: d.Count,
