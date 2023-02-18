@@ -9,6 +9,7 @@ let mapCallBack
 
 let nodes = {}
 let lines = []
+let items = {}
 let backImage = {
   X:0,
   Y:0,
@@ -20,8 +21,10 @@ let backImage = {
 }
 
 const selectedNodes = []
+let selectedItem = ""
 
 const iconCodeMap = {}
+const imageMap = {}
 
 /* eslint prettier/prettier: 0 */
 const setIconCodeMap = (list) => {
@@ -42,6 +45,7 @@ const setMAP = (m,url,ro) => {
   readOnly = ro
   nodes = m.Nodes
   lines = m.Lines
+  items = m.Items || {}
   backImage = m.MapConf.BackImage
   backImage.Image = null
   if (backImage.Path){
@@ -50,6 +54,16 @@ const setMAP = (m,url,ro) => {
       backImage.Image = img
       mapRedraw = true
     })
+  }
+
+  for(const k in items) {
+    if (items[k].Type === 3 && !imageMap[items[k].Path]) {
+      const _p5 = new P5()
+      _p5.loadImage(url+'/image/' + items[k].Path,(img)=>{
+        imageMap[items[k].Path] = img
+        mapRedraw = true
+      })
+    } 
   }
   mapRedraw = true
 }
@@ -88,6 +102,7 @@ const mapMain = (p5) => {
   let lastMouseY
   let dragMode  = 0 // 0 : None , 1: Select , 2 :Move
   const draggedNodes = []
+  const draggedItems = []
   let clickInCanvas = false
   p5.setup = () => {
     const c = p5.createCanvas(MAP_SIZE_X, MAP_SIZE_Y)
@@ -131,6 +146,40 @@ const mapMain = (p5) => {
         p5.stroke(color)
         p5.strokeWeight(1)
         p5.text(lines[k].Info, xm + 10, ym)  
+      }
+      p5.pop()
+    }
+    for (const k in items) {
+      p5.push()
+      p5.translate(items[k].X, items[k].Y)
+      if (selectedItem === items[k].ID ) {
+        p5.fill('rgba(23,23,23,0.9)')
+        p5.stroke('#ccc')
+        const w =  items[k].Type === 2 ?  (items[k].Size *  items[k].Text.length) + 10 : items[k].W +10
+        const h =  items[k].Type === 2 ?  items[k].Size + 10 : items[k].H +10
+        p5.rect(-5, -5, w, h)
+      }
+      switch (items[k].Type) {
+      case 0: // rect
+        p5.fill(items[k].Color)
+        p5.stroke('rgba(23,23,23,0.9)')
+        p5.rect(0,0,items[k].W, items[k].H)
+        break
+      case 1: // ellipse
+        p5.fill(items[k].Color)
+        p5.stroke('rgba(23,23,23,0.9)')
+        p5.rect(0,0,items[k].W, items[k].H)
+        break
+      case 2: // text
+        p5.textSize(items[k].Size || 12)
+        p5.fill(items[k].Color)
+        p5.text(items[k].Text, 0, 0,items[k].Size *  items[k].Text.length + 10, items[k].Size + 10)
+        break
+      case 3: // Image
+        if (imageMap[items[k].Path]) {
+          p5.image(imageMap[items[k].Path],0,0,items[k].W,items[k].H)
+        }
+        break
       }
       p5.pop()
     }
@@ -184,7 +233,7 @@ const mapMain = (p5) => {
       return true
     }
     if (dragMode === 0) {
-      if (selectedNodes.length > 0 ){
+      if (selectedNodes.length > 0 || selectedItem !== "" ){
         dragMode = 2
       } else {
         dragMode = 1
@@ -216,6 +265,7 @@ const mapMain = (p5) => {
       return false
     } else  {
       setSelectNode(false)
+      setSelectItem()
     }
     lastMouseX = p5.mouseX
     lastMouseY = p5.mouseY
@@ -232,13 +282,15 @@ const mapMain = (p5) => {
     mapRedraw = true
     if(!clickInCanvas){
       selectedNodes.length = 0
+      selectedItem = ""
       return true
     }
-    if(p5.mouseButton === p5.RIGHT && selectedNodes.length < 2) {
+    if(p5.mouseButton === p5.RIGHT && selectedNodes.length < 2 ) {
       if (mapCallBack) {
         mapCallBack({
           Cmd: 'contextMenu',
           Node: selectedNodes[0] || '',
+          Item: selectedItem || '',
           x: p5.winMouseX,
           y: p5.winMouseY,
         })
@@ -252,10 +304,12 @@ const mapMain = (p5) => {
       dragMode = 0
       return false
     }
-    if (draggedNodes.length === 0) {
-      return false
+    if (draggedNodes.length > 0) {
+      updateNodesPos()
     }
-    updateNodesPos()
+    if (draggedItems.length > 0) {
+      updateItemsPos()
+    }
     return false
   }
 
@@ -278,6 +332,8 @@ const mapMain = (p5) => {
   p5.doubleClicked = () => {
     if (selectedNodes.length === 1 ){
       nodeDoubleClicked()
+    } else if (selectedItem !== "" ){
+      itemDoubleClicked()
     }
     return true
   }
@@ -295,6 +351,20 @@ const mapMain = (p5) => {
       n.Y = MAP_SIZE_Y - 16
     }
   }
+  const checkItemPos = (i) => {
+    if (i.X < 16) {
+      i.X = 16
+    }
+    if (i.Y < 16) {
+      i.Y = 16
+    }
+    if (i.X > MAP_SIZE_X - i.W) {
+      i.X = MAP_SIZE_X - i.W
+    }
+    if (i.Y > MAP_SIZE_Y - i.H) {
+      i.Y = MAP_SIZE_Y - i.H
+    }
+  }
   const dragMoveNodes = () => {
     selectedNodes.forEach((id) => {
       if (nodes[id]) {
@@ -306,6 +376,14 @@ const mapMain = (p5) => {
         }
       }
     })
+    if (selectedItem !== "" && items[selectedItem] ) {
+      items[selectedItem].X += p5.mouseX - lastMouseX
+      items[selectedItem].Y += p5.mouseY - lastMouseY
+      checkItemPos(items[selectedItem])
+      if (!draggedItems.includes(selectedItem)) {
+        draggedItems.push(selectedItem)
+      }
+    }
     mapRedraw = true
   }
 
@@ -352,6 +430,23 @@ const mapMain = (p5) => {
     }
     return l !== selectedNodes.length
   }
+  // 描画アイテムを選択する
+  const setSelectItem = () => {
+    for (const k in items) {
+      const w =  items[k].Type === 2 ?  (items[k].Size *  items[k].Text.length) + 10 : items[k].W +10
+      const h =  items[k].Type === 2 ?  items[k].Size + 10 : items[k].H +10
+      if (
+        items[k].X + w > p5.mouseX &&
+        items[k].X - 10 < p5.mouseX &&
+        items[k].Y + h > p5.mouseY &&
+        items[k].Y - 10 < p5.mouseY
+      ) {
+        selectedItem = items[k].ID
+        return
+      }
+    }
+    selectedItem = ""
+  }
   // ノードを削除する
   const deleteNodes = () => {
     if (mapCallBack){
@@ -383,12 +478,42 @@ const mapMain = (p5) => {
     }
     draggedNodes.length = 0
   }
+  // 描画アイテムの位置を保存する
+  const updateItemsPos = () => {
+    const list  = []
+    draggedItems.forEach((id) => {
+      if (items[id]) {
+        // 位置を保存するノード
+        list.push({
+          ID: id,
+          X: items[id].X,
+          Y: items[id].Y,
+        })
+      }
+    })
+    if (mapCallBack) {
+      mapCallBack({
+        Cmd: 'updateItemsPos',
+        Param: list,
+      })
+    }
+    draggedItems.length = 0
+  }
   // nodeをダブルクリックした場合
   const nodeDoubleClicked = () => {
     if (mapCallBack) {
       mapCallBack({
         Cmd: 'nodeDoubleClicked',
         Param: selectedNodes[0],
+      })
+    }
+  }
+  // itemをダブルクリックした場合
+  const itemDoubleClicked = () => {
+    if (mapCallBack) {
+      mapCallBack({
+        Cmd: 'itemDoubleClicked',
+        Param: selectedItem,
       })
     }
   }

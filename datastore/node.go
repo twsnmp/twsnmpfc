@@ -32,6 +32,28 @@ type NodeEnt struct {
 	AutoAck   bool
 }
 
+type DrawItemType int
+
+const (
+	DrawItemTypeRect = iota
+	DrawItemTypeEllipse
+	DrawItemTypeText
+	DrawItemTypeImage
+)
+
+type DrawItemEnt struct {
+	ID    string
+	Type  DrawItemType
+	X     int
+	Y     int
+	W     int // Width
+	H     int // Higeht
+	Color string
+	Path  string
+	Text  string
+	Size  int // Font Size
+}
+
 func loadMapData() error {
 	if db == nil {
 		return ErrDBNotOpen
@@ -48,6 +70,16 @@ func loadMapData() error {
 			}
 			return nil
 		})
+		b = tx.Bucket([]byte("items"))
+		if b != nil {
+			_ = b.ForEach(func(k, v []byte) error {
+				var di DrawItemEnt
+				if err := json.Unmarshal(v, &di); err == nil {
+					items.Store(di.ID, &di)
+				}
+				return nil
+			})
+		}
 		b = tx.Bucket([]byte("lines"))
 		if b != nil {
 			_ = b.ForEach(func(k, v []byte) error {
@@ -103,6 +135,30 @@ func AddNode(n *NodeEnt) error {
 	})
 	nodes.Store(n.ID, n)
 	log.Printf("AddNode name=%s dur=%v", n.Name, time.Since(st))
+	return nil
+}
+
+func AddDrawItem(di *DrawItemEnt) error {
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	for {
+		di.ID = makeKey()
+		if _, ok := items.Load(di.ID); !ok {
+			break
+		}
+	}
+	s, err := json.Marshal(di)
+	if err != nil {
+		return err
+	}
+	st := time.Now()
+	db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("nodes"))
+		return b.Put([]byte(di.ID), s)
+	})
+	items.Store(di.ID, di)
+	log.Printf("AddItem  dur=%v", time.Since(st))
 	return nil
 }
 
@@ -166,12 +222,43 @@ func DeleteNode(nodeID string) error {
 	return nil
 }
 
+func DeleteDrawItem(id string) error {
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	if _, ok := items.Load(id); !ok {
+		return ErrInvalidID
+	} else {
+		AddEventLog(&EventLogEnt{
+			Type:  "user",
+			Level: "info",
+			Event: "描画アイテムを削除しました",
+		})
+	}
+	db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("items"))
+		return b.Delete([]byte(id))
+	})
+	items.Delete(id)
+	return nil
+}
+
 func GetNode(nodeID string) *NodeEnt {
 	if db == nil {
 		return nil
 	}
 	if n, ok := nodes.Load(nodeID); ok {
 		return n.(*NodeEnt)
+	}
+	return nil
+}
+
+func GetDrawItem(id string) *DrawItemEnt {
+	if db == nil {
+		return nil
+	}
+	if di, ok := items.Load(id); ok {
+		return di.(*DrawItemEnt)
 	}
 	return nil
 }
@@ -221,6 +308,12 @@ func ForEachNodes(f func(*NodeEnt) bool) {
 	})
 }
 
+func ForEachItems(f func(*DrawItemEnt) bool) {
+	items.Range(func(_, p interface{}) bool {
+		return f(p.(*DrawItemEnt))
+	})
+}
+
 func saveAllNodes() error {
 	if db == nil {
 		return ErrDBNotOpen
@@ -233,6 +326,15 @@ func saveAllNodes() error {
 			s, err := json.Marshal(pn)
 			if err == nil {
 				b.Put([]byte(pn.ID), s)
+			}
+			return true
+		})
+		b = tx.Bucket([]byte("items"))
+		items.Range(func(_, p interface{}) bool {
+			di := p.(*DrawItemEnt)
+			s, err := json.Marshal(di)
+			if err == nil {
+				b.Put([]byte(di.ID), s)
 			}
 			return true
 		})

@@ -59,6 +59,28 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="deleteItemDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">描画アイテム</span>
+        </v-card-title>
+        <v-alert v-model="deleteError" color="error" dense dismissible>
+          描画アイテムを削除できませんでした
+        </v-alert>
+        <v-card-text> 選択した描画アイテムを削除しますか？ </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="doDeleteItem">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" @click="deleteItemDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="editNodeDialog" persistent max-width="800px">
       <v-card>
         <v-card-title>
@@ -166,6 +188,109 @@
             dark
             @click="
               editNodeDialog = false
+              $fetch()
+            "
+          >
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="editItemDialog" persistent max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">描画アイテム</span>
+        </v-card-title>
+        <v-alert v-model="editItemError" color="error" dense dismissible>
+          描画アイテムの保存に失敗しました
+        </v-alert>
+        <v-card-text>
+          <v-row dense>
+            <v-select
+              v-model="editItem.Type"
+              :items="drawItemList"
+              label="描画アイテムタイプ"
+            >
+            </v-select>
+          </v-row>
+          <v-row dense>
+            <v-col v-if="editItem.Type != 2">
+              <v-text-field
+                v-model="editItem.W"
+                type="number"
+                step="any"
+                min="0"
+                max="1000"
+                label="幅"
+              ></v-text-field>
+            </v-col>
+            <v-col v-if="editItem.Type != 2">
+              <v-text-field
+                v-model="editItem.H"
+                type="number"
+                step="any"
+                min="0"
+                max="1000"
+                label="高さ"
+              ></v-text-field>
+            </v-col>
+            <v-col v-if="editItem.Type == 2">
+              <v-text-field
+                v-model="editItem.Size"
+                type="number"
+                step="any"
+                min="8"
+                max="128"
+                label="文字サイズ"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-color-picker v-if="editItem.Type != 3" v-model="editItem.Color">
+          </v-color-picker>
+          <v-text-field
+            v-if="editItem.Type == 2"
+            v-model="editItem.Text"
+            label="文字列"
+          >
+          </v-text-field>
+          <v-select
+            v-if="editItem.Type == 3"
+            v-model="editItem.Path"
+            :items="map.Images"
+            label="画像ファイル"
+          >
+          </v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            v-if="editItem.Type == 3"
+            color="primary"
+            dark
+            @click="imageUploadDialog = true"
+          >
+            <v-icon>mdi-image</v-icon>
+            画像ファイルアップロード
+          </v-btn>
+          <v-btn
+            v-if="editItem.Type == 3 && notUsedImages.length > 0"
+            color="error"
+            dark
+            @click="imageDeleteDialog = true"
+          >
+            <v-icon>mdi-image</v-icon>
+            画像ファイル削除
+          </v-btn>
+          <v-btn color="primary" dark @click="doUpdateItem">
+            <v-icon>mdi-content-save</v-icon>
+            保存
+          </v-btn>
+          <v-btn
+            color="normal"
+            dark
+            @click="
+              editItemDialog = false
               $fetch()
             "
           >
@@ -512,6 +637,12 @@
             <v-list-item-title>新規ノード</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item @click="addItem()">
+          <v-list-item-icon><v-icon>mdi-drawing</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>描画アイテム</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item @click="checkPolling(true)">
           <v-list-item-icon><v-icon>mdi-cached</v-icon></v-list-item-icon>
           <v-list-item-content>
@@ -562,6 +693,64 @@
             実行
           </v-btn>
           <v-btn color="normal" @click="gridDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="imageUploadDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">画僧ファイルアップロード</span>
+        </v-card-title>
+        <v-alert v-model="imageError" color="error" dense dismissible>
+          画像ファイルの保存に失敗しました
+        </v-alert>
+        <v-card-text>
+          <v-file-input
+            label="背景画像ファイル"
+            accept="image/*"
+            @change="selectFile"
+          >
+          </v-file-input>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="doUploadImage">
+            <v-icon>mdi-content-save</v-icon>
+            保存
+          </v-btn>
+          <v-btn color="normal" @click="imageUploadDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="imageDeleteDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">画僧ファイル操作</span>
+        </v-card-title>
+        <v-alert v-model="imageDeleteError" color="error" dense dismissible>
+          画像ファイルの削除に失敗しました
+        </v-alert>
+        <v-card-text>
+          <v-select
+            v-model="selectedImagePath"
+            :items="notUsedImages"
+            label="削除できる画像ファイル"
+          >
+          </v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn v-if="selectedImagePath" color="error" @click="doDeleteImage">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" @click="imageDelteDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -683,6 +872,29 @@
         </v-list-item>
       </v-list>
     </v-menu>
+    <v-menu
+      v-model="showItemContextMenu"
+      :position-x="x"
+      :position-y="y"
+      absolute
+    >
+      <v-list dense>
+        <v-list-item @click="editItemDialog = true">
+          <v-list-item-icon><v-icon>mdi-pencil</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>編集</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="deleteItemDialog = true">
+          <v-list-item-icon
+            ><v-icon color="red">mdi-delete</v-icon></v-list-item-icon
+          >
+          <v-list-item-content>
+            <v-list-item-title>削除</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-menu>
   </v-row>
 </template>
 
@@ -697,6 +909,10 @@ export default {
       lineError: false,
       deleteDialog: false,
       deleteError: false,
+      editItemDialog: false,
+      editItemError: false,
+      deleteItemDialog: false,
+      deleteItemError: false,
       selectedNodeID: '',
       showNode: {},
       editLine: {
@@ -711,6 +927,7 @@ export default {
       selectedLinePolling1: 0,
       selectedLinePolling2: 0,
       editNode: {},
+      editItem: {},
       nodeList: [],
       deleteNodes: [],
       map: {
@@ -730,6 +947,7 @@ export default {
       ],
       showMapContextMenu: false,
       showNodeContextMenu: false,
+      showItemContextMenu: false,
       x: 0,
       y: 0,
       copyFrom: '',
@@ -741,6 +959,19 @@ export default {
         { text: '4', value: 4 },
         { text: '5', value: 5 },
       ],
+      drawItemList: [
+        { text: '矩形', value: 0 },
+        { text: '楕円', value: 1 },
+        { text: 'ラベル', value: 2 },
+        { text: 'イメージ', value: 3 },
+      ],
+      selectedImagePath: '',
+      imageFile: '',
+      imageUploadDialog: false,
+      imageDeleteDialog: false,
+      imageError: false,
+      imageDeleteError: false,
+      notUsedImages: [],
       urls: [],
       wolDone: false,
       wolError: false,
@@ -765,6 +996,18 @@ export default {
     const nodeID = this.$route.query.node
     if (nodeID && this.map.Nodes[nodeID]) {
       this.$selectNode(nodeID)
+    }
+    const usedImages = {}
+    for (const k in this.map.Items) {
+      if (this.map.Items[k].Type === 3) {
+        usedImages[this.map.Items[k].Path] = true
+      }
+    }
+    this.notUsedImages = []
+    for (const i of this.map.Images) {
+      if (!usedImages[i]) {
+        this.notUsedImages.push(i)
+      }
     }
   },
   computed: {
@@ -844,6 +1087,9 @@ export default {
         case 'updateNodesPos':
           this.$axios.post('/api/map/update', r.Param)
           break
+        case 'updateItemsPos':
+          this.$axios.post('/api/map/update_item', r.Param)
+          break
         case 'deleteNodes':
           this.deleteNodes = Array.from(r.Param)
           this.deleteDialog = true
@@ -873,12 +1119,24 @@ export default {
             this.showNodeDialog = true
           }
           break
+        case 'itemDoubleClicked':
+          if (this.map.Items[r.Param]) {
+            this.editItem = this.map.Items[r.Param]
+            this.editItemDialog = true
+          }
+          break
         case 'contextMenu':
           this.x = r.x
           this.y = r.y
-          if (!r.Node) {
+          if (!r.Node && !r.Item) {
             this.showMapContextMenu = true
             this.editNode.ID = ''
+          } else if (!r.Node) {
+            if (!this.map.Items[r.Item]) {
+              return
+            }
+            this.editItem = this.map.Items[r.Item]
+            this.showItemContextMenu = true
           } else {
             if (!this.map.Nodes[r.Node]) {
               return
@@ -939,6 +1197,18 @@ export default {
           this.deleteError = true
         })
     },
+    doDeleteItem() {
+      this.deleteItemError = false
+      this.$axios
+        .post('/api/nodes/delete_items', [this.editItem.ID])
+        .then(() => {
+          this.$fetch()
+          this.deleteItemDialog = false
+        })
+        .catch((e) => {
+          this.deleteItemError = true
+        })
+    },
     doUpdateNode() {
       let url = '/api/node/update'
       if (this.copyFrom && this.copyPolling) {
@@ -953,6 +1223,24 @@ export default {
         })
         .catch((e) => {
           this.editNodeError = true
+        })
+    },
+    doUpdateItem() {
+      this.editItem.Size = this.editItem.Size * 1
+      this.editItem.X = this.editItem.X * 1
+      this.editItem.Y = this.editItem.Y * 1
+      this.editItem.H = this.editItem.H * 1
+      this.editItem.W = this.editItem.W * 1
+      const url = '/api/item/update'
+      this.editItemError = false
+      this.$axios
+        .post(url, this.editItem)
+        .then(() => {
+          this.$fetch()
+          this.editItemDialog = false
+        })
+        .catch((e) => {
+          this.editItemError = true
         })
     },
     addNode() {
@@ -978,7 +1266,26 @@ export default {
       }
       this.editNodeDialog = true
     },
+    addItem() {
+      this.editItem = {
+        ID: '',
+        Type: 2, // Text
+        X: this.x,
+        Y: this.y,
+        W: 100,
+        H: 32,
+        Text: '新しいラベル',
+        Color: '#ccc',
+        Size: 24,
+      }
+      this.editItemDialog = true
+    },
     deleteNode() {
+      this.showNodeDialog = false
+      this.deleteNodes = [this.editNode.ID]
+      this.deleteDialog = true
+    },
+    deleteItem() {
       this.showNodeDialog = false
       this.deleteNodes = [this.editNode.ID]
       this.deleteDialog = true
@@ -1113,6 +1420,41 @@ export default {
       if (d && list.length > 0) {
         await this.$axios.post('/api/map/update', list)
       }
+    },
+    selectFile(f) {
+      this.imageFile = f
+    },
+    doUploadImage() {
+      const formData = new FormData()
+      formData.append('file', this.imageFile)
+      this.imageError = false
+      this.$axios
+        .$post('/api/image', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+        .then((r) => {
+          this.imageUploadDialog = false
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.imageError = true
+          this.$fetch()
+        })
+    },
+    doDeleteImage() {
+      this.imageDeleteError = false
+      this.$axios
+        .delete('/api/image/' + this.selectedImagePath)
+        .then((r) => {
+          this.imageDeleteDialog = false
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.imageDeleteError = true
+          this.$fetch()
+        })
     },
   },
 }

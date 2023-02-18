@@ -75,6 +75,7 @@ func setup(p *WebAPI) {
 	// Route
 	e.POST("/login", login)
 	e.GET("/backimage", getBackImage)
+	e.GET("/image/:path", getImage)
 	e.GET("/version", getVersion)
 	// JWT保護されたRoute
 	r := e.Group("/api")
@@ -90,6 +91,8 @@ func setup(p *WebAPI) {
 	r.DELETE("/conf/icon/:icon", deleteIcon)
 	r.POST("/conf/backimage", postBackImage)
 	r.DELETE("/conf/backimage", deleteBackImage)
+	r.POST("/image", postImage)
+	r.DELETE("/image/:path", deleteImage)
 	r.POST("/conf/geoip", postGeoIP)
 	r.DELETE("/conf/geoip", deleteGeoIP)
 	r.GET("/conf/notify", getNotifyConf)
@@ -121,6 +124,8 @@ func setup(p *WebAPI) {
 	r.GET("/nodes", getNodes)
 	r.POST("/nodes/delete", deleteNodes)
 	r.POST("/node/update", postNodeUpdate)
+	r.POST("/nodes/delete_items", deleteDrawItems)
+	r.POST("/item/update", postItemUpdate)
 	r.GET("/node/log/:id", getNodeLog)
 	r.GET("/node/polling/:id", getNodePolling)
 	r.GET("/node/vpanel/:id", getVPanel)
@@ -131,6 +136,7 @@ func setup(p *WebAPI) {
 	r.GET("/mibbr/:id", getMIBBr)
 	r.GET("/map", getMap)
 	r.POST("/map/update", postNodePos)
+	r.POST("/map/update_item", postItemPos)
 	r.POST("/line/delete", deleteLine)
 	r.POST("/line/add", postLine)
 	r.POST("/wol/:id", postWOL)

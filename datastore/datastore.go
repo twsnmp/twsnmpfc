@@ -38,6 +38,7 @@ var (
 	RestartSnmpTrapd bool
 	// Map Data on Memory
 	nodes    sync.Map
+	items    sync.Map
 	lines    sync.Map
 	pollings sync.Map
 	// Report Data on Memory
@@ -270,8 +271,8 @@ func openDB(path string) error {
 }
 
 func initDB() error {
-	buckets := []string{"config", "nodes", "lines", "pollings", "logs", "pollingLogs",
-		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report", "grok"}
+	buckets := []string{"config", "nodes", "items", "lines", "pollings", "logs", "pollingLogs",
+		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report", "grok", "images"}
 	reports := []string{"devices", "users", "flows", "servers", "ips",
 		"ether", "dns", "radius", "tls", "cert",
 		"sensor",
