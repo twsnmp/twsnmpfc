@@ -168,7 +168,7 @@ const mapMain = (p5) => {
       case 1: // ellipse
         p5.fill(items[k].Color)
         p5.stroke('rgba(23,23,23,0.9)')
-        p5.rect(0,0,items[k].W, items[k].H)
+        p5.ellipse(items[k].W/2,items[k].H/2,items[k].W, items[k].H)
         break
       case 2: // text
         p5.textSize(items[k].Size || 12)
