@@ -44,6 +44,9 @@
 - RTL-SDRで電波強度を測定するtwSdrPowerのレポート機能(v1.14.0)
 - SwitchBot Plug Miniで測定した電力レポート機能(v1.14.0)
 - グリッド整列(v1.14.0)
+- RMON管理対応(v1.16.0)
+- MIB管理(v1.19.0)
+- マップの描画アイテム対応(v1.20.0)
 
 ![2021-04-10_11-56-00](https://user-images.githubusercontent.com/5225950/114256371-cc61db80-99f3-11eb-8631-c1917554ce26.png)
 
