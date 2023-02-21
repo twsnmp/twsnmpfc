@@ -26,6 +26,8 @@ let selectedItem = ""
 const iconCodeMap = {}
 const imageMap = {}
 
+const _ImageP5 = new P5()
+
 /* eslint prettier/prettier: 0 */
 const setIconCodeMap = (list) => {
   list.forEach((e) => {
@@ -49,8 +51,7 @@ const setMAP = (m,url,ro) => {
   backImage = m.MapConf.BackImage
   backImage.Image = null
   if (backImage.Path){
-    const _p5 = new P5()
-    _p5.loadImage(url+'/backimage',(img)=>{
+    _ImageP5.loadImage(url+'/backimage',(img)=>{
       backImage.Image = img
       mapRedraw = true
     })
@@ -58,8 +59,7 @@ const setMAP = (m,url,ro) => {
 
   for(const k in items) {
     if (items[k].Type === 3 && !imageMap[items[k].Path]) {
-      const _p5 = new P5()
-      _p5.loadImage(url+'/image/' + items[k].Path,(img)=>{
+      _ImageP5.loadImage(url+'/image/' + items[k].Path,(img)=>{
         imageMap[items[k].Path] = img
         mapRedraw = true
       })
