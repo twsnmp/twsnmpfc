@@ -214,13 +214,13 @@
               </v-select>
             </v-col>
           </v-row>
-          <v-textarea
+          <label>判定スクリプト</label>
+          <prism-editor
             v-model="editPolling.Script"
-            label="判定スクリプト"
-            clearable
-            rows="3"
-            clear-icon="mdi-close-circle"
-          ></v-textarea>
+            class="script"
+            :highlight="highlighter"
+            line-numbers
+          ></prism-editor>
           <v-slider
             v-model="editPolling.PollInt"
             label="ポーリング間隔(Sec)"
@@ -442,7 +442,16 @@
 </template>
 
 <script>
+import { PrismEditor } from 'vue-prism-editor'
+import 'vue-prism-editor/dist/prismeditor.min.css'
+import { highlight, languages } from 'prismjs/components/prism-core'
+import 'prismjs/components/prism-clike'
+import 'prismjs/components/prism-javascript'
+import 'prismjs/themes/prism-tomorrow.css'
 export default {
+  components: {
+    PrismEditor,
+  },
   data() {
     return {
       editDialog: false,
@@ -607,6 +616,9 @@ export default {
     this.$store.commit('pollings/setConf', this.conf)
   },
   methods: {
+    highlighter(code) {
+      return highlight(code, languages.js)
+    },
     editPollingFunc(item) {
       this.editIndex = this.pollings.indexOf(item)
       this.editPolling = Object.assign({}, item)
@@ -808,3 +820,12 @@ export default {
   },
 }
 </script>
+
+<style>
+.script {
+  height: 100px;
+  overflow: auto;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+</style>

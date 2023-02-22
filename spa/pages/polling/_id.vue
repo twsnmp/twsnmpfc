@@ -65,7 +65,15 @@
             </tr>
             <tr>
               <td>判定スクリプト</td>
-              <td>{{ polling.Script }}</td>
+              <td>
+                <prism-editor
+                  v-model="polling.Script"
+                  class="script"
+                  :highlight="highlighter"
+                  line-numbers
+                  readonly
+                ></prism-editor>
+              </td>
             </tr>
             <tr>
               <td>最終実施</td>
@@ -653,7 +661,16 @@
 </template>
 
 <script>
+import { PrismEditor } from 'vue-prism-editor'
+import 'vue-prism-editor/dist/prismeditor.min.css'
+import { highlight, languages } from 'prismjs/components/prism-core'
+import 'prismjs/components/prism-clike'
+import 'prismjs/components/prism-javascript'
+import 'prismjs/themes/prism-tomorrow.css'
 export default {
+  components: {
+    PrismEditor,
+  },
   data() {
     return {
       node: {},
@@ -762,6 +779,9 @@ export default {
     }
   },
   methods: {
+    highlighter(code) {
+      return highlight(code, languages.js)
+    },
     zoomCallBack(st, et) {
       this.zoom.st = st
       this.zoom.et = et
@@ -964,3 +984,12 @@ export default {
   },
 }
 </script>
+
+<style>
+.script {
+  height: 100px;
+  overflow: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+</style>
