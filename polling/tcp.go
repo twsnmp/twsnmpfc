@@ -87,6 +87,15 @@ func doPollingHTTP(pe *datastore.PollingEnt) {
 
 func checkHTTPResp(pe *datastore.PollingEnt, status, body string, code int, rTime int64) (bool, error) {
 	vm := otto.New()
+	vm.Set("setResult", func(call otto.FunctionCall) otto.Value {
+		if call.Argument(0).IsString() && call.Argument(1).IsNumber() {
+			n := call.Argument(0).String()
+			if v, err := call.Argument(1).ToFloat(); err == nil {
+				pe.Result[n] = v
+			}
+		}
+		return otto.Value{}
+	})
 	vm.Set("status", status)
 	vm.Set("code", code)
 	vm.Set("rtt", rTime)

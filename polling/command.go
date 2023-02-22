@@ -22,6 +22,15 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 	script := pe.Script
 	vm := otto.New()
 	pe.Result = make(map[string]interface{})
+	vm.Set("setResult", func(call otto.FunctionCall) otto.Value {
+		if call.Argument(0).IsString() && call.Argument(1).IsNumber() {
+			n := call.Argument(0).String()
+			if v, err := call.Argument(1).ToFloat(); err == nil {
+				pe.Result[n] = v
+			}
+		}
+		return otto.Value{}
+	})
 	cl := strings.Split(cmd, " ")
 	if len(cl) < 1 {
 		setPollingError("cmd", pe, fmt.Errorf("no cmd"))
