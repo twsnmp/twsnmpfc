@@ -82,10 +82,12 @@
             rows="3"
             clear-icon="mdi-close-circle"
           ></v-textarea>
-          <v-text-field
+          <label>パターン(Grok)</label>
+          <prism-editor
             v-model="selected.Pat"
-            label="パターン(Grok)"
-          ></v-text-field>
+            class="script"
+            :highlight="highlighter"
+          ></prism-editor>
           <v-text-field v-model="selected.Ok" label="正常値"></v-text-field>
         </v-card-text>
         <v-card-actions>
@@ -117,10 +119,12 @@
           抽出したデータはありません。
         </v-alert>
         <v-card-text>
-          <v-text-field
+          <label>パターン(Grok)</label>
+          <prism-editor
             v-model="selected.Pat"
-            label="パターン(Grok)"
-          ></v-text-field>
+            class="script"
+            :highlight="highlighter"
+          ></prism-editor>
           <v-textarea
             v-model="testData"
             label="テストデータ"
@@ -202,7 +206,14 @@
 </template>
 
 <script>
+import { PrismEditor } from 'vue-prism-editor'
+import 'vue-prism-editor/dist/prismeditor.min.css'
+import { highlight } from 'prismjs/components/prism-core'
+import 'prismjs/themes/prism-tomorrow.css'
 export default {
+  components: {
+    PrismEditor,
+  },
   data() {
     return {
       headers: [
@@ -271,6 +282,13 @@ export default {
     this.grok = r
   },
   methods: {
+    highlighter(code) {
+      return highlight(code, {
+        string: /%\{[^}]*\}/,
+        number: /\\s\+/,
+        boolean: /\.\+/,
+      })
+    },
     copyGrok(item) {
       this.selected = item
       this.selected.ID += '_Copy'
@@ -295,6 +313,7 @@ export default {
       this.deleteDialog = true
     },
     doUpdateGrok() {
+      this.selected.Pat = this.selected.Pat.replaceAll(/\r?\n/g, '')
       this.$axios
         .post('/api/conf/grok', this.selected)
         .then(() => {
@@ -321,6 +340,7 @@ export default {
     doTestGrok() {
       this.testNoData = false
       this.testError = false
+      this.selected.Pat = this.selected.Pat.replaceAll(/\r?\n/, '')
       this.$axios
         .post('/api/test/grok', { Pat: this.selected.Pat, Data: this.testData })
         .then((resp) => {
