@@ -20,7 +20,7 @@
             <v-icon>{{ item.icon }}</v-icon>
           </v-list-item-action>
           <v-list-item-content>
-            <v-list-item-title v-text="item.title" />
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-group no-action prepend-icon="mdi-chart-box" :value="false">
@@ -42,7 +42,7 @@
                 <v-icon>{{ item.icon }}</v-icon>
               </v-list-item-action>
               <v-list-item-content>
-                <v-list-item-title v-text="item.title" />
+                <v-list-item-title>{{ item.title }} </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
@@ -61,7 +61,7 @@
                 <v-icon>{{ item.icon }}</v-icon>
               </v-list-item-action>
               <v-list-item-content>
-                <v-list-item-title v-text="item.title" />
+                <v-list-item-title>{{ item.title }} </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
@@ -80,7 +80,7 @@
                 <v-icon>{{ item.icon }}</v-icon>
               </v-list-item-action>
               <v-list-item-content>
-                <v-list-item-title v-text="item.title" />
+                <v-list-item-title>{{ item.title }} </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
@@ -99,7 +99,7 @@
                 <v-icon>{{ item.icon }}</v-icon>
               </v-list-item-action>
               <v-list-item-content>
-                <v-list-item-title v-text="item.title" />
+                <v-list-item-title>{{ item.title }} </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
@@ -118,7 +118,7 @@
                 <v-icon>{{ item.icon }}</v-icon>
               </v-list-item-action>
               <v-list-item-content>
-                <v-list-item-title v-text="item.title" />
+                <v-list-item-title>{{ item.title }} </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
@@ -137,7 +137,7 @@
                 <v-icon>{{ item.icon }}</v-icon>
               </v-list-item-action>
               <v-list-item-content>
-                <v-list-item-title v-text="item.title" />
+                <v-list-item-title>{{ item.title }} </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
@@ -156,7 +156,7 @@
                 <v-icon>{{ item.icon }}</v-icon>
               </v-list-item-action>
               <v-list-item-content>
-                <v-list-item-title v-text="item.title" />
+                <v-list-item-title>{{ item.title }} </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
@@ -176,7 +176,7 @@
               <v-icon>{{ item.icon }}</v-icon>
             </v-list-item-action>
             <v-list-item-content>
-              <v-list-item-title v-text="item.title" />
+              <v-list-item-title>{{ item.title }} </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </v-list-group>
@@ -200,7 +200,7 @@
               <v-icon>{{ item.icon }}</v-icon>
             </v-list-item-action>
             <v-list-item-content>
-              <v-list-item-title v-text="item.title" />
+              <v-list-item-title>{{ item.title }} </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </v-list-group>
@@ -208,7 +208,7 @@
     </v-navigation-drawer>
     <v-app-bar app>
       <v-app-bar-nav-icon v-if="isAuthenticated" @click.stop="menu = !menu" />
-      <v-toolbar-title v-text="title" />
+      <v-toolbar-title> {{ title }} </v-toolbar-title>
       <v-spacer />
       <v-select
         v-if="showMAP"
