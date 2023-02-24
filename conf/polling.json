@@ -221,15 +221,6 @@
     "AutoMode": "443,2181,8080,8888"
   },
   {
-    "Name": "HTTP応答監視",
-    "Type": "http",
-    "Mode": "",
-    "Params": "URLを指定",
-    "Level": "low",
-    "Descr": "HTTP応答監視",
-    "AutoMode": "disable"
-  },
-  {
     "Name": "気象情報",
     "Type": "http",
     "Mode": "https",
