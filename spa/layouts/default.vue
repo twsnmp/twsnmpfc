@@ -225,6 +225,9 @@
       <v-btn v-if="!isAuthenticated" to="/login">
         <v-icon>mdi-login</v-icon>
       </v-btn>
+      <v-btn v-if="isAuthenticated" @click="mapMax = !mapMax">
+        <v-icon>mdi-window-maximize</v-icon>
+      </v-btn>
       <v-btn v-if="isAuthenticated" @click="logout">
         <v-icon>mdi-logout</v-icon>
       </v-btn>
@@ -540,6 +543,7 @@ export default {
       logs: [],
       newLog: 0,
       iconImported: false,
+      mapMax: false,
     }
   },
   computed: {
@@ -559,6 +563,9 @@ export default {
       return this.$store.state.map.readOnly
     },
     mapHeight() {
+      if (this.mapMax) {
+        return window.innerHeight + 'px'
+      }
       if (window.innerHeight > 1190) {
         return window.innerHeight - 590 + 'px'
       }
