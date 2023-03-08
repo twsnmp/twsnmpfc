@@ -8,6 +8,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"log"
 	"math/big"
 	"net"
 	"os"
@@ -61,17 +62,23 @@ func getPEMBlocks(b []byte) ([]*pem.Block, error) {
 }
 
 func getRSAKeyFromPEMBlocks(blocks []*pem.Block, keypass string) (*rsa.PrivateKey, error) {
+	if keypass == "" {
+		keypass = KeyPass
+	}
 	for _, block := range blocks {
-		if block.Type == "RSA PRIVATE KEY" {
+		switch block.Type {
+		case "RSA PRIVATE KEY":
 			if x509.IsEncryptedPEMBlock(block) {
 				kder, e := x509.DecryptPEMBlock(block, []byte(keypass))
 				if e == nil {
 					return x509.ParsePKCS1PrivateKey(kder)
+				} else {
+					log.Printf("DecryptPEMBlock err=%v", e)
 				}
 			} else {
 				return x509.ParsePKCS1PrivateKey(block.Bytes)
 			}
-		} else if block.Type == "PRIVATE KEY" {
+		case "PRIVATE KEY":
 			var b []byte
 			var err error
 			if x509.IsEncryptedPEMBlock(block) {
@@ -142,6 +149,7 @@ func getHostIPS() (string, string) {
 func GetRawKeyPem(p, keypass string) string {
 	priv, err := getRSAKeyFromPEM(p, keypass)
 	if err != nil {
+		log.Printf("GetRawKeyPem err=%v", err)
 		return ""
 	}
 	// Convert it to pem
