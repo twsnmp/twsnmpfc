@@ -58,6 +58,7 @@ func doPollingSSH(pe *datastore.PollingEnt) {
 	}
 	pe.Result["lastTime"] = time.Now().Format("2006-01-02T15:04")
 	pe.Result["exitCode"] = float64(exitCode)
+	pe.Result["error"] = ""
 	vm.Set("interval", pe.PollInt)
 	vm.Set("exitCode", exitCode)
 	if extractor != "" {

@@ -123,7 +123,7 @@ func loadConf() error {
 		return nil
 	})
 	if err == nil && MapConf.PrivateKey == "" {
-		initSecurityKey()
+		InitSecurityKey()
 	}
 	if err == nil && bSaveConf {
 		if err := SaveMapConf(); err != nil {
@@ -220,7 +220,7 @@ func GetImage(path string) ([]byte, error) {
 	})
 }
 
-func initSecurityKey() {
+func InitSecurityKey() {
 	key, err := security.GenPrivateKey(4096, "")
 	if err != nil {
 		log.Printf("init security key err=%v", err)

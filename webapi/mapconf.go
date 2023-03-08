@@ -37,6 +37,7 @@ func getMapConf(c echo.Context) error {
 	r.BackImage = datastore.MapConf.BackImage
 	r.GeoIPInfo = datastore.MapConf.GeoIPInfo
 	r.EnableMobileAPI = datastore.MapConf.EnableMobileAPI
+	r.PublicKey = datastore.MapConf.PublicKey
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -223,6 +224,16 @@ func deleteGeoIP(c echo.Context) error {
 		Type:  "user",
 		Level: "info",
 		Event: "IP位置情報DBを削除しました",
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postReGenarateSSHKey(c echo.Context) error {
+	datastore.InitSecurityKey()
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "SSHの鍵を再作成しました。",
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

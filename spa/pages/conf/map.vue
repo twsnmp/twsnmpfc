@@ -263,6 +263,10 @@
             <v-icon>mdi-database-marker</v-icon>
             GeoIPデータベース
           </v-btn>
+          <v-btn color="normal" dark @click="sshKeyDialog = true">
+            <v-icon>mdi-database-marker</v-icon>
+            SSH鍵
+          </v-btn>
           <v-btn color="error" dark @click="stopDialog = true">
             <v-icon>mdi-stop</v-icon>
             停止
@@ -411,6 +415,64 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="sshKeyDialog" persistent max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">SSHの公開鍵</span>
+        </v-card-title>
+        <v-card-text>
+          <p class="text-wrap">{{ mapconf.PublicKey }}</p>
+        </v-card-text>
+        <v-snackbar v-model="copyError" absolute centered color="error">
+          コピーできません
+        </v-snackbar>
+        <v-snackbar v-model="copyDone" absolute centered color="primary">
+          コピーしました
+        </v-snackbar>
+        <v-snackbar v-model="sshKeyError" absolute centered color="error">
+          SSH鍵の再作成に失敗しました
+        </v-snackbar>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="copySSHKey">
+            <v-icon>mdi-content-copy</v-icon>
+            コピー
+          </v-btn>
+          <v-btn color="error" @click="sshKeyReGenDialog = true">
+            <v-icon>mdi-reload</v-icon>
+            再作成
+          </v-btn>
+          <v-btn color="normal" @click="sshKeyDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="sshKeyReGenDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">SSH鍵の再作成</span>
+        </v-card-title>
+        <v-alert v-model="sshKeyError" color="error" dense dismissible>
+          SSH鍵の再作成に失敗しました
+        </v-alert>
+        <v-card-text>
+          <p>SSH鍵を再作成しますか？</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="regenSSHKey">
+            <v-icon>mdi-reload</v-icon>
+            実行
+          </v-btn>
+          <v-btn color="normal" @click="sshKeyReGenDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -467,6 +529,11 @@ export default {
       stopDialog: false,
       stopError: false,
       stopDone: false,
+      copyDone: false,
+      copyError: false,
+      sshKeyDialog: false,
+      sshKeyReGenDialog: false,
+      sshKeyError: false,
     }
   },
   async fetch() {
@@ -569,6 +636,30 @@ export default {
         .catch((e) => {
           this.geoipDeleteError = true
           this.$fetch()
+        })
+    },
+    copySSHKey() {
+      if (!navigator.clipboard) {
+        return
+      }
+      navigator.clipboard.writeText(this.mapconf.PublicKey).then(
+        () => {
+          this.copyDone = true
+        },
+        () => {
+          this.copyError = true
+        }
+      )
+    },
+    regenSSHKey() {
+      this.$axios
+        .post('/api/conf/sshkey')
+        .then((r) => {
+          this.sshKeyReGenDialog = false
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.sshKeyerror = true
         })
     },
   },
