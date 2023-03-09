@@ -363,20 +363,12 @@
           <span v-if="autoAdd" class="headline">テンプレートから自動追加</span>
           <span v-else class="headline">テンプレートから選択</span>
           <v-spacer></v-spacer>
-          <v-text-field
-            v-model="searchTemplate"
-            append-icon="mdi-magnify"
-            label="検索"
-            single-line
-            hide-details
-          ></v-text-field>
         </v-card-title>
         <v-data-table
           v-model="selectedTemplate"
           :headers="headersTemplate"
           :items="templates"
           :single-select="!autoAdd"
-          :search="searchTemplate"
           item-key="ID"
           show-select
           :items-per-page="15"
@@ -388,6 +380,21 @@
               $getStateIconName(item.Level)
             }}</v-icon>
             {{ $getStateName(item.Level) }}
+          </template>
+          <template #[`body.append`]>
+            <tr>
+              <td></td>
+              <td>
+                <v-text-field v-model="tempName" label="name"></v-text-field>
+              </td>
+              <td></td>
+              <td>
+                <v-select v-model="tempType" :items="typeList" label="type">
+                </v-select>
+              </td>
+              <td></td>
+              <td></td>
+            </tr>
           </template>
         </v-data-table>
         <v-card-actions>
@@ -468,12 +475,17 @@ export default {
       ],
       pollings: [],
       autoAdd: false,
-      searchTemplate: '',
+      tempType: '',
+      tempName: '',
       headersTemplate: [
         {
           text: '名前',
           value: 'Name',
           width: '25%',
+          filter: (value) => {
+            if (!this.tempName) return true
+            return value.includes(this.tempName)
+          },
         },
         {
           text: 'レベル',
@@ -485,6 +497,10 @@ export default {
           text: '種別',
           value: 'Type',
           width: '10%',
+          filter: (value) => {
+            if (!this.tempType) return true
+            return this.tempType === value
+          },
         },
         { text: 'モード', value: 'Mode', width: '10%' },
         {

@@ -398,19 +398,11 @@
         <v-card-title>
           <span class="headline">テンプレートから選択</span>
           <v-spacer></v-spacer>
-          <v-text-field
-            v-model="searchTemplate"
-            append-icon="mdi-magnify"
-            label="検索"
-            single-line
-            hide-details
-          ></v-text-field>
         </v-card-title>
         <v-data-table
           v-model="selectedTemplate"
           :headers="headersTemplate"
           :items="templates"
-          :search="searchTemplate"
           single-select
           item-key="ID"
           show-select
@@ -423,6 +415,21 @@
               $getStateIconName(item.Level)
             }}</v-icon>
             {{ $getStateName(item.Level) }}
+          </template>
+          <template #[`body.append`]>
+            <tr>
+              <td></td>
+              <td>
+                <v-text-field v-model="tempName" label="name"></v-text-field>
+              </td>
+              <td></td>
+              <td>
+                <v-select v-model="tempType" :items="typeList" label="type">
+                </v-select>
+              </td>
+              <td></td>
+              <td></td>
+            </tr>
           </template>
         </v-data-table>
         <v-card-actions>
@@ -507,11 +514,28 @@ export default {
       ],
       nodeList: [],
       pollings: [],
-      searchTemplate: '',
+      tempType: '',
+      tempName: '',
       headersTemplate: [
-        { text: '名前', value: 'Name', width: '25%' },
+        {
+          text: '名前',
+          value: 'Name',
+          width: '25%',
+          filter: (value) => {
+            if (!this.tempName) return true
+            return value.includes(this.tempName)
+          },
+        },
         { text: 'レベル', value: 'Level', width: '15%' },
-        { text: '種別', value: 'Type', width: '10%' },
+        {
+          text: '種別',
+          value: 'Type',
+          width: '10%',
+          filter: (value) => {
+            if (!this.tempType) return true
+            return this.tempType === value
+          },
+        },
         { text: 'モード', value: 'Mode', width: '10%' },
         { text: '説明', value: 'Descr', width: '35%' },
       ],
