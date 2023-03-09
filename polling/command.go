@@ -36,12 +36,19 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 		setPollingError("cmd", pe, fmt.Errorf("no cmd"))
 		return
 	}
-	exe := filepath.Join(datastore.GetDataStorePath(), "cmd", filepath.Base(cl[0]))
 	tio := &timeout.Timeout{
-		Cmd:       exec.Command(exe, cl[1:]...),
 		Duration:  time.Duration(pe.Timeout) * time.Second,
 		KillAfter: 5 * time.Second,
 	}
+
+	if filepath.Ext(cl[0]) == ".sh" {
+		cl[0] = filepath.Join(datastore.GetDataStorePath(), "cmd", filepath.Base(cl[0]))
+		tio.Cmd = exec.Command("/bin/sh", "-c", strings.Join(cl, " "))
+	} else {
+		exe := filepath.Join(datastore.GetDataStorePath(), "cmd", filepath.Base(cl[0]))
+		tio.Cmd = exec.Command(exe, cl[1:]...)
+	}
+
 	exitStatus, stdout, stderr, err := tio.Run()
 	if err != nil {
 		setPollingError("cmd", pe, err)
