@@ -53,12 +53,19 @@
             </td>
           </tr>
         </template>
+        <template v-if="!tableMode" #[`item.actions`]="{ item }">
+          <v-icon small @click="addPolling(item)"> mdi-card-plus </v-icon>
+          <v-icon small @click="copyOneMIB(item)"> mdi-content-copy </v-icon>
+        </template>
       </v-data-table>
       <v-snackbar v-model="copyError" absolute centered color="error">
         コピーできません
       </v-snackbar>
       <v-snackbar v-model="copyDone" absolute centered color="primary">
         コピーしました
+      </v-snackbar>
+      <v-snackbar v-model="addPollingDone" absolute centered color="primary">
+        ポーリング作成しました
       </v-snackbar>
       <v-card-actions>
         <v-switch v-model="mibget.Raw" label="生データ"></v-switch>
@@ -177,11 +184,164 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="addPollingDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title> ポーリング設定 </v-card-title>
+        <v-alert v-model="addPollingError" color="error" dense dismissible>
+          ポーリングを追加できませんでした
+        </v-alert>
+        <v-card-text>
+          <v-text-field v-model="polling.Name" label="名前"></v-text-field>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="polling.Level"
+                :items="$levelList"
+                label="レベル"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-select v-model="polling.Type" :items="$typeList" label="種別">
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="polling.Mode"
+                label="モード"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="polling.Params"
+                label="パラメータ"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="polling.Filter"
+                label="フィルター"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="polling.Extractor"
+                :items="extractorList"
+                label="抽出パターン"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="polling.LogMode"
+                :items="$logModeList"
+                label="ログモード"
+              >
+              </v-select>
+            </v-col>
+          </v-row>
+          <label>判定スクリプト</label>
+          <prism-editor
+            v-model="polling.Script"
+            class="script"
+            :highlight="highlighter"
+            line-numbers
+          ></prism-editor>
+
+          <v-slider
+            v-model="polling.PollInt"
+            label="ポーリング間隔(Sec)"
+            class="align-center"
+            max="3600"
+            min="5"
+            hide-details
+          >
+            <template #append>
+              <v-text-field
+                v-model="polling.PollInt"
+                class="mt-0 pt-0"
+                hide-details
+                single-line
+                type="number"
+                style="width: 60px"
+              ></v-text-field>
+            </template>
+          </v-slider>
+          <v-slider
+            v-model="polling.Timeout"
+            label="タイムアウト(Sec)"
+            class="align-center"
+            max="10"
+            min="1"
+            hide-details
+          >
+            <template #append>
+              <v-text-field
+                v-model="polling.Timeout"
+                class="mt-0 pt-0"
+                hide-details
+                single-line
+                type="number"
+                style="width: 60px"
+              ></v-text-field>
+            </template>
+          </v-slider>
+          <v-slider
+            v-model="polling.Retry"
+            label="リトライ回数"
+            class="align-center"
+            max="5"
+            min="0"
+            hide-details
+          >
+            <template #append>
+              <v-text-field
+                v-model="polling.Retry"
+                class="mt-0 pt-0"
+                hide-details
+                single-line
+                type="number"
+                style="width: 60px"
+              ></v-text-field>
+            </template>
+          </v-slider>
+          <v-select
+            v-model="polling.LogMode"
+            :items="$logModeList"
+            label="ログモード"
+          >
+          </v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="savePolling">
+            <v-icon>mdi-content-save</v-icon>
+            追加
+          </v-btn>
+          <v-btn color="normal" dark @click="addPollingDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
 <script>
+import { PrismEditor } from 'vue-prism-editor'
+import 'vue-prism-editor/dist/prismeditor.min.css'
+import { highlight, languages } from 'prismjs/components/prism-core'
+import 'prismjs/components/prism-clike'
+import 'prismjs/components/prism-javascript'
+import 'prismjs/themes/prism-tomorrow.css'
 export default {
+  components: {
+    PrismEditor,
+  },
   data() {
     return {
       nekoNo: 1,
@@ -221,6 +381,10 @@ export default {
       mibInfoText: '',
       copyError: false,
       copyDone: false,
+      polling: {},
+      addPollingDialog: false,
+      addPollingError: false,
+      addPollingDone: false,
       mibTreeOpened: false,
     }
   },
@@ -311,10 +475,11 @@ export default {
       this.tableMode = false
       this.conf.search = ''
       this.headers = [
-        { text: 'インデックス', value: 'Index' },
+        { text: 'インデックス', value: 'Index', width: '10%' },
         {
           text: '名前',
           value: 'Name',
+          width: '20%',
           filter: (value) => {
             if (!this.conf.name) return true
             return value.includes(this.conf.name)
@@ -323,11 +488,13 @@ export default {
         {
           text: '値',
           value: 'Value',
+          width: '60%',
           filter: (value) => {
             if (!this.conf.value) return true
             return value.includes(this.conf.value)
           },
         },
+        { text: '操作', value: 'actions', width: '10%' },
       ]
       this.items = this.mibs
     },
@@ -523,6 +690,58 @@ export default {
           this.copyError = true
         }
       )
+    },
+    copyOneMIB(e) {
+      if (!navigator.clipboard) {
+        this.copyError = true
+        return
+      }
+      navigator.clipboard.writeText(e.Name + '=' + e.Value).then(
+        () => {
+          this.copyDone = true
+        },
+        () => {
+          this.copyError = true
+        }
+      )
+    },
+    addPolling(e) {
+      const n = e.Name.split('.')[0] || ''
+      if (n === '') {
+        this.addPollingError = true
+        return
+      }
+      this.polling = {
+        ID: '',
+        Name: e.Name + 'の監視',
+        NodeID: this.node.ID,
+        Type: 'snmp',
+        Mode: 'get',
+        Params: e.Name,
+        Filter: '',
+        Extractor: '',
+        Script: n + '==' + e.Value,
+        Level: 'off',
+        PollInt: 60,
+        Timeout: 1,
+        Retry: 0,
+        LogMode: 0,
+      }
+      this.addPollingDialog = true
+    },
+    savePolling() {
+      this.$axios
+        .post('/api/polling/add', this.polling)
+        .then(() => {
+          this.addPollingDialog = false
+          this.addPollingDone = true
+        })
+        .catch((e) => {
+          this.addPollingError = true
+        })
+    },
+    highlighter(code) {
+      return highlight(code, languages.js)
     },
     openCloseMibTree() {
       this.mibTreeOpened = !this.mibTreeOpened
