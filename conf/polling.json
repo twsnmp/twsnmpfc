@@ -525,5 +525,16 @@
     "Level": "off",
     "Descr": "IPFIXの情報から通信量を集計",
     "AutoMode": "disable"
+  },
+  {
+    "Name": "ARP監視により新規デバイスの接続を検知",
+    "Type": "arplog",
+    "Mode": "",
+    "Filter": "New",
+    "Extractor": "",
+    "Script": "count < 1",
+    "Level": "off",
+    "Descr": "ARPログを監視して新規のMACアドレスの登録を検知する",
+    "AutoMode": "disable"
   }
 ]
