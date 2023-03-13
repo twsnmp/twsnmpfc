@@ -46,7 +46,11 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 		tio.Cmd = exec.Command("/bin/sh", "-c", strings.Join(cl, " "))
 	} else {
 		exe := filepath.Join(datastore.GetDataStorePath(), "cmd", filepath.Base(cl[0]))
-		tio.Cmd = exec.Command(exe, cl[1:]...)
+		if len(cl) == 1 {
+			tio.Cmd = exec.Command(exe)
+		} else {
+			tio.Cmd = exec.Command(exe, cl[1:]...)
+		}
 	}
 
 	exitStatus, stdout, stderr, err := tio.Run()

@@ -52,22 +52,26 @@ func ExecNotifyCmd(cmd string, level int) error {
 	if filepath.Base(cl[0]) != cl[0] {
 		return fmt.Errorf("notify ExecCmd has path")
 	}
-	c := filepath.Join(datastore.GetDataStorePath(), "cmd", filepath.Base(cl[0]))
 	strLevel := fmt.Sprintf("%d", level)
-
+	for i, v := range cl {
+		if v == "$level" {
+			cl[i] = strLevel
+		}
+	}
 	tio := &timeout.Timeout{
 		Duration:  60 * time.Second,
 		KillAfter: 5 * time.Second,
 	}
-	if len(cl) == 1 {
-		tio.Cmd = exec.Command(c)
+	if filepath.Ext(cl[0]) == ".sh" {
+		cl[0] = filepath.Join(datastore.GetDataStorePath(), "cmd", filepath.Base(cl[0]))
+		tio.Cmd = exec.Command("/bin/sh", "-c", strings.Join(cl, " "))
 	} else {
-		for i, v := range cl {
-			if v == "$level" {
-				cl[i] = strLevel
-			}
+		exe := filepath.Join(datastore.GetDataStorePath(), "cmd", filepath.Base(cl[0]))
+		if len(cl) == 1 {
+			tio.Cmd = exec.Command(exe)
+		} else {
+			tio.Cmd = exec.Command(exe, cl[1:]...)
 		}
-		tio.Cmd = exec.Command(c, cl[1:]...)
 	}
 	_, _, _, err := tio.Run()
 	return err
