@@ -56,6 +56,7 @@ func doPollingReport(pe *datastore.PollingEnt) {
 	pe.Result["max"], _ = stats.Max(scores)
 	pe.Result["mean"], _ = stats.Mean(scores)
 	pe.Result["mode"], _ = stats.Mode(scores)
+	pe.Result["median"], _ = stats.Median(scores)
 	pe.Result["stddev"], _ = stats.StandardDeviation(scores)
 	for k, v := range pe.Result {
 		if v == math.NaN() {
@@ -82,6 +83,7 @@ func doPollingReport(pe *datastore.PollingEnt) {
 	vm.Set("min", pe.Result["min"])
 	vm.Set("mean", pe.Result["mean"])
 	vm.Set("mode", pe.Result["mode"])
+	vm.Set("median", pe.Result["median"])
 	vm.Set("stddev", pe.Result["stddev"])
 	value, err := vm.Run(script)
 	if err != nil {
