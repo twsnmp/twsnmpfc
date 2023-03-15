@@ -802,7 +802,13 @@ const showNetFlowGraph = (div, logs, type) => {
         saveAsImage: { name: 'twsnmp_' + div },
       },
     },
-    tooltip: {},
+    tooltip: {
+      trigger: 'item',
+      textStyle: {
+        fontSize: 8,
+      },
+      position: 'bottom',
+    },
     legend: [
       {
         orient: 'vertical',

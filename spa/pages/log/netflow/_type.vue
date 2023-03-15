@@ -499,7 +499,10 @@
             @change="updateGraph"
           ></v-select>
         </v-card-title>
-        <div id="graph" style="width: 1000px; height: 750px"></div>
+        <div
+          id="graph"
+          style="width: 1000px; height: 750px; overflow: hidden"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="graphDialog = false">
@@ -1104,7 +1107,7 @@ export default {
     updateIPFlow3D() {
       this.$showNetFlowIPFlow3D(
         'ipflow3d',
-        this.getFilteredLog,
+        this.getFilteredLog(),
         this.ipFlow3DType
       )
     },

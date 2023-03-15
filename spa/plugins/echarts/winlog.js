@@ -1037,7 +1037,7 @@ const getGraphChartOption = (div, categories, layout) => {
       textStyle: {
         fontSize: 8,
       },
-      position: 'right',
+      position: 'bottom',
     },
     legend: [
       {

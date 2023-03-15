@@ -199,7 +199,10 @@
             @change="updateGraph"
           ></v-select>
         </v-card-title>
-        <div id="graphChart" style="width: 1000px; height: 700px"></div>
+        <div
+          id="graphChart"
+          style="width: 1000px; height: 700px; overflow: hidden"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="graphDialog = false">

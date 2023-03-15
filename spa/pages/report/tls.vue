@@ -342,7 +342,10 @@
         <v-alert v-model="over" color="error" dense dismissible>
           対象のTLS通信フローの数が多すぎます。フィルターしてください。
         </v-alert>
-        <div id="flowsChart" style="width: 1000px; height: 700px"></div>
+        <div
+          id="flowsChart"
+          style="width: 1000px; height: 700px; overflow: hidden"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="flowsChartDialog = false">

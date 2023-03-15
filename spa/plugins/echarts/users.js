@@ -269,7 +269,13 @@ const showUserGraph = (div, users, type, filter) => {
         saveAsImage: { name: 'twsnmp_' + div },
       },
     },
-    tooltip: {},
+    tooltip: {
+      trigger: 'item',
+      textStyle: {
+        fontSize: 8,
+      },
+      position: 'bottom',
+    },
     legend: [
       {
         orient: 'vertical',
