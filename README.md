@@ -48,6 +48,7 @@
 - MIB管理(v1.19.0)
 - マップの描画アイテム対応(v1.20.0)
 - スクリプト編集のカラーリング対応、マップの最大化ボタン追加(v1.21.0)
+- MIBブラウザーからポーリング作成に対応(v1.22.0)
 
 ![2021-04-10_11-56-00](https://user-images.githubusercontent.com/5225950/114256371-cc61db80-99f3-11eb-8631-c1917554ce26.png)
 
@@ -56,7 +57,7 @@
 ### Build Env
 ビルドするためには、以下の環境が必要です。
 
-- go 1.17
+- go 1.19
 - node.js npm
 - statik
 - docker(Docker版をビルドする場合)
@@ -69,7 +70,7 @@ https://github.com/rakyll/statik
 Docker環境でビルドできます。
 
 ```
-$docker run -it golang:1.17 /bin/bash
+$docker run -it golang:1.19 /bin/bash
 ```
 
 で起動したDokcerコンテナ内のLinux環境で
