@@ -46,6 +46,7 @@ type MapConfEnt struct {
 	AIThreshold     int
 	AIMode          string
 	GeoIPInfo       string
+	FontSize        int
 }
 
 func initConf() {
@@ -63,6 +64,7 @@ func initConf() {
 	MapConf.UserID = "twsnmp"
 	MapConf.Password = security.PasswordHash("twsnmp")
 	MapConf.EnableArpWatch = true
+	MapConf.FontSize = 12
 	DiscoverConf.Retry = 1
 	DiscoverConf.Timeout = 1
 	NotifyConf.InsecureSkipVerify = true

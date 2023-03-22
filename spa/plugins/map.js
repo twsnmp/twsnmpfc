@@ -20,6 +20,8 @@ let backImage = {
   Image: null,
 }
 
+let fontSize = 12
+
 const selectedNodes = []
 let selectedItem = ""
 
@@ -49,6 +51,7 @@ const setMAP = (m,url,ro) => {
   lines = m.Lines
   items = m.Items || {}
   backImage = m.MapConf.BackImage
+  fontSize = m.MapConf.FontSize || 12
   backImage.Image = null
   if (backImage.Path){
     _ImageP5.loadImage(url+'/backimage',(img)=>{
@@ -140,12 +143,16 @@ const mapMain = (p5) => {
       p5.line(xm, ym, x2, y2)
       if (lines[k].Info) {
         const color = getLineColor(lines[k].State)
+        const dx = Math.abs(x1-x2)
+        const dy = Math.abs(y1-y2)
         p5.textFont('Roboto')
-        p5.textSize(10)
+        p5.textSize(fontSize)
         p5.fill(color)
-        p5.stroke(color)
-        p5.strokeWeight(1)
-        p5.text(lines[k].Info, xm + 10, ym)  
+        if (dx === 0 || dy/dx > 0.8) {
+          p5.text(lines[k].Info, xm + 10, ym)  
+        } else {
+          p5.text(lines[k].Info, xm - dx/4, ym + 20)  
+        }
       }
       p5.pop()
     }
@@ -202,7 +209,7 @@ const mapMain = (p5) => {
       p5.fill(getStateColor(nodes[k].State))
       p5.text(icon, 0, 0)
       p5.textFont('Roboto')
-      p5.textSize(12)
+      p5.textSize(fontSize)
       p5.fill(250)
       p5.text(nodes[k].Name, 0, 32)
       p5.pop()

@@ -251,6 +251,14 @@
                 label="モバイルアプリからの接続を許可する"
               ></v-switch>
             </v-col>
+            <v-col>
+              <v-select
+                v-model="mapconf.FontSize"
+                :items="fontSizeList"
+                label="フォントサイズ"
+              >
+              </v-select>
+            </v-col>
           </v-row>
         </v-card-text>
         <v-card-actions>
@@ -504,10 +512,17 @@ export default {
         AILevel: 'high',
         AIThreshold: 81,
         AIMode: 'lof',
+        FontSize: 12,
       },
       aiModeList: [
         { text: 'Local Outiler Factor', value: 'lof' },
         { text: 'Isolation Forest', value: 'iforest' },
+      ],
+      fontSizeList: [
+        { text: '小さい', value: 10 },
+        { text: '普通', value: 12 },
+        { text: '大きい', value: 16 },
+        { text: 'すごく大きい', value: 20 },
       ],
       backImage: {
         X: 0,
