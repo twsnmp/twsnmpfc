@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -35,6 +36,7 @@ func getMap(c echo.Context) error {
 		return true
 	})
 	datastore.ForEachItems(func(di *datastore.DrawItemEnt) bool {
+		checkDrawItem(di)
 		r.Items[di.ID] = di
 		return true
 	})
@@ -54,6 +56,76 @@ func getMap(c echo.Context) error {
 	})
 	r.LastUpdate = time.Now().Unix()
 	return c.JSON(http.StatusOK, r)
+}
+
+func checkDrawItem(di *datastore.DrawItemEnt) {
+	if di.Type < 4 || di.PollingID == "" {
+		return
+	}
+	if di.Type == 4 {
+		di.Text = "値なし"
+	}
+	if di.Type == 5 {
+		di.Value = 0.0
+	}
+	p := datastore.GetPolling(di.PollingID)
+	if p == nil {
+		return
+	}
+	i, ok := p.Result[di.VarName]
+	if !ok {
+		return
+	}
+	text := ""
+	val := 0.0
+	switch v := i.(type) {
+	case string:
+		if di.Format == "" {
+			text = v
+		} else {
+			text = fmt.Sprintf(di.Format, v)
+		}
+	case float64:
+		if di.Scale != 0.0 {
+			v *= di.Scale
+		}
+		if di.Format == "" {
+			text = fmt.Sprintf("%f", v)
+		} else {
+			text = fmt.Sprintf(di.Format, v)
+		}
+		val = v
+	}
+	if text == "" {
+		text = "値が空"
+	}
+	switch di.Type {
+	case datastore.DrawItemTypePollingGauge:
+		if val > 100.0 {
+			val = 100.0
+		}
+		if val > 90.0 {
+			di.Color = "#e31a1c"
+		} else if val > 80.0 {
+			di.Color = "#dfdf22"
+		} else {
+			di.Color = "#1f78b4"
+		}
+		di.Value = val
+	case datastore.DrawItemTypePollingText:
+		di.Text = text
+		switch p.State {
+		case "high":
+			di.Color = "#e31a1c"
+		case "low":
+			di.Color = "#fb9a99"
+		case "warn":
+			di.Color = "#dfdf22"
+		default:
+			di.Color = "#eee"
+		}
+		di.Value = val
+	}
 }
 
 type itemPosWebAPI struct {
@@ -115,6 +187,9 @@ func postItemUpdate(c echo.Context) error {
 	odi.Text = di.Text
 	odi.Size = di.Size
 	odi.Color = di.Color
+	odi.Format = di.Format
+	odi.VarName = di.VarName
+	odi.Scale = di.Scale
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 

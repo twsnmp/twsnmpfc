@@ -215,7 +215,7 @@
             </v-select>
           </v-row>
           <v-row dense>
-            <v-col v-if="editItem.Type != 2">
+            <v-col v-if="editItem.Type < 2 || editItem.Type == 3">
               <v-text-field
                 v-model="editItem.W"
                 type="number"
@@ -225,7 +225,7 @@
                 label="幅"
               ></v-text-field>
             </v-col>
-            <v-col v-if="editItem.Type != 2">
+            <v-col v-if="editItem.Type < 2 || editItem.Type == 3">
               <v-text-field
                 v-model="editItem.H"
                 type="number"
@@ -235,7 +235,7 @@
                 label="高さ"
               ></v-text-field>
             </v-col>
-            <v-col v-if="editItem.Type == 2">
+            <v-col v-if="editItem.Type == 2 || editItem.Type > 3">
               <v-text-field
                 v-model="editItem.Size"
                 type="number"
@@ -246,7 +246,7 @@
               ></v-text-field>
             </v-col>
           </v-row>
-          <v-color-picker v-if="editItem.Type != 3" v-model="editItem.Color">
+          <v-color-picker v-if="editItem.Type < 3" v-model="editItem.Color">
           </v-color-picker>
           <v-text-field
             v-if="editItem.Type == 2"
@@ -254,6 +254,36 @@
             label="文字列"
           >
           </v-text-field>
+          <v-autocomplete
+            v-if="editItem.Type == 4 || editItem.Type == 5"
+            v-model="editItem.PollingID"
+            :items="itemPollingList"
+            label="ポーリング"
+          >
+          </v-autocomplete>
+          <v-text-field
+            v-if="editItem.Type == 4 || editItem.Type == 5"
+            v-model="editItem.VarName"
+            label="結果の変数名"
+          >
+          </v-text-field>
+          <v-text-field
+            v-if="editItem.Type == 4"
+            v-model="editItem.Format"
+            label="表示フォーマット"
+          >
+          </v-text-field>
+          <v-text-field
+            v-if="editItem.Type == 5"
+            v-model="editItem.Text"
+            label="ゲージのラベル"
+          >
+          </v-text-field>
+          <v-text-field
+            v-model="editItem.Scale"
+            type="number"
+            label="倍率"
+          ></v-text-field>
           <v-select
             v-if="editItem.Type == 3"
             v-model="editItem.Path"
@@ -964,6 +994,8 @@ export default {
         { text: '楕円', value: 1 },
         { text: 'ラベル', value: 2 },
         { text: 'イメージ', value: 3 },
+        { text: 'ポーリング結果(テキスト)', value: 4 },
+        { text: 'ポーリング結果(ゲージ)', value: 5 },
       ],
       selectedImagePath: '',
       imageFile: '',
@@ -1022,6 +1054,21 @@ export default {
       const l2 = this.pollingList(this.editLine.NodeID1, true)
       const l3 = this.pollingList(this.editLine.NodeID2, true)
       return l1.concat(l2, l3)
+    },
+    itemPollingList() {
+      const l = []
+      const keys = Object.keys(this.map.Pollings)
+      for (const id of keys) {
+        this.map.Pollings[id].forEach((p) => {
+          const nodeName = this.map.Nodes[id].Name + ':'
+          l.push({
+            text: nodeName + p.Name,
+            state: p.State,
+            value: p.ID,
+          })
+        })
+      }
+      return l
     },
     discoverURL() {
       return `/discover?x=${this.x}&y=${this.y}`
@@ -1231,6 +1278,7 @@ export default {
       this.editItem.Y = this.editItem.Y * 1
       this.editItem.H = this.editItem.H * 1
       this.editItem.W = this.editItem.W * 1
+      this.editItem.Scale = this.editItem.Scale * 1.0
       const url = '/api/item/update'
       this.editItemError = false
       this.$axios
@@ -1277,6 +1325,9 @@ export default {
         Text: '新しいラベル',
         Color: '#ccc',
         Size: 24,
+        Scale: 1.0,
+        Format: '',
+        VarName: '',
       }
       this.editItemDialog = true
     },

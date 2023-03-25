@@ -39,19 +39,26 @@ const (
 	DrawItemTypeEllipse
 	DrawItemTypeText
 	DrawItemTypeImage
+	DrawItemTypePollingText
+	DrawItemTypePollingGauge
 )
 
 type DrawItemEnt struct {
-	ID    string
-	Type  DrawItemType
-	X     int
-	Y     int
-	W     int // Width
-	H     int // Higeht
-	Color string
-	Path  string
-	Text  string
-	Size  int // Font Size
+	ID        string
+	Type      DrawItemType
+	X         int
+	Y         int
+	W         int // Width
+	H         int // Higeht
+	Color     string
+	Path      string
+	Text      string
+	Size      int     // Font Size | GaugeSize
+	PollingID string  // Polling ID
+	VarName   string  // Pollingから取得する項目
+	Format    string  // 表示フォーマット
+	Value     float64 // Gaugeの値
+	Scale     float64 // 値の補正倍率
 }
 
 func loadMapData() error {

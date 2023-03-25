@@ -61,11 +61,24 @@ const setMAP = (m,url,ro) => {
   }
 
   for(const k in items) {
-    if (items[k].Type === 3 && !imageMap[items[k].Path]) {
-      _ImageP5.loadImage(url+'/image/' + items[k].Path,(img)=>{
-        imageMap[items[k].Path] = img
-        mapRedraw = true
-      })
+    switch (items[k].Type) {
+    case 3:
+      if (!imageMap[items[k].Path]) {
+        _ImageP5.loadImage(url+'/image/' + items[k].Path,(img)=>{
+          imageMap[items[k].Path] = img
+          mapRedraw = true
+        })
+      }  
+      break
+    case 2:
+    case 4:
+      items[k].W = items[k].Size *  items[k].Text.length
+      items[k].H = items[k].Size
+      break
+    case 5:
+      items[k].H = items[k].Size * 10
+      items[k].W = items[k].Size * 10
+      break
     } 
   }
   mapRedraw = true
@@ -162,8 +175,8 @@ const mapMain = (p5) => {
       if (selectedItem === items[k].ID ) {
         p5.fill('rgba(23,23,23,0.9)')
         p5.stroke('#ccc')
-        const w =  items[k].Type === 2 ?  (items[k].Size *  items[k].Text.length) + 10 : items[k].W +10
-        const h =  items[k].Type === 2 ?  items[k].Size + 10 : items[k].H +10
+        const w =  items[k].W +10
+        const h =  items[k].H +10
         p5.rect(-5, -5, w, h)
       }
       switch (items[k].Type) {
@@ -178,6 +191,7 @@ const mapMain = (p5) => {
         p5.ellipse(items[k].W/2,items[k].H/2,items[k].W, items[k].H)
         break
       case 2: // text
+      case 4: // Polling
         p5.textSize(items[k].Size || 12)
         p5.fill(items[k].Color)
         p5.text(items[k].Text, 0, 0,items[k].Size *  items[k].Text.length + 10, items[k].Size + 10)
@@ -187,6 +201,37 @@ const mapMain = (p5) => {
           p5.image(imageMap[items[k].Path],0,0,items[k].W,items[k].H)
         }
         break
+      case 5: { // Gauge
+          const x = items[k].W / 2
+          const y = items[k].H / 2
+          const r0 = items[k].W 
+          const r1 = (items[k].W - items[k].Size) 
+          const r2 = (items[k].W - items[k].Size *4)
+          p5.noStroke()
+          p5.fill('#eee')
+          p5.arc(x, y, r0, r0, 5*p5.QUARTER_PI, -p5.QUARTER_PI)
+          if(items[k].Value > 0){
+            p5.fill(items[k].Color)
+            p5.arc(x, y, r0, r0, 5*p5.QUARTER_PI, -p5.QUARTER_PI - (p5.HALF_PI - p5.HALF_PI * items[k].Value/100))
+          }
+          p5.fill(backImage.Color || 23)
+          p5.arc(x, y, r1, r1, -p5.PI, 0)
+          p5.textAlign(p5.CENTER)
+          p5.textSize(8)
+          p5.fill('#fff')
+          p5.text( items[k].Value + '%', x, y - 10 )
+          p5.textSize(items[k].Size)
+          p5.text( items[k].Text || "", x, y + 5)
+          p5.fill('#e31a1c')
+          const angle = -p5.QUARTER_PI + (p5.HALF_PI * items[k].Value/100)
+          const x1 = x + r1/2 * p5.sin(angle)
+          const y1 = y - r1/2 * p5.cos(angle)
+          const x2 = x + r2/2 * p5.sin(angle) + 5  * p5.cos(angle)
+          const y2 = y - r2/2 * p5.cos(angle) + 5  * p5.sin(angle)
+          const x3 = x + r2/2 * p5.sin(angle) - 5  * p5.cos(angle)
+          const y3 = y - r2/2 * p5.cos(angle) - 5  * p5.sin(angle)
+          p5.triangle(x1, y1, x2, y2, x3, y3)
+        }
       }
       p5.pop()
     }
