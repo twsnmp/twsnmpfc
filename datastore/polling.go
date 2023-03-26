@@ -53,7 +53,7 @@ func AddPolling(p *PollingEnt) error {
 	if err != nil {
 		return err
 	}
-	db.Update(func(tx *bbolt.Tx) error {
+	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollings"))
 		return b.Put([]byte(p.ID), s)
 	})
@@ -162,7 +162,7 @@ func AddPollingLog(p *PollingEnt) error {
 	if err != nil {
 		return err
 	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingLogs"))
 		return b.Put([]byte(makeKey()), s)
 	})

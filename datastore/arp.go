@@ -15,7 +15,7 @@ func UpdateArpEnt(ip, mac string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	return db.Update(func(tx *bbolt.Tx) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("arp"))
 		return b.Put([]byte(ip), []byte(mac))
 	})

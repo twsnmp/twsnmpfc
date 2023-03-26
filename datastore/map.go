@@ -145,7 +145,7 @@ func loadConf() error {
 }
 
 func SaveBackImage(img []byte) error {
-	return db.Update(func(tx *bbolt.Tx) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
@@ -170,7 +170,7 @@ var imageListCache = []string{}
 
 func SaveImage(path string, img []byte) error {
 	imageListCache = []string{}
-	return db.Update(func(tx *bbolt.Tx) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("images"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
@@ -181,7 +181,7 @@ func SaveImage(path string, img []byte) error {
 
 func DelteImage(path string) error {
 	imageListCache = []string{}
-	return db.Update(func(tx *bbolt.Tx) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("images"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
@@ -250,7 +250,7 @@ func SaveMapConf() error {
 	if err != nil {
 		return err
 	}
-	return db.Update(func(tx *bbolt.Tx) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
@@ -302,7 +302,7 @@ func saveIcons() error {
 	if err != nil {
 		return err
 	}
-	return db.Update(func(tx *bbolt.Tx) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")

@@ -32,7 +32,7 @@ func SaveBackup() error {
 	if err != nil {
 		return err
 	}
-	return db.Update(func(tx *bbolt.Tx) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")

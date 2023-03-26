@@ -136,7 +136,7 @@ func AddNode(n *NodeEnt) error {
 		return err
 	}
 	st := time.Now()
-	db.Update(func(tx *bbolt.Tx) error {
+	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))
 		return b.Put([]byte(n.ID), s)
 	})
@@ -160,7 +160,7 @@ func AddDrawItem(di *DrawItemEnt) error {
 		return err
 	}
 	st := time.Now()
-	db.Update(func(tx *bbolt.Tx) error {
+	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))
 		return b.Put([]byte(di.ID), s)
 	})
@@ -213,7 +213,7 @@ func DeleteNode(nodeID string) error {
 			Event:    "ノードを削除しました",
 		})
 	}
-	db.Update(func(tx *bbolt.Tx) error {
+	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))
 		return b.Delete([]byte(nodeID))
 	})

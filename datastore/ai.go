@@ -21,7 +21,7 @@ func SaveAIResult(res *AIResult) error {
 	if err != nil {
 		return err
 	}
-	return db.Update(func(tx *bbolt.Tx) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("ai"))
 		if b == nil {
 			return fmt.Errorf("bucket ai is nil")
@@ -60,7 +60,7 @@ func DeleteAIResult(id string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	return db.Update(func(tx *bbolt.Tx) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("ai"))
 		_ = b.Delete([]byte(id))
 		return nil

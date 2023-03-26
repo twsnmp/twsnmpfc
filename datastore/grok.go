@@ -166,7 +166,7 @@ func UpdateGrokEnt(g *GrokEnt) error {
 	if err != nil {
 		return err
 	}
-	err = db.Update(func(tx *bbolt.Tx) error {
+	err = db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("grok"))
 		return b.Put([]byte(g.ID), s)
 	})
@@ -181,7 +181,7 @@ func DeleteGrokEnt(id string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	err := db.Update(func(tx *bbolt.Tx) error {
+	err := db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("grok"))
 		return b.Delete([]byte(id))
 	})

@@ -72,7 +72,6 @@ func SaveReport(last int64) error {
 	})
 }
 
-//
 var reportNameToMap = map[string]*sync.Map{
 	"devices":      &devices,
 	"users":        &users,
@@ -134,7 +133,7 @@ func ClearReport(r string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	db.Update(func(tx *bbolt.Tx) error {
+	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("report"))
 		if b != nil {
 			_ = b.DeleteBucket([]byte(r))

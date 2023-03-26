@@ -35,7 +35,7 @@ func AddLine(l *LineEnt) error {
 	if err != nil {
 		return err
 	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("lines"))
 		return b.Put([]byte(l.ID), s)
 	})
@@ -54,7 +54,7 @@ func UpdateLine(l *LineEnt) error {
 	if err != nil {
 		return err
 	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("lines"))
 		return b.Put([]byte(l.ID), s)
 	})
@@ -68,7 +68,7 @@ func DeleteLine(lineID string) error {
 	if _, ok := lines.Load(lineID); !ok {
 		return ErrInvalidID
 	}
-	_ = db.Update(func(tx *bbolt.Tx) error {
+	_ = db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("lines"))
 		return b.Delete([]byte(lineID))
 	})

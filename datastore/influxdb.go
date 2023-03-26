@@ -28,7 +28,7 @@ func SaveInfluxdbConf() error {
 	if err != nil {
 		return err
 	}
-	err = db.Update(func(tx *bbolt.Tx) error {
+	err = db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
