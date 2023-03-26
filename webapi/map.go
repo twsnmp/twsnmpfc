@@ -239,6 +239,7 @@ func postItemUpdate(c echo.Context) error {
 		log.Println("no draw item")
 		return echo.ErrBadRequest
 	}
+	odi.Type = di.Type
 	odi.W = di.W
 	odi.H = di.H
 	odi.Path = di.Path
