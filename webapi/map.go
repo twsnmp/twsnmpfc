@@ -248,6 +248,7 @@ func postItemUpdate(c echo.Context) error {
 	odi.Color = di.Color
 	odi.Format = di.Format
 	odi.VarName = di.VarName
+	odi.PollingID = di.PollingID
 	odi.Scale = di.Scale
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
