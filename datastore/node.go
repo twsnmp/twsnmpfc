@@ -242,7 +242,7 @@ func DeleteDrawItem(id string) error {
 			Event: "描画アイテムを削除しました",
 		})
 	}
-	db.Update(func(tx *bbolt.Tx) error {
+	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("items"))
 		return b.Delete([]byte(id))
 	})

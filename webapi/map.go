@@ -5,8 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
@@ -72,7 +74,8 @@ func checkDrawItem(di *datastore.DrawItemEnt) {
 	if p == nil {
 		return
 	}
-	i, ok := p.Result[di.VarName]
+	varName, format, scale := autoGetPollingSetting(di, p)
+	i, ok := p.Result[varName]
 	if !ok {
 		return
 	}
@@ -80,24 +83,28 @@ func checkDrawItem(di *datastore.DrawItemEnt) {
 	val := 0.0
 	switch v := i.(type) {
 	case string:
-		if di.Format == "" {
+		if format == "" {
 			text = v
 		} else {
-			text = fmt.Sprintf(di.Format, v)
+			text = fmt.Sprintf(format, v)
 		}
 	case float64:
-		if di.Scale != 0.0 {
-			v *= di.Scale
-		}
-		if di.Format == "" {
+		v *= scale
+		if format == "" {
 			text = fmt.Sprintf("%f", v)
+		} else if strings.Contains(format, "BPS") {
+			bps := humanize.Bytes(uint64(v)) + "PS"
+			text = strings.Replace(format, "BPS", bps, 1)
+		} else if strings.Contains(format, "PPS") {
+			pps := humanize.Commaf(v) + "PPS"
+			text = strings.Replace(format, "PPS", pps, 1)
 		} else {
-			text = fmt.Sprintf(di.Format, v)
+			text = fmt.Sprintf(format, v)
 		}
 		val = v
 	}
 	if text == "" {
-		text = "値が空"
+		text = "値なし"
 	}
 	switch di.Type {
 	case datastore.DrawItemTypePollingGauge:
@@ -126,6 +133,57 @@ func checkDrawItem(di *datastore.DrawItemEnt) {
 		}
 		di.Value = val
 	}
+}
+
+func autoGetPollingSetting(di *datastore.DrawItemEnt, p *datastore.PollingEnt) (varName, format string, scale float64) {
+	varName = di.VarName
+	format = di.Format
+	scale = di.Scale
+	if scale == 0.0 {
+		scale = 1.0
+	}
+	// ポーリングだけ選択して変数が空欄なら自動で設定する
+	if varName != "" {
+		return
+	}
+	// 値があるものを優先的に返す
+	if _, ok := p.Result["bps"]; ok {
+		varName = "bps"
+		if format == "" {
+			format = "BPS"
+		}
+		scale = 1.0
+		return
+	}
+	if _, ok := p.Result["rtt"]; ok {
+		varName = "rtt"
+		if format == "" {
+			format = "RTT=%.3fSec"
+		}
+		scale = 0.000000001
+		return
+	}
+	if _, ok := p.Result["state"]; ok {
+		varName = "state"
+		format = "%s"
+		return
+	}
+	if _, ok := p.Result["avg"]; ok {
+		varName = "avg"
+		if format == "" {
+			format = "AVG=%.2f"
+		}
+		return
+	}
+	if _, ok := p.Result["count"]; ok {
+		varName = "count"
+		if format == "" {
+			format = "COUNT=%.0f"
+		}
+		return
+	}
+	// 自動選択できないものは、値なしを表示する
+	return
 }
 
 type itemPosWebAPI struct {
