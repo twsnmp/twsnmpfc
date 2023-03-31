@@ -247,6 +247,12 @@
           <v-row dense>
             <v-col>
               <v-switch
+                v-model="mapconf.AutoCharCode"
+                label="SNMP/syslogの文字コードを自動変換する"
+              ></v-switch>
+            </v-col>
+            <v-col>
+              <v-switch
                 v-model="mapconf.EnableMobileAPI"
                 label="モバイルアプリからの接続を許可する"
               ></v-switch>
@@ -513,6 +519,7 @@ export default {
         AIThreshold: 81,
         AIMode: 'lof',
         FontSize: 12,
+        AutoCharCode: false,
       },
       aiModeList: [
         { text: 'Local Outiler Factor', value: 'lof' },

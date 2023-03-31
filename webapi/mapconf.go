@@ -39,6 +39,7 @@ func getMapConf(c echo.Context) error {
 	r.EnableMobileAPI = datastore.MapConf.EnableMobileAPI
 	r.PublicKey = datastore.MapConf.PublicKey
 	r.FontSize = datastore.MapConf.FontSize
+	r.AutoCharCode = datastore.MapConf.AutoCharCode
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -77,6 +78,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.AIThreshold = mc.AIThreshold
 	datastore.MapConf.AIMode = mc.AIMode
 	datastore.MapConf.FontSize = mc.FontSize
+	datastore.MapConf.AutoCharCode = mc.AutoCharCode
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}

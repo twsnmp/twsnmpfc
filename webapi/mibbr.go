@@ -11,6 +11,7 @@ import (
 	"github.com/gosnmp/gosnmp"
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/logger"
 )
 
 type mibbrWebAPI struct {
@@ -183,6 +184,9 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 					}
 				case "DisplayString":
 					value = getMIBStringVal(variable.Value)
+					if datastore.MapConf.AutoCharCode {
+						value = logger.CheckCharCode(value)
+					}
 				default:
 					value = getMIBStringVal(variable.Value)
 				}

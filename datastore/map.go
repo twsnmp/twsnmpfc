@@ -47,6 +47,7 @@ type MapConfEnt struct {
 	AIMode          string
 	GeoIPInfo       string
 	FontSize        int
+	AutoCharCode    bool
 }
 
 func initConf() {

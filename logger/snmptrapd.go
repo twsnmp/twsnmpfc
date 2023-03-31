@@ -15,6 +15,8 @@ import (
 	gosnmp "github.com/gosnmp/gosnmp"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"golang.org/x/text/encoding/japanese"
+	"golang.org/x/text/transform"
 )
 
 func snmptrapd(stopCh chan bool) {
@@ -75,6 +77,11 @@ func snmptrapd(stopCh chan bool) {
 				val = datastore.MIBDB.OIDToName(getSnmpString(vb.Value))
 			case gosnmp.OctetString:
 				val = getSnmpString(vb.Value)
+				if datastore.MapConf.AutoCharCode {
+					val = CheckCharCode(val)
+				}
+			case gosnmp.TimeTicks:
+				val = getTimeTickStr(gosnmp.ToBigInt(vb.Value).Int64())
 			default:
 				val = fmt.Sprintf("%d", gosnmp.ToBigInt(vb.Value).Uint64())
 			}
@@ -109,4 +116,47 @@ func getSnmpString(i interface{}) string {
 		return string(v)
 	}
 	return fmt.Sprintf("%v", i)
+}
+
+func getTimeTickStr(t int64) string {
+	ft := float64(t) / 100
+	if ft > 3600*24 {
+		return fmt.Sprintf("%.2f日(%d)", ft/(3600*24), t)
+	} else if ft > 3600 {
+		return fmt.Sprintf("%.2f時間(%d)", ft/(3600), t)
+	}
+	return fmt.Sprintf("%.2f秒(%d)", ft, t)
+}
+
+func CheckCharCode(s string) string {
+	if isSjis([]byte(s)) {
+		dec := japanese.ShiftJIS.NewDecoder()
+		if b, _, err := transform.Bytes(dec, []byte(s)); err == nil {
+			return string(b)
+		}
+	}
+	return s
+}
+
+func isSjis(p []byte) bool {
+	f := false
+	for _, c := range p {
+		if f {
+			if c < 0x0040 || c > 0x00fc {
+				return false
+			}
+			f = false
+			continue
+		}
+		if c < 0x007f {
+			continue
+		}
+		if (c >= 0x0081 && c <= 0x9f) ||
+			(c >= 0x00e0 && c <= 0x00ef) {
+			f = true
+		} else {
+			return false
+		}
+	}
+	return true
 }

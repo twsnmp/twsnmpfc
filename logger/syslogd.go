@@ -34,6 +34,11 @@ func syslogd(stopCh chan bool) {
 			}
 		case sl := <-syslogCh:
 			{
+				if datastore.MapConf.AutoCharCode {
+					if c, ok := sl["content"].(string); ok {
+						sl["content"] = CheckCharCode(c)
+					}
+				}
 				s, err := json.Marshal(sl)
 				if err == nil {
 					tag, ok := sl["tag"].(string)
