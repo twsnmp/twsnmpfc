@@ -175,7 +175,7 @@ func deleteOldLogs() {
 		log.Println("mapConf.LogDays < 1 ")
 		return
 	}
-	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix"}
+	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix", "arplog"}
 	for _, b := range buckets {
 		if err := deleteOldLog(b, MapConf.LogDays); err != nil {
 			log.Printf("deleteOldLog err=%v", err)
