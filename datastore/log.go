@@ -156,7 +156,7 @@ func deleteOldLog(bucket string, days int) error {
 		}
 		c := b.Cursor()
 		for k, _ := c.First(); k != nil; k, _ = c.Next() {
-			if st < string(k) || delCount > MaxDelLog || lt < time.Now().Unix() {
+			if st < string(k) || lt < time.Now().Unix() {
 				break
 			}
 			_ = c.Delete()
