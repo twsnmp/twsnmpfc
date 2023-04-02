@@ -146,6 +146,7 @@ func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
 
 func deleteOldLog(bucket string, days int) error {
 	s := time.Now()
+	lt := s.Unix() + 10 // 10秒間削除
 	delCount := 0
 	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -days).UnixNano())
 	err := db.Batch(func(tx *bbolt.Tx) error {
@@ -155,7 +156,7 @@ func deleteOldLog(bucket string, days int) error {
 		}
 		c := b.Cursor()
 		for k, _ := c.First(); k != nil; k, _ = c.Next() {
-			if st < string(k) || delCount > MaxDelLog {
+			if st < string(k) || delCount > MaxDelLog || lt < time.Now().Unix() {
 				break
 			}
 			_ = c.Delete()
