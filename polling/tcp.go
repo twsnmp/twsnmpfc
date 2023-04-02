@@ -6,10 +6,13 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -99,6 +102,21 @@ func checkHTTPResp(pe *datastore.PollingEnt, status, body string, code int, rTim
 	vm.Set("status", status)
 	vm.Set("code", code)
 	vm.Set("rtt", rTime)
+	if strings.Contains(pe.Mode, "metrics") {
+		//前回の値と間隔をJavaScriptで処理できるようにする
+		for _, k := range []string{"accepts", "handled", "requests"} {
+			if i, ok := pe.Result[k]; ok {
+				if v, ok := i.(float64); ok {
+					vm.Set(k+"_last", v)
+				}
+			}
+		}
+		vm.Set("interval", pe.PollInt)
+		for k, v := range getMetrics(body) {
+			pe.Result[k] = v
+			vm.Set(k, v)
+		}
+	}
 	extractor := pe.Extractor
 	script := pe.Script
 	if extractor == "" {
@@ -138,6 +156,96 @@ func checkHTTPResp(pe *datastore.PollingEnt, status, body string, code int, rTim
 	return false, nil
 }
 
+type fiberMetricsEnt struct {
+	PID struct {
+		CPU   float64 `json:"cpu"`
+		RAM   float64 `json:"ram"`
+		Conns float64 `json:"conns"`
+	} `json:"pid"`
+	OS struct {
+		CPU      float64 `json:"cpu"`
+		RAM      float64 `json:"ram"`
+		Conns    float64 `json:"conns"`
+		TotalRAM float64 `json:"total_ram"`
+		LoadAvg  float64 `json:"load_avg"`
+	} `json:"os"`
+}
+
+var numReg = regexp.MustCompile(`[\.0-9]`)
+var nginxAConnsReg = regexp.MustCompile(`Active connections: (\d+)`)
+var nginxAHRReg = regexp.MustCompile(`\s*(\d+)\s+(\d+)\s+(\d+)`)
+var nginxRWWReg = regexp.MustCompile(`Reading:\s*(\d+)\s+Writing:\s*(\d+)Waiting:\s*(\d+)`)
+
+func getMetrics(body string) map[string]any {
+	r := make(map[string]any)
+	if strings.Contains(body, "Apache") {
+		// Apache mod_status
+		for _, l := range strings.Split(body, "\n") {
+			l = strings.TrimSpace(l)
+			a := strings.SplitN(l, ": ", 2)
+			if len(a) != 2 {
+				continue
+			}
+			if numReg.MatchString(a[1]) {
+				if v, err := strconv.ParseFloat(a[1], 64); err == nil {
+					r[a[0]] = v
+					continue
+				}
+			}
+			r[a[0]] = a[1]
+		}
+	} else if strings.Contains(body, "Active conn") {
+		// NGINX
+		if a := nginxAConnsReg.FindStringSubmatch(body); len(a) == 2 && a[1] != "" {
+			if v, err := strconv.ParseFloat(a[1], 64); err == nil {
+				r["active_connectios"] = v
+			}
+		}
+		if a := nginxAHRReg.FindStringSubmatch(body); len(a) == 4 && a[1] != "" {
+			if v, err := strconv.ParseFloat(a[1], 64); err == nil {
+				r["accepts"] = v
+			}
+			if v, err := strconv.ParseFloat(a[2], 64); err == nil {
+				r["handled"] = v
+			}
+			if v, err := strconv.ParseFloat(a[3], 64); err == nil {
+				r["requests"] = v
+			}
+		}
+		if a := nginxRWWReg.FindStringSubmatch(body); len(a) == 4 && a[1] != "" {
+			if v, err := strconv.ParseFloat(a[1], 64); err == nil {
+				r["Reading"] = v
+			}
+			if v, err := strconv.ParseFloat(a[2], 64); err == nil {
+				r["Writing"] = v
+			}
+			if v, err := strconv.ParseFloat(a[3], 64); err == nil {
+				r["Waiting"] = v
+			}
+		}
+	} else if strings.Contains(body, "{\"pid\"") {
+		var s fiberMetricsEnt
+		body = strings.TrimSpace(body)
+		if err := json.Unmarshal([]byte(body), &s); err == nil {
+			r["pid_cpu"] = s.PID.CPU
+			r["pid_ram"] = s.PID.RAM
+			r["pid_conns"] = s.PID.Conns
+			r["os_cpu"] = s.OS.CPU
+			r["os_ram"] = s.OS.RAM
+			r["os_conns"] = s.OS.Conns
+			r["os_load_avg"] = s.OS.LoadAvg
+			r["os_total_ram"] = s.OS.TotalRAM
+		} else {
+			log.Printf("getMetrics fiber err=%v", err)
+		}
+	} else {
+		if err := json.Unmarshal([]byte(body), &r); err != nil {
+			log.Printf("getMetrics other err=%v", err)
+		}
+	}
+	return r
+}
+
 var insecureTransport = &http.Transport{
 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 }
@@ -151,29 +259,44 @@ func doHTTPGet(pe *datastore.PollingEnt, url string) (string, string, int, error
 	if err != nil {
 		return "", "", 0, err
 	}
-	body := make([]byte, 64*1024)
+	if pe.Mode == "metrics/json" {
+		req.Header.Set("Accept", "application/json")
+	}
 	if pe.Mode == "https" {
 		resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 		if err != nil {
 			return "", "", 0, err
 		}
 		defer resp.Body.Close()
-		_, err = resp.Body.Read(body)
-		if err == io.EOF {
-			err = nil
+		// メモリー不足をおこさないための64MBまで
+		if resp.ContentLength > 1024*1024*64 {
+			return "", "", 0, fmt.Errorf("http rest seize over len=%d", resp.ContentLength)
 		}
-		return resp.Status, string(body), resp.StatusCode, err
+		if body, err := io.ReadAll(resp.Body); err == nil {
+			return resp.Status, string(body), resp.StatusCode, err
+		} else {
+			if err == io.EOF {
+				err = nil
+			}
+			return resp.Status, "", resp.StatusCode, err
+		}
 	}
 	resp, err := insecureClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return "", "", 0, err
 	}
 	defer resp.Body.Close()
-	_, err = resp.Body.Read(body)
-	if err == io.EOF {
-		err = nil
+	if resp.ContentLength > 1024*1024*64 {
+		return "", "", 0, fmt.Errorf("http resp seize over len=%d", resp.ContentLength)
 	}
-	return resp.Status, string(body), resp.StatusCode, err
+	if body, err := io.ReadAll(resp.Body); err == nil {
+		return resp.Status, string(body), resp.StatusCode, err
+	} else {
+		if err == io.EOF {
+			err = nil
+		}
+		return resp.Status, "", resp.StatusCode, err
+	}
 }
 
 func doPollingTLS(pe *datastore.PollingEnt) {
