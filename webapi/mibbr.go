@@ -187,6 +187,8 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 					if datastore.MapConf.AutoCharCode {
 						value = logger.CheckCharCode(value)
 					}
+				case "DateAndTime":
+					value = getDateAndTime(variable.Value)
 				default:
 					value = getMIBStringVal(variable.Value)
 				}
@@ -248,4 +250,19 @@ func getMIBStringVal(i interface{}) string {
 		return fmt.Sprintf("%d", v)
 	}
 	return ""
+}
+
+func getDateAndTime(i interface{}) string {
+	switch v := i.(type) {
+	case string:
+		return v
+	case []uint8:
+		if len(v) > 6 {
+			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d%c%02d%02d",
+				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[8], v[9], v[10])
+		}
+	case int, int64, uint, uint64:
+		return fmt.Sprintf("%d", v)
+	}
+	return "Unknown"
 }
