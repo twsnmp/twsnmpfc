@@ -7,6 +7,7 @@ package logger
 import (
 	"encoding/json"
 	"log"
+	"strings"
 
 	"fmt"
 	"net"
@@ -76,14 +77,77 @@ func snmptrapd(stopCh chan bool) {
 			case gosnmp.ObjectIdentifier:
 				val = datastore.MIBDB.OIDToName(getSnmpString(vb.Value))
 			case gosnmp.OctetString:
-				val = getSnmpString(vb.Value)
-				if datastore.MapConf.AutoCharCode {
-					val = CheckCharCode(val)
+				mi := datastore.FindMIBInfo(key)
+				if mi != nil {
+					switch mi.Type {
+					case "PhysAddress", "OctetString":
+						a, ok := vb.Value.([]uint8)
+						if !ok {
+							a = []uint8(getSnmpString(vb.Value))
+						}
+						mac := []string{}
+						for _, m := range a {
+							mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
+						}
+						val = strings.Join(mac, ":")
+					case "BITS":
+						a, ok := vb.Value.([]uint8)
+						if !ok {
+							a = []uint8(getSnmpString(vb.Value))
+						}
+						hex := []string{}
+						ap := []string{}
+						bit := 0
+						for _, m := range a {
+							hex = append(hex, fmt.Sprintf("%02X", m&0x00ff))
+							if mi.Enum != "" {
+								for i := 0; i < 8; i++ {
+									if (m & 0x80) == 0x80 {
+										if n, ok := mi.EnumMap[bit]; ok {
+											ap = append(ap, fmt.Sprintf("%s(%d)", n, bit))
+										}
+									}
+									m <<= 1
+									bit++
+								}
+							}
+						}
+						val = strings.Join(hex, " ")
+						if len(ap) > 0 {
+							val += " " + strings.Join(ap, " ")
+						}
+					case "DisplayString":
+						val = getSnmpString(vb.Value)
+						if datastore.MapConf.AutoCharCode {
+							val = CheckCharCode(val)
+						}
+					case "DateAndTime":
+						val = getDateAndTime(vb.Value)
+					default:
+						val = getSnmpString(vb.Value)
+					}
+				} else {
+					val = getSnmpString(vb.Value)
+					if datastore.MapConf.AutoCharCode {
+						val = CheckCharCode(val)
+					}
 				}
 			case gosnmp.TimeTicks:
 				val = getTimeTickStr(gosnmp.ToBigInt(vb.Value).Int64())
 			default:
-				val = fmt.Sprintf("%d", gosnmp.ToBigInt(vb.Value).Uint64())
+				v := int(gosnmp.ToBigInt(vb.Value).Uint64())
+				apend := ""
+				mi := datastore.FindMIBInfo(key)
+				if mi != nil {
+					if mi.Enum != "" {
+						if vn, ok := mi.EnumMap[v]; ok {
+							apend = "(" + vn + ")"
+						}
+					} else if mi.Units != "" {
+						apend = " " + mi.Units
+					}
+				}
+				val = fmt.Sprintf("%d%s", gosnmp.ToBigInt(vb.Value).Uint64(), apend)
 			}
 			vbs += fmt.Sprintf("%s=%s\n", key, val)
 		}
@@ -159,4 +223,23 @@ func isSjis(p []byte) bool {
 		}
 	}
 	return true
+}
+
+// DISPLAY-HINT "2d-1d-1d,1d:1d:1d.1d,1a1d:1d"
+func getDateAndTime(i interface{}) string {
+	switch v := i.(type) {
+	case string:
+		return v
+	case []uint8:
+		if len(v) == 11 {
+			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d%c%02d%02d",
+				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10])
+		} else if len(v) == 8 {
+			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d",
+				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7])
+		}
+	case int, int64, uint, uint64:
+		return fmt.Sprintf("%d", v)
+	}
+	return fmt.Sprintf("Invalid Date And Time %v", i)
 }

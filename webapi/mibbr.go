@@ -252,17 +252,21 @@ func getMIBStringVal(i interface{}) string {
 	return ""
 }
 
+// DISPLAY-HINT "2d-1d-1d,1d:1d:1d.1d,1a1d:1d"
 func getDateAndTime(i interface{}) string {
 	switch v := i.(type) {
 	case string:
 		return v
 	case []uint8:
-		if len(v) > 6 {
-			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d%c%02d%02d",
-				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[8], v[9], v[10])
+		if len(v) == 11 {
+			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d%c%02d%02d",
+				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10])
+		} else if len(v) == 8 {
+			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d",
+				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7])
 		}
 	case int, int64, uint, uint64:
 		return fmt.Sprintf("%d", v)
 	}
-	return "Unknown"
+	return fmt.Sprintf("Invalid Date And Time %v", i)
 }
