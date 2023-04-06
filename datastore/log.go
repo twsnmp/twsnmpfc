@@ -144,30 +144,27 @@ func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
 	})
 }
 
-func deleteOldLog(bucket string, days int) error {
+func deleteOldLog(tx *bbolt.Tx, bucket string, days int) error {
 	s := time.Now()
 	lt := s.Unix() + 10 // 10秒間削除
 	delCount := 0
 	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -days).UnixNano())
-	err := db.Batch(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucket))
-		if b == nil {
-			return fmt.Errorf("bucket %s not found", bucket)
+	b := tx.Bucket([]byte(bucket))
+	if b == nil {
+		return fmt.Errorf("bucket %s not found", bucket)
+	}
+	c := b.Cursor()
+	for k, _ := c.First(); k != nil; k, _ = c.Next() {
+		if st < string(k) || lt < time.Now().Unix() {
+			break
 		}
-		c := b.Cursor()
-		for k, _ := c.First(); k != nil; k, _ = c.Next() {
-			if st < string(k) || lt < time.Now().Unix() {
-				break
-			}
-			_ = c.Delete()
-			delCount++
-		}
-		return nil
-	})
+		_ = c.Delete()
+		delCount++
+	}
 	if delCount > 0 {
 		log.Printf("delete old logs bucket=%s count=%d dur=%s", bucket, delCount, time.Since(s))
 	}
-	return err
+	return nil
 }
 
 func deleteOldLogs() {
@@ -176,11 +173,14 @@ func deleteOldLogs() {
 		return
 	}
 	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix", "arplog"}
-	for _, b := range buckets {
-		if err := deleteOldLog(b, MapConf.LogDays); err != nil {
-			log.Printf("deleteOldLog err=%v", err)
+	db.Batch(func(tx *bbolt.Tx) error {
+		for _, b := range buckets {
+			if err := deleteOldLog(tx, b, MapConf.LogDays); err != nil {
+				log.Printf("deleteOldLog bucket=%s err=%v", b, err)
+			}
 		}
-	}
+		return nil
+	})
 }
 
 func DeleteAllLogs() {

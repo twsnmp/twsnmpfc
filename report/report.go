@@ -145,6 +145,7 @@ func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
 	calcScore()
 	checkCerts()
 	last := time.Now().UnixNano()
+	skip := 0
 	for {
 		select {
 		case <-ctx.Done():
@@ -159,11 +160,15 @@ func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
 			{
 				checkCertCh <- true
 				st := time.Now()
-				go checkOldReport()
 				setSensorState()
 				calcScore()
-				datastore.SaveReport(last)
-				last = time.Now().UnixNano()
+				skip--
+				if skip < 0 {
+					skip = 12
+					go checkOldReport()
+					datastore.SaveReport(last)
+					last = time.Now().UnixNano()
+				}
 				clearIpToNameCache()
 				log.Printf("report timer process dur=%v", time.Since(st))
 			}
