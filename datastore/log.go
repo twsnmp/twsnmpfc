@@ -146,7 +146,7 @@ func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
 
 func deleteOldLog(tx *bbolt.Tx, bucket string, days int) error {
 	s := time.Now()
-	lt := s.Unix() + 10 // 10秒間削除
+	lt := s.Unix() + 8 //  削除は8秒
 	delCount := 0
 	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -days).UnixNano())
 	b := tx.Bucket([]byte(bucket))
@@ -212,32 +212,50 @@ func DeleteArp() {
 func eventLogger(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Println("start eventlog")
-	timer1 := time.NewTicker(time.Minute)
-	timer2 := time.NewTicker(time.Second * 5)
-	list := []*EventLogEnt{}
+	timer := time.NewTicker(time.Second * 10)
+	eventLogList := []*EventLogEnt{}
+	pollingLogList := []*PollingLogEnt{}
 	for {
 		select {
 		case <-ctx.Done():
-			if len(list) > 0 {
-				saveLogList(list)
+			if len(eventLogList) > 0 {
+				saveLogList(eventLogList)
 			}
-			timer1.Stop()
-			timer2.Stop()
+			if len(pollingLogList) > 0 {
+				savePollingLogList(pollingLogList)
+			}
+			timer.Stop()
 			log.Println("stop eventlog")
 			return
 		case e := <-eventLogCh:
-			list = append(list, e)
-			if len(list) > 100 {
-				saveLogList(list)
-				list = []*EventLogEnt{}
+			eventLogList = append(eventLogList, e)
+		case e := <-pollingLogCh:
+			pollingLogList = append(pollingLogList, e)
+		case <-timer.C:
+			if len(eventLogList) > 0 {
+				saveLogList(eventLogList)
+				eventLogList = []*EventLogEnt{}
 			}
-		case <-timer1.C:
+			if len(pollingLogList) > 0 {
+				savePollingLogList(pollingLogList)
+				pollingLogList = []*PollingLogEnt{}
+			}
+		}
+	}
+}
+
+func oldLogChecker(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	log.Println("start old log checker")
+	timer := time.NewTicker(time.Minute)
+	for {
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			log.Println("stop old log checker")
+			return
+		case <-timer.C:
 			deleteOldLogs()
-		case <-timer2.C:
-			if len(list) > 0 {
-				saveLogList(list)
-				list = []*EventLogEnt{}
-			}
 		}
 	}
 }
@@ -246,6 +264,7 @@ func saveLogList(list []*EventLogEnt) {
 	if db == nil {
 		return
 	}
+	st := time.Now()
 	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("logs"))
 		for i, e := range list {
@@ -260,6 +279,29 @@ func saveLogList(list []*EventLogEnt) {
 		}
 		return nil
 	})
+	log.Printf("save event log count=%d,dur=%v", len(list), time.Since(st))
+}
+
+func savePollingLogList(list []*PollingLogEnt) {
+	if db == nil {
+		return
+	}
+	st := time.Now()
+	db.Batch(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("pollingLogs"))
+		for i, e := range list {
+			s, err := json.Marshal(e)
+			if err != nil {
+				return err
+			}
+			err = b.Put([]byte(fmt.Sprintf("%016x", e.Time+int64(i))), s)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	log.Printf("save plling log count=%d,dur=%v", len(list), time.Since(st))
 }
 
 func SaveLogBuffer(logBuffer []*LogEnt) {

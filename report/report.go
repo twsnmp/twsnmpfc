@@ -140,7 +140,6 @@ func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
 	log.Println("start report")
 	datastore.LoadReport()
 	log.Println("load report done")
-	go checkOldReport()
 	setSensorState()
 	calcScore()
 	checkCerts()

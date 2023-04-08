@@ -152,20 +152,12 @@ func AddPollingLog(p *PollingEnt) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	pl := PollingLogEnt{
+	pollingLogCh <- &PollingLogEnt{
 		Time:      time.Now().UnixNano(),
 		PollingID: p.ID,
 		State:     p.State,
 		Result:    p.Result,
 	}
-	s, err := json.Marshal(pl)
-	if err != nil {
-		return err
-	}
-	_ = db.Batch(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("pollingLogs"))
-		return b.Put([]byte(makeKey()), s)
-	})
 	return nil
 }
 

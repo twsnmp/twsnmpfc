@@ -80,6 +80,7 @@ var (
 	dstDB        *bbolt.DB
 	dstTx        *bbolt.Tx
 	eventLogCh   chan *EventLogEnt
+	pollingLogCh chan *PollingLogEnt
 
 	influxc   client.Client
 	muInfluxc sync.Mutex
@@ -113,6 +114,7 @@ var (
 func Init(ctx context.Context, path string, fs http.FileSystem, wg *sync.WaitGroup) error {
 	dspath = path
 	eventLogCh = make(chan *EventLogEnt, 100)
+	pollingLogCh = make(chan *PollingLogEnt, 1000)
 	protMap = map[int]string{
 		1:   "icmp",
 		2:   "igmp",
@@ -130,6 +132,8 @@ func Init(ctx context.Context, path string, fs http.FileSystem, wg *sync.WaitGro
 	}
 	wg.Add(1)
 	go eventLogger(ctx, wg)
+	wg.Add(1)
+	go oldLogChecker(ctx, wg)
 	setLastBackupTime()
 	return nil
 }
