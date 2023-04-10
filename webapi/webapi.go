@@ -28,6 +28,7 @@ type WebAPI struct {
 	Host          string
 	IP            string
 	Local         bool
+	Timeout       int
 	Password      string
 	DataStorePath string
 	Version       string

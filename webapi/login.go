@@ -34,7 +34,9 @@ func login(c echo.Context) error {
 
 	claims := token.Claims.(jwt.MapClaims)
 	claims["userid"] = le.UserID
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	if api.Timeout > 0 {
+		claims["exp"] = time.Now().Add(time.Hour * time.Duration(api.Timeout)).Unix()
+	}
 
 	t, err := token.SignedString([]byte(api.Password))
 	if err != nil {

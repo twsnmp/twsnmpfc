@@ -42,7 +42,7 @@ var cpuprofile string
 var memprofile string
 var restore string
 var pingMode string
-
+var timeout int
 var version = "vx.x.x"
 var commit = ""
 
@@ -58,6 +58,7 @@ func init() {
 	flag.BoolVar(&local, "local", false, "Local only")
 	flag.StringVar(&cpuprofile, "cpuprofile", "", "write cpu profile to `file`")
 	flag.StringVar(&memprofile, "memprofile", "", "write memory profile to `file`")
+	flag.IntVar(&timeout, "timeout", 24, "session timeout 0 is unlimit")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
 			f.Value.Set(s)
@@ -167,6 +168,7 @@ func main() {
 		Version:       fmt.Sprintf("%s(%s)", version, commit),
 		DataStorePath: dataStorePath,
 		QuitSignal:    quit,
+		Timeout:       timeout,
 	}
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go webapi.Start(w)
