@@ -42,6 +42,7 @@ func SaveBackup() error {
 }
 
 func CheckDBBackup() {
+	log.Printf("check backup")
 	if db == nil || Backup.Mode == "" {
 		return
 	}
@@ -67,6 +68,7 @@ func CheckDBBackup() {
 		}
 		DBStats.BackupStart = time.Now().UnixNano()
 		go func() {
+			log.Printf("start backup")
 			st := time.Now()
 			file := filepath.Join(dspath, "backup", "twsnmpfc.db."+time.Now().Format("20060102150405"))
 			stopBackup = false
@@ -152,23 +154,26 @@ func backupDB(file string) error {
 	return dstTx.Commit()
 }
 
-var configBuckets = []string{"config", "nodes", "lines", "pollings", "grok"}
+var configBuckets = map[string]bool{
+	"config":   true,
+	"nodes":    true,
+	"lines":    true,
+	"items":    true,
+	"pollings": true,
+	"grok":     true,
+	"images":   true,
+}
 
 func walkBucket(b *bbolt.Bucket, keypath [][]byte, k, v []byte, seq uint64) error {
 	if stopBackup {
 		return fmt.Errorf("stop backup")
 	}
 	if Backup.ConfigOnly && v == nil {
-		c := false
-		for _, cbn := range configBuckets {
-			if k != nil && cbn == string(k) {
-				c = true
-				break
-			}
-		}
-		if !c {
+		if _, ok := configBuckets[string(k)]; !ok {
+			log.Printf("skip backup %s", string(k))
 			return nil
 		}
+		log.Printf("do backup %s", string(k))
 	}
 	if dbBackupSize > 64*1024 {
 		_ = dstTx.Commit()
