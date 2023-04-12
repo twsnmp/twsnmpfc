@@ -36,6 +36,8 @@ func login(c echo.Context) error {
 	claims["userid"] = le.UserID
 	if api.Timeout > 0 {
 		claims["exp"] = time.Now().Add(time.Hour * time.Duration(api.Timeout)).Unix()
+	} else {
+		claims["exp"] = time.Now().Add(time.Hour * 24 * 365 * 10).Unix()
 	}
 
 	t, err := token.SignedString([]byte(api.Password))
