@@ -47,7 +47,19 @@ func getMap(c echo.Context) error {
 		return true
 	})
 	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
-		r.Pollings[p.NodeID] = append(r.Pollings[p.NodeID], p)
+		r.Pollings[p.NodeID] = append(r.Pollings[p.NodeID], &datastore.PollingEnt{
+			ID:        p.ID,
+			Name:      p.Name,
+			NodeID:    p.NodeID,
+			Type:      p.Type,
+			Mode:      p.Mode,
+			Params:    p.Params,
+			Filter:    p.Filter,
+			Extractor: p.Extractor,
+			State:     p.State,
+			LogMode:   p.LogMode,
+			LastTime:  p.LastTime,
+		})
 		return true
 	})
 	i := 0
