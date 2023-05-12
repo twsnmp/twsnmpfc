@@ -144,43 +144,68 @@ func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
 	})
 }
 
-func deleteOldLog(tx *bbolt.Tx, bucket string, days int) error {
+func deleteOldLog(tx *bbolt.Tx, bucket string, days int) bool {
 	s := time.Now()
-	lt := s.Unix() + 8 //  削除は8秒
+	done := true
 	delCount := 0
 	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -days).UnixNano())
 	b := tx.Bucket([]byte(bucket))
 	if b == nil {
-		return fmt.Errorf("bucket %s not found", bucket)
+		log.Printf("bucket %s not found", bucket)
+		// bucketがないのは、エラーにしないでスキップする
+		return done
 	}
 	c := b.Cursor()
 	for k, _ := c.First(); k != nil; k, _ = c.Next() {
-		if st < string(k) || lt < time.Now().Unix() {
+		if st < string(k) {
+			break
+		}
+		if delCount > 1000 {
+			done = false
 			break
 		}
 		_ = c.Delete()
 		delCount++
 	}
 	if delCount > 0 {
-		log.Printf("delete old logs bucket=%s count=%d dur=%s", bucket, delCount, time.Since(s))
+		log.Printf("delete old logs bucket=%s count=%d done=%v dur=%s", bucket, delCount, done, time.Since(s))
 	}
-	return nil
+	return done
 }
 
 func deleteOldLogs() {
+	s := time.Now()
 	if MapConf.LogDays < 1 {
 		log.Println("mapConf.LogDays < 1 ")
 		return
 	}
+	tx, err := db.Begin(true)
+	if err != nil {
+		log.Printf("deleteOldLog err=%v", err)
+		return
+	}
 	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix", "arplog"}
-	db.Batch(func(tx *bbolt.Tx) error {
+	doneMap := make(map[string]bool)
+	doneCount := 0
+	lt := time.Now().Unix() + 50
+	for doneCount < len(buckets) && lt > time.Now().Unix() {
 		for _, b := range buckets {
-			if err := deleteOldLog(tx, b, MapConf.LogDays); err != nil {
-				log.Printf("deleteOldLog bucket=%s err=%v", b, err)
+			if _, ok := doneMap[b]; !ok {
+				if done := deleteOldLog(tx, b, MapConf.LogDays); done {
+					doneMap[b] = true
+					doneCount++
+				}
+			}
+			tx.Commit()
+			tx, err = db.Begin(true)
+			if err != nil {
+				log.Printf("deleteOldLog err=%v", err)
+				return
 			}
 		}
-		return nil
-	})
+	}
+	tx.Commit()
+	log.Printf("deleteOldLogs dur=%s", time.Since(s))
 }
 
 func DeleteAllLogs() {
