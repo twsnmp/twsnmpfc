@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"go.etcd.io/bbolt"
 )
@@ -50,6 +51,7 @@ func LaodReportConf() error {
 
 // SaveReportConf : レポート設定を保存する
 func SaveReportConf() error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -62,6 +64,7 @@ func SaveReportConf() error {
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
 		}
+		log.Printf("SaveReportConf dur=%v", time.Since(st))
 		return b.Put([]byte("report"), s)
 	})
 }

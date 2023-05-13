@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"go.etcd.io/bbolt"
 )
@@ -34,6 +36,7 @@ type NotifyConfEnt struct {
 }
 
 func SaveNotifyConf() error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -46,6 +49,7 @@ func SaveNotifyConf() error {
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
 		}
+		log.Printf("SaveNotifyConf dur=%v", time.Since(st))
 		return b.Put([]byte("notifyConf"), s)
 	})
 }

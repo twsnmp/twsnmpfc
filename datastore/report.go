@@ -41,6 +41,7 @@ func LoadReport() error {
 }
 
 func SaveReport(last int64) error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -68,6 +69,7 @@ func SaveReport(last int64) error {
 		saveEnvMonitor(b, last)
 		saveWifiAP(b, last)
 		savePowerMonitor(b, last)
+		log.Printf("SaveReport dur=%v", time.Since(st))
 		return nil
 	})
 }
@@ -130,6 +132,7 @@ func deleteSyncMap(m *sync.Map, ids []string) {
 }
 
 func ClearReport(r string) error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -142,6 +145,7 @@ func ClearReport(r string) error {
 		return nil
 	})
 	deleteSyncMapAllData(reportNameToMap[r])
+	log.Printf("ClearReport dur=%v", time.Since(st))
 	return nil
 }
 

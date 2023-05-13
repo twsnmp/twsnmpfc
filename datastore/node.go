@@ -121,6 +121,7 @@ func loadMapData() error {
 }
 
 func AddNode(n *NodeEnt) error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -135,7 +136,6 @@ func AddNode(n *NodeEnt) error {
 	if err != nil {
 		return err
 	}
-	st := time.Now()
 	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))
 		return b.Put([]byte(n.ID), s)
@@ -146,6 +146,7 @@ func AddNode(n *NodeEnt) error {
 }
 
 func AddDrawItem(di *DrawItemEnt) error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -159,7 +160,6 @@ func AddDrawItem(di *DrawItemEnt) error {
 	if err != nil {
 		return err
 	}
-	st := time.Now()
 	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))
 		return b.Put([]byte(di.ID), s)
@@ -198,6 +198,7 @@ func setIPv6AndMAC(n *NodeEnt) {
 }
 
 func DeleteNode(nodeID string) error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -226,10 +227,12 @@ func DeleteNode(nodeID string) error {
 		return true
 	})
 	DeletePollings(delList)
+	log.Printf("DeletNode dur=%v", time.Since(st))
 	return nil
 }
 
 func DeleteDrawItem(id string) error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -247,6 +250,7 @@ func DeleteDrawItem(id string) error {
 		return b.Delete([]byte(id))
 	})
 	items.Delete(id)
+	log.Printf("DeleteDrawItem dur=%v", time.Since(st))
 	return nil
 }
 
@@ -322,10 +326,10 @@ func ForEachItems(f func(*DrawItemEnt) bool) {
 }
 
 func saveAllNodes() error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	st := time.Now()
 	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("nodes"))
 		nodes.Range(func(_, p interface{}) bool {

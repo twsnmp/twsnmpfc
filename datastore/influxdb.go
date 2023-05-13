@@ -3,6 +3,7 @@ package datastore
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	_ "github.com/influxdata/influxdb1-client" // this is important because of the bug in go mod
@@ -21,6 +22,7 @@ type InfluxdbConfEnt struct {
 }
 
 func SaveInfluxdbConf() error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -38,6 +40,7 @@ func SaveInfluxdbConf() error {
 	if err != nil {
 		return err
 	}
+	log.Printf("SaveInfluxdbConf dur=%v", time.Since(st))
 	return setupInfluxdb()
 }
 

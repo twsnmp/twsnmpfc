@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"go.etcd.io/bbolt"
 )
@@ -17,6 +18,7 @@ type SdrPowerEnt struct {
 }
 
 func AddSdrPower(list []*SdrPowerEnt) {
+	st := time.Now()
 	if db == nil || len(list) < 1 {
 		return
 	}
@@ -42,6 +44,7 @@ func AddSdrPower(list []*SdrPowerEnt) {
 	if err != nil {
 		log.Printf("AddSdrPower err=%v", err)
 	}
+	log.Printf("AddSdrPower dur=%v", time.Since(st))
 }
 
 func ForEachSdrPower(st int64, h string, f func(*SdrPowerEnt) bool) error {
@@ -109,6 +112,7 @@ func GetSdrPowerKeys() []SdrPowerKey {
 }
 
 func DeleteSdrPower(st int64, h string) error {
+	s := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -123,6 +127,7 @@ func DeleteSdrPower(st int64, h string) error {
 		for k, _ := c.Seek([]byte(sk)); bytes.HasPrefix(k, []byte(sk)); k, _ = c.Next() {
 			c.Delete()
 		}
+		log.Printf("DeleteSdrPoer dur=%v", time.Since(s))
 		return nil
 	})
 }

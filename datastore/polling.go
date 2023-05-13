@@ -40,6 +40,7 @@ type PollingLogEnt struct {
 
 // AddPolling : ポーリングを追加する
 func AddPolling(p *PollingEnt) error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -60,6 +61,7 @@ func AddPolling(p *PollingEnt) error {
 	p.Result = make(map[string]interface{})
 	pollings.Store(p.ID, p)
 	SetNodeStateChanged(p.NodeID)
+	log.Printf("AddPolling dur=%v", time.Since(st))
 	return nil
 }
 
@@ -76,6 +78,7 @@ func UpdatePolling(p *PollingEnt) error {
 }
 
 func DeletePollings(ids []string) error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -109,6 +112,7 @@ func DeletePollings(ids []string) error {
 		return nil
 	})
 	go clearDeletedPollingLogs(ids)
+	log.Printf("DeletePollings dur=%v", time.Since(st))
 	return nil
 }
 
@@ -128,10 +132,10 @@ func ForEachPollings(f func(*PollingEnt) bool) {
 }
 
 func saveAllPollings() error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	st := time.Now()
 	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollings"))
 		pollings.Range(func(_, p interface{}) bool {
@@ -201,6 +205,7 @@ func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bo
 
 // ClearPollingLog : ポーリングログを削除する
 func ClearPollingLog(pollingID string) error {
+	st := time.Now()
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingLogs"))
 		if b == nil {
@@ -220,8 +225,9 @@ func ClearPollingLog(pollingID string) error {
 			if e.PollingID != pollingID {
 				continue
 			}
-			_ = c.Delete()
+			c.Delete()
 		}
+		log.Printf("ClearPollingLog id=%s,dur=%v", pollingID, time.Since(st))
 		return nil
 	})
 }
@@ -253,7 +259,7 @@ func clearDeletedPollingLogs(ids []string) error {
 				}
 			}
 		}
-		log.Printf("clearDeletedPollingLogs del=%d dur=%v", del, time.Since(st))
+		log.Printf("clearDeletedPollingLogs del=%d,dur=%v", del, time.Since(st))
 		return nil
 	})
 }

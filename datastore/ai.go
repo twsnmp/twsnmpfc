@@ -3,6 +3,8 @@ package datastore
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"time"
 
 	"go.etcd.io/bbolt"
 )
@@ -21,11 +23,13 @@ func SaveAIResult(res *AIResult) error {
 	if err != nil {
 		return err
 	}
+	st := time.Now()
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("ai"))
 		if b == nil {
 			return fmt.Errorf("bucket ai is nil")
 		}
+		log.Printf("SaveAIResult dur=%v", time.Since(st))
 		return b.Put([]byte(res.PollingID), s)
 	})
 }
@@ -60,9 +64,11 @@ func DeleteAIResult(id string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
+	st := time.Now()
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("ai"))
-		_ = b.Delete([]byte(id))
+		b.Delete([]byte(id))
+		log.Printf("DelteAIResult dur=%v", time.Since(st))
 		return nil
 	})
 }

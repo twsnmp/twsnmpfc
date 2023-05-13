@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/twsnmp/twsnmpfc/security"
 	"go.etcd.io/bbolt"
@@ -146,11 +147,13 @@ func loadConf() error {
 }
 
 func SaveBackImage(img []byte) error {
+	st := time.Now()
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
 		}
+		log.Printf("SaveBackImage dur=%v", time.Since(st))
 		return b.Put([]byte("backImage"), img)
 	})
 }
@@ -170,23 +173,27 @@ func GetBackImage() ([]byte, error) {
 var imageListCache = []string{}
 
 func SaveImage(path string, img []byte) error {
+	st := time.Now()
 	imageListCache = []string{}
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("images"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
 		}
+		log.Printf("SaveImage dur=%v", time.Since(st))
 		return b.Put([]byte(path), img)
 	})
 }
 
 func DelteImage(path string) error {
+	st := time.Now()
 	imageListCache = []string{}
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("images"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
 		}
+		log.Printf("DeleteImage dur=%v", time.Since(st))
 		return b.Delete([]byte(path))
 	})
 }
@@ -244,6 +251,7 @@ func GetPrivateKey() string {
 }
 
 func SaveMapConf() error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -256,6 +264,7 @@ func SaveMapConf() error {
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
 		}
+		log.Printf("SaveMapConf dur=%v", time.Since(st))
 		return b.Put([]byte("mapConf"), s)
 	})
 }
@@ -296,6 +305,7 @@ func DeleteIcon(icon string) error {
 }
 
 func saveIcons() error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -308,6 +318,7 @@ func saveIcons() error {
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
 		}
+		log.Printf("saveIcons dur=%v", time.Since(st))
 		return b.Put([]byte("icons"), s)
 	})
 }

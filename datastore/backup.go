@@ -32,11 +32,13 @@ func SaveBackup() error {
 	if err != nil {
 		return err
 	}
+	st := time.Now()
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		if b == nil {
 			return fmt.Errorf("bucket config is nil")
 		}
+		log.Printf("SaveBackup dur=%v", time.Since(st))
 		return b.Put([]byte("backup"), s)
 	})
 }

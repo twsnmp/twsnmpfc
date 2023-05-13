@@ -209,6 +209,7 @@ func deleteOldLogs() {
 }
 
 func DeleteAllLogs() {
+	st := time.Now()
 	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix"}
 	for _, b := range buckets {
 		db.Batch(func(tx *bbolt.Tx) error {
@@ -219,9 +220,11 @@ func DeleteAllLogs() {
 			return nil
 		})
 	}
+	log.Printf("DeleteAllLogs dur=%v", time.Since(st))
 }
 
 func DeleteArp() {
+	st := time.Now()
 	buckets := []string{"arp", "arplog"}
 	for _, b := range buckets {
 		db.Batch(func(tx *bbolt.Tx) error {
@@ -232,6 +235,7 @@ func DeleteArp() {
 			return nil
 		})
 	}
+	log.Printf("DeleteArp dur=%v", time.Since(st))
 }
 
 func eventLogger(ctx context.Context, wg *sync.WaitGroup) {
@@ -326,7 +330,7 @@ func savePollingLogList(list []*PollingLogEnt) {
 		}
 		return nil
 	})
-	log.Printf("save plling log count=%d,dur=%v", len(list), time.Since(st))
+	log.Printf("save polling log count=%d,dur=%v", len(list), time.Since(st))
 }
 
 func SaveLogBuffer(logBuffer []*LogEnt) {

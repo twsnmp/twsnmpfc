@@ -2,6 +2,8 @@ package datastore
 
 import (
 	"encoding/json"
+	"log"
+	"time"
 
 	"go.etcd.io/bbolt"
 )
@@ -166,6 +168,7 @@ func UpdateGrokEnt(g *GrokEnt) error {
 	if err != nil {
 		return err
 	}
+	st := time.Now()
 	err = db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("grok"))
 		return b.Put([]byte(g.ID), s)
@@ -174,10 +177,12 @@ func UpdateGrokEnt(g *GrokEnt) error {
 		return err
 	}
 	grokMap[g.ID] = g
+	log.Printf("UpdateGrokEnt dur=%v", time.Since(st))
 	return nil
 }
 
 func DeleteGrokEnt(id string) error {
+	st := time.Now()
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -189,6 +194,7 @@ func DeleteGrokEnt(id string) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("DeleteGrokEnt dur=%v", time.Since(st))
 	return nil
 }
 

@@ -2,6 +2,8 @@ package datastore
 
 import (
 	"fmt"
+	"log"
+	"time"
 
 	"go.etcd.io/bbolt"
 )
@@ -15,8 +17,10 @@ func UpdateArpEnt(ip, mac string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
+	st := time.Now()
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("arp"))
+		log.Printf("UpdateArpEnt dur=%v", time.Since(st))
 		return b.Put([]byte(ip), []byte(mac))
 	})
 }
@@ -45,6 +49,7 @@ func ForEachArp(f func(*ArpEnt) bool) error {
 }
 
 func ResetArpTable() error {
+	st := time.Now()
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("arp"))
 		if b == nil {
@@ -54,6 +59,7 @@ func ResetArpTable() error {
 		for k, _ := c.First(); k != nil; k, _ = c.Next() {
 			_ = c.Delete()
 		}
+		log.Printf("ResetArpTable  dur=%v", time.Since(st))
 		return nil
 	})
 }
