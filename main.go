@@ -43,6 +43,9 @@ var memprofile string
 var restore string
 var pingMode string
 var timeout int
+var compact string
+var backupPath string
+var copyBackup bool
 var version = "vx.x.x"
 var commit = ""
 
@@ -59,6 +62,9 @@ func init() {
 	flag.StringVar(&cpuprofile, "cpuprofile", "", "write cpu profile to `file`")
 	flag.StringVar(&memprofile, "memprofile", "", "write memory profile to `file`")
 	flag.IntVar(&timeout, "timeout", 24, "session timeout 0 is unlimit")
+	flag.StringVar(&backupPath, "backup", "", "Backup path")
+	flag.StringVar(&compact, "compact", "", "DB Conmact path")
+	flag.BoolVar(&copyBackup, "copybackup", false, "Use copy mode on backup")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
 			f.Value.Set(s)
@@ -106,11 +112,22 @@ func main() {
 			log.Fatalf("write memory profile err=%v", err)
 		}
 	}
+	datastore.BackupPath = backupPath
+	datastore.CopyBackup = copyBackup
 	if restore != "" {
 		if err := datastore.RestoreDB(dataStorePath, restore); err != nil {
-			log.Fatalf("restore db  err=%v", err)
+			log.Fatalf("restore db err=%v", err)
 		} else {
 			log.Println("restore db done")
+		}
+		os.Exit(0)
+	}
+	if compact != "" {
+		st := time.Now()
+		if err := datastore.CompactDB(dataStorePath, compact); err != nil {
+			log.Fatalf("compact db err=%v", err)
+		} else {
+			log.Printf("compact db done dur=%v", time.Since(st))
 		}
 		os.Exit(0)
 	}

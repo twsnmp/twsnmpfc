@@ -4,6 +4,7 @@ package datastore
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -44,8 +45,12 @@ func SaveBackup() error {
 }
 
 func CheckDBBackup() {
-	log.Printf("check backup")
+	log.Printf("check backup mode='%s' nextBackup=%v", Backup.Mode, time.Unix(0, nextBackup))
 	if db == nil || Backup.Mode == "" {
+		return
+	}
+	if DBStats.BackupStart > 0 {
+		log.Printf("skip backup mode=%s ", Backup.Mode)
 		return
 	}
 	if Backup.Mode == "daily" && nextBackup == 0 {
@@ -55,10 +60,15 @@ func CheckDBBackup() {
 			d = 1
 		}
 		nextBackup = time.Date(now.Year(), now.Month(), now.Day()+d, 3, 0, 0, 0, time.Local).UnixNano()
+	} else if Backup.Mode == "onece" {
+		// 1回だけはすぐ実行するように修正
+		nextBackup = 0
 	}
-	if err := os.MkdirAll(filepath.Join(dspath, "backup"), 0777); err != nil {
-		log.Printf("backup err=%v", err)
-		return
+	if BackupPath == "" {
+		if err := os.MkdirAll(filepath.Join(dspath, "backup"), 0777); err != nil {
+			log.Printf("backup err=%v", err)
+			return
+		}
 	}
 	if nextBackup < time.Now().UnixNano() {
 		if Backup.Mode == "daily" {
@@ -73,6 +83,9 @@ func CheckDBBackup() {
 			log.Printf("start backup")
 			st := time.Now()
 			file := filepath.Join(dspath, "backup", "twsnmpfc.db."+time.Now().Format("20060102150405"))
+			if BackupPath != "" {
+				file = filepath.Join(BackupPath, "twsnmpfc.db."+time.Now().Format("20060102150405"))
+			}
 			stopBackup = false
 			defer func() {
 				DBStats.BackupStart = 0
@@ -116,6 +129,12 @@ func backupDB(file string) error {
 		return fmt.Errorf("backup in progress")
 	}
 	os.Remove(file)
+	if CopyBackup && !Backup.ConfigOnly {
+		log.Println("backup copyfile mode")
+		return db.View(func(tx *bbolt.Tx) error {
+			return tx.CopyFile(file, 0600)
+		})
+	}
 	var err error
 	dstDB, err = bbolt.Open(file, 0600, nil)
 	if err != nil {
@@ -277,6 +296,9 @@ func rotateBackup() {
 }
 
 func RestoreDB(ds, backup string) error {
+	if BackupPath != "" {
+		return restoreDBWithPath(ds, backup)
+	}
 	srcBackup := filepath.Join(ds, "backup", backup)
 	if _, err := os.Stat(srcBackup); err != nil {
 		return err
@@ -293,9 +315,68 @@ func RestoreDB(ds, backup string) error {
 	return nil
 }
 
+func restoreDBWithPath(ds, backup string) error {
+	srcBackup := filepath.Join(BackupPath, backup)
+	if _, err := os.Stat(srcBackup); err != nil {
+		return err
+	}
+	dbPath := filepath.Join(ds, "twsnmpfc.db")
+	newBackup := filepath.Join(BackupPath, "twsnmpfc.db."+time.Now().Format("20060102150405"))
+	if err := copyFile(dbPath, newBackup); err != nil {
+		return err
+	}
+	os.RemoveAll(dbPath)
+	if err := copyFile(srcBackup, dbPath); err != nil {
+		return err
+	}
+	return nil
+}
+
+func copyFile(src, dst string) error {
+	s, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("couldn't open source file: %s", err)
+	}
+	d, err := os.Create(dst)
+	if err != nil {
+		s.Close()
+		return fmt.Errorf("couldn't open dest file: %s", err)
+	}
+	defer d.Close()
+	_, err = io.Copy(d, s)
+	s.Close()
+	if err != nil {
+		return fmt.Errorf("writing to output file failed: %s", err)
+	}
+	return nil
+}
+
+func CompactDB(ds, compact string) error {
+	dbPath := filepath.Join(ds, "twsnmpfc.db")
+	fi, err := os.Stat(dbPath)
+	if err != nil {
+		return err
+	}
+	src, err := bbolt.Open(dbPath, 0444, &bbolt.Options{ReadOnly: true})
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	dst, err := bbolt.Open(compact, fi.Mode(), nil)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+	return bbolt.Compact(dst, src, 1024*1024*64)
+}
+
 // 再起動後にも最終バックアップ時刻を表示するため
 func setLastBackupTime() {
-	dirList, err := ioutil.ReadDir(filepath.Join(dspath, "backup"))
+	path := BackupPath
+	if path == "" {
+		path = filepath.Join(dspath, "backup")
+	}
+	dirList, err := ioutil.ReadDir(path)
 	if err != nil {
 		return
 	}

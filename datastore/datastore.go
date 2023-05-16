@@ -95,6 +95,9 @@ var (
 	logSize      int64
 	compLogSize  int64
 	mailTemplate map[string]string
+	// 拡張バックアップ
+	BackupPath string
+	CopyBackup bool
 )
 
 const (
