@@ -103,18 +103,27 @@ func checkHTTPResp(pe *datastore.PollingEnt, status, body string, code int, rTim
 	vm.Set("code", code)
 	vm.Set("rtt", rTime)
 	if strings.Contains(pe.Mode, "metrics") {
-		//前回の値と間隔をJavaScriptで処理できるようにする
-		for _, k := range []string{"accepts", "handled", "requests"} {
-			if i, ok := pe.Result[k]; ok {
-				if v, ok := i.(float64); ok {
-					vm.Set(k+"_last", v)
+		if code >= 200 && code < 300 && body != "" {
+			//前回の値と間隔をJavaScriptで処理できるようにする
+			for _, k := range []string{"accepts", "handled", "requests"} {
+				if i, ok := pe.Result[k]; ok {
+					if v, ok := i.(float64); ok {
+						vm.Set(k+"_last", v)
+					}
 				}
 			}
-		}
-		vm.Set("interval", pe.PollInt)
-		for k, v := range getMetrics(body) {
-			pe.Result[k] = v
-			vm.Set(k, v)
+			vm.Set("interval", pe.PollInt)
+			if m, err := getMetrics(body); err == nil {
+				delete(pe.Result, "error")
+				for k, v := range m {
+					pe.Result[k] = v
+					vm.Set(k, v)
+				}
+			} else {
+				return false, err
+			}
+		} else {
+			return false, fmt.Errorf("get metrics resp error code=%d", code)
 		}
 	}
 	extractor := pe.Extractor
@@ -176,7 +185,7 @@ var nginxAConnsReg = regexp.MustCompile(`Active connections: (\d+)`)
 var nginxAHRReg = regexp.MustCompile(`\s*(\d+)\s+(\d+)\s+(\d+)`)
 var nginxRWWReg = regexp.MustCompile(`Reading:\s*(\d+)\s+Writing:\s*(\d+)Waiting:\s*(\d+)`)
 
-func getMetrics(body string) map[string]any {
+func getMetrics(body string) (map[string]any, error) {
 	r := make(map[string]any)
 	if strings.Contains(body, "Apache") {
 		// Apache mod_status
@@ -237,13 +246,15 @@ func getMetrics(body string) map[string]any {
 			r["os_total_ram"] = s.OS.TotalRAM
 		} else {
 			log.Printf("getMetrics fiber err=%v", err)
+			return r, err
 		}
 	} else {
 		if err := json.Unmarshal([]byte(body), &r); err != nil {
-			log.Printf("getMetrics other err=%v", err)
+			log.Printf("getMetrics other '%s' err=%v", body, err)
+			return r, err
 		}
 	}
-	return r
+	return r, nil
 }
 
 var insecureTransport = &http.Transport{
