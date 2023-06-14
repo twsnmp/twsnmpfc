@@ -1,6 +1,6 @@
 module github.com/twsnmp/twsnmpfc
 
-go 1.19
+go 1.20
 
 require (
 	github.com/Songmu/timeout v0.4.0
@@ -68,7 +68,7 @@ require (
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	github.com/xtgo/set v1.0.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
-	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
+	go4.org/unsafe/assume-no-moving-gc v0.0.0-20230525183740-e7c30c78aeb2 // indirect
 	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect

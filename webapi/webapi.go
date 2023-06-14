@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
@@ -309,9 +308,9 @@ func getServerCert(p *WebAPI) (tls.Certificate, error) {
 	//証明書、秘密鍵ファイルがある場合
 	kpath := filepath.Join(p.DataStorePath, "key.pem")
 	cpath := filepath.Join(p.DataStorePath, "cert.pem")
-	keyPem, err := ioutil.ReadFile(kpath)
+	keyPem, err := os.ReadFile(kpath)
 	if err == nil {
-		certPem, err := ioutil.ReadFile(cpath)
+		certPem, err := os.ReadFile(cpath)
 		if err == nil {
 			keyPem = []byte(security.GetRawKeyPem(string(keyPem), p.Password))
 			cert, err := tls.X509KeyPair(certPem, keyPem)
@@ -331,10 +330,10 @@ func getServerCert(p *WebAPI) (tls.Certificate, error) {
 	if err != nil {
 		return cert, err
 	}
-	if err := ioutil.WriteFile(kpath, keyPem, 0600); err != nil {
+	if err := os.WriteFile(kpath, keyPem, 0600); err != nil {
 		return cert, err
 	}
-	if err := ioutil.WriteFile(cpath, certPem, 0600); err != nil {
+	if err := os.WriteFile(cpath, certPem, 0600); err != nil {
 		return cert, err
 	}
 	log.Println("new cert")

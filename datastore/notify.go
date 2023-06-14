@@ -3,7 +3,7 @@ package datastore
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -57,7 +57,7 @@ func SaveNotifyConf() error {
 func LoadMailTemplate(t string) string {
 	f := fmt.Sprintf("mail_%s.html", t)
 	if r, err := os.Open(filepath.Join(dspath, f)); err == nil {
-		b, err := ioutil.ReadAll(r)
+		b, err := io.ReadAll(r)
 		if err == nil {
 			return string(b)
 		}

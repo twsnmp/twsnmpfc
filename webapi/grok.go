@@ -2,7 +2,7 @@ package webapi
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sort"
 	"strings"
@@ -82,7 +82,7 @@ func postImportGrok(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	defer src.Close()
-	y, err := ioutil.ReadAll(src)
+	y, err := io.ReadAll(src)
 	if err != nil {
 		return echo.ErrBadRequest
 	}

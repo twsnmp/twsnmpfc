@@ -6,7 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"sync"
 	"time"
@@ -405,7 +405,7 @@ func compressLog(s []byte) []byte {
 
 func deCompressLog(s []byte) []byte {
 	r := flate.NewReader(bytes.NewBuffer(s))
-	d, err := ioutil.ReadAll(r)
+	d, err := io.ReadAll(r)
 	if err != nil {
 		return s
 	}

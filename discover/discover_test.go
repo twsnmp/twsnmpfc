@@ -2,7 +2,6 @@ package discover
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"sync"
 	"testing"
@@ -15,7 +14,7 @@ import (
 )
 
 func getTmpDBFile() (string, error) {
-	f, err := ioutil.TempFile("", "twsnmpfc_test")
+	f, err := os.CreateTemp("", "twsnmpfc_test")
 	if err != nil {
 		return "", err
 	}
@@ -31,7 +30,7 @@ func TestDiscover(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	td, err := ioutil.TempDir("", "twsnmpfc_test")
+	td, err := os.MkdirTemp("", "twsnmpfc_test")
 	if err != nil {
 		t.Fatal(err)
 	}

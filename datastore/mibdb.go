@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -89,7 +88,7 @@ func loadMIBDBNameOnly(f io.ReadCloser) {
 		return
 	}
 	defer f.Close()
-	if s, err := ioutil.ReadAll(f); err == nil {
+	if s, err := io.ReadAll(f); err == nil {
 		mibdb, err := gomibdb.NewMIBDBFromStr(string(s), "")
 		if err != nil {
 			log.Printf("load mibdb err=%v", err)

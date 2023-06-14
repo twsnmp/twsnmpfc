@@ -4,7 +4,7 @@ package webapi
 import (
 	"crypto/sha256"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -77,7 +77,7 @@ func sendFeedback(fb *feedbackWebAPI) error {
 		return err
 	}
 	defer resp.Body.Close()
-	r, err := ioutil.ReadAll(resp.Body)
+	r, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func getCheckUpdate(c echo.Context) error {
 		return echo.ErrInternalServerError
 	}
 	defer resp.Body.Close()
-	ba, err := ioutil.ReadAll(resp.Body)
+	ba, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("check new version err=%v", err)
 		return echo.ErrInternalServerError

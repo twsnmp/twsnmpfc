@@ -4,7 +4,7 @@ package datastore
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -173,14 +173,14 @@ func loadDataFromFS(fs http.FileSystem) error {
 	}
 	// 休みの定義
 	if r, err := os.Open(filepath.Join(dspath, "yasumi.txt")); err == nil {
-		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+		if b, err := io.ReadAll(r); err == nil && len(b) > 0 {
 			Yasumi = string(b)
 		}
 		r.Close()
 	}
 	if Yasumi == "" {
 		if r, err := fs.Open("/conf/yasumi.txt"); err == nil {
-			if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+			if b, err := io.ReadAll(r); err == nil && len(b) > 0 {
 				Yasumi = string(b)
 			}
 			r.Close()
@@ -204,7 +204,7 @@ func loadDataFromFS(fs http.FileSystem) error {
 	}
 	loadGrokMap()
 	if r, err := fs.Open("/conf/polling.json"); err == nil {
-		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+		if b, err := io.ReadAll(r); err == nil && len(b) > 0 {
 			if err := loadPollingTemplate(b); err != nil {
 				log.Printf("load polling template err=%v", err)
 			}
@@ -214,7 +214,7 @@ func loadDataFromFS(fs http.FileSystem) error {
 		log.Printf("open polling template err=%v", err)
 	}
 	if r, err := os.Open(filepath.Join(dspath, "polling.json")); err == nil {
-		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+		if b, err := io.ReadAll(r); err == nil && len(b) > 0 {
 			if err := loadPollingTemplate(b); err != nil {
 				log.Printf("load polling template err=%v", err)
 			}
@@ -230,7 +230,7 @@ func loadDataFromFS(fs http.FileSystem) error {
 
 func loadMailTemplateToMap(t string, fs http.FileSystem) {
 	if r, err := fs.Open("/conf/mail_" + t + ".html"); err == nil {
-		if b, err := ioutil.ReadAll(r); err == nil && len(b) > 0 {
+		if b, err := io.ReadAll(r); err == nil && len(b) > 0 {
 			log.Printf("load mail template=%s", t)
 			mailTemplate[t] = string(b)
 		}

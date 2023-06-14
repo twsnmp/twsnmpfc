@@ -2,7 +2,7 @@ package webapi
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -298,7 +298,7 @@ func postImage(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	defer fp.Close()
-	img, err := ioutil.ReadAll(fp)
+	img, err := io.ReadAll(fp)
 	if err != nil {
 		return echo.ErrBadRequest
 	}

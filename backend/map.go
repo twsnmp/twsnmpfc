@@ -3,7 +3,7 @@ package backend
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -203,7 +203,7 @@ func checkNewVersion() {
 		return
 	}
 	defer resp.Body.Close()
-	ba, err := ioutil.ReadAll(resp.Body)
+	ba, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("check new version err=%v", err)
 		return

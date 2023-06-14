@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -267,17 +266,19 @@ func rotateBackup() {
 	if Backup.Mode != "daily" {
 		return
 	}
-	dirList, err := ioutil.ReadDir(filepath.Join(dspath, "backup"))
+	dirList, err := os.ReadDir(filepath.Join(dspath, "backup"))
 	if err != nil {
 		log.Printf("rotate backup err=%v", err)
 		return
 	}
 	backupList := []fs.FileInfo{}
-	for _, f := range dirList {
-		if f.IsDir() || !strings.HasPrefix(f.Name(), "twsnmpfc.db.") {
+	for _, d := range dirList {
+		if d.IsDir() || !strings.HasPrefix(d.Name(), "twsnmpfc.db.") {
 			continue
 		}
-		backupList = append(backupList, f)
+		if f, err := d.Info(); err == nil {
+			backupList = append(backupList, f)
+		}
 	}
 	if Backup.Generation+1 >= len(backupList) {
 		return
@@ -376,16 +377,18 @@ func setLastBackupTime() {
 	if path == "" {
 		path = filepath.Join(dspath, "backup")
 	}
-	dirList, err := ioutil.ReadDir(path)
+	dirList, err := os.ReadDir(path)
 	if err != nil {
 		return
 	}
-	for _, f := range dirList {
-		if f.IsDir() || !strings.HasPrefix(f.Name(), "twsnmpfc.db.") {
+	for _, d := range dirList {
+		if d.IsDir() || !strings.HasPrefix(d.Name(), "twsnmpfc.db.") {
 			continue
 		}
-		if DBStats.BackupTime < f.ModTime().UnixNano() {
-			DBStats.BackupTime = f.ModTime().UnixNano()
+		if f, err := d.Info(); err == nil {
+			if DBStats.BackupTime < f.ModTime().UnixNano() {
+				DBStats.BackupTime = f.ModTime().UnixNano()
+			}
 		}
 	}
 }

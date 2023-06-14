@@ -4,7 +4,7 @@ package notify
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -69,7 +69,7 @@ func SendChat(c *datastore.NotifyConfEnt, title, level, message string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	r, err := ioutil.ReadAll(resp.Body)
+	r, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}

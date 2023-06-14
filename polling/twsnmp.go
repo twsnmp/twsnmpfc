@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -90,7 +90,7 @@ func doTWSNMPGet(n *datastore.NodeEnt, pe *datastore.PollingEnt) (string, error)
 		return "", err
 	}
 	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
