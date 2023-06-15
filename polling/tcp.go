@@ -415,7 +415,7 @@ func getServerCert(host string, cs *tls.ConnectionState) *x509.Certificate {
 
 func getTLSConnectioStateInfo(pe *datastore.PollingEnt, host string, cs *tls.ConnectionState) {
 	switch cs.Version {
-	case tls.VersionSSL30:
+	case 0x0300: //tls.VersionSSL30 : ワーニングがでる
 		pe.Result["version"] = "SSLv3"
 	case tls.VersionTLS10:
 		pe.Result["version"] = "TLSv1.0"
