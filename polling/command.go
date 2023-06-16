@@ -17,7 +17,7 @@ import (
 )
 
 func doPollingCmd(pe *datastore.PollingEnt) {
-	cmd := pe.Params
+	cmd := getReplacedCmd(pe)
 	extractor := pe.Extractor
 	script := pe.Script
 	vm := otto.New()
@@ -104,4 +104,15 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 		return
 	}
 	setPollingState(pe, pe.Level)
+}
+
+func getReplacedCmd(pe *datastore.PollingEnt) string {
+	n := datastore.GetNode(pe.NodeID)
+	if n == nil {
+		return ""
+	}
+	cmd := pe.Params
+	cmd = strings.ReplaceAll(cmd, "$IP", n.IP)
+	cmd = strings.ReplaceAll(cmd, "$NODE", strings.ReplaceAll(n.Name, " ", "_"))
+	return cmd
 }
