@@ -83,14 +83,18 @@
               <td>結果</td>
               <td>
                 <v-virtual-scroll
-                  height="100"
-                  item-height="20"
+                  height="200"
+                  item-height="50"
                   :items="results"
                 >
                   <template #default="{ item }">
-                    <v-list-item>
-                      <v-list-item-title>{{ item.title }}</v-list-item-title>
-                      {{ item.value }}
+                    <v-list-item tow-line>
+                      <v-list-item-content>
+                        <v-list-item-title>{{ item.title }}</v-list-item-title>
+                        <v-list-item-subtitle>
+                          {{ item.value }}
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
                     </v-list-item>
                   </template>
                 </v-virtual-scroll>
