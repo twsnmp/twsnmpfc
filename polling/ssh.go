@@ -53,7 +53,17 @@ func doPollingSSH(pe *datastore.PollingEnt) {
 	pe.Result["error"] = ""
 	vm.Set("interval", pe.PollInt)
 	vm.Set("exitCode", exitCode)
-	if extractor != "" {
+	if extractor == "goquery" {
+		setPollingError("ssh", pe, fmt.Errorf("goquery not supported"))
+		return
+	} else if extractor == "getBody" {
+		vm.Set("getBody", func(call otto.FunctionCall) otto.Value {
+			if r, err := otto.ToValue(string(out)); err == nil {
+				return r
+			}
+			return otto.UndefinedValue()
+		})
+	} else if extractor != "" {
 		grokEnt := datastore.GetGrokEnt(extractor)
 		if grokEnt == nil {
 			setPollingError("ssh", pe, fmt.Errorf("no grok pattern"))

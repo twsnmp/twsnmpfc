@@ -59,7 +59,17 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 	if err := vm.Set("interval", pe.PollInt); err != nil {
 		log.Printf("cmd polling err=%v", err)
 	}
-	if extractor != "" {
+	if extractor == "goquery" {
+		setPollingError("cmd", pe, fmt.Errorf("goquery not supported"))
+		return
+	} else if extractor == "getBody" {
+		vm.Set("getBody", func(call otto.FunctionCall) otto.Value {
+			if r, err := otto.ToValue(string(stdout)); err == nil {
+				return r
+			}
+			return otto.UndefinedValue()
+		})
+	} else if extractor != "" {
 		grokEnt := datastore.GetGrokEnt(extractor)
 		if grokEnt == nil {
 			setPollingError("cmd", pe, fmt.Errorf("no grok pattern"))
