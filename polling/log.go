@@ -78,15 +78,7 @@ func doPollingLog(pe *datastore.PollingEnt) {
 	}
 	et := time.Now().UnixNano()
 	vm := otto.New()
-	vm.Set("setResult", func(call otto.FunctionCall) otto.Value {
-		if call.Argument(0).IsString() && call.Argument(1).IsNumber() {
-			n := call.Argument(0).String()
-			if v, err := call.Argument(1).ToFloat(); err == nil {
-				pe.Result[n] = v
-			}
-		}
-		return otto.Value{}
-	})
+	addJavaScriptFunctions(pe, vm)
 	count := 0
 	okCount := 0
 	failed := false

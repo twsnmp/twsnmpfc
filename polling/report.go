@@ -69,15 +69,7 @@ func doPollingReport(pe *datastore.PollingEnt) {
 		return
 	}
 	vm := otto.New()
-	vm.Set("setResult", func(call otto.FunctionCall) otto.Value {
-		if call.Argument(0).IsString() && call.Argument(1).IsNumber() {
-			n := call.Argument(0).String()
-			if v, err := call.Argument(1).ToFloat(); err == nil {
-				pe.Result[n] = v
-			}
-		}
-		return otto.Value{}
-	})
+	addJavaScriptFunctions(pe, vm)
 	vm.Set("count", pe.Result["count"])
 	vm.Set("max", pe.Result["max"])
 	vm.Set("min", pe.Result["min"])
