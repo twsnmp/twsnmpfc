@@ -3,6 +3,7 @@ module github.com/twsnmp/twsnmpfc
 go 1.20
 
 require (
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/Songmu/timeout v0.4.0
 	github.com/beevik/ntp v0.3.0
 	github.com/chewxy/stl v1.3.1
@@ -31,8 +32,8 @@ require (
 	github.com/vmware/govmomi v0.24.0
 	go.etcd.io/bbolt v1.3.6
 	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be
-	golang.org/x/net v0.0.0-20221002022538-bcab6841153b
-	golang.org/x/text v0.3.7
+	golang.org/x/net v0.7.0
+	golang.org/x/text v0.7.0
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -42,6 +43,7 @@ require (
 	github.com/alecthomas/participle v0.4.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a // indirect
+	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20201229220542-30ce2eb5d4dc // indirect
 	github.com/chewxy/hm v1.0.0 // indirect
 	github.com/chewxy/math32 v1.0.6 // indirect
@@ -69,7 +71,7 @@ require (
 	github.com/xtgo/set v1.0.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20230525183740-e7c30c78aeb2 // indirect
-	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gonum.org/v1/gonum v0.8.2 // indirect

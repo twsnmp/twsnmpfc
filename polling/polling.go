@@ -28,6 +28,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/robertkrimen/otto"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/notify"
 )
@@ -271,4 +272,31 @@ func hasSameNamePolling(nodeID, name string) bool {
 		return true
 	})
 	return r
+}
+
+func addJavaScriptFunctions(pe *datastore.PollingEnt, vm *otto.Otto) {
+	vm.Set("setResult", func(call otto.FunctionCall) otto.Value {
+		if call.Argument(0).IsString() {
+			n := call.Argument(0).String()
+			if call.Argument(1).IsNumber() {
+				if v, err := call.Argument(1).ToFloat(); err == nil {
+					pe.Result[n] = v
+				}
+			} else if call.Argument(1).IsString() {
+				pe.Result[n] = call.Argument(1).String()
+			}
+		}
+		return otto.Value{}
+	})
+	vm.Set("getResult", func(call otto.FunctionCall) otto.Value {
+		if call.Argument(0).IsString() {
+			k := call.Argument(0).String()
+			if v, ok := pe.Result[k]; ok {
+				if ov, err := otto.ToValue(v); err == nil {
+					return ov
+				}
+			}
+		}
+		return otto.UndefinedValue()
+	})
 }

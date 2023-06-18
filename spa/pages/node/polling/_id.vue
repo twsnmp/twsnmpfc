@@ -573,14 +573,22 @@ export default {
       })
     }
     if (this.extractorList.length < 1) {
+      this.extractorList = [
+        {
+          text: '',
+          ID: '',
+        },
+        {
+          text: 'goqueryによるデータ取得',
+          value: 'goquery',
+        },
+        {
+          text: 'getBodyによるデータ取得',
+          value: 'getBody',
+        },
+      ]
       const groks = await this.$axios.$get('/api/conf/grok')
       if (groks) {
-        this.extractorList = [
-          {
-            text: '',
-            ID: '',
-          },
-        ]
         groks.forEach((g) => {
           this.extractorList.push({
             text: g.Name,
