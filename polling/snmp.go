@@ -90,6 +90,8 @@ func doPollingSnmp(pe *datastore.PollingEnt) {
 		doPollingSnmpStats(pe, agent)
 	case "traffic":
 		doPollingSnmpTraffic(pe, agent)
+	case "script":
+		doPollingSnmpScript(pe, agent)
 	default:
 		doPollingSnmpGet(pe, agent)
 	}
@@ -275,7 +277,9 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 					diff = vf
 				}
 				if diff < 1.0 {
-					setPollingError("snmp", pe, fmt.Errorf("no sysUptime"))
+					log.Printf("sysuptime wrap diff=%x", int64(diff))
+					pe.Result = lr
+					setPollingError("snmp", pe, fmt.Errorf("sysUptime wrap"))
 					return
 				}
 				for _, k := range keys {
@@ -696,7 +700,9 @@ func doPollingSnmpTraffic(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			diff = vf
 		}
 		if diff < 1.0 {
-			setPollingError("snmp", pe, fmt.Errorf("no sysUptime"))
+			log.Printf("sysuptime wrap diff=%x", int64(diff))
+			pe.Result = lr
+			setPollingError("snmp", pe, fmt.Errorf("sysUptime wrap"))
 			return
 		}
 		for _, k := range keys {
@@ -814,7 +820,7 @@ func doPollingSnmpSystemDate(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		return
 	}
 	vm := otto.New()
-	lr := make(map[string]interface{})
+	pe.Result = make(map[string]interface{})
 	addJavaScriptFunctions(pe, vm)
 	for _, variable := range result.Variables {
 		if variable.Name == datastore.MIBDB.NameToOID("hrSystemDate.0") {
@@ -830,14 +836,13 @@ func doPollingSnmpSystemDate(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 				if diff < 0 {
 					diff *= -1
 				}
-				lr["hrSystemDate"] = ts
-				lr["diff"] = float64(diff)
+				pe.Result["hrSystemDate"] = ts
+				pe.Result["diff"] = float64(diff)
 				vm.Set("diff", diff)
 			}
 			break
 		}
 	}
-	pe.Result = lr
 	value, err := vm.Run(script)
 	if err == nil {
 		if ok, _ := value.ToBoolean(); !ok {
@@ -848,4 +853,78 @@ func doPollingSnmpSystemDate(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		return
 	}
 	setPollingError("snmp", pe, err)
+}
+
+func doPollingSnmpScript(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
+	script := pe.Script
+	if script == "" {
+		setPollingError("snmp", pe, fmt.Errorf("no script"))
+		return
+	}
+	vm := otto.New()
+	pe.Result = make(map[string]interface{})
+	addJavaScriptFunctions(pe, vm)
+	vm.Set("snmpGet", func(call otto.FunctionCall) otto.Value {
+		if call.Argument(0).IsString() {
+			name := call.Argument(0).String()
+			if v, err := snmpGet(agent, name); err == nil {
+				if r, err := otto.ToValue(v); err == nil {
+					return r
+				}
+			} else {
+				log.Printf("snmp get err=%v", err)
+			}
+		}
+		return otto.UndefinedValue()
+	})
+	value, err := vm.Run(script)
+	if err == nil {
+		if ok, _ := value.ToBoolean(); !ok {
+			setPollingState(pe, pe.Level)
+			return
+		}
+		setPollingState(pe, "normal")
+		return
+	}
+	setPollingError("snmp", pe, err)
+}
+
+func snmpGet(agent *gosnmp.GoSNMP, name string) (string, error) {
+	oids := []string{datastore.MIBDB.NameToOID(name)}
+	result, err := agent.Get(oids)
+	if err != nil {
+		return "", err
+	}
+	for _, variable := range result.Variables {
+		if variable.Name == datastore.MIBDB.NameToOID(name) {
+			s := ""
+			switch variable.Type {
+			case gosnmp.OctetString:
+				s = getMIBStringVal(variable.Value)
+				mi := datastore.FindMIBInfo(variable.Name)
+				if mi != nil {
+					switch mi.Type {
+					case "PhysAddress", "OctetString":
+						a, ok := variable.Value.([]uint8)
+						if !ok {
+							a = []uint8(getMIBStringVal(variable.Value))
+						}
+						mac := []string{}
+						for _, m := range a {
+							mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
+						}
+						s = strings.Join(mac, ":")
+					case "DisplayString":
+					default:
+					}
+				}
+			case gosnmp.ObjectIdentifier:
+				s = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
+			default:
+				s = fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Uint64())
+			}
+			return s, nil
+		}
+	}
+	return "", fmt.Errorf("no mib value")
 }
