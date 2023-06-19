@@ -424,7 +424,7 @@ func setMIB2Descr(fs http.FileSystem) {
 			name = m[1]
 			descr = []string{}
 		} else {
-			strings.ReplaceAll(l, `"`, "")
+			l = strings.ReplaceAll(l, `"`, "")
 			descr = append(descr, l)
 		}
 	}

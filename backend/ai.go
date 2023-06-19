@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/rand"
 	"strings"
 	"sync"
 	"time"
@@ -291,7 +290,6 @@ func calcLOF(req *AIReq) *datastore.AIResult {
 
 func calcIForest(req *AIReq) *datastore.AIResult {
 	res := datastore.AIResult{}
-	rand.Seed(time.Now().UnixNano())
 	sub := 256
 	if len(req.Data) < sub {
 		sub = len(req.Data) / 2
