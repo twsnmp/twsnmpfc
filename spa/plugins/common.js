@@ -75,6 +75,7 @@ const typeList = [
   { text: 'Report', value: 'report' },
   { text: 'TWSNMP', value: 'twsnmp' },
   { text: 'VMware', value: 'vmware' },
+  { text: 'LXI', value: 'lxi' },
 ]
 
 const logModeList = [

@@ -199,6 +199,8 @@ func doPolling(pe *datastore.PollingEnt) {
 		doPollingTWSNMP(pe)
 	case "report":
 		doPollingReport(pe)
+	case "lxi":
+		doPollingLxi(pe)
 	}
 	datastore.UpdatePolling(pe)
 	if pe.LogMode == datastore.LogModeAlways || pe.LogMode == datastore.LogModeAI || (pe.LogMode == datastore.LogModeOnChange && oldState != pe.State) {

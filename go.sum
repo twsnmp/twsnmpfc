@@ -185,6 +185,10 @@ github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7 h1:FXtkgH4JQh+Rygm
 github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7/go.mod h1:fqYxYtdzPjVkqu1Dafev4I98LrT/Eg8F0DAnAcnDkkU=
 github.com/twsnmp/golof v1.0.0 h1:+jtR5WYdaW1JnC7+T6Um3zMgv24Npg+CcbFgAP5QocE=
 github.com/twsnmp/golof v1.0.0/go.mod h1:W4eMdArbmzA6FjLuspL/YDKPsG5C324OPnqQWNtxYFc=
+github.com/twsnmp/lxi v0.3.1 h1:W5m6m3raQPA50rHknt2U46j3WYNstzjOeCvrv6VW6ZI=
+github.com/twsnmp/lxi v0.3.1/go.mod h1:WYMqhW+84GIOLRWlnb2wWGG7zcB3LOUtYNMjqz1dkzE=
+github.com/twsnmp/lxi v0.3.2 h1:XGr/79m5wY03bIFUiipz3pB+ppxwOm9O9UxB6axlslQ=
+github.com/twsnmp/lxi v0.3.2/go.mod h1:WYMqhW+84GIOLRWlnb2wWGG7zcB3LOUtYNMjqz1dkzE=
 github.com/twsnmp/rdap v0.9.1 h1:OUCnzzEDvMvCCSfF12ykXCzJtA2njjaN9uqwluBFyEA=
 github.com/twsnmp/rdap v0.9.1/go.mod h1:JovP1XLPsEz2IEmrR00971FiyG3tQuQALpVUn0d3k30=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
