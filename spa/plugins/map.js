@@ -23,7 +23,7 @@ let backImage = {
 let fontSize = 12
 
 const selectedNodes = []
-let selectedItem = ""
+const selectedItems = []
 
 const iconCodeMap = {}
 const imageMap = {}
@@ -172,7 +172,7 @@ const mapMain = (p5) => {
     for (const k in items) {
       p5.push()
       p5.translate(items[k].X, items[k].Y)
-      if (selectedItem === items[k].ID ) {
+      if (selectedItems.includes(items[k].ID) ) {
         p5.fill('rgba(23,23,23,0.9)')
         p5.stroke('#ccc')
         const w =  items[k].W +10
@@ -285,7 +285,7 @@ const mapMain = (p5) => {
       return true
     }
     if (dragMode === 0) {
-      if (selectedNodes.length > 0 || selectedItem !== "" ){
+      if (selectedNodes.length > 0 || selectedItems.length > 0 ){
         dragMode = 2
       } else {
         dragMode = 1
@@ -315,9 +315,9 @@ const mapMain = (p5) => {
       editLine()
       selectedNodes.length = 0
       return false
-    } else  {
-      setSelectNode(false)
-      setSelectItem()
+    } else  if (dragMode !== 3) {
+        setSelectNode(false)
+        setSelectItem()
     }
     lastMouseX = p5.mouseX
     lastMouseY = p5.mouseY
@@ -334,26 +334,31 @@ const mapMain = (p5) => {
     mapRedraw = true
     if(!clickInCanvas){
       selectedNodes.length = 0
-      selectedItem = ""
+      selectedItems.length = 0
       return true
     }
-    if(p5.mouseButton === p5.RIGHT && selectedNodes.length < 2 ) {
+    if(p5.mouseButton === p5.RIGHT && (selectedNodes.length + selectedItems.length) < 2 ) {
       if (mapCallBack) {
         mapCallBack({
           Cmd: 'contextMenu',
           Node: selectedNodes[0] || '',
-          Item: selectedItem || '',
+          Item: selectedItems[0] || '',
           x: p5.winMouseX,
           y: p5.winMouseY,
         })
       }
     }
     clickInCanvas = false 
-    if (dragMode === 0) {
+    if (dragMode === 0 || dragMode === 3) {
+      dragMode = 0
       return false
     }
     if (dragMode === 1) {
-      dragMode = 0
+      if (selectedNodes.length > 0 || selectedItems.length > 0 ){
+        dragMode = 3
+      } else {
+        dragMode = 0
+      }
       return false
     }
     if (draggedNodes.length > 0) {
@@ -384,7 +389,7 @@ const mapMain = (p5) => {
   p5.doubleClicked = () => {
     if (selectedNodes.length === 1 ){
       nodeDoubleClicked()
-    } else if (selectedItem !== "" ){
+    } else if (selectedItems.length === 1 ){
       itemDoubleClicked()
     }
     return true
@@ -428,14 +433,16 @@ const mapMain = (p5) => {
         }
       }
     })
-    if (selectedItem !== "" && items[selectedItem] ) {
-      items[selectedItem].X += p5.mouseX - lastMouseX
-      items[selectedItem].Y += p5.mouseY - lastMouseY
-      checkItemPos(items[selectedItem])
-      if (!draggedItems.includes(selectedItem)) {
-        draggedItems.push(selectedItem)
+    selectedItems.forEach((id) => {
+      if ( items[id] ) {
+        items[id].X += p5.mouseX - lastMouseX
+        items[id].Y += p5.mouseY - lastMouseY
+        checkItemPos(items[id])
+        if (!draggedItems.includes(id)) {
+          draggedItems.push(id)
+        }
       }
-    }
+    })
     mapRedraw = true
   }
 
@@ -453,6 +460,17 @@ const mapMain = (p5) => {
         nodes[k].Y < ly
       ) {
         selectedNodes.push(nodes[k].ID)
+      }
+    }
+    selectedItems.length = 0
+    for (const k in items) {
+      if (
+        items[k].X > sx &&
+        items[k].X < lx &&
+        items[k].Y > sy &&
+        items[k].Y < ly
+      ) {
+        selectedItems.push(items[k].ID)
       }
     }
     mapRedraw = true
@@ -493,11 +511,14 @@ const mapMain = (p5) => {
         items[k].Y + h > p5.mouseY &&
         items[k].Y - 10 < p5.mouseY
       ) {
-        selectedItem = items[k].ID
+        if (selectedItems.includes(items[k].ID)) {
+          return
+        }
+        selectedItems.push(items[k].ID)
         return
       }
     }
-    selectedItem = ""
+    selectedItems.length = 0
   }
   // ノードを削除する
   const deleteNodes = () => {
@@ -565,7 +586,7 @@ const mapMain = (p5) => {
     if (mapCallBack) {
       mapCallBack({
         Cmd: 'itemDoubleClicked',
-        Param: selectedItem,
+        Param: selectedItems[0],
       })
     }
   }
