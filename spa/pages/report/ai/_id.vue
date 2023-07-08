@@ -227,8 +227,12 @@ export default {
       this.pollingChartDialog = true
       const st = new Date((item.UnixTime - 3600) * 1000)
       const et = new Date((item.UnixTime + 3600) * 1000)
-      const r = await this.$axios.$post(
-        '/api/polling/' + this.$route.params.id,
+      const r = await this.$axios.$get('/api/polling/' + this.$route.params.id)
+      if (!r || !r.Polling) {
+        return
+      }
+      const logs = await this.$axios.$post(
+        '/api/pollingLogs/' + this.$route.params.id,
         {
           StartDate: this.$timeFormat(st, '{yyyy}-{MM}-{dd}'),
           StartTime: this.$timeFormat(st, '{HH}:{mm}'),
@@ -236,11 +240,11 @@ export default {
           EndTime: this.$timeFormat(et, '{HH}:{mm}'),
         }
       )
-      if (!r.Logs) {
+      if (!logs) {
         return
       }
       this.polling = r.Polling
-      this.logs = r.Logs
+      this.logs = logs
       this.logs.forEach((e) => {
         this.$setDataList(e.Result, this.numValEntList)
       })

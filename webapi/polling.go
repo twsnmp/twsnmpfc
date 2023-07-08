@@ -183,7 +183,6 @@ func postPollingAdd(c echo.Context) error {
 type pollingWebAPI struct {
 	Node    *datastore.NodeEnt
 	Polling *datastore.PollingEnt
-	Logs    []*datastore.PollingLogEnt
 }
 
 type timeFilter struct {
@@ -193,7 +192,7 @@ type timeFilter struct {
 	EndTime   string
 }
 
-func postPolling(c echo.Context) error {
+func getPolling(c echo.Context) error {
 	id := c.Param("id")
 	r := pollingWebAPI{}
 	r.Polling = datastore.GetPolling(id)
@@ -204,6 +203,16 @@ func postPolling(c echo.Context) error {
 	if r.Node == nil {
 		return echo.ErrBadRequest
 	}
+	return c.JSON(http.StatusOK, r)
+}
+
+func postPollingLogs(c echo.Context) error {
+	id := c.Param("id")
+	r := []*datastore.PollingLogEnt{}
+	polling := datastore.GetPolling(id)
+	if polling == nil {
+		return echo.ErrBadRequest
+	}
 	filter := new(timeFilter)
 	if err := c.Bind(filter); err != nil {
 		return echo.ErrBadRequest
@@ -212,7 +221,7 @@ func postPolling(c echo.Context) error {
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
 	datastore.ForEachPollingLog(st, et, id, func(l *datastore.PollingLogEnt) bool {
-		r.Logs = append(r.Logs, l)
+		r = append(r, l)
 		i++
 		return i <= datastore.MapConf.LogDispSize
 	})

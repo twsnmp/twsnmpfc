@@ -187,6 +187,10 @@
             </v-list-item>
           </v-list>
         </v-menu>
+        <v-btn v-if="!logs" color="primary" @click="getPollingLogs()">
+          <v-icon>mdi-reload</v-icon>
+          ログ確認
+        </v-btn>
         <v-btn v-if="logs" color="error" @click="clearPollingLogDialog = true">
           <v-icon>mdi-delete</v-icon>
           ログクリア
@@ -745,10 +749,7 @@ export default {
     }
   },
   async fetch() {
-    const r = await this.$axios.$post(
-      '/api/polling/' + this.$route.params.id,
-      this.filter
-    )
+    const r = await this.$axios.$get('/api/polling/' + this.$route.params.id)
     this.node = r.Node
     this.polling = r.Polling
     this.timeStr = this.$timeFormat(
@@ -762,27 +763,33 @@ export default {
       })
     })
     this.aiScores = []
-    if (!r.Logs) {
-      this.logs = null
-      return
-    }
-    this.logs = r.Logs
-    this.logs.forEach((e) => {
-      const t = new Date(e.Time / (1000 * 1000))
-      e.TimeStr = this.$timeFormat(t)
-      e.ResultStr = ''
-      Object.keys(e.Result).forEach((k) => {
-        e.ResultStr += k + '=' + e.Result[k] + ' '
-      })
-      this.$setDataList(e.Result, this.numValEntList)
-    })
-    if (!this.selectedValEnt) {
-      if (this.numValEntList) {
-        this.selectedValEnt = this.numValEntList[0].value
-      }
-    }
+    this.logs = null
   },
   methods: {
+    async getPollingLogs() {
+      const logs = await this.$axios.$post(
+        '/api/pollingLogs/' + this.$route.params.id,
+        this.filter
+      )
+      if (!logs) {
+        return
+      }
+      this.logs = logs
+      this.logs.forEach((e) => {
+        const t = new Date(e.Time / (1000 * 1000))
+        e.TimeStr = this.$timeFormat(t)
+        e.ResultStr = ''
+        Object.keys(e.Result).forEach((k) => {
+          e.ResultStr += k + '=' + e.Result[k] + ' '
+        })
+        this.$setDataList(e.Result, this.numValEntList)
+      })
+      if (!this.selectedValEnt) {
+        if (this.numValEntList) {
+          this.selectedValEnt = this.numValEntList[0].value
+        }
+      }
+    },
     highlighter(code) {
       return highlight(code, languages.js)
     },
@@ -813,7 +820,7 @@ export default {
         this.filter.EndTime = '23:59'
       }
       this.filterDialog = false
-      this.$fetch()
+      this.getPollingLogs()
     },
     showPollingLog() {
       this.pollingLogDialog = true
@@ -979,7 +986,7 @@ export default {
       this.$axios
         .delete('/api/polling/clear/' + this.$route.params.id)
         .then((r) => {
-          this.$fetch()
+          this.logs = null
         })
         .catch(() => {
           this.clearPollingLogError = true
