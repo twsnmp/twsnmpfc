@@ -124,6 +124,35 @@ func setPollingLogMode(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
+func setPollingParams(c echo.Context) error {
+	var params = struct {
+		Timeout int
+		Retry   int
+		PollInt int
+		IDs     []string
+	}{}
+	if err := c.Bind(&params); err != nil {
+		return echo.ErrBadRequest
+	}
+	for _, id := range params.IDs {
+		p := datastore.GetPolling(id)
+		if p != nil {
+			p.Timeout = params.Timeout
+			p.PollInt = params.PollInt
+			p.Retry = params.Retry
+			if err := datastore.UpdatePolling(p); err != nil {
+				return echo.ErrBadRequest
+			}
+		}
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("%d件のポーリングのパラメータを変更しました", len(params.IDs)),
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
 func getPollingCheck(c echo.Context) error {
 	id := c.Param("id")
 	all := id == "all"

@@ -102,6 +102,15 @@
         </v-btn>
         <v-btn
           v-if="hasSelectedPollings"
+          color="primary"
+          dark
+          @click="setPollingParamsDialog = true"
+        >
+          <v-icon>mdi-tune</v-icon>
+          パラメータ変更
+        </v-btn>
+        <v-btn
+          v-if="hasSelectedPollings"
           color="error"
           @click="deleteSelectedPollingDialog = true"
         >
@@ -393,6 +402,83 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="setPollingParamsDialog" persistent max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ポーリングパラメータ設定</span>
+        </v-card-title>
+        <v-card-text>
+          <v-slider
+            v-model="newPollInt"
+            label="ポーリング間隔(Sec)"
+            class="align-center"
+            max="3600"
+            min="5"
+            hide-details
+          >
+            <template #append>
+              <v-text-field
+                v-model="newPollInt"
+                class="mt-0 pt-0"
+                hide-details
+                single-line
+                type="number"
+                style="width: 60px"
+              ></v-text-field>
+            </template>
+          </v-slider>
+          <v-slider
+            v-model="newTimeout"
+            label="タイムアウト(Sec)"
+            class="align-center"
+            max="10"
+            min="1"
+            hide-details
+          >
+            <template #append>
+              <v-text-field
+                v-model="newTimeout"
+                class="mt-0 pt-0"
+                hide-details
+                single-line
+                type="number"
+                style="width: 60px"
+              ></v-text-field>
+            </template>
+          </v-slider>
+          <v-slider
+            v-model="newRetry"
+            label="リトライ回数"
+            class="align-center"
+            max="5"
+            min="0"
+            hide-details
+          >
+            <template #append>
+              <v-text-field
+                v-model="newRetry"
+                class="mt-0 pt-0"
+                hide-details
+                single-line
+                type="number"
+                style="width: 60px"
+              ></v-text-field>
+            </template>
+          </v-slider>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="setPollingParams()">
+            <v-icon>mdi-content-</v-icon>
+            変更
+          </v-btn>
+          <v-btn color="normal" @click="setPollingParamsDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="templateDialog" persistent max-width="90%">
       <v-card>
         <v-card-title>
@@ -548,6 +634,10 @@ export default {
       newLevel: 'off',
       setPollingLogModeDialog: false,
       newLogMode: 0,
+      setPollingParamsDialog: false,
+      newPollInt: 60,
+      newTimeout: 1,
+      newRetry: 1,
       stateList: [
         { text: '', value: '' },
         { text: '重度', value: 'high' },
@@ -741,6 +831,29 @@ export default {
           this.updateError = true
         })
       this.setPollingLogModeDialog = false
+    },
+    setPollingParams() {
+      const ids = []
+      this.selectedPollings.forEach((p) => {
+        ids.push(p.ID)
+      })
+      this.updateError = false
+      this.$axios
+        .post('/api/pollings/setParams', {
+          IDs: ids,
+          Timeout: this.newTimeout,
+          Retry: this.newRetry,
+          PollInt: this.newPollInt,
+        })
+        .then(() => {
+          this.$fetch()
+          this.selectedPollings = []
+        })
+        .catch((e) => {
+          this.$fetch()
+          this.updateError = true
+        })
+      this.setPollingParamsDialog = false
     },
     closeDelete() {
       this.deleteDialog = false

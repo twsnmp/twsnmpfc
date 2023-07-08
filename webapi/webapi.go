@@ -155,6 +155,7 @@ func setup(p *WebAPI) {
 	r.POST("/pollings/delete", deletePollings)
 	r.POST("/pollings/setlevel", setPollingLevel)
 	r.POST("/pollings/setlogmode", setPollingLogMode)
+	r.POST("/pollings/setParams", setPollingParams)
 	r.GET("/polling/check/:id", getPollingCheck)
 	r.GET("/polling/TimeAnalyze/:id", getPollingLogTimeAnalyze)
 	r.DELETE("/polling/clear/:id", deletePollingLog)
