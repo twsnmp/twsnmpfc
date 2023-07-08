@@ -915,6 +915,12 @@
             <v-list-item-title>編集</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item @click="copyDrawItem()">
+          <v-list-item-icon><v-icon>mdi-content-copy</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>コピー</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item @click="deleteItemDialog = true">
           <v-list-item-icon
             ><v-icon color="red">mdi-delete</v-icon></v-list-item-icon
@@ -1350,6 +1356,12 @@ export default {
       this.editNode.State = 'unknown'
       this.editNode.Name += 'のコピー'
       this.editNodeDialog = true
+    },
+    copyDrawItem() {
+      this.editItem.X += 64
+      this.editItem.ID = ''
+      this.editItem.Text += 'のコピー'
+      this.editItemDialog = true
     },
     showEditNodeDialog() {
       this.showNodeDialog = false
