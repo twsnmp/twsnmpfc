@@ -3,6 +3,8 @@ package webapi
 import (
 	"fmt"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -140,6 +142,56 @@ func postNotifyExecTest(c echo.Context) error {
 		Type:  "user",
 		Level: "info",
 		Event: "通知コマンド実行の試験に成功しました",
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+// 通知スケジュール
+func getNotifySchedule(c echo.Context) error {
+	return c.JSON(http.StatusOK, datastore.NotifySchedule)
+}
+
+var notifySchedulePat = regexp.MustCompile(`(\S+)\s+(\d{2}):(\d{2})-(\d{2}):(\d{2})`)
+
+func postNotifySchedule(c echo.Context) error {
+	type notifyScheduleEnt struct {
+		NodeID   string
+		Schedule string
+	}
+	ns := new(notifyScheduleEnt)
+	if err := c.Bind(ns); err != nil || ns.Schedule == "" {
+		return echo.ErrBadRequest
+	}
+	for _, sc := range strings.Split(ns.Schedule, ",") {
+		if !notifySchedulePat.MatchString(sc) {
+			return echo.ErrBadRequest
+		}
+	}
+	datastore.NotifySchedule[ns.NodeID] = ns.Schedule
+	if err := datastore.SaveNotifySchedule(); err != nil {
+		return echo.ErrBadRequest
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "通知除外スケジュールを更新しました",
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func deleteNotifySchedule(c echo.Context) error {
+	id := c.Param("id")
+	if id == "all" {
+		id = ""
+	}
+	delete(datastore.NotifySchedule, id)
+	if err := datastore.SaveNotifySchedule(); err != nil {
+		return echo.ErrBadRequest
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "通知除外スケジュールを削除しました",
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

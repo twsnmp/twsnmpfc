@@ -200,6 +200,10 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="showScheduleDialog()">
+            <v-icon>mdi-clock</v-icon>
+            スケジュール設定
+          </v-btn>
           <v-btn color="normal" dark @click="test">
             <v-icon>mdi-email-send</v-icon>
             テスト
@@ -219,6 +223,71 @@
         </v-card-actions>
       </v-form>
     </v-card>
+    <v-dialog v-model="scheduleDialog" persistent max-width="60%">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> 通知除外スケジュール </span>
+        </v-card-title>
+        <v-card-text>
+          <v-alert v-model="scheduleAddError" color="error" dense dismissible>
+            通知除外スケジュールの追加に失敗しました
+          </v-alert>
+          <v-alert v-model="scheduleDelError" color="error" dense dismissible>
+            通知除外スケジュールの削除に失敗しました
+          </v-alert>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="schedule.NodeID"
+                :items="nodeList"
+                label="対象ノード"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="schedule.Schedule"
+                label="スケジュール"
+                placeholder="Fri 23:30-23:59"
+              />
+            </v-col>
+            <v-col>
+              <v-btn color="primary" dark @click="addSchedule()">
+                <v-icon>mdi-plus</v-icon>
+                追加
+              </v-btn>
+            </v-col>
+          </v-row>
+          <v-table theme="dark">
+            <thead>
+              <tr>
+                <th width="30%" class="text-left">ノード</th>
+                <th width="60%" class="text-left">スケジュール</th>
+                <th width="10%" class="text-left">削除</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="sc in schedules" :key="sc.ID">
+                <td>{{ sc.NodeName }}</td>
+                <td>{{ sc.Schedule }}</td>
+                <td>
+                  <v-btn icon color="error" dark @click="delSchedule(sc.ID)">
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </td>
+              </tr>
+            </tbody>
+          </v-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="scheduleDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -258,6 +327,16 @@ export default {
         { text: '使用しない', value: '' },
         { text: 'Discord', value: 'discord' },
       ],
+      nodeList: [],
+      scheduleDialog: false,
+      scheduleAddError: false,
+      scheduleDelError: false,
+      schedules: [],
+      schedule: {
+        NodeID: '',
+        Schedule: '',
+      },
+      nodeMap: {},
     }
   },
   async fetch() {
@@ -321,6 +400,58 @@ export default {
       this.failed = false
       this.execOK = false
       this.execFailed = false
+    },
+    async showScheduleDialog() {
+      if (this.nodeList.length < 1) {
+        const nodes = await this.$axios.$get('/api/nodes')
+        this.nodeList.push({
+          text: '全ノード',
+          value: '',
+        })
+        this.nodeMap[''] = '全ノード'
+        for (const n of nodes) {
+          this.nodeList.push({
+            text: n.Name,
+            value: n.ID,
+          })
+          this.nodeMap[n.ID] = n.Name
+        }
+      }
+      await this.updateSchedule()
+      this.scheduleDialog = true
+    },
+    async updateSchedule() {
+      this.schedules = []
+      const scMap = await this.$axios.$get(`/api/conf/notifySchedule`)
+      for (const id in scMap) {
+        this.schedules.push({
+          ID: id,
+          NodeName: this.nodeMap[id] || '',
+          Schedule: scMap[id],
+        })
+      }
+    },
+    addSchedule() {
+      this.scheduleAddError = false
+      this.$axios
+        .post('/api/conf/notifySchedule', this.schedule)
+        .then((r) => {
+          this.updateSchedule()
+        })
+        .catch((e) => {
+          this.scheduleAddError = true
+        })
+    },
+    delSchedule(id) {
+      this.scheduleDelError = false
+      this.$axios
+        .delete('/api/conf/notifySchedule/' + (id || 'all'))
+        .then((r) => {
+          this.updateSchedule()
+        })
+        .catch((e) => {
+          this.scheduleDelError = true
+        })
     },
   },
 }

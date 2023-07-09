@@ -64,3 +64,22 @@ func LoadMailTemplate(t string) string {
 	}
 	return mailTemplate[t]
 }
+
+func SaveNotifySchedule() error {
+	st := time.Now()
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	s, err := json.Marshal(NotifySchedule)
+	if err != nil {
+		return err
+	}
+	return db.Batch(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("config"))
+		if b == nil {
+			return fmt.Errorf("bucket config is nil")
+		}
+		log.Printf("SaveNotifySchedule dur=%v", time.Since(st))
+		return b.Put([]byte("notifySchedule"), s)
+	})
+}

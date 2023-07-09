@@ -106,6 +106,12 @@ func loadConf() error {
 		if err := json.Unmarshal(v, &NotifyConf); err != nil {
 			return err
 		}
+		v = b.Get([]byte("notifySchedule"))
+		if v != nil {
+			if err := json.Unmarshal(v, &NotifySchedule); err != nil {
+				log.Printf("load conf err=%v", err)
+			}
+		}
 		v = b.Get([]byte("backup"))
 		if v != nil {
 			if err := json.Unmarshal(v, &Backup); err != nil {

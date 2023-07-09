@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -72,17 +74,59 @@ func getLevelNum(l string) int {
 }
 
 func checkNotify(lastLog string) string {
+	excludeNodes := getExcludeNodes()
+	_, exAll := excludeNodes[""]
 	list := []*datastore.EventLogEnt{}
+	lastLogTime := int64(0)
 	datastore.ForEachLastEventLog(lastLog, func(l *datastore.EventLogEnt) bool {
-		list = append(list, l)
+		if _, ok := excludeNodes[l.NodeID]; !ok && !exAll {
+			list = append(list, l)
+		}
+		if lastLogTime < l.Time {
+			lastLogTime = l.Time
+		}
 		return true
 	})
 	log.Printf("check notify last=%s len=%d", lastLog, len(list))
 	if len(list) > 0 {
 		sendNotifyMail(list)
-		lastLog = fmt.Sprintf("%016x", list[0].Time)
 	}
+	lastLog = fmt.Sprintf("%016x", lastLogTime)
 	return lastLog
+}
+
+func getExcludeNodes() map[string]bool {
+	ret := make(map[string]bool)
+	for nid, sc := range datastore.NotifySchedule {
+		if isIncludeNow(sc) {
+			ret[nid] = true
+		}
+	}
+	return ret
+}
+
+var notifySchedulePat = regexp.MustCompile(`(\S+)\s+(\d{2}):(\d{2})-(\d{2}):(\d{2})`)
+
+func isIncludeNow(sc string) bool {
+	now := time.Now()
+	wd := now.Format("Mon")
+	md := now.Format("1")
+	for _, s := range strings.Split(sc, ",") {
+		a := notifySchedulePat.FindStringSubmatch(s)
+		if len(a) == 6 {
+			if wd == a[1] || md == a[1] || a[1] == "*" {
+				sh, _ := strconv.Atoi(a[2])
+				sm, _ := strconv.Atoi(a[3])
+				eh, _ := strconv.Atoi(a[4])
+				em, _ := strconv.Atoi(a[5])
+				if sh <= now.Hour() && sm <= now.Minute() && eh >= now.Hour() && em >= now.Minute() {
+					log.Printf("isIncludeNow s=%s,sc=%s", s, sc)
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 type notifyData struct {

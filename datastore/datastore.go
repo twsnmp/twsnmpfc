@@ -98,6 +98,8 @@ var (
 	// 拡張バックアップ
 	BackupPath string
 	CopyBackup bool
+	//  通知除外スケジュール設定
+	NotifySchedule map[string]string
 )
 
 const (
@@ -130,6 +132,7 @@ func Init(ctx context.Context, path string, fs http.FileSystem, wg *sync.WaitGro
 	geoipMap = make(map[string]string)
 	ouiMap = make(map[string]string)
 	tlsCSMap = make(map[string]string)
+	NotifySchedule = make(map[string]string)
 	if err := loadDataFromFS(fs); err != nil {
 		return err
 	}
