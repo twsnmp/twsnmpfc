@@ -212,6 +212,7 @@ func GetHostResource(n *datastore.NodeEnt) *HostResourceEnt {
 				d.Descr = getMIBStringVal(variable.Value)
 			}
 		case "hrDeviceID", "hrProcessorFrwID", "hrNetworkIfIndex", "hrDiskStorageAccess", "hrDiskStorageMedia":
+		case "hrStorageAllocationFailures", "hrPrinterStatus", "hrPrinterDetectedErrorState", "hrFSStorageIndex":
 		case "hrDiskStorageRemoveble", "hrDiskStorageCapacity", "hrPartitionIndex", "hrPartitionLabel", "hrPartitionID":
 		case "hrPartitionSize", "hrPartitionFSIndex":
 			// Skip
@@ -274,7 +275,8 @@ func GetHostResource(n *datastore.NodeEnt) *HostResourceEnt {
 				f.Bootable = gosnmp.ToBigInt(variable.Value).Int64()
 			}
 		case "hrFSLastFullBackupDate", "hrFSLastPartialBackupDate":
-		case "hrSWRunIndex", "hrSWRunID":
+		case "hrSWRunIndex", "hrSWRunID", "hrSWInstalledDate", "hrSWInstalledType", "hrSWInstalledName", "hrSWInstalledID":
+		case "hrSWOSIndex", "hrSWInstalledLastChange", "hrSWInstalledLastUpdateTime", "hrSWInstalledIndex":
 			// Skip
 		case "hrSWRunName":
 			if p, ok := procMap[a[1]]; !ok {
@@ -591,10 +593,14 @@ func getDateAndTime(i interface{}) string {
 	case string:
 		return v
 	case []uint8:
-		if len(v) > 6 {
-			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d%c%02d%02d",
-				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[8], v[9], v[10])
+		if len(v) == 11 {
+			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d%c%02d%02d",
+				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10])
+		} else if len(v) == 8 {
+			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d",
+				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7])
 		}
+		log.Printf("invalid  date and time format %v", v)
 	case int, int64, uint, uint64:
 		return fmt.Sprintf("%d", v)
 	}
