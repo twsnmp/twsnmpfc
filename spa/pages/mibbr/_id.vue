@@ -184,7 +184,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="addPollingDialog" persistent max-width="500px">
+    <v-dialog v-model="addPollingDialog" persistent max-width="800px">
       <v-card>
         <v-card-title> ポーリング設定 </v-card-title>
         <v-alert v-model="addPollingError" color="error" dense dismissible>
@@ -386,6 +386,7 @@ export default {
       addPollingError: false,
       addPollingDone: false,
       mibTreeOpened: false,
+      extractorList: [],
     }
   },
   async fetch() {
@@ -396,6 +397,31 @@ export default {
     this.node = r.Node
     this.mibget.NodeID = r.Node.ID
     this.mibtree = r.MIBTree
+    if (this.extractorList.length < 1) {
+      this.extractorList = [
+        {
+          text: '',
+          ID: '',
+        },
+        {
+          text: 'goqueryによるデータ取得',
+          value: 'goquery',
+        },
+        {
+          text: 'getBodyによるデータ取得',
+          value: 'getBody',
+        },
+      ]
+      const groks = await this.$axios.$get('/api/conf/grok')
+      if (groks) {
+        groks.forEach((g) => {
+          this.extractorList.push({
+            text: g.Name,
+            value: g.ID,
+          })
+        })
+      }
+    }
   },
   created() {
     const c = this.$store.state.mibbr.conf
