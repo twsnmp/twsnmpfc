@@ -100,7 +100,7 @@ func getLastEventLog() ([]string, []string, []*datastore.EventLogEnt) {
 	normal := 0
 	other := 0
 	st := time.Now().Add(time.Duration(-24) * time.Hour).UnixNano()
-	datastore.ForEachLastEventLog("", func(l *datastore.EventLogEnt) bool {
+	datastore.ForEachLastEventLog(0, func(l *datastore.EventLogEnt) bool {
 		if l.Time < st {
 			return false
 		}

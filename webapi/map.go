@@ -63,7 +63,7 @@ func getMap(c echo.Context) error {
 		return true
 	})
 	i := 0
-	datastore.ForEachLastEventLog("", func(e *datastore.EventLogEnt) bool {
+	datastore.ForEachLastEventLog(0, func(e *datastore.EventLogEnt) bool {
 		r.Logs = append(r.Logs, e)
 		i++
 		return i < 100

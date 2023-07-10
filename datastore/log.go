@@ -85,7 +85,7 @@ func ForEachEventLog(st, et int64, f func(*EventLogEnt) bool) error {
 	})
 }
 
-func ForEachLastEventLog(skey string, f func(*EventLogEnt) bool) error {
+func ForEachLastEventLog(last int64, f func(*EventLogEnt) bool) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
@@ -95,11 +95,14 @@ func ForEachLastEventLog(skey string, f func(*EventLogEnt) bool) error {
 			return nil
 		}
 		c := b.Cursor()
-		for k, v := c.Last(); k != nil && string(k) != skey; k, v = c.Prev() {
+		for k, v := c.Last(); k != nil; k, v = c.Prev() {
 			var e EventLogEnt
 			err := json.Unmarshal(v, &e)
 			if err != nil {
 				continue
+			}
+			if e.Time < last {
+				break
 			}
 			if !f(&e) {
 				break

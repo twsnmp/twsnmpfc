@@ -405,10 +405,10 @@ export default {
       if (this.nodeList.length < 1) {
         const nodes = await this.$axios.$get('/api/nodes')
         this.nodeList.push({
-          text: '全ノード',
+          text: 'すべての通知',
           value: '',
         })
-        this.nodeMap[''] = '全ノード'
+        this.nodeMap[''] = 'すべての通知'
         for (const n of nodes) {
           this.nodeList.push({
             text: n.Name,

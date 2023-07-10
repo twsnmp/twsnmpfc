@@ -33,7 +33,7 @@ func notifyBackend(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Println("start notify")
 	lastSendReport := time.Now().Add(time.Hour * time.Duration(-24))
-	lastLog := fmt.Sprintf("%016x", time.Now().Add(time.Hour*time.Duration(-1)).UnixNano())
+	lastLog := time.Now().Add(time.Hour * time.Duration(-1)).UnixNano()
 	lastLog = checkNotify(lastLog)
 	timer := time.NewTicker(time.Second * 60)
 	i := 0
@@ -73,54 +73,56 @@ func getLevelNum(l string) int {
 	return 3
 }
 
-func checkNotify(lastLog string) string {
-	excludeNodes := getExcludeNodes()
-	_, exAll := excludeNodes[""]
+func checkNotify(last int64) int64 {
+	exAll := datastore.NotifySchedule[""]
 	list := []*datastore.EventLogEnt{}
 	lastLogTime := int64(0)
-	datastore.ForEachLastEventLog(lastLog, func(l *datastore.EventLogEnt) bool {
-		if _, ok := excludeNodes[l.NodeID]; !ok && !exAll {
-			list = append(list, l)
-		}
+	datastore.ForEachLastEventLog(last, func(l *datastore.EventLogEnt) bool {
 		if lastLogTime < l.Time {
 			lastLogTime = l.Time
 		}
+		if exAll != "" && isExcludeTime(exAll, l.Time) {
+			log.Printf("skip all log=%+v", l)
+			return true
+		}
+		if l.NodeID != "" {
+			if sc, ok := datastore.NotifySchedule[l.NodeID]; ok && sc != "" && isExcludeTime(sc, l.Time) {
+				log.Printf("skip log=%+v", l)
+				return true
+			}
+		}
+		list = append(list, l)
 		return true
 	})
-	log.Printf("check notify last=%s len=%d", lastLog, len(list))
+	log.Printf("check notify last=%v len=%d", time.Unix(0, last), len(list))
 	if len(list) > 0 {
 		sendNotifyMail(list)
 	}
-	lastLog = fmt.Sprintf("%016x", lastLogTime)
-	return lastLog
-}
-
-func getExcludeNodes() map[string]bool {
-	ret := make(map[string]bool)
-	for nid, sc := range datastore.NotifySchedule {
-		if isIncludeNow(sc) {
-			ret[nid] = true
-		}
+	if lastLogTime > 0 {
+		return lastLogTime
 	}
-	return ret
+	return time.Now().UnixNano()
 }
 
 var notifySchedulePat = regexp.MustCompile(`(\S+)\s+(\d{2}):(\d{2})-(\d{2}):(\d{2})`)
 
-func isIncludeNow(sc string) bool {
-	now := time.Now()
-	wd := now.Format("Mon")
-	md := now.Format("1")
+func isExcludeTime(sc string, t int64) bool {
+	tm := time.Unix(0, t)
+	wd := tm.Format("Mon")
+	md := tm.Format("1")
 	for _, s := range strings.Split(sc, ",") {
 		a := notifySchedulePat.FindStringSubmatch(s)
 		if len(a) == 6 {
 			if wd == a[1] || md == a[1] || a[1] == "*" {
 				sh, _ := strconv.Atoi(a[2])
 				sm, _ := strconv.Atoi(a[3])
+				st := sh*60 + sm
 				eh, _ := strconv.Atoi(a[4])
 				em, _ := strconv.Atoi(a[5])
-				if sh <= now.Hour() && sm <= now.Minute() && eh >= now.Hour() && em >= now.Minute() {
-					log.Printf("isIncludeNow s=%s,sc=%s", s, sc)
+				et := eh*60 + em
+				t := tm.Hour()*60 + tm.Minute()
+				if st <= t && t <= et {
+					log.Printf("isExcludeTime hit s=%s,sc=%s,st=%d,et=%d,tm=%v", s, sc, st, et, tm)
 					return true
 				}
 			}
