@@ -109,7 +109,7 @@ var notifySchedulePat = regexp.MustCompile(`(\S+)\s+(\d{2}):(\d{2})-(\d{2}):(\d{
 func isExcludeTime(sc string, t int64) bool {
 	tm := time.Unix(0, t)
 	wd := tm.Format("Mon")
-	md := tm.Format("1")
+	md := tm.Format("2")
 	for _, s := range strings.Split(sc, ",") {
 		a := notifySchedulePat.FindStringSubmatch(s)
 		if len(a) == 6 {
