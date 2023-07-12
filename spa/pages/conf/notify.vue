@@ -237,12 +237,12 @@
           </v-alert>
           <v-row dense>
             <v-col>
-              <v-select
+              <v-autocomplete
                 v-model="schedule.NodeID"
                 :items="nodeList"
                 label="対象ノード"
               >
-              </v-select>
+              </v-autocomplete>
             </v-col>
             <v-col>
               <v-text-field

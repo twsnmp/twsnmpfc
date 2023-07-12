@@ -77,24 +77,25 @@ func checkNotify(last int64) int64 {
 	exAll := datastore.NotifySchedule[""]
 	list := []*datastore.EventLogEnt{}
 	lastLogTime := int64(0)
+	skip := 0
 	datastore.ForEachLastEventLog(last, func(l *datastore.EventLogEnt) bool {
 		if lastLogTime < l.Time {
 			lastLogTime = l.Time
 		}
 		if exAll != "" && isExcludeTime(exAll, l.Time) {
-			log.Printf("skip all log=%+v", l)
+			skip++
 			return true
 		}
 		if l.NodeID != "" {
 			if sc, ok := datastore.NotifySchedule[l.NodeID]; ok && sc != "" && isExcludeTime(sc, l.Time) {
-				log.Printf("skip log=%+v", l)
+				skip++
 				return true
 			}
 		}
 		list = append(list, l)
 		return true
 	})
-	log.Printf("check notify last=%v len=%d", time.Unix(0, last), len(list))
+	log.Printf("check notify last=%v next=%v len=%d skip=%d", time.Unix(0, last), time.Unix(0, lastLogTime), len(list), skip)
 	if len(list) > 0 {
 		sendNotifyMail(list)
 	}
@@ -113,7 +114,7 @@ func isExcludeTime(sc string, t int64) bool {
 	for _, s := range strings.Split(sc, ",") {
 		a := notifySchedulePat.FindStringSubmatch(s)
 		if len(a) == 6 {
-			if wd == a[1] || md == a[1] || a[1] == "*" {
+			if wd == a[1] || md == a[1] || a[1] == "*" || (a[1] == "Last" && isLastDayOfMonth(tm)) {
 				sh, _ := strconv.Atoi(a[2])
 				sm, _ := strconv.Atoi(a[3])
 				st := sh*60 + sm
@@ -122,13 +123,17 @@ func isExcludeTime(sc string, t int64) bool {
 				et := eh*60 + em
 				t := tm.Hour()*60 + tm.Minute()
 				if st <= t && t <= et {
-					log.Printf("isExcludeTime hit s=%s,sc=%s,st=%d,et=%d,tm=%v", s, sc, st, et, tm)
 					return true
 				}
 			}
 		}
 	}
 	return false
+}
+
+func isLastDayOfMonth(t time.Time) bool {
+	lastDay := time.Date(t.Year(), t.Month()+1, 0, 0, 0, 0, 0, time.Local)
+	return t.Day() == lastDay.Day()
 }
 
 type notifyData struct {
