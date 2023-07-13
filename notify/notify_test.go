@@ -53,6 +53,26 @@ func TestNotifySchedule(t *testing.T) {
 			Schedule: "Last 18:00-20:00",
 			Result:   false,
 		},
+		{
+			Time:     "2023-12-28T19:04:05+09:00",
+			Schedule: "Last 18:00-20:00",
+			Result:   false,
+		},
+		{
+			Time:     "2024-02-29T19:04:05+09:00",
+			Schedule: "Last 18:00-20:00",
+			Result:   true,
+		},
+		{
+			Time:     "2024-02-28T19:04:05+09:00",
+			Schedule: "Last 18:00-20:00",
+			Result:   false,
+		},
+		{
+			Time:     "2023-07-14T06:58:05+09:00",
+			Schedule: "Fri 05:00-06:30",
+			Result:   false,
+		},
 	} {
 		tm, err := time.Parse(time.RFC3339, e.Time)
 		if err != nil {
