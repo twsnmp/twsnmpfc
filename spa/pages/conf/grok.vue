@@ -340,7 +340,8 @@ export default {
     doTestGrok() {
       this.testNoData = false
       this.testError = false
-      this.selected.Pat = this.selected.Pat.replaceAll(/\r?\n/, '')
+      this.selected.Pat = this.selected.Pat.replaceAll('\n', '')
+      this.selected.Pat = this.selected.Pat.replaceAll('\r', '')
       this.$axios
         .post('/api/test/grok', { Pat: this.selected.Pat, Data: this.testData })
         .then((resp) => {
