@@ -305,7 +305,7 @@ func postPollingAutoAdd(c echo.Context) error {
 		p.Level = pt.Level
 		p.PollInt = datastore.MapConf.PollInt
 		p.Timeout = datastore.MapConf.Timeout
-		p.Retry = datastore.MapConf.Timeout
+		p.Retry = datastore.MapConf.Retry
 		p.LogMode = 0
 		p.NextTime = 0
 		p.State = "unknown"
