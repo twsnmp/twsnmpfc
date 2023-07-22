@@ -220,6 +220,13 @@ func doPolling(pe *datastore.PollingEnt) {
 func setPollingState(pe *datastore.PollingEnt, newState string) {
 	sendEvent := false
 	oldState := pe.State
+	if v, ok := pe.Result["_level"]; ok {
+		if l, ok := v.(string); ok {
+			log.Printf("setPollingState set level from JavaScript %s to %s", newState, l)
+			newState = l
+		}
+		delete(pe.Result, "_level")
+	}
 	switch newState {
 	case "normal":
 		if pe.State != "normal" && pe.State != "repair" {
@@ -300,5 +307,12 @@ func addJavaScriptFunctions(pe *datastore.PollingEnt, vm *otto.Otto) {
 			}
 		}
 		return otto.UndefinedValue()
+	})
+	vm.Set("setLevel", func(call otto.FunctionCall) otto.Value {
+		if call.Argument(0).IsString() {
+			level := call.Argument(0).String()
+			pe.Result["_level"] = level
+		}
+		return otto.Value{}
 	})
 }
