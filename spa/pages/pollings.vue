@@ -253,7 +253,7 @@
             v-model="editPolling.Timeout"
             label="タイムアウト(Sec)"
             class="align-center"
-            max="10"
+            max="60"
             min="1"
             hide-details
           >
@@ -272,7 +272,7 @@
             v-model="editPolling.Retry"
             label="リトライ回数"
             class="align-center"
-            max="5"
+            max="20"
             min="0"
             hide-details
           >
@@ -431,7 +431,7 @@
             v-model="newTimeout"
             label="タイムアウト(Sec)"
             class="align-center"
-            max="10"
+            max="60"
             min="1"
             hide-details
           >
@@ -450,7 +450,7 @@
             v-model="newRetry"
             label="リトライ回数"
             class="align-center"
-            max="5"
+            max="20"
             min="0"
             hide-details
           >

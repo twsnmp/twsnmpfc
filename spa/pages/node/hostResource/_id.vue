@@ -302,7 +302,7 @@
             v-model="polling.Timeout"
             label="タイムアウト(Sec)"
             class="align-center"
-            max="10"
+            max="60"
             min="1"
             hide-details
           >
@@ -321,7 +321,7 @@
             v-model="polling.Retry"
             label="リトライ回数"
             class="align-center"
-            max="5"
+            max="20"
             min="0"
             hide-details
           >
