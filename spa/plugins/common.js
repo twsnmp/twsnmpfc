@@ -160,10 +160,10 @@ const getIconName = (icon) => {
 }
 
 const setIcon = (e) => {
-  for( let i = 0; i < iconList; i++) {
+  for( let i = 0; i < iconList.length; i++) {
     if(iconList[i].value === e.Icon) {
       iconList[i].text = e.Text
-      iconList[i].Code = e.Code
+      iconList[i].code = e.Code
       return
     }
   }
@@ -178,7 +178,7 @@ const setIcon = (e) => {
 }
 
 const delIcon = (icon) => {
-  for( let i = 0; i < iconList; i++) {
+  for( let i = 0; i < iconList.length; i++) {
     if(iconList[i].value === icon) {
       iconList.splice(i+1,1)
       delete(iconMap[icon])
