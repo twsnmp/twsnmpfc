@@ -26,7 +26,10 @@ func doPollingVMWare(pe *datastore.PollingEnt) {
 		return
 	}
 	mode := pe.Mode
-	target := pe.Params
+	target := pe.Filter
+	if target == "" {
+		target = pe.Params
+	}
 	script := pe.Script
 	us := n.URL
 	if us == "" {
@@ -78,6 +81,7 @@ func doPollingVMWare(pe *datastore.PollingEnt) {
 		setPollingState(pe, pe.Level)
 		return
 	}
+	pe.Result["error"] = ""
 	setPollingState(pe, "normal")
 }
 
@@ -122,6 +126,9 @@ func vmwareHostSystem(ctx context.Context, c *vim25.Client, target string) (map[
 	} else {
 		r["usageMEM"] = 0.0
 	}
+	if r["totalHost"] == 0.0 {
+		return r, fmt.Errorf("not found")
+	}
 	return r, nil
 }
 
@@ -156,6 +163,9 @@ func vmwareDatastore(ctx context.Context, c *vim25.Client, target string) (map[s
 	} else {
 		r["usage"] = 0.0
 	}
+	if r["total"] == 0.0 {
+		return r, fmt.Errorf("not found")
+	}
 	return r, nil
 }
 
@@ -188,6 +198,8 @@ func vmwareVirtualMachine(ctx context.Context, c *vim25.Client, target string) (
 	}
 	if r["total"] > 0.0 {
 		r["rate"] = 100.0 * r["up"] / r["total"]
+	} else {
+		return r, fmt.Errorf("not found")
 	}
 	return r, nil
 }
