@@ -81,7 +81,7 @@ func doPollingVMWare(pe *datastore.PollingEnt) {
 		setPollingState(pe, pe.Level)
 		return
 	}
-	pe.Result["error"] = ""
+	delete(pe.Result, "error")
 	setPollingState(pe, "normal")
 }
 
