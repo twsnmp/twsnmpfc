@@ -10,9 +10,18 @@ import (
 )
 
 func UpdateSensor(h, t string, r int) {
-	id := fmt.Sprintf("%s:%s:", h, t)
 	now := time.Now().UnixNano()
+	id := makeID(h + ":" + t + ":")
 	e := datastore.GetSensor(id)
+	if e != nil {
+		e.Total += int64(r)
+		e.Send++
+		e.LastTime = now
+		return
+	}
+	// 古い形式
+	idold := fmt.Sprintf("%s:%s:", h, t)
+	e = datastore.GetSensor(idold)
 	if e != nil {
 		e.Total += int64(r)
 		e.Send++
