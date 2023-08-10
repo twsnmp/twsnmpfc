@@ -53,9 +53,11 @@ require (
 	github.com/go-playground/locales v0.13.0 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/flatbuffers v1.12.0 // indirect
 	github.com/jarcoal/httpmock v1.0.8 // indirect
+	github.com/labstack/echo-jwt/v4 v4.2.0
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect

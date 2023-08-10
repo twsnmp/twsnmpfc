@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/twsnmp/twsnmpfc/backend"
@@ -79,7 +80,7 @@ func setup(p *WebAPI) {
 	e.GET("/version", getVersion)
 	// JWT保護されたRoute
 	r := e.Group("/api")
-	r.Use(middleware.JWT([]byte(p.Password)))
+	r.Use(echojwt.JWT([]byte(p.Password)))
 	r.POST("/feedback", postFeedback)
 	r.POST("/stop", postStop)
 	r.GET("/checkupdate", getCheckUpdate)
