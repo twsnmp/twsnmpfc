@@ -1467,12 +1467,39 @@ export default {
     },
     async grid(d) {
       const list = []
-      const g = this.selectedGrid * 1.0
+      const g = Math.max(this.selectedGrid * 1.0, 20)
+      const mx = Math.ceil(2500 / g)
+      const my = Math.ceil(5000 / g)
+      const m = new Array(mx)
+      for (let x = 0; x < m.length; x++) {
+        m[x] = new Array(my)
+        for (let y = 0; y < m[x].length; y++) {
+          m[x][y] = false
+        }
+      }
       for (const id in this.map.Nodes) {
-        this.map.Nodes[id].X =
-          Math.ceil((this.map.Nodes[id].X * 1.0) / g) * this.selectedGrid
-        this.map.Nodes[id].Y =
-          Math.ceil((this.map.Nodes[id].Y * 1.0) / g) * this.selectedGrid
+        let x = Math.max(
+          Math.min(Math.ceil((this.map.Nodes[id].X * 1.0) / g), mx - 1),
+          0
+        )
+        let y = Math.max(
+          Math.min(Math.ceil((this.map.Nodes[id].Y * 1.0) / g), my - 1),
+          0
+        )
+        while (m[x][y]) {
+          x++
+          if (x >= mx) {
+            y++
+            x = 0
+            if (y >= my) {
+              y = 0
+              break
+            }
+          }
+        }
+        m[x][y] = true
+        this.map.Nodes[id].X = x * g
+        this.map.Nodes[id].Y = y * g
         list.push({
           ID: id,
           X: this.map.Nodes[id].X,
