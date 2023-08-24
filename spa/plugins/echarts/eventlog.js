@@ -353,7 +353,7 @@ const showEventLogTimeChart = (div, type, logs) => {
     },
     yAxis: {
       type: 'value',
-      name: type === '' ? '稼働率%' : '使用率%',
+      name: type === 'oprate' ? '稼働率%' : '使用率%',
       nameTextStyle: {
         color: '#ccc',
         fontSize: 10,
@@ -374,7 +374,7 @@ const showEventLogTimeChart = (div, type, logs) => {
       {
         color: '#1f78b4',
         type: 'line',
-        name: type === '' ? '稼働率' : '使用率',
+        name: type === 'oprate' ? '稼働率' : '使用率',
         showSymbol: false,
         data: [],
       },
