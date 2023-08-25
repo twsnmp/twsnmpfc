@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -49,9 +50,21 @@ func postSnmpTrap(c echo.Context) error {
 		}
 		var ok bool
 		re := new(snmpTrapWebAPI)
-		if re.FromAddress, ok = sl["FromAddress"].(string); !ok {
+		if fa, ok := sl["FromAddress"].(string); !ok {
 			return true
+		} else {
+			a := strings.SplitN(fa, ":", 2)
+			if len(a) == 2 {
+				re.FromAddress = a[0]
+				n := datastore.FindNodeFromIP(a[0])
+				if n != nil {
+					re.FromAddress += "(" + n.Name + ")"
+				}
+			} else {
+				re.FromAddress = fa
+			}
 		}
+
 		if re.Variables, ok = sl["Variables"].(string); !ok {
 			return true
 		}
