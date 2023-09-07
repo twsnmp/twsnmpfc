@@ -353,9 +353,9 @@ export default {
           // サイズを変更するモード
           this.pingReq.size += 100
         }
-        if (this.ttl === 0 && this.ttl < 254) {
+        if (this.ttl === 0) {
           this.pingReq.ttl++
-          if (r.Stat === 1) {
+          if (r.Stat === 1 || this.pingReq.ttl > 254) {
             this.wait = false
             return
           }
