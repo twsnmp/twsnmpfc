@@ -187,8 +187,17 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        <v-btn v-if="!logs" color="primary" @click="getPollingLogs()">
-          <v-icon>mdi-reload</v-icon>
+        <v-btn
+          v-if="!logs"
+          color="primary"
+          :disabled="waitLog"
+          @click="
+            waitLog = true
+            getPollingLogs()
+          "
+        >
+          <v-icon v-if="waitLog">mdi-timer-sand</v-icon>
+          <v-icon v-else>mdi-reload</v-icon>
           ログ確認
         </v-btn>
         <v-btn v-if="logs" color="error" @click="clearPollingLogDialog = true">
@@ -746,6 +755,7 @@ export default {
       pollingForecastDialog: false,
       clearPollingLogDialog: false,
       clearPollingLogError: false,
+      waitLog: false,
     }
   },
   async fetch() {
@@ -771,6 +781,7 @@ export default {
         '/api/pollingLogs/' + this.$route.params.id,
         this.filter
       )
+      this.waitLog = false
       if (!logs) {
         return
       }

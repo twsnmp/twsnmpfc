@@ -246,7 +246,7 @@ func postPollingLogs(c echo.Context) error {
 	if err := c.Bind(filter); err != nil {
 		return echo.ErrBadRequest
 	}
-	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24*7)
+	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24)
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	i := 0
 	datastore.ForEachPollingLog(st, et, id, func(l *datastore.PollingLogEnt) bool {
