@@ -180,6 +180,10 @@
               v-model="mapconf.EnableArpWatch"
               label="ARP Watch"
             ></v-switch>
+            <v-switch
+              v-model="mapconf.DisableOperLog"
+              label="稼働率ログを停止"
+            ></v-switch>
           </v-row>
           <v-row dense>
             <v-col>
@@ -520,6 +524,7 @@ export default {
         AIMode: 'lof',
         FontSize: 12,
         AutoCharCode: false,
+        DisableOperLog: false,
       },
       aiModeList: [
         { text: 'Local Outiler Factor', value: 'lof' },

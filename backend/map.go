@@ -71,6 +71,10 @@ func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 }
 
 func checkOperationRate() {
+	if datastore.MapConf.DisableOperLog {
+		log.Println("disable oprate log")
+		return
+	}
 	total := 0
 	down := 0
 	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {

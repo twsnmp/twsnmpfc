@@ -49,6 +49,7 @@ type MapConfEnt struct {
 	GeoIPInfo       string
 	FontSize        int
 	AutoCharCode    bool
+	DisableOperLog  bool
 }
 
 func initConf() {

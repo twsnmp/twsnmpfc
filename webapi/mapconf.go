@@ -39,6 +39,7 @@ func getMapConf(c echo.Context) error {
 	r.PublicKey = datastore.MapConf.PublicKey
 	r.FontSize = datastore.MapConf.FontSize
 	r.AutoCharCode = datastore.MapConf.AutoCharCode
+	r.DisableOperLog = datastore.MapConf.DisableOperLog
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -78,6 +79,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.AIMode = mc.AIMode
 	datastore.MapConf.FontSize = mc.FontSize
 	datastore.MapConf.AutoCharCode = mc.AutoCharCode
+	datastore.MapConf.DisableOperLog = mc.DisableOperLog
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
