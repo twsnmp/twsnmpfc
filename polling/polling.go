@@ -230,7 +230,9 @@ func setPollingState(pe *datastore.PollingEnt, newState string) {
 	switch newState {
 	case "normal":
 		if pe.State != "normal" && pe.State != "repair" {
-			if pe.State == "unknown" {
+			if pe.State == "unknown" ||
+				pe.Type == "syslog" || pe.Type == "trap" ||
+				pe.Type == "netflow" || pe.Type == "ipfix" || pe.Type == "arplog" {
 				pe.State = "normal"
 			} else {
 				pe.State = "repair"
