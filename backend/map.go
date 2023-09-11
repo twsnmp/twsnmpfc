@@ -110,7 +110,7 @@ func clearPollingState() {
 func updateNodeState(n *datastore.NodeEnt) {
 	n.State = "unknown"
 	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
-		if p.NodeID != n.ID {
+		if p.NodeID != n.ID || p.Level == "off" {
 			return true
 		}
 		s := p.State
