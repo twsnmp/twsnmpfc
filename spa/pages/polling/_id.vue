@@ -782,7 +782,7 @@ export default {
         this.filter
       )
       this.waitLog = false
-      if (!logs) {
+      if (!logs || logs.length < 1) {
         return
       }
       this.logs = logs
