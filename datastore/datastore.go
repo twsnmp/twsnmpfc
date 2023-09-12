@@ -274,6 +274,7 @@ func openDB(path string) error {
 	if err != nil {
 		log.Printf("setup influxdb err=%v", err)
 	}
+	convertPollingLog()
 	log.Println("end openDB")
 	return nil
 }

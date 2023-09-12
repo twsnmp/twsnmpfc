@@ -175,7 +175,11 @@ func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bo
 		if b == nil {
 			return nil
 		}
-		c := b.Cursor()
+		bs := b.Bucket([]byte(pollingID))
+		if bs == nil {
+			return nil
+		}
+		c := bs.Cursor()
 		for k, v := c.Seek([]byte(sk)); k != nil; k, v = c.Next() {
 			if !bytes.Contains(v, []byte(pollingID)) {
 				continue
@@ -211,22 +215,7 @@ func ClearPollingLog(pollingID string) error {
 		if b == nil {
 			return fmt.Errorf("bucket pollingLogs not found")
 		}
-		c := b.Cursor()
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-			if !bytes.Contains(v, []byte(pollingID)) {
-				continue
-			}
-			var e PollingLogEnt
-			err := json.Unmarshal(v, &e)
-			if err != nil {
-				log.Printf("ClearPollingLog log err=%v", err)
-				continue
-			}
-			if e.PollingID != pollingID {
-				continue
-			}
-			c.Delete()
-		}
+		b.DeleteBucket([]byte(pollingID))
 		log.Printf("ClearPollingLog id=%s,dur=%v", pollingID, time.Since(st))
 		return nil
 	})
@@ -240,26 +229,10 @@ func clearDeletedPollingLogs(ids []string) error {
 		if b == nil {
 			return fmt.Errorf("bucket pollingLogs not found")
 		}
-		c := b.Cursor()
-		del := 0
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-			for _, id := range ids {
-				if bytes.Contains(v, []byte(id)) {
-					var e PollingLogEnt
-					err := json.Unmarshal(v, &e)
-					if err != nil {
-						log.Printf("ClearDeletedPollingLogs err=%v", err)
-					} else {
-						if e.PollingID == id {
-							_ = c.Delete()
-							del++
-							break
-						}
-					}
-				}
-			}
+		for _, id := range ids {
+			b.DeleteBucket([]byte(id))
 		}
-		log.Printf("clearDeletedPollingLogs del=%d,dur=%v", del, time.Since(st))
+		log.Printf("clearDeletedPollingLogs dur=%v", time.Since(st))
 		return nil
 	})
 }
@@ -276,19 +249,17 @@ func GetAllPollingLog(pollingID string) []PollingLogEnt {
 			log.Printf("no polling log bucket")
 			return nil
 		}
-		c := b.Cursor()
+		bs := b.Bucket([]byte(pollingID))
+		if bs == nil {
+			return nil
+		}
+		c := bs.Cursor()
 		i := 0
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			if !bytes.Contains(v, []byte(pollingID)) {
-				continue
-			}
 			var l PollingLogEnt
 			err := json.Unmarshal(v, &l)
 			if err != nil {
 				log.Printf("get polling log err=%v", err)
-				continue
-			}
-			if l.PollingID != pollingID {
 				continue
 			}
 			ret = append(ret, l)
@@ -297,4 +268,35 @@ func GetAllPollingLog(pollingID string) []PollingLogEnt {
 		return nil
 	})
 	return ret
+}
+
+func convertPollingLog() error {
+	log.Println("start convertPollingLog")
+	if db == nil {
+		return fmt.Errorf("no db")
+	}
+	st := time.Now()
+	return db.Batch(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("pollingLogs"))
+		if b == nil {
+			return fmt.Errorf("bucket pollingLogs not found")
+		}
+		count := 0
+		b.ForEach(func(k, v []byte) error {
+			var e PollingLogEnt
+			err := json.Unmarshal(v, &e)
+			if err != nil {
+				log.Printf("load polling log err=%v", err)
+				return nil
+			}
+			if bs, err := b.CreateBucketIfNotExists([]byte(e.PollingID)); err == nil {
+				bs.Put(k, v)
+				count++
+			}
+			b.Delete(k)
+			return nil
+		})
+		log.Printf("convertPollingLog count=%d dur=%v", count, time.Since(st))
+		return nil
+	})
 }

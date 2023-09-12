@@ -176,6 +176,43 @@ func deleteOldLog(tx *bbolt.Tx, bucket string, days int) bool {
 	return done
 }
 
+// deleteOldPollingLogは、古いポーリングログを削除する
+func deleteOldPollingLog(tx *bbolt.Tx, bucket string, days int) bool {
+	s := time.Now()
+	done := true
+	delCount := 0
+	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -days).UnixNano())
+	b := tx.Bucket([]byte(bucket))
+	if b == nil {
+		log.Printf("bucket %s not found", bucket)
+		// bucketがないのは、エラーにしないでスキップする
+		return done
+	}
+	b.ForEachBucket(func(k []byte) error {
+		b2 := b.Bucket(k)
+		if b2 == nil {
+			return nil
+		}
+		c := b2.Cursor()
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			if st < string(k) {
+				break
+			}
+			if delCount > 1000 {
+				done = false
+				break
+			}
+			_ = c.Delete()
+			delCount++
+		}
+		return nil
+	})
+	if delCount > 0 {
+		log.Printf("delete old logs bucket=%s count=%d done=%v dur=%s", bucket, delCount, done, time.Since(s))
+	}
+	return done
+}
+
 func deleteOldLogs() {
 	s := time.Now()
 	if MapConf.LogDays < 1 {
@@ -194,9 +231,16 @@ func deleteOldLogs() {
 	for doneCount < len(buckets) && lt > time.Now().Unix() {
 		for _, b := range buckets {
 			if _, ok := doneMap[b]; !ok {
-				if done := deleteOldLog(tx, b, MapConf.LogDays); done {
-					doneMap[b] = true
-					doneCount++
+				if b == "pollingLogs" {
+					if done := deleteOldPollingLog(tx, b, MapConf.LogDays); done {
+						doneMap[b] = true
+						doneCount++
+					}
+				} else {
+					if done := deleteOldLog(tx, b, MapConf.LogDays); done {
+						doneMap[b] = true
+						doneCount++
+					}
 				}
 			}
 			tx.Commit()
@@ -326,7 +370,11 @@ func savePollingLogList(list []*PollingLogEnt) {
 			if err != nil {
 				return err
 			}
-			err = b.Put([]byte(fmt.Sprintf("%016x", e.Time+int64(i))), s)
+			bs, err := b.CreateBucketIfNotExists([]byte(e.PollingID))
+			if err != nil {
+				return err
+			}
+			err = bs.Put([]byte(fmt.Sprintf("%016x", e.Time+int64(i))), s)
 			if err != nil {
 				return err
 			}
