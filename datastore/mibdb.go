@@ -136,6 +136,7 @@ RFC-1215.txt
 RFC1155-SMI.txt
 RFC1213-MIB.txt
 RMON-MIB.txt
+TOKEN-RING-RMON-MIB.txt
 RMON2.txt
 HC-RMON-MIB.txt
 SCTP-MIB.txt
@@ -176,7 +177,7 @@ func loadMIBsFromFS(fs http.FileSystem) {
 		log.Printf("load mib path=%s", path)
 		if r, err := fs.Open(path); err == nil {
 			if asn1, err := io.ReadAll(r); err == nil {
-				if !loadExtMIB(asn1, "int", path) {
+				if !loadExtMIB(asn1, "int", path, false) {
 					skipList = append(skipList, path)
 				}
 			} else {
@@ -190,7 +191,7 @@ func loadMIBsFromFS(fs http.FileSystem) {
 		log.Printf("retry to load mib path=%s", path)
 		if r, err := fs.Open(path); err == nil {
 			if asn1, err := io.ReadAll(r); err == nil {
-				if loadExtMIB(asn1, "int", path) {
+				if loadExtMIB(asn1, "int", path, true) {
 					log.Printf("skip error mib file=%s", path)
 				}
 			}
@@ -213,7 +214,7 @@ func loadExtMIBs(root string) {
 			}
 			log.Printf("load ext mib path=%s", path)
 			if asn1, err := os.ReadFile(path); err == nil {
-				if loadExtMIB(asn1, "ext", path) {
+				if loadExtMIB(asn1, "ext", path, false) {
 					skipList = append(skipList, path)
 				}
 			} else {
@@ -224,14 +225,14 @@ func loadExtMIBs(root string) {
 	for _, path := range skipList {
 		log.Printf("retry to load ext mib path=%s", path)
 		if asn1, err := os.ReadFile(path); err == nil {
-			if loadExtMIB(asn1, "ext", path) {
+			if loadExtMIB(asn1, "ext", path, true) {
 				log.Printf("skip error mib file=%s", path)
 			}
 		}
 	}
 }
 
-func loadExtMIB(asn1 []byte, fileType, file string) bool {
+func loadExtMIB(asn1 []byte, fileType, file string, retry bool) bool {
 	var nameList []string
 	var mapNameToOID = make(map[string]string)
 	for _, name := range MIBDB.GetNameList() {
@@ -294,15 +295,23 @@ func loadExtMIB(asn1 []byte, fileType, file string) bool {
 		mapNameToOID[name] = noid + "." + a[1]
 	}
 	hasSkip := false
+	noParent := ""
 	oidReg := regexp.MustCompile(`^[.0-9]+$`)
 	for _, name := range nameList {
 		oid := mapNameToOID[name]
 		if !oidReg.MatchString(oid) {
-			oid = MIBDB.NameToOID(oid)
-			if oid == ".0.0" {
+			noid := MIBDB.NameToOID(oid)
+			if noid == ".0.0" {
 				hasSkip = true
+				if retry {
+					if noParent == "" {
+						noParent = fmt.Sprintf("no parent name=%s,oid=%s\n", name, oid)
+					}
+					log.Printf("no parent name=%s,oid=%s", name, oid)
+				}
 				continue
 			}
+			oid = noid
 		}
 		_ = MIBDB.Add(name, oid)
 	}
@@ -311,6 +320,13 @@ func loadExtMIB(asn1 []byte, fileType, file string) bool {
 			File: file,
 			Type: fileType,
 			Name: string(module.Name),
+		})
+	} else if retry {
+		MIBModules = append(MIBModules, &MIBModuleEnt{
+			File:  file,
+			Type:  fileType,
+			Name:  string(module.Name),
+			Error: noParent,
 		})
 	}
 	return hasSkip
