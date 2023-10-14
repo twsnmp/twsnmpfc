@@ -261,6 +261,24 @@
                 label="モバイルアプリからの接続を許可する"
               ></v-switch>
             </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="mapconf.MapSize"
+                :items="mapSizeList"
+                label="マップサイズ"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="mapconf.IconSize"
+                :items="iconSizeList"
+                label="アイコンサイズ"
+              >
+              </v-select>
+            </v-col>
             <v-col>
               <v-select
                 v-model="mapconf.FontSize"
@@ -525,6 +543,8 @@ export default {
         FontSize: 12,
         AutoCharCode: false,
         DisableOperLog: false,
+        MapSize: 0,
+        IconSize: 32,
       },
       aiModeList: [
         { text: 'Local Outiler Factor', value: 'lof' },
@@ -535,6 +555,19 @@ export default {
         { text: '普通', value: 12 },
         { text: '大きい', value: 16 },
         { text: 'すごく大きい', value: 20 },
+      ],
+      mapSizeList: [
+        { text: '2500x5000', value: 0 },
+        { text: '5000x5000', value: 1 },
+        { text: '5000x10000', value: 2 },
+        { text: '10000x10000', value: 3 },
+      ],
+      iconSizeList: [
+        { text: 'すごく小さい', value: 24 },
+        { text: '小さい', value: 28 },
+        { text: '普通', value: 32 },
+        { text: '大きい', value: 48 },
+        { text: 'すごく大きい', value: 64 },
       ],
       backImage: {
         X: 0,

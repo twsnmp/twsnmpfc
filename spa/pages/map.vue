@@ -1021,7 +1021,8 @@ export default {
   },
   async fetch() {
     this.map = await this.$axios.$get('/api/map')
-    this.$setMAP(
+    this.$showMAP(
+      'map',
       this.map,
       this.$axios.defaults.baseURL,
       this.$store.state.map.readOnly
@@ -1084,7 +1085,6 @@ export default {
     this.$setIconCodeMap(this.$iconList)
     this.$setStateColorMap(this.$stateList)
     this.$setCallback(this.callback)
-    this.$showMAP('map')
   },
   beforeDestroy() {
     this.$setMapContextMenu(true)

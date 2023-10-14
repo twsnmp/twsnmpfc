@@ -50,6 +50,8 @@ type MapConfEnt struct {
 	FontSize        int
 	AutoCharCode    bool
 	DisableOperLog  bool
+	MapSize         int
+	IconSize        int
 }
 
 func initConf() {

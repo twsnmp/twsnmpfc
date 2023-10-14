@@ -1,7 +1,11 @@
 import P5 from 'p5'
 
-const MAP_SIZE_X = 2500
-const MAP_SIZE_Y = 5000
+let mapSize = 0
+let mapSizeX = 2500
+let mapSizeY = 5000
+let mapP5
+let contextMenu = true
+
 let mapRedraw = true
 let readOnly = false
 
@@ -21,6 +25,7 @@ let backImage = {
 }
 
 let fontSize = 12
+let iconSize = 32
 
 const selectedNodes = []
 const selectedItems = []
@@ -28,7 +33,6 @@ const selectedItems = []
 const iconCodeMap = {}
 const imageMap = {}
 
-const _ImageP5 = new P5()
 
 /* eslint prettier/prettier: 0 */
 const setIconCodeMap = (list) => {
@@ -42,7 +46,12 @@ const setIconToMap = (e) => {
   iconCodeMap[e.Icon] = String.fromCodePoint(e.Code)
 } 
 
-const setMAP = (m,url,ro) => {
+const showMAP = (div,m,url,ro) => {
+  const ms = (m.MapConf.MapSize || 0)
+  if (!mapP5 || ms !== mapSize ) {
+    mapSize = m.mapSize
+    initMap(div,ms)
+  }
   if (!url || url === '/') {
     url = window.location.origin
   }
@@ -52,9 +61,10 @@ const setMAP = (m,url,ro) => {
   items = m.Items || {}
   backImage = m.MapConf.BackImage
   fontSize = m.MapConf.FontSize || 12
+  iconSize = m.MapConf.IconSize || 24
   backImage.Image = null
-  if (backImage.Path){
-    _ImageP5.loadImage(url+'/backimage',(img)=>{
+  if (backImage.Path && mapP5){
+    mapP5.loadImage(url+'/backimage',(img)=>{
       backImage.Image = img
       mapRedraw = true
     })
@@ -63,8 +73,8 @@ const setMAP = (m,url,ro) => {
   for(const k in items) {
     switch (items[k].Type) {
     case 3:
-      if (!imageMap[items[k].Path]) {
-        _ImageP5.loadImage(url+'/image/' + items[k].Path,(img)=>{
+      if (!imageMap[items[k].Path] && mapP5) {
+        mapP5.loadImage(url+'/image/' + items[k].Path,(img)=>{
           imageMap[items[k].Path] = img
           mapRedraw = true
         })
@@ -82,6 +92,38 @@ const setMAP = (m,url,ro) => {
     } 
   }
   mapRedraw = true
+}
+
+const initMap = (div,ms) => {
+  if (mapP5) {
+    mapP5.remove()
+  }
+  mapRedraw = true
+  contextMenu = false
+  document.oncontextmenu = (e) => {
+    if (!contextMenu) {
+      e.preventDefault()
+    }
+  }
+  switch (ms) {
+    case 1:
+      mapSizeX = 5000
+      mapSizeY = 5000
+      break
+    case 2:
+      mapSizeX = 5000
+      mapSizeY = 10000
+      break
+    case 3:
+      mapSizeX = 10000
+      mapSizeY = 10000
+      break
+    default:
+      mapSizeX = 2500
+      mapSizeY = 5000
+      break
+    }
+  mapP5 = new P5(mapMain, div) // eslint-disable-line no-new
 }
 
 const setCallback = (cb) => {
@@ -121,7 +163,7 @@ const mapMain = (p5) => {
   const draggedItems = []
   let clickInCanvas = false
   p5.setup = () => {
-    const c = p5.createCanvas(MAP_SIZE_X, MAP_SIZE_Y)
+    const c = p5.createCanvas(mapSizeX, mapSizeY)
     c.mousePressed(canvasMousePressed)
   }
 
@@ -240,23 +282,25 @@ const mapMain = (p5) => {
       p5.push()
       p5.translate(nodes[k].X, nodes[k].Y)
       if (selectedNodes.includes(nodes[k].ID)) {
+        const w = iconSize + 16
         p5.fill('rgba(23,23,23,0.9)')
         p5.stroke(getStateColor(nodes[k].State))
-        p5.rect(-24, -24, 48, 48)
+        p5.rect(-w/2, -w/2, w, w)
       } else {
+        const w = iconSize - 8
         p5.fill('rgba(23,23,23,0.9)')
         p5.stroke('rgba(23,23,23,0.9)')
-        p5.rect(-12, -12, 24, 24)
+        p5.rect(-w/2, -w/2, w, w)
       }
       p5.textFont('Material Design Icons')
-      p5.textSize(32)
+      p5.textSize(iconSize)
       p5.textAlign(p5.CENTER, p5.CENTER)
       p5.fill(getStateColor(nodes[k].State))
       p5.text(icon, 0, 0)
       p5.textFont('Roboto')
       p5.textSize(fontSize)
       p5.fill(250)
-      p5.text(nodes[k].Name, 0, 32)
+      p5.text(nodes[k].Name, 0, iconSize)
       p5.pop()
     }
     if (dragMode === 1) {
@@ -401,11 +445,11 @@ const mapMain = (p5) => {
     if (n.Y < 16) {
       n.Y = 16
     }
-    if (n.X > MAP_SIZE_X) {
-      n.X = MAP_SIZE_X - 16
+    if (n.X > mapSizeX) {
+      n.X = mapSizeX - 16
     }
-    if (n.Y > MAP_SIZE_Y) {
-      n.Y = MAP_SIZE_Y - 16
+    if (n.Y > mapSizeY) {
+      n.Y = mapSizeY - 16
     }
   }
   const checkItemPos = (i) => {
@@ -415,11 +459,11 @@ const mapMain = (p5) => {
     if (i.Y < 16) {
       i.Y = 16
     }
-    if (i.X > MAP_SIZE_X - i.W) {
-      i.X = MAP_SIZE_X - i.W
+    if (i.X > mapSizeX - i.W) {
+      i.X = mapSizeX - i.W
     }
-    if (i.Y > MAP_SIZE_Y - i.H) {
-      i.Y = MAP_SIZE_Y - i.H
+    if (i.Y > mapSizeY - i.H) {
+      i.Y = mapSizeY - i.H
     }
   }
   const dragMoveNodes = () => {
@@ -606,23 +650,6 @@ const mapMain = (p5) => {
   }
 }
 
-let  hasMAP = false
-let  contextMenu = true
-const showMAP = (div) => {
-  mapRedraw = true
-  contextMenu = false
-  if (hasMAP) {
-    return
-  }
-  document.oncontextmenu = (e) => {
-    if (!contextMenu) {
-      e.preventDefault()
-    }
-  }  
-  new P5(mapMain, div) // eslint-disable-line no-new
-  hasMAP = true
-}
-
 const setMapContextMenu = (e) => {
   contextMenu = e
 }
@@ -648,7 +675,6 @@ export default (context, inject) => {
   inject('showMAP', showMAP)
   inject('setIconCodeMap', setIconCodeMap)
   inject('setStateColorMap', setStateColorMap)
-  inject('setMAP', setMAP)
   inject('setCallback', setCallback)
   inject('selectNode', selectNode)
   inject('refreshMAP', refreshMAP)
