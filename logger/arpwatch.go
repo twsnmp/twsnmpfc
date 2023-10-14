@@ -56,6 +56,8 @@ func arpWatch(stopCh chan bool) {
 	}
 }
 
+var lastAddressUsage float64
+
 func makeLoacalCheckAddrs() {
 	ifs, err := net.Interfaces()
 	if err != nil {
@@ -118,6 +120,10 @@ func makeLoacalCheckAddrs() {
 	} else {
 		return
 	}
+	if lau == lastAddressUsage {
+		return
+	}
+	lastAddressUsage = lau
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "arpwatch",
 		Level: "info",
