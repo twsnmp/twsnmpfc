@@ -212,23 +212,21 @@ func checkNewVersion() {
 		log.Printf("check new version err=%v", err)
 		return
 	}
-	if CmpVersion(versionNum, strings.TrimSpace(string(ba))) >= 0 {
+	level := "info"
+	v := strings.TrimSpace(string(ba))
+	if CmpVersion(versionNum, v) >= 0 {
 		if versionCheckState == 0 {
-			datastore.AddEventLog(&datastore.EventLogEnt{
-				Type:  "system",
-				Level: "info",
-				Event: "TWSNMPのバージョンは最新です。",
-			})
 			versionCheckState = 1
 		}
-		return
+	} else {
+		versionCheckState = 2
+		level = "warn"
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "system",
-		Level: "warn",
-		Event: "TWSNMPの新しいバージョンがあります。",
+		Level: level,
+		Event: fmt.Sprintf("利用中のTWSNMP FCのバージョンは%s、最新バージョンは%s", versionNum, v),
 	})
-	versionCheckState = 2
 }
 
 func CmpVersion(mv, sv string) int {
