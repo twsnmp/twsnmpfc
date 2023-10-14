@@ -283,10 +283,13 @@ func convertPollingLog() error {
 		}
 		count := 0
 		b.ForEach(func(k, v []byte) error {
+			if v == nil {
+				return nil
+			}
 			var e PollingLogEnt
 			err := json.Unmarshal(v, &e)
 			if err != nil {
-				log.Printf("load polling log err=%v", err)
+				log.Printf("convertPollingLog load polling log err=%v", err)
 				return nil
 			}
 			if bs, err := b.CreateBucketIfNotExists([]byte(e.PollingID)); err == nil {
