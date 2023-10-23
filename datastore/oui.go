@@ -47,11 +47,23 @@ func FindVendor(mac string) string {
 		if n, ok := ouiMap[mac[:6]]; ok {
 			return n
 		}
+		if n, ok := ouiMap[mac[:7]]; ok {
+			return n
+		}
+		if n, ok := ouiMap[mac[:9]]; ok {
+			return n
+		}
 		if h, err := hex.DecodeString(mac); err == nil {
 			if (h[0] & 0x02) == 0x02 {
 				h[0] = h[0] & 0xfd
 				mac = strings.ToUpper(hex.EncodeToString(h))
 				if n, ok := ouiMap[mac[:6]]; ok {
+					return n + "(Local)"
+				}
+				if n, ok := ouiMap[mac[:7]]; ok {
+					return n + "(Local)"
+				}
+				if n, ok := ouiMap[mac[:9]]; ok {
 					return n + "(Local)"
 				}
 				return "Local"
