@@ -314,7 +314,7 @@
         </v-card-actions>
       </v-form>
     </v-card>
-    <v-dialog v-model="backImageDialog" persistent max-width="500px">
+    <v-dialog v-model="backImageDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">背景設定</span>
@@ -387,7 +387,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="geoipDialog" persistent max-width="500px">
+    <v-dialog v-model="geoipDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">GeoIPデータベース</span>
@@ -424,7 +424,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="stopDialog" persistent max-width="500px">
+    <v-dialog v-model="stopDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">TWSNMP FC停止</span>
@@ -451,7 +451,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="sshKeyDialog" persistent max-width="800px">
+    <v-dialog v-model="sshKeyDialog" persistent max-width="60vw">
       <v-card>
         <v-card-title>
           <span class="headline">SSHの公開鍵</span>
@@ -485,7 +485,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="sshKeyReGenDialog" persistent max-width="500px">
+    <v-dialog v-model="sshKeyReGenDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">SSH鍵の再作成</span>

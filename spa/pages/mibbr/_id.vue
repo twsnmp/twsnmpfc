@@ -115,7 +115,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="mibTreeDialog" persistent width="800px">
+    <v-dialog v-model="mibTreeDialog" persistent width="70vw">
       <v-card max-height="95%">
         <v-card-title> MIBツリー </v-card-title>
         <v-card-text>
@@ -184,7 +184,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="addPollingDialog" persistent max-width="800px">
+    <v-dialog v-model="addPollingDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title> ポーリング設定 </v-card-title>
         <v-alert v-model="addPollingError" color="error" dense dismissible>

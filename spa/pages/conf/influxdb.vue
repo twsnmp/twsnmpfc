@@ -86,7 +86,7 @@
         </v-card-actions>
       </v-form>
     </v-card>
-    <v-dialog v-model="initInfluxdbDialog" persistent max-width="500px">
+    <v-dialog v-model="initInfluxdbDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">Influxdb初期化</span>

@@ -98,7 +98,7 @@
         </v-card-actions>
       </v-card>
     </v-col>
-    <v-dialog v-model="feedbackDialog" persistent max-width="500px">
+    <v-dialog v-model="feedbackDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">フィードバック</span>
@@ -132,7 +132,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="checkUpdateDialog" persistent max-width="500px">
+    <v-dialog v-model="checkUpdateDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">更新版の確認</span>

@@ -97,7 +97,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">タスク情報削除</span>
@@ -119,7 +119,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="800px">
+    <v-dialog v-model="infoDialog" persistent max-width="60vw">
       <v-card>
         <v-card-title>
           <span class="headline">タスク情報</span>
@@ -169,7 +169,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="graphDialog" persistent max-width="1050px">
+    <v-dialog v-model="graphDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           Windowsタスク（グラフ分析）
@@ -185,7 +185,7 @@
         </v-card-title>
         <div
           id="graphChart"
-          style="width: 1000px; height: 700px; overflow: hidden"
+          style="width: 95vw; height: 80vh; overflow: hidden; margin: 0 auto"
         ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -196,10 +196,13 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="scatter3DChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="scatter3DChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title> Windowsタスク（3Dグラフ） </v-card-title>
-        <div id="scatter3DChart" style="width: 1000px; height: 700px"></div>
+        <div
+          id="scatter3DChart"
+          style="width: 95vw; height: 98vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="scatter3DChartDialog = false">

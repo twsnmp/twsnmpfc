@@ -115,7 +115,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">レポート削除</span>
@@ -137,7 +137,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="800px">
+    <v-dialog v-model="infoDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">イベントID情報</span>
@@ -200,12 +200,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="winEventIDDialog" persistent max-width="1000px">
+    <v-dialog v-model="winEventIDDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">WindowsイベントID(3D集計)</span>
         </v-card-title>
-        <div id="winEventID3DChart" style="width: 1000px; height: 600px"></div>
+        <div
+          id="winEventID3DChart"
+          style="width: 96vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="winEventIDDialog = false">

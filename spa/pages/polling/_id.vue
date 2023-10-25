@@ -210,7 +210,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="pollingLogDialog" persistent max-width="1050px">
+    <v-dialog v-model="pollingLogDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           ポーリングログ - {{ node.Name }} - {{ polling.Name }}
@@ -223,7 +223,10 @@
             hide-details
           ></v-text-field>
         </v-card-title>
-        <div id="logStateChart" style="width: 1000px; height: 200px"></div>
+        <div
+          id="logStateChart"
+          style="width: 95vw; height: 20vh; margin: 0 auto"
+        ></div>
         <v-data-table
           :headers="headers"
           :items="logs"
@@ -255,7 +258,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="pollingResultDialog" persistent max-width="1050px">
+    <v-dialog v-model="pollingResultDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           ポーリング結果 - {{ node.Name }} - {{ polling.Name }}
@@ -269,7 +272,10 @@
             @change="selectValEnt"
           ></v-select>
         </v-card-title>
-        <div id="pollingChart" style="width: 1000px; height: 400px"></div>
+        <div
+          id="pollingChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-switch
@@ -294,7 +300,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="pollingForecastDialog" persistent max-width="950px">
+    <v-dialog v-model="pollingForecastDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           ポーリング予測 - {{ node.Name }} - {{ polling.Name }}
@@ -308,7 +314,10 @@
             @change="updatePollingForcast"
           ></v-select>
         </v-card-title>
-        <div id="pollingForecast" style="width: 900px; height: 400px"></div>
+        <div
+          id="pollingForecast"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="pollingForecastDialog = false">
@@ -318,7 +327,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="pollingHistogramDialog" persistent max-width="1050px">
+    <v-dialog v-model="pollingHistogramDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           ヒストグラム - {{ node.Name }} - {{ polling.Name }}
@@ -332,7 +341,10 @@
             @change="selectValEnt"
           ></v-select>
         </v-card-title>
-        <div id="pollingHistogram" style="width: 900px; height: 400px"></div>
+        <div
+          id="pollingHistogram"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="primary" dark @click="filterDialog = true">
@@ -346,7 +358,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="filterDialog" persistent max-width="500px">
+    <v-dialog v-model="filterDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">時間範囲</span>
@@ -479,7 +491,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="aiTrainDialog" persistent max-width="800px">
+    <v-dialog v-model="aiTrainDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">AI学習状況</span>
@@ -490,7 +502,10 @@
         <v-spacer></v-spacer>
         <v-card-subtitle> 学習状況 </v-card-subtitle>
         <v-card-text>
-          <div id="error" style="width: 800px; height: 200px"></div>
+          <div
+            id="error"
+            style="width: 95vw; height: 20vh; margin: 0 auto"
+          ></div>
         </v-card-text>
         <v-card-subtitle> モデル </v-card-subtitle>
         <v-card-text>
@@ -505,12 +520,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="aiHeatMapDialog" persistent max-width="1050px">
+    <v-dialog v-model="aiHeatMapDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> AI分析ヒートマップ </span>
         </v-card-title>
-        <div id="heatMap" style="width: 1000px; height: 400px"></div>
+        <div
+          id="heatMap"
+          style="width: 95vw; height: 50vh; margin: 0 atuo"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="aiHeatMapDialog = false">
@@ -520,12 +538,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="aiPieChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="aiPieChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> AI分析異常割合 </span>
         </v-card-title>
-        <div id="pieChart" style="width: 1000px; height: 400px"></div>
+        <div
+          id="pieChart"
+          style="width: 95vw; height: 60vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="aiPieChartDialog = false">
@@ -535,12 +556,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="aiTimeChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="aiTimeChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> AI分析時系列 </span>
         </v-card-title>
-        <div id="timeChart" style="width: 1000px; height: 300px"></div>
+        <div
+          id="timeChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="aiTimeChartDialog = false">
@@ -550,7 +574,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="stlDialog" persistent max-width="1050px">
+    <v-dialog v-model="stlDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">
@@ -588,7 +612,10 @@
               ></v-select>
             </v-col>
           </v-row>
-          <div id="STLChart" style="width: 1000px; height: 500px"></div>
+          <div
+            id="STLChart"
+            style="width: 95vw; height: 50vh; margin: 0 auto"
+          ></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -599,7 +626,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="fftDialog" persistent max-width="1050px">
+    <v-dialog v-model="fftDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">
@@ -644,7 +671,10 @@
               ></v-select>
             </v-col>
           </v-row>
-          <div id="FFTChart" style="width: 1000px; height: 500px"></div>
+          <div
+            id="FFTChart"
+            style="width: 95vw; height: 50vh; margin: 0 auto"
+          ></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -655,7 +685,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="clearPollingLogDialog" persistent max-width="500px">
+    <v-dialog v-model="clearPollingLogDialog" persistent max-width="40vw">
       <v-card>
         <v-card-title>
           <span class="headline">ポーリングクリア</span>

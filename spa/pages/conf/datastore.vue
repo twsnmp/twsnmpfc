@@ -95,12 +95,15 @@
         </v-card-actions>
       </v-form>
     </v-card>
-    <v-dialog v-model="dbStatsChartDialog" persistent max-width="1020px">
+    <v-dialog v-model="dbStatsChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> データストア統計 </span>
         </v-card-title>
-        <div id="dbStatsChart" style="width: 1000px; height: 400px"></div>
+        <div
+          id="dbStatsChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="dbStatsChartDialog = false">
@@ -110,12 +113,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dbSizeForecastDialog" persistent max-width="1020px">
+    <v-dialog v-model="dbSizeForecastDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> データベースサイズ予測 </span>
         </v-card-title>
-        <div id="dbSizeForecast" style="width: 1000px; height: 400px"></div>
+        <div
+          id="dbSizeForecast"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="dbSizeForecastDialog = false">
@@ -125,7 +131,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="cleanupDialog" persistent max-width="500px">
+    <v-dialog v-model="cleanupDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">データストアのクリーンアップ</span>
@@ -154,7 +160,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="stopBackupDialog" persistent max-width="500px">
+    <v-dialog v-model="stopBackupDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">バックアップ停止</span>
@@ -176,7 +182,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="backupDialog" persistent max-width="500px">
+    <v-dialog v-model="backupDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">バックアップ設定</span>

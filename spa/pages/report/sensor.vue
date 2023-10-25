@@ -93,7 +93,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">センサー削除</span>
@@ -112,7 +112,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="800px">
+    <v-dialog v-model="infoDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">センサー情報</span>
@@ -224,12 +224,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="statsChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="statsChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> 統計情報 </span>
         </v-card-title>
-        <div id="statsChart" style="width: 1000px; height: 400px"></div>
+        <div
+          id="statsChart"
+          style="width: 95vw height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="statsChartDialog = false">
@@ -239,12 +242,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="cpuMemChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="cpuMemChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> CPU/Memory </span>
         </v-card-title>
-        <div id="cpuMemChart" style="width: 1000px; height: 400px"></div>
+        <div
+          id="cpuMemChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="cpuMemChartDialog = false">
@@ -254,12 +260,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="netChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="netChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> 通信量 </span>
         </v-card-title>
-        <div id="netChart" style="width: 1000px; height: 400px"></div>
+        <div
+          id="netChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="netChartDialog = false">
@@ -269,12 +278,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="procChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="procChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> プロセス数と負荷 </span>
         </v-card-title>
-        <div id="procChart" style="width: 1000px; height: 400px"></div>
+        <div
+          id="procChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="procChartDialog = false">
@@ -284,7 +296,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="treeDialog" persistent max-width="1050px">
+    <v-dialog v-model="treeDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           センサーツリー
@@ -298,7 +310,7 @@
             @change="showTree"
           ></v-select>
         </v-card-title>
-        <div id="tree" style="width: 1050px; height: 750px"></div>
+        <div id="tree" style="width: 95vw; height: 80vh; margin: 0 auto"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="treeDialog = false">

@@ -85,7 +85,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">AI分析結果削除</span>

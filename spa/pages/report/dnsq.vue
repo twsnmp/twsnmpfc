@@ -121,7 +121,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="infoDialog" persistent max-width="800px">
+    <v-dialog v-model="infoDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">DNS問い合わせ情報</span>
@@ -183,12 +183,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="nameChartDialog" persistent max-width="950px">
+    <v-dialog v-model="nameChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">問い合わせ別</span>
         </v-card-title>
-        <div id="nameChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="nameChart"
+          style="width: 95vw; height: 60vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="nameChartDialog = false">
@@ -198,12 +201,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="typeChartDialog" persistent max-width="950px">
+    <v-dialog v-model="typeChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">タイプ別</span>
         </v-card-title>
-        <div id="typeChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="typeChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="typeChartDialog = false">
@@ -213,12 +219,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="serverChartDialog" persistent max-width="950px">
+    <v-dialog v-model="serverChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">サーバー別</span>
         </v-card-title>
-        <div id="serverChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="serverChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="serverChartDialog = false">

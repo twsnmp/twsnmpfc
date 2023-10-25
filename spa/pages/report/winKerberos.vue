@@ -119,7 +119,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">レポート削除</span>
@@ -141,7 +141,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="800px">
+    <v-dialog v-model="infoDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">Kerberos情報</span>
@@ -219,7 +219,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="resetDialog" persistent max-width="500px">
+    <v-dialog v-model="resetDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">信用スコア再計算</span>
@@ -241,7 +241,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="graphDialog" persistent max-width="1050px">
+    <v-dialog v-model="graphDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           Kerberosチケット発行(グラフ分析)
@@ -257,7 +257,7 @@
         </v-card-title>
         <div
           id="graphChart"
-          style="width: 1000px; height: 700px; overflow: hidden"
+          style="width: 95vw; height: 80vh; overflow: hidden; margin: 0 auto"
         ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -268,10 +268,13 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="scatter3DChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="scatter3DChartDialog" persistent max-width="98vw">
       <v-card>
-        <v-card-title> Kerberosチケット発行状況（３Dグラフ） </v-card-title>
-        <div id="scatter3DChart" style="width: 1000px; height: 700px"></div>
+        <v-card-title> Kerberosチケット発行状況（3Dグラフ） </v-card-title>
+        <div
+          id="scatter3DChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="scatter3DChartDialog = false">

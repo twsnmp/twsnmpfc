@@ -87,12 +87,15 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="etherTypeChartDialog" persistent max-width="950px">
+    <v-dialog v-model="etherTypeChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">Ethernetタイプ別</span>
         </v-card-title>
-        <div id="etherTypeChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="etherTypeChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="etherTypeChartDialog = false">

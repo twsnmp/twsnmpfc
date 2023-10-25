@@ -3,7 +3,10 @@
     <v-card min-width="1100px" width="100%">
       <v-card-title> パネル表示 - {{ node.Name }} </v-card-title>
       <v-card-text>
-        <div id="vpanel" style="width: 95%; height: 500px"></div>
+        <div
+          id="vpanel"
+          style="width: 98vw; height: 40vh; margin: 0 auto"
+        ></div>
         <v-data-table
           :headers="headers"
           :items="ports"
@@ -131,7 +134,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="editDialog" persistent max-width="500px">
+    <v-dialog v-model="editDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title> ポーリング設定 </v-card-title>
         <v-alert v-model="addError" color="error" dense dismissible>
@@ -218,12 +221,12 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="chartDialog" persistent max-width="950px">
+    <v-dialog v-model="chartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">{{ chartTitle }}</span>
         </v-card-title>
-        <div id="chart" style="width: 900px; height: 700px"></div>
+        <div id="chart" style="width: 95vw; height: 80vh; margin: 0 auto"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="chartDialog = false">

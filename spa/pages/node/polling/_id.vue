@@ -116,7 +116,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="editDialog" persistent max-width="800px">
+    <v-dialog v-model="editDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">ポーリング編集</span>
@@ -265,7 +265,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">ポーリング削除</span>
@@ -309,7 +309,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="setPollingLevelDialog" persistent max-width="500px">
+    <v-dialog v-model="setPollingLevelDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">レベル変更</span>
@@ -331,7 +331,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="setPollingLogModeDialog" persistent max-width="500px">
+    <v-dialog v-model="setPollingLogModeDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">ログモード変更</span>

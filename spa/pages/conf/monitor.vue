@@ -57,12 +57,15 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="sysResChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="sysResChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> システムリソース </span>
         </v-card-title>
-        <div id="sysResChart" style="width: 1000px; height: 400px"></div>
+        <div
+          id="sysResChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="sysResChartDialog = false">
@@ -72,12 +75,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="sysNetChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="sysNetChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> 通信量 </span>
         </v-card-title>
-        <div id="sysNetChart" style="width: 1000px; height: 400px"></div>
+        <div
+          id="sysNetChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="sysNetChartDialog = false">
@@ -87,12 +93,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="sysProcChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="sysProcChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> プロセス数と負荷 </span>
         </v-card-title>
-        <div id="sysProcChart" style="width: 1000px; height: 400px"></div>
+        <div
+          id="sysProcChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="sysProcChartDialog = false">
@@ -102,12 +111,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="diskUsageForecastDialog" persistent max-width="1050px">
+    <v-dialog v-model="diskUsageForecastDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> ディスク使用量の予測 </span>
         </v-card-title>
-        <div id="diskUsageForecast" style="width: 1000px; height: 400px"></div>
+        <div
+          id="diskUsageForecast"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="diskUsageForecastDialog = false">

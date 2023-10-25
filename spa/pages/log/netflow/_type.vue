@@ -198,7 +198,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="filterDialog" persistent max-width="800px">
+    <v-dialog v-model="filterDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">検索条件</span>
@@ -403,7 +403,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="histogramDialog" persistent max-width="950px">
+    <v-dialog v-model="histogramDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           ヒストグラム
@@ -417,7 +417,10 @@
             @change="updateHistogram"
           ></v-select>
         </v-card-title>
-        <div id="histogram" style="width: 900px; height: 400px"></div>
+        <div
+          id="histogram"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="histogramDialog = false">
@@ -427,7 +430,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="clusterDialog" persistent max-width="950px">
+    <v-dialog v-model="clusterDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           クラスター分析
@@ -450,7 +453,10 @@
           ></v-text-field>
         </v-card-title>
         <v-card-text>
-          <div id="cluster" style="width: 900px; height: 400px"></div>
+          <div
+            id="cluster"
+            style="width: 95vw; height: 50vh; margin: 0 auto"
+          ></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -461,7 +467,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="trafficDialog" persistent max-width="950px">
+    <v-dialog v-model="trafficDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           通信量
@@ -475,7 +481,10 @@
             @change="updateTraffic"
           ></v-select>
         </v-card-title>
-        <div id="traffic" style="width: 900px; height: 400px"></div>
+        <div
+          id="traffic"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="trafficDialog = false">
@@ -485,7 +494,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="graphDialog" persistent max-width="1050px">
+    <v-dialog v-model="graphDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           IPペアーのグラフ分析
@@ -501,7 +510,7 @@
         </v-card-title>
         <div
           id="graph"
-          style="width: 1000px; height: 750px; overflow: hidden"
+          style="width: 95vw; height: 80vh; overflow: hidden; margin: 0 auto"
         ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -512,7 +521,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="service3DDialog" persistent max-width="1050px">
+    <v-dialog v-model="service3DDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           サービス別の通信量(3D)
@@ -526,7 +535,10 @@
             @change="updateService3D"
           ></v-select>
         </v-card-title>
-        <div id="service3d" style="width: 1000px; height: 750px"></div>
+        <div
+          id="service3d"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="service3DDialog = false">
@@ -536,7 +548,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="sender3DDialog" persistent max-width="1050px">
+    <v-dialog v-model="sender3DDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           送信元別の通信量(3D)
@@ -550,7 +562,10 @@
             @change="updateSender3D"
           ></v-select>
         </v-card-title>
-        <div id="sender3d" style="width: 1000px; height: 750px"></div>
+        <div
+          id="sender3d"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="sender3DDialog = false">
@@ -560,7 +575,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="ipFlow3DDialog" persistent max-width="1050px">
+    <v-dialog v-model="ipFlow3DDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           IPペアー別の通信量(3D)
@@ -574,7 +589,10 @@
             @change="updateIPFlow3D"
           ></v-select>
         </v-card-title>
-        <div id="ipflow3d" style="width: 1000px; height: 750px"></div>
+        <div
+          id="ipflow3d"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="ipFlow3DDialog = false">
@@ -584,7 +602,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="topListDialog" persistent max-width="950px">
+    <v-dialog v-model="topListDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           {{ topListTitle }}
@@ -599,7 +617,10 @@
           ></v-select>
         </v-card-title>
         <v-card-text>
-          <div id="topList" style="width: 900px; height: 500px"></div>
+          <div
+            id="topList"
+            style="width: 95vw; height: 40vh; margin: 0 auto"
+          ></div>
           <v-data-table
             :headers="topListHeader"
             :items="topList"
@@ -658,7 +679,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="fftDialog" persistent max-width="1050px">
+    <v-dialog v-model="fftDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           {{ title }} - FFT分析
@@ -682,7 +703,10 @@
           ></v-select>
         </v-card-title>
         <v-card-text>
-          <div id="FFTChart" style="width: 1000px; height: 500px"></div>
+          <div
+            id="FFTChart"
+            style="width: 95vw; height: 50vh; margin: 0 auto"
+          ></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -693,7 +717,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="fft3DDialog" persistent max-width="1050px">
+    <v-dialog v-model="fft3DDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           {{ title }} - FFT分析(3D)
@@ -708,7 +732,10 @@
           ></v-select>
         </v-card-title>
         <v-card-text>
-          <div id="FFTChart3D" style="width: 1000px; height: 600px"></div>
+          <div
+            id="FFTChart3D"
+            style="width: 95vw; height: 80vh; margin: 0 auto"
+          ></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -719,13 +746,16 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="heatmapDialog" persistent max-width="1050px">
+    <v-dialog v-model="heatmapDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> {{ title }} - ヒートマップ </span>
         </v-card-title>
         <v-card-text>
-          <div id="heatmap" style="width: 1000px; height: 600px"></div>
+          <div
+            id="heatmap"
+            style="width: 95vw; height: 60vh; margin: 0 auto"
+          ></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>

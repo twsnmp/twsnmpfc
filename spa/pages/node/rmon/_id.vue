@@ -728,12 +728,12 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="chartDialog" persistent max-width="950px">
+    <v-dialog v-model="chartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">{{ chartTitle }}</span>
         </v-card-title>
-        <div id="chart" style="width: 900px; height: 700px"></div>
+        <div id="chart" style="width: 95vw; height: 60vh"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="chartDialog = false">

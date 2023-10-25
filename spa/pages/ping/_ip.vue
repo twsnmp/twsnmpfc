@@ -33,7 +33,7 @@
       <v-alert v-model="error" color="error" dense dismissible>
         PINGを実行できませんでした
       </v-alert>
-      <div id="chart" style="width: 100%; height: 250px"></div>
+      <div id="chart" style="width: 100%; height: 25vh"></div>
       <v-data-table
         :headers="headers"
         :items="results"
@@ -136,13 +136,16 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="histogramDialog" persistent max-width="950px">
+    <v-dialog v-model="histogramDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           PING応答のヒストグラム
           <v-spacer></v-spacer>
         </v-card-title>
-        <div id="histogram" style="width: 900px; height: 400px"></div>
+        <div
+          id="histogram"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="histogramDialog = false">
@@ -152,13 +155,16 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="chart3DDialog" persistent max-width="1050px">
+    <v-dialog v-model="chart3DDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           実行日時、サイズ、応答時間の関係(3D)
           <v-spacer></v-spacer>
         </v-card-title>
-        <div id="chart3d" style="width: 1000px; height: 750px"></div>
+        <div
+          id="chart3d"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="chart3DDialog = false">
@@ -168,13 +174,16 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="linearDialog" persistent max-width="1050px">
+    <v-dialog v-model="linearDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           PINGによる回線速度予測
           <v-spacer></v-spacer>
         </v-card-title>
-        <div id="linear" style="width: 1000px; height: 750px"></div>
+        <div
+          id="linear"
+          style="width: 95vw; height: 60vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="linearDialog = false">
@@ -184,13 +193,13 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="worldDialog" persistent max-width="1050px">
+    <v-dialog v-model="worldDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           トレースルートの経路分析
           <v-spacer></v-spacer>
         </v-card-title>
-        <div id="world" style="width: 1000px; height: 750px"></div>
+        <div id="world" style="width: 95vw; height: 60vh; margin: 0 auto"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="worldDialog = false">

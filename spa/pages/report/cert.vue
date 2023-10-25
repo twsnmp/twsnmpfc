@@ -91,7 +91,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">サーバー証明書削除</span>
@@ -113,7 +113,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="resetDialog" persistent max-width="500px">
+    <v-dialog v-model="resetDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">信用度再計算</span>
@@ -135,7 +135,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="800px">
+    <v-dialog v-model="infoDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">サーバー証明書情報</span>
@@ -211,7 +211,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="editDialog" persistent max-width="500px">
+    <v-dialog v-model="editDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">対象サーバー編集</span>

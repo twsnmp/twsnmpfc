@@ -108,7 +108,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">レポート削除</span>
@@ -127,7 +127,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="800px">
+    <v-dialog v-model="infoDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">環境センサー情報</span>
@@ -214,7 +214,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="env3DDialog" persistent max-width="1000px">
+    <v-dialog v-model="env3DDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">{{ chartTitle }}</span>
@@ -228,7 +228,10 @@
             @change="change3DType"
           ></v-select>
         </v-card-title>
-        <div id="env3DChart" style="width: 1000px; height: 600px"></div>
+        <div
+          id="env3DChart"
+          style="width: 95vw; height: 80vh; margin: 0 atuo"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="env3DDialog = false">
@@ -238,7 +241,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="env2DDialog" persistent max-width="1000px">
+    <v-dialog v-model="env2DDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">{{ chartTitle }}</span>
@@ -252,7 +255,10 @@
             @change="change2DType"
           ></v-select>
         </v-card-title>
-        <div id="env2DChart" style="width: 1000px; height: 600px"></div>
+        <div
+          id="env2DChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="env2DDialog = false">

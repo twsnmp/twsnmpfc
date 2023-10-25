@@ -264,7 +264,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="editDialog" persistent max-width="500px">
+    <v-dialog v-model="editDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title> ポーリング設定 </v-card-title>
         <v-alert v-model="addError" color="error" dense dismissible>
@@ -356,12 +356,12 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="chartDialog" persistent max-width="950px">
+    <v-dialog v-model="chartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">{{ chartTitle }}</span>
         </v-card-title>
-        <div id="chart" style="width: 900px; height: 700px"></div>
+        <div id="chart" style="width: 95vw; height: 80vh; margin: 0 auto"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="chartDialog = false">

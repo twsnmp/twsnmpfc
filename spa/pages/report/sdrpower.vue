@@ -74,7 +74,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">レポート削除</span>
@@ -93,13 +93,13 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="chartDialog" persistent max-width="1050px">
+    <v-dialog v-model="chartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           {{ chartTitle }}
           <v-spacer></v-spacer>
         </v-card-title>
-        <div id="chart" style="width: 1000px; height: 700px"></div>
+        <div id="chart" style="width: 95vw; height: 80vh; margin: 0 auto"></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="chartDialog = false">

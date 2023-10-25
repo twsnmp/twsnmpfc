@@ -159,7 +159,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">フロー削除</span>
@@ -178,7 +178,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="resetDialog" persistent max-width="500px">
+    <v-dialog v-model="resetDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">信用度再計算</span>
@@ -197,7 +197,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="flowsChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="flowsChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           通信フロー（グラフ分析）
@@ -214,7 +214,10 @@
         <v-alert v-model="over" color="error" dense dismissible>
           対象の通信フローが多すぎます。フィルターしてください。
         </v-alert>
-        <div id="flowsChart" style="width: 1000px; height: 700px"></div>
+        <div
+          id="flowsChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="flowsChartDialog = false">
@@ -224,12 +227,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="flows3DChartDialog" persistent max-width="800px">
+    <v-dialog v-model="flows3DChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">通信フロー（位置情報）</span>
         </v-card-title>
-        <div id="flows3DChart" style="width: 800px; height: 800px"></div>
+        <div
+          id="flows3DChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="flows3DChartDialog = false">
@@ -239,12 +245,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="countryChartDialog" persistent max-width="950px">
+    <v-dialog v-model="countryChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">国別</span>
         </v-card-title>
-        <div id="countryChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="countryChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="countryChartDialog = false">
@@ -254,7 +263,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="950px">
+    <v-dialog v-model="infoDialog" persistent max-width="80vw">
       <v-card>
         <v-card-title>
           <span class="headline">フロー情報</span>
@@ -377,12 +386,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="servicePieChartDialog" persistent max-width="950px">
+    <v-dialog v-model="servicePieChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">サービス割合</span>
         </v-card-title>
-        <div id="servicePieChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="servicePieChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="servicePieChartDialog = false">
@@ -392,7 +404,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="unknownPortDialog" persistent max-width="950px">
+    <v-dialog v-model="unknownPortDialog" persistent max-width="60vw">
       <v-card>
         <v-card-title>
           <span class="headline">不明ポート一覧</span>

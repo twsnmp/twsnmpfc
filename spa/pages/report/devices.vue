@@ -133,7 +133,7 @@
         コピーしました
       </v-snackbar>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">LANデバイス削除</span>
@@ -157,7 +157,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="resetDialog" persistent max-width="500px">
+    <v-dialog v-model="resetDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">信用スコア再計算</span>
@@ -179,12 +179,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="vendorDialog" persistent max-width="950px">
+    <v-dialog v-model="vendorDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">メーカー別</span>
         </v-card-title>
-        <div id="vendorChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="vendorChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="vendorDialog = false">
@@ -194,7 +197,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="800px">
+    <v-dialog v-model="infoDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">LANデバイス情報</span>
@@ -265,7 +268,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="addNodeDialog" persistent max-width="800px">
+    <v-dialog v-model="addNodeDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">ノード追加</span>

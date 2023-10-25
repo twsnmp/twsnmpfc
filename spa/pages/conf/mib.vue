@@ -38,7 +38,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="mibTreeDialog" persistent width="900px">
+    <v-dialog v-model="mibTreeDialog" persistent width="80vw">
       <v-card max-height="95%">
         <v-card-title> MIBツリー </v-card-title>
         <v-card-text>

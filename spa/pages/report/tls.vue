@@ -179,7 +179,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">TLS通信削除</span>
@@ -201,7 +201,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="resetDialog" persistent max-width="500px">
+    <v-dialog v-model="resetDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">信用スコア再計算</span>
@@ -223,7 +223,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="950px">
+    <v-dialog v-model="infoDialog" persistent max-width="80vw">
       <v-card>
         <v-card-title>
           <span class="headline">TLS通信フロー情報</span>
@@ -325,7 +325,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="flowsChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="flowsChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           TLS通信フロー（グラフ分析）
@@ -344,7 +344,7 @@
         </v-alert>
         <div
           id="flowsChart"
-          style="width: 1000px; height: 700px; overflow: hidden"
+          style="width: 95vw; height: 80vh; overflow: hidden; margin: 0 auto"
         ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -355,12 +355,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="flows3DChartDialog" persistent max-width="800px">
+    <v-dialog v-model="flows3DChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">TLS通信フロー（位置情報）</span>
         </v-card-title>
-        <div id="flows3DChart" style="width: 800px; height: 800px"></div>
+        <div
+          id="flows3DChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="flows3DChartDialog = false">
@@ -370,7 +373,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="countryChartDialog" persistent max-width="950px">
+    <v-dialog v-model="countryChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">国別</span>
@@ -384,7 +387,10 @@
             @change="showCountryChart"
           ></v-select>
         </v-card-title>
-        <div id="countryChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="countryChart"
+          style="width: 95vw; height: 60vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="countryChartDialog = false">
@@ -394,12 +400,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="versionChartDialog" persistent max-width="950px">
+    <v-dialog v-model="versionChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">TLSバージョン別割合</span>
         </v-card-title>
-        <div id="versionChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="versionChart"
+          style="width: 95vw; height: 60vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="versionChartDialog = false">
@@ -409,12 +418,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="cipherChartDialog" persistent max-width="950px">
+    <v-dialog v-model="cipherChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">暗号スイート別</span>
         </v-card-title>
-        <div id="cipherChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="cipherChart"
+          style="width: 95vw; height: 60vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="cipherChartDialog = false">

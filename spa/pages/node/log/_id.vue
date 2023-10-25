@@ -12,7 +12,7 @@
           hide-details
         ></v-text-field>
       </v-card-title>
-      <div id="logCountChart" style="width: 100%; height: 200px"></div>
+      <div id="logCountChart" style="width: 100%; height: 20vh"></div>
       <v-data-table
         :headers="headers"
         :items="logs"

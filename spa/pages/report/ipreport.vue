@@ -160,7 +160,7 @@
         コピーしました
       </v-snackbar>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">IPアドレス削除</span>
@@ -184,7 +184,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="resetDialog" persistent max-width="500px">
+    <v-dialog v-model="resetDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">信用スコア再計算</span>
@@ -208,12 +208,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="vendorDialog" persistent max-width="950px">
+    <v-dialog v-model="vendorDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">ベンダー別</span>
         </v-card-title>
-        <div id="vendorChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="vendorChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="vendorDialog = false">
@@ -223,12 +226,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="mapChartDialog" persistent max-width="1050px">
+    <v-dialog v-model="mapChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">IP位置</span>
         </v-card-title>
-        <div id="mapChart" style="width: 1000px; height: 600px"></div>
+        <div
+          id="mapChart"
+          style="width: 95vw; height: 60vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="mapChartDialog = false">
@@ -238,12 +244,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="countryChartDialog" persistent max-width="950px">
+    <v-dialog v-model="countryChartDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">国別</span>
         </v-card-title>
-        <div id="countryChart" style="width: 900px; height: 600px"></div>
+        <div
+          id="countryChart"
+          style="width: 95vw; height: 60vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="countryChartDialog = false">
@@ -253,7 +262,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="800px">
+    <v-dialog v-model="infoDialog" persistent max-width="60vw">
       <v-card>
         <v-card-title>
           <span class="headline">IPアドレス情報</span>
@@ -352,7 +361,7 @@
         </v-snackbar>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="addNodeDialog" persistent max-width="800px">
+    <v-dialog v-model="addNodeDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">ノード追加</span>

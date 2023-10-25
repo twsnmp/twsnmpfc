@@ -8,7 +8,7 @@
           {{ ft }}から{{ lt }} {{ count }} / {{ process }}件
         </span>
       </v-card-title>
-      <div id="logCountChart" style="width: 100%; height: 200px"></div>
+      <div id="logCountChart" style="width: 100%; height: 20vh"></div>
       <v-data-table
         :headers="headers"
         :items="logs"
@@ -172,7 +172,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="filterDialog" persistent max-width="500px">
+    <v-dialog v-model="filterDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">検索条件</span>
@@ -443,7 +443,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="histogramDialog" persistent max-width="950px">
+    <v-dialog v-model="histogramDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           ヒストグラム
@@ -457,7 +457,10 @@
             @change="updateHistogram"
           ></v-select>
         </v-card-title>
-        <div id="histogram" style="width: 900px; height: 400px"></div>
+        <div
+          id="histogram"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="histogramDialog = false">
@@ -467,7 +470,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="clusterDialog" persistent max-width="950px">
+    <v-dialog v-model="clusterDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           クラスター分析
@@ -478,7 +481,10 @@
             @change="updateCluster"
           ></v-text-field>
         </v-card-title>
-        <div id="cluster" style="width: 900px; height: 400px"></div>
+        <div
+          id="cluster"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="clusterDialog = false">
@@ -488,13 +494,16 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="host3DDialog" persistent max-width="1050px">
+    <v-dialog v-model="host3DDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           ホスト別ログ(3D)
           <v-spacer></v-spacer>
         </v-card-title>
-        <div id="host3d" style="width: 1000px; height: 750px"></div>
+        <div
+          id="host3d"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="host3DDialog = false">
@@ -504,14 +513,17 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="hostListDialog" persistent max-width="950px">
+    <v-dialog v-model="hostListDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           ホスト別ログ
           <v-spacer></v-spacer>
         </v-card-title>
         <v-card-text>
-          <div id="hostList" style="width: 900px; height: 500px"></div>
+          <div
+            id="hostList"
+            style="width: 95vw; height: 80vh; margin: 0 auto"
+          ></div>
           <v-data-table
             :headers="hostListHeader"
             :items="hostList"
@@ -566,7 +578,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="extractHistogramDialog" persistent max-width="950px">
+    <v-dialog v-model="extractHistogramDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           抽出情報のヒストグラム分析
@@ -580,7 +592,10 @@
             @change="updateExtractHistogram"
           ></v-select>
         </v-card-title>
-        <div id="histogram" style="width: 900px; height: 400px"></div>
+        <div
+          id="histogram"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="extractHistogramDialog = false">
@@ -590,7 +605,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="extractClusterDialog" persistent max-width="950px">
+    <v-dialog v-model="extractClusterDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           抽出情報のクラスター分析
@@ -601,7 +616,10 @@
             @change="updateExtractCluster"
           ></v-text-field>
         </v-card-title>
-        <div id="cluster" style="width: 900px; height: 400px"></div>
+        <div
+          id="cluster"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="extractClusterDialog = false">
@@ -611,7 +629,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="extract3DDialog" persistent max-width="1050px">
+    <v-dialog v-model="extract3DDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title> 抽出情報の項目別3Dグラフ </v-card-title>
         <v-card-text>
@@ -647,7 +665,10 @@
               ></v-select>
             </v-col>
           </v-row>
-          <div id="extract3d" style="width: 1000px; height: 750px"></div>
+          <div
+            id="extract3d"
+            style="width: 95vw; height: 80vh; margin: 0 auto"
+          ></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -658,7 +679,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="extractTopListDialog" persistent max-width="950px">
+    <v-dialog v-model="extractTopListDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           抽出情報の項目別集計
@@ -673,7 +694,10 @@
           ></v-select>
         </v-card-title>
         <v-card-text>
-          <div id="extractTopList" style="width: 900px; height: 500px"></div>
+          <div
+            id="extractTopList"
+            style="width: 95vw; height: 80vh; margin: 0 auto"
+          ></div>
           <v-data-table
             :headers="extractTopListHeader"
             :items="extractTopList"
@@ -731,14 +755,14 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="aiAssistDialog" persistent max-width="1200px">
+    <v-dialog v-model="aiAssistDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title> AIアシスト分析 </v-card-title>
         <v-card-text>
           <div
             v-if="hasAIErrorChart"
             id="aiAssist"
-            style="width: 1200px; height: 200px"
+            style="width: 95vw; height: 200px"
           ></div>
           <v-data-table
             v-model="selectedAILogs"
@@ -813,7 +837,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="setAIClassDialog" persistent max-width="500px">
+    <v-dialog v-model="setAIClassDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">分類を教える</span>
@@ -834,7 +858,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="fftDialog" persistent max-width="1050px">
+    <v-dialog v-model="fftDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> Syslog - FFT分析 </span>
@@ -862,7 +886,10 @@
               ></v-select>
             </v-col>
           </v-row>
-          <div id="FFTChart" style="width: 1000px; height: 500px"></div>
+          <div
+            id="FFTChart"
+            style="width: 95vw; height: 50vh; margin: 0 auto"
+          ></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -873,7 +900,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="fft3DDialog" persistent max-width="1050px">
+    <v-dialog v-model="fft3DDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> Syslog - FFT分析(3D) </span>
@@ -888,7 +915,10 @@
           ></v-select>
         </v-card-title>
         <v-card-text>
-          <div id="FFTChart3D" style="width: 1000px; height: 600px"></div>
+          <div
+            id="FFTChart3D"
+            style="width: 95vw; height: 60vh; margin: 0 auto"
+          ></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -899,13 +929,16 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="heatmapDialog" persistent max-width="1050px">
+    <v-dialog v-model="heatmapDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline"> Syslog - ヒートマップ </span>
         </v-card-title>
         <v-card-text>
-          <div id="heatmap" style="width: 1000px; height: 600px"></div>
+          <div
+            id="heatmap"
+            style="width: 95vw; height: 60vh; margin: 0 auto"
+          ></div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>

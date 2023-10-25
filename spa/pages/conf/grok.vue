@@ -156,7 +156,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">抽出パターン削除</span>
@@ -177,7 +177,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="importDialog" persistent max-width="500px">
+    <v-dialog v-model="importDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">抽出パターンのインポート</span>

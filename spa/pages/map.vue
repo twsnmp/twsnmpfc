@@ -37,7 +37,7 @@
         </template>
       </v-data-table>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">ノード削除</span>
@@ -59,7 +59,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="deleteItemDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteItemDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">描画アイテム</span>
@@ -81,7 +81,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="editNodeDialog" persistent max-width="800px">
+    <v-dialog v-model="editNodeDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">ノード設定</span>
@@ -197,7 +197,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="editItemDialog" persistent max-width="800px">
+    <v-dialog v-model="editItemDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">描画アイテム</span>
@@ -330,7 +330,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="lineDialog" persistent max-width="800px">
+    <v-dialog v-model="lineDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">ライン編集</span>
@@ -442,7 +442,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="showNodeDialog" persistent max-width="800px">
+    <v-dialog v-model="showNodeDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">ノード情報</span>
@@ -626,7 +626,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="openURLDialog" persistent max-width="500px">
+    <v-dialog v-model="openURLDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">アクセス先URLの選択</span>
@@ -699,7 +699,7 @@
         </v-list-item>
       </v-list>
     </v-menu>
-    <v-dialog v-model="gridDialog" persistent max-width="500px">
+    <v-dialog v-model="gridDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">グリッド整列</span>
@@ -729,7 +729,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="imageUploadDialog" persistent max-width="500px">
+    <v-dialog v-model="imageUploadDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">画僧ファイルアップロード</span>
@@ -758,7 +758,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="imageDeleteDialog" persistent max-width="500px">
+    <v-dialog v-model="imageDeleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">画僧ファイル操作</span>

@@ -107,7 +107,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="500px">
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">レポート削除</span>
@@ -129,7 +129,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="infoDialog" persistent max-width="800px">
+    <v-dialog v-model="infoDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
           <span class="headline">Wifiアクセスポイント情報</span>
@@ -208,12 +208,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="rssiTime3DDialog" persistent max-width="1000px">
+    <v-dialog v-model="rssiTime3DDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">Wifi AP RSSI時間変化 3Dグラフ</span>
         </v-card-title>
-        <div id="rssiTime3DChart" style="width: 1000px; height: 600px"></div>
+        <div
+          id="rssiTime3DChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="rssiTime3DDialog = false">
@@ -223,12 +226,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="rssiLoc3DDialog" persistent max-width="1000px">
+    <v-dialog v-model="rssiLoc3DDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
           <span class="headline">Wifi AP RSSI位置変化 3Dグラフ</span>
         </v-card-title>
-        <div id="rssiLoc3DChart" style="width: 1000px; height: 600px"></div>
+        <div
+          id="rssiLoc3DChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="rssiLoc3DDialog = false">

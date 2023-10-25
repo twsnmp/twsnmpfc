@@ -5,7 +5,7 @@
         SNMP TRAP
         <v-spacer></v-spacer>
       </v-card-title>
-      <div id="logCountChart" style="width: 100%; height: 200px"></div>
+      <div id="logCountChart" style="width: 100%; height: 20vh"></div>
       <v-data-table
         :headers="headers"
         :items="logs"
@@ -72,7 +72,7 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <v-dialog v-model="filterDialog" persistent max-width="500px">
+    <v-dialog v-model="filterDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
           <span class="headline">検索条件</span>
