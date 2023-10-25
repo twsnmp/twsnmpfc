@@ -1,6 +1,8 @@
 import P5 from 'p5'
 
 let ports = []
+let cw = 1000
+let ch = 500
 let power = false
 let rotate = false
 
@@ -19,7 +21,7 @@ const vpanelMain = (p) => {
     font = p.loadFont('/fonts/inconsolata.ttf')
   }
   p.setup = () => {
-    p.createCanvas(1000, 500, p.WEBGL)
+    p.createCanvas(cw, ch, p.WEBGL)
     p.frameRate(10)
     portImage = p.loadImage('/images/port.png')
     p.textFont(font, 24)
@@ -128,6 +130,9 @@ const setVPanel = (po, pw, r) => {
 }
 
 const makeVPanel = (div) => {
+  const d = document.getElementById(div)
+  cw = d.clientWidth || 1000
+  ch = d.clientHeight || 500
   new P5(vpanelMain, div) // eslint-disable-line no-new
 }
 
