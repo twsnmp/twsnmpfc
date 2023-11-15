@@ -1021,12 +1021,22 @@ export default {
   },
   async fetch() {
     this.map = await this.$axios.$get('/api/map')
+    const mb = document.getElementById('map')
+    const sbt = mb ? mb.scrollTop : 0
+    const sbl = mb ? mb.scrollLeft : 0
     this.$showMAP(
       'map',
       this.map,
       this.$axios.defaults.baseURL,
       this.$store.state.map.readOnly
     )
+    if (mb) {
+      const ma = document.getElementById('map')
+      if (ma) {
+        ma.scrollTop = sbt
+        ma.scrollLeft = sbl
+      }
+    }
     this.$store.commit('map/setMAP', this.map)
     this.map.Logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
