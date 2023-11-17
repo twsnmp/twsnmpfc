@@ -256,11 +256,12 @@
               mdi-calendar-today
             </v-icon>
           </v-row>
-          <v-select
+          <v-autocomplete
             v-model="filter.NodeID"
             :items="nodeList"
             label="関連ノード"
-          ></v-select>
+          >
+          </v-autocomplete>
           <v-select
             v-model="filter.Type"
             :items="$filterEventTypeList"
