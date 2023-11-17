@@ -159,6 +159,7 @@ func postSyslog(c echo.Context) error {
 		to = datastore.MapConf.LogTimeout
 	}
 	end := time.Now().Unix() + int64(to)
+	var hostMap = make(map[string]string)
 	datastore.ForEachLog(st, et, "syslog", func(l *datastore.LogEnt) bool {
 		if i > 1000 {
 			// 検索期間が15秒を超えた場合
@@ -191,6 +192,17 @@ func postSyslog(c echo.Context) error {
 		}
 		if re.Host, ok = sl["hostname"].(string); !ok {
 			return true
+		}
+		if h, ok := hostMap[re.Host]; ok {
+			re.Host = h
+		} else {
+			if n := datastore.FindNodeFromIP(re.Host); n != nil {
+				h = fmt.Sprintf("%s(%s)", re.Host, n.Name)
+				hostMap[re.Host] = h
+				re.Host = h
+			} else {
+				hostMap[re.Host] = re.Host
+			}
 		}
 		if re.Tag, ok = sl["tag"].(string); !ok {
 			if re.Tag, ok = sl["app_name"].(string); !ok {
