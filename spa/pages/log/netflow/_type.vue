@@ -231,34 +231,29 @@
               >
               </v-date-picker>
             </v-menu>
-            <v-menu
-              ref="stMenu"
-              v-model="stMenuShow"
-              :close-on-content-click="false"
-              :return-value.sync="filter.StartTime"
-              transition="scale-transition"
-              offset-y
-              :nudge-right="40"
-              max-width="290px"
-              min-width="290px"
+            <v-text-field
+              v-model="filter.StartTime"
+              label="開始時刻"
+              prepend-icon="mdi-clock-time-four-outline"
+              type="time"
+            ></v-text-field>
+            <v-icon
+              @click="
+                filter.StartDate = ''
+                filter.StartTime = ''
+              "
             >
-              <template #activator="{ on, attrs }">
-                <v-text-field
-                  v-model="filter.StartTime"
-                  label="開始時刻"
-                  prepend-icon="mdi-clock-time-four-outline"
-                  readonly
-                  v-bind="attrs"
-                  v-on="on"
-                ></v-text-field>
-              </template>
-              <v-time-picker
-                v-if="stMenuShow"
-                v-model="filter.StartTime"
-                full-width
-                @click:minute="$refs.stMenu.save(filter.StartTime)"
-              ></v-time-picker>
-            </v-menu>
+              mdi-close
+            </v-icon>
+            <v-icon
+              @click="
+                const t = Date.now()
+                filter.StartDate = $timeFormat(t, '{yyyy}-{MM}-{dd}')
+                filter.StartTime = '00:00'
+              "
+            >
+              mdi-calendar-today
+            </v-icon>
           </v-row>
           <v-row justify="space-around">
             <v-menu
@@ -287,35 +282,29 @@
               >
               </v-date-picker>
             </v-menu>
-            <v-menu
-              ref="etMenu"
-              v-model="etMenuShow"
-              :close-on-content-click="false"
-              :return-value.sync="filter.EndTime"
-              transition="scale-transition"
-              offset-y
-              :nudge-right="40"
-              max-width="290px"
-              min-width="290px"
+            <v-text-field
+              v-model="filter.EndTime"
+              label="終了時刻"
+              prepend-icon="mdi-clock-time-four-outline"
+              type="time"
+            ></v-text-field>
+            <v-icon
+              @click="
+                filter.EndDate = ''
+                filter.EndTime = ''
+              "
             >
-              <template #activator="{ on, attrs }">
-                <v-text-field
-                  v-model="filter.EndTime"
-                  label="終了時刻"
-                  prepend-icon="mdi-clock-time-four-outline"
-                  readonly
-                  v-bind="attrs"
-                  v-on="on"
-                ></v-text-field>
-              </template>
-              <v-time-picker
-                v-if="etMenuShow"
-                v-model="filter.EndTime"
-                full-width
-                dark
-                @click:minute="$refs.etMenu.save(filter.EndTime)"
-              ></v-time-picker>
-            </v-menu>
+              mdi-close
+            </v-icon>
+            <v-icon
+              @click="
+                const t = Date.now() + 3600 * 24 * 1000
+                filter.EndDate = $timeFormat(t, '{yyyy}-{MM}-{dd}')
+                filter.EndTime = '00:00'
+              "
+            >
+              mdi-calendar-today
+            </v-icon>
           </v-row>
           <v-switch v-model="filter.SrcDst" label="双方向"></v-switch>
           <v-row v-if="!filter.SrcDst" justify="space-around">
@@ -780,9 +769,7 @@ export default {
       lt: '',
       filterDialog: false,
       sdMenuShow: false,
-      stMenuShow: false,
       edMenuShow: false,
-      etMenuShow: false,
       nodeList: [],
       filter: {
         StartDate: '',
