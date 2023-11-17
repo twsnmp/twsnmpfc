@@ -94,6 +94,20 @@
         <download-excel
           v-if="info.length > 0"
           :fetch="makeExports"
+          type="csv"
+          :escape-csv="false"
+          name="TWSNMP_FC_Addr_Info.csv"
+          header="TWSNMP FCによるアドレス調査結果"
+          class="v-btn ml-0"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          v-if="info.length > 0"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Addr_Info.xls"
           header="TWSNMP FCによるアドレス調査結果"

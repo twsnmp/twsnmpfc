@@ -55,6 +55,19 @@
         </download-excel>
         <download-excel
           :fetch="makeExports"
+          type="csv"
+          :escape-csv="false"
+          name="TWSNMP_FC_SNMP_TRAP.csv"
+          header="TWSNMP FCのSNMP TRAPログ"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_SNMP_TRAP.xls"
           header="TWSNMP FCのSNMP TRAPログ"

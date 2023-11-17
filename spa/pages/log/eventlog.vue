@@ -63,6 +63,19 @@
         </download-excel>
         <download-excel
           :fetch="makeExports"
+          type="csv"
+          :escape-csv="false"
+          name="TWSNMP_FC_Event_Log.csv"
+          header="TWSNMP FCのイベントログ"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Event_Log.xls"
           header="TWSNMP FCのイベントログ"

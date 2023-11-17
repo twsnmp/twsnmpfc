@@ -86,6 +86,20 @@
         <download-excel
           v-if="mibs.length > 0"
           :fetch="makeExports"
+          type="csv"
+          :escape-csv="false"
+          name="TWSNMP_FC_MIB.csv"
+          :header="exportHeader"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          v-if="mibs.length > 0"
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_MIB.xls"
           :header="exportHeader"

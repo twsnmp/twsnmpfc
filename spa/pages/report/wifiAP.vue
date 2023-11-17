@@ -91,6 +91,19 @@
         </download-excel>
         <download-excel
           :fetch="makeExports"
+          type="csv"
+          :escape-csv="false"
+          name="TWSNMP_FC_Wifi_AP_List.csv"
+          header="TWSNMP FCで作成したWifiアクセスポイントリスト"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Wifi_AP_List.xls"
           header="TWSNMP FCで作成したWifiアクセスポイントリスト"

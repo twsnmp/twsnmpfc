@@ -67,6 +67,19 @@
         </download-excel>
         <download-excel
           :fetch="makeLogExports"
+          type="csv"
+          :escape-csv="false"
+          :name="'TWSNMP_FC_' + title + '.csv'"
+          :header="'TWSNMP FCの' + title + 'ログ'"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeLogExports"
           type="xls"
           :name="'TWSNMP_FC_' + title + '.xls'"
           :header="'TWSNMP FCの' + title + 'ログ'"
@@ -646,6 +659,19 @@
             <v-btn color="primary" dark>
               <v-icon>mdi-file-delimited</v-icon>
               CSV
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :fetch="makeTopExports"
+            type="csv"
+            :escape-csv="false"
+            :name="'TWSNMP_FC_' + title + '_TopList.csv'"
+            :header="'TWSNMP FCの' + title + '上位リスト'"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV(NO ESC)
             </v-btn>
           </download-excel>
           <download-excel

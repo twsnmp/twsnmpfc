@@ -77,8 +77,21 @@
         </download-excel>
         <download-excel
           :fetch="makeSyslogExports"
+          type="csv"
+          :escape-csv="false"
+          name="TWSNMP_FC_Syslog.csv"
+          header="TWSNMP FCのSyslog"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeSyslogExports"
           type="xls"
-          name="TWSNMP_FC_Sysog.xls"
+          name="TWSNMP_FC_Syslog.xls"
           header="TWSNMP FCのSyslog"
           worksheet="Syslog"
           class="v-btn"
@@ -358,8 +371,21 @@
           </download-excel>
           <download-excel
             :fetch="makeExtractExports"
+            type="csv"
+            :escape-csv="false"
+            name="TWSNMP_FC_Syslog_Extract.csv"
+            header="TWSNMP FCでSyslogから抽出した情報"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV(NO ESC)
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :fetch="makeExtractExports"
             type="xls"
-            name="TWSNMP_FC_Sysog_Extract.xls"
+            name="TWSNMP_FC_Syslog_Extract.xls"
             header="TWSNMP FCでSyslogから抽出した情報"
             worksheet="Syslogから抽出"
             class="v-btn"
@@ -549,6 +575,19 @@
           </download-excel>
           <download-excel
             :fetch="makeHostExports"
+            type="csv"
+            :escape-csv="false"
+            name="TWSNMP_FC_Syslog_Host_List.csv"
+            header="TWSNMP FCへSyslogを送信するホストリスト"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV(NO ESC)
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :fetch="makeHostExports"
             type="xls"
             name="TWSNMP_FC_Syslog_Host_List.xls"
             header="TWSNMP FCへSyslogを送信するホストリスト"
@@ -722,6 +761,19 @@
             <v-btn color="primary" dark>
               <v-icon>mdi-file-delimited</v-icon>
               CSV
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :fetch="makeExtractTopExports"
+            type="csv"
+            :escape-csv="false"
+            name="TWSNMP_FC_Syslog_Extract_Top_List.csv"
+            header="TWSNMP FC Syslogで抽出したデータの上位リスト"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV(NO ESC)
             </v-btn>
           </download-excel>
           <download-excel

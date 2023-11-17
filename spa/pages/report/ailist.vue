@@ -68,6 +68,19 @@
         </download-excel>
         <download-excel
           :fetch="makeExports"
+          type="csv"
+          :escape-csv="false"
+          name="TWSNMP_FC_AI_List.csv"
+          header="TWSNMP FCのAI分析リスト"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_AI_List.xls"
           header="TWSNMP FCのAI分析リスト"

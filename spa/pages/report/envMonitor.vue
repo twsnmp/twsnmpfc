@@ -92,6 +92,19 @@
         </download-excel>
         <download-excel
           :fetch="makeSensorExports"
+          type="csv"
+          :escape-csv="false"
+          name="TWSNMP_FC_Env_Monitor_List.csv"
+          header="TWSNMP FCで作成した環境センサーリスト"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeSensorExports"
           type="xls"
           name="TWSNMP_FC_Env_Monitor_List.xls"
           header="TWSNMP FCで作成した環境センサーリスト"
@@ -193,6 +206,19 @@
             <v-btn color="primary" dark>
               <v-icon>mdi-file-delimited</v-icon>
               CSV
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :fetch="makeDataExports"
+            type="csv"
+            :escape-csv="false"
+            name="TWSNMP_FC_Env_Data_List.csv"
+            :header="makeDataHeader"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV(NO ESC)
             </v-btn>
           </download-excel>
           <download-excel

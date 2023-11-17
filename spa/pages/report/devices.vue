@@ -106,6 +106,19 @@
         </download-excel>
         <download-excel
           :fetch="makeExports"
+          type="csv"
+          :escape-csv="false"
+          name="TWSNMP_FC_Device_List.csv"
+          header="TWSNMPで作成したLANデバイスリスト"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeExports"
           type="xls"
           name="TWSNMP_FC_Device_List.xls"
           header="TWSNMPで作成したLANデバイスリスト"
