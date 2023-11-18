@@ -57,7 +57,7 @@ func SaveReport(last int64) error {
 		saveRADIUS(b, last)
 		saveTLS(b, last)
 		saveCert(b, last)
-		saveSensor(b, last)
+		saveSensor(b)
 		saveWinEventID(b, last)
 		saveWinLogon(b, last)
 		saveWinAccount(b, last)

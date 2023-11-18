@@ -76,14 +76,11 @@ func loadSensor(r *bbolt.Bucket) {
 	}
 }
 
-func saveSensor(b *bbolt.Bucket, last int64) {
+func saveSensor(b *bbolt.Bucket) {
 	r := b.Bucket([]byte("sensor"))
 	sensors.Range(func(k, v interface{}) bool {
 		e, ok := v.(*SensorEnt)
 		if !ok {
-			return true
-		}
-		if e.LastTime < last {
 			return true
 		}
 		s, err := json.Marshal(e)
