@@ -257,6 +257,7 @@ export default {
         { text: '実行しない', value: '' },
         { text: '今すぐ１回だけ実行', value: 'onece' },
         { text: '毎日AM3:00時に実行', value: 'daily' },
+        { text: '今すぐと毎日AM3:00時に実行', value: 'onece_daily' },
       ],
       backupGenerationList: [
         { text: '1日分', value: 0 },

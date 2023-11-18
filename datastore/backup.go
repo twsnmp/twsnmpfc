@@ -52,15 +52,17 @@ func CheckDBBackup() {
 		log.Printf("skip backup mode=%s ", Backup.Mode)
 		return
 	}
-	if Backup.Mode == "daily" && nextBackup == 0 {
-		now := time.Now()
-		d := 0
-		if now.Hour() > 2 {
-			d = 1
+	if Backup.Mode == "daily" {
+		if nextBackup == 0 {
+			now := time.Now()
+			d := 0
+			if now.Hour() > 2 {
+				d = 1
+			}
+			nextBackup = time.Date(now.Year(), now.Month(), now.Day()+d, 3, 0, 0, 0, time.Local).UnixNano()
 		}
-		nextBackup = time.Date(now.Year(), now.Month(), now.Day()+d, 3, 0, 0, 0, time.Local).UnixNano()
-	} else if Backup.Mode == "onece" {
-		// 1回だけはすぐ実行するように修正
+	} else {
+		// 1回だけと今と定期はすぐ実行するように修正
 		nextBackup = 0
 	}
 	if BackupPath == "" {
@@ -73,7 +75,11 @@ func CheckDBBackup() {
 		if Backup.Mode == "daily" {
 			nextBackup += (24 * 3600 * 1000 * 1000 * 1000)
 		} else {
-			Backup.Mode = ""
+			if Backup.Mode == "onece" {
+				Backup.Mode = ""
+			} else {
+				Backup.Mode = "daily"
+			}
 			nextBackup = 0
 			SaveBackup()
 		}
