@@ -52,16 +52,19 @@ func InitInfluxdb() error {
 }
 
 func setupInfluxdb() error {
-	closeInfluxdb()
 	muInfluxc.Lock()
 	defer muInfluxc.Unlock()
+	if influxc != nil {
+		influxc.Close()
+		influxc = nil
+	}
 	if InfluxdbConf.URL == "" {
 		return nil
 	}
 	var err error
 	conf := client.HTTPConfig{
 		Addr:               InfluxdbConf.URL,
-		Timeout:            time.Second * 5,
+		Timeout:            time.Second,
 		InsecureSkipVerify: true,
 	}
 	if InfluxdbConf.User != "" && InfluxdbConf.Password != "" {
@@ -73,7 +76,16 @@ func setupInfluxdb() error {
 		influxc = nil
 		return err
 	}
-	return checkInfluxdb()
+	err = checkInfluxdb()
+	if err != nil {
+		if influxc != nil {
+			influxc.Close()
+			influxc = nil
+		}
+		log.Printf("setupInfluxdb err=%v", err)
+		return err
+	}
+	return nil
 }
 
 func checkInfluxdb() error {
@@ -157,7 +169,8 @@ func SendPollingLogToInfluxdb(pe *PollingEnt) error {
 		}
 	}
 	if len(fields) < 1 {
-		return fmt.Errorf("no send data")
+		//  送信するデータがない場合は、エラーにしない
+		return nil
 	}
 	pt, err := client.NewPoint(pe.Name, tags, fields, time.Unix(0, pe.LastTime))
 	if err != nil {
@@ -225,14 +238,4 @@ func SendAIScoreToInfluxdb(pe *PollingEnt, res *AIResult) error {
 		return err
 	}
 	return nil
-}
-
-func closeInfluxdb() {
-	muInfluxc.Lock()
-	defer muInfluxc.Unlock()
-	if influxc == nil {
-		return
-	}
-	influxc.Close()
-	influxc = nil
 }
