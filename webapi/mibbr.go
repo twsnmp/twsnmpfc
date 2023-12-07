@@ -215,20 +215,22 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 			if p.Raw {
 				value = fmt.Sprintf("%d", v)
 			} else {
-				apend := ""
+				value = fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Uint64())
 				mi := datastore.FindMIBInfo(name)
 				if mi != nil {
 					if mi.Enum != "" {
 						if vn, ok := mi.EnumMap[v]; ok {
-							apend = "(" + vn + ")"
+							value += "(" + vn + ")"
 						}
 					} else {
+						if mi.Hint != "" {
+							value = datastore.PrintHintedMIBIntVal(int32(v), mi.Hint, variable.Type != gosnmp.Integer)
+						}
 						if mi.Units != "" {
-							apend = " " + mi.Units
+							value += " " + mi.Units
 						}
 					}
 				}
-				value = fmt.Sprintf("%d%s", gosnmp.ToBigInt(variable.Value).Uint64(), apend)
 			}
 		}
 		ret = append(ret, &mibEnt{

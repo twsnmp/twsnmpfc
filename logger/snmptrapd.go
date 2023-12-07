@@ -136,18 +136,22 @@ func snmptrapd(stopCh chan bool) {
 				val = getTimeTickStr(gosnmp.ToBigInt(vb.Value).Int64())
 			default:
 				v := int(gosnmp.ToBigInt(vb.Value).Uint64())
-				apend := ""
+				val = fmt.Sprintf("%d", v)
 				mi := datastore.FindMIBInfo(key)
 				if mi != nil {
 					if mi.Enum != "" {
 						if vn, ok := mi.EnumMap[v]; ok {
-							apend = "(" + vn + ")"
+							val += "(" + vn + ")"
 						}
-					} else if mi.Units != "" {
-						apend = " " + mi.Units
+					} else {
+						if mi.Hint != "" {
+							val = datastore.PrintHintedMIBIntVal(int32(v), mi.Hint, vb.Type != gosnmp.Integer)
+						}
+						if mi.Units != "" {
+							val += " " + mi.Units
+						}
 					}
 				}
-				val = fmt.Sprintf("%d%s", gosnmp.ToBigInt(vb.Value).Uint64(), apend)
 			}
 			vbs += fmt.Sprintf("%s=%s\n", key, val)
 		}

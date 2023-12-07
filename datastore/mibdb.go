@@ -27,6 +27,7 @@ type MIBInfo struct {
 	Index       string
 	Description string
 	EnumMap     map[int]string
+	Hint        string
 }
 
 type MIBTreeEnt struct {
@@ -44,9 +45,16 @@ type MIBModuleEnt struct {
 	Error string
 }
 
+type MIBTypeEnt struct {
+	Enum    string
+	EnumMap map[int]string
+	Hint    string
+}
+
 var MIBTree = []*MIBTreeEnt{}
 
-var MIBInfoMap = make(map[string]MIBInfo)
+var MIBInfoMap = make(map[string]*MIBInfo)
+var MIBTypeMap = make(map[string]MIBTypeEnt)
 
 var MIBModules = []*MIBModuleEnt{}
 
@@ -57,7 +65,7 @@ func FindMIBInfo(name string) *MIBInfo {
 	}
 	oid := MIBDB.NameToOID(name)
 	if i, ok := MIBInfoMap[oid]; ok {
-		return &i
+		return i
 	}
 	return nil
 }
@@ -269,6 +277,30 @@ func loadExtMIB(asn1 []byte, fileType, file string, retry bool) bool {
 		nameList = append(nameList, name)
 		log.Printf("module %s=%s", name, oid)
 	}
+	if module.Body.Types != nil {
+		for _, t := range module.Body.Types {
+			if t.Syntax != nil && t.Syntax.Enum != nil {
+				log.Printf("type syntax enum(%s) = %#v ", t.Name, t.Syntax)
+			}
+			if t.TextualConvention != nil {
+				enum := []string{}
+				enumMap := make(map[int]string)
+				if t.TextualConvention.Syntax.Enum != nil {
+					for _, e := range t.TextualConvention.Syntax.Enum {
+						enum = append(enum, fmt.Sprintf("%s:%s ", e.Value, e.Name))
+						if i, err := strconv.Atoi(e.Value); err == nil {
+							enumMap[i] = string(e.Name)
+						}
+					}
+					MIBTypeMap[t.Name.String()] = MIBTypeEnt{
+						Hint:    t.TextualConvention.DisplayHint,
+						Enum:    strings.Join(enum, ","),
+						EnumMap: enumMap,
+					}
+				}
+			}
+		}
+	}
 	for _, n := range module.Body.Nodes {
 		if n.Name.String() == "" || n.Oid == nil {
 			continue
@@ -350,7 +382,7 @@ func setMIBInfo(oid string, n *parser.Node) {
 		return
 	}
 	if n.NotificationType != nil {
-		MIBInfoMap[oid] = MIBInfo{
+		MIBInfoMap[oid] = &MIBInfo{
 			OID:         oid,
 			Status:      n.NotificationType.Status.ToSmi().String(),
 			Type:        "Notification",
@@ -359,14 +391,27 @@ func setMIBInfo(oid string, n *parser.Node) {
 		return
 	}
 	if n.TrapType != nil {
-		MIBInfoMap[oid] = MIBInfo{
+		MIBInfoMap[oid] = &MIBInfo{
 			OID:         oid,
 			Status:      "current",
 			Type:        "Notification",
 			Description: n.TrapType.Description,
 		}
 	}
-	if n.ObjectType == nil || n.ObjectType.Syntax.Type == nil {
+	if n.ObjectType == nil {
+		// OID
+		return
+	}
+	if n.ObjectType.Syntax.Sequence != nil {
+		MIBInfoMap[oid] = &MIBInfo{
+			OID:         oid,
+			Status:      "current",
+			Type:        "Sequence",
+			Description: n.ObjectType.Description,
+		}
+		return
+	}
+	if n.ObjectType.Syntax.Type == nil {
 		return
 	}
 	enum := []string{}
@@ -386,7 +431,7 @@ func setMIBInfo(oid string, n *parser.Node) {
 		index = append(index, i.Name.String())
 	}
 
-	MIBInfoMap[oid] = MIBInfo{
+	MIBInfoMap[oid] = &MIBInfo{
 		OID:         oid,
 		Status:      n.ObjectType.Status.ToSmi().String(),
 		Type:        n.ObjectType.Syntax.Type.Name.String(),
@@ -402,13 +447,22 @@ func setMIBInfo(oid string, n *parser.Node) {
 // checkMIBInfoMap : MIB情報を数値のOIDをキーとしたMAPへ変換する
 func checkMIBInfoMap() {
 	delList := []string{}
-	addList := []MIBInfo{}
+	addList := []*MIBInfo{}
 	for oid, info := range MIBInfoMap {
 		noid := MIBDB.NameToOID(oid)
 		if noid != oid {
 			delList = append(delList, oid)
 			info.OID = noid
 			addList = append(addList, info)
+		}
+		if e, ok := MIBTypeMap[info.Type]; ok {
+			if info.Enum == "" {
+				info.Enum = e.Enum
+				info.EnumMap = e.EnumMap
+			}
+			if info.Hint == "" {
+				info.Hint = e.Hint
+			}
 		}
 	}
 	for _, d := range delList {
@@ -466,7 +520,7 @@ var (
 func addToMibTree(oid, name, poid string) {
 	n := &MIBTreeEnt{Name: name, OID: oid, Children: []*MIBTreeEnt{}}
 	if i, ok := MIBInfoMap[oid]; ok {
-		n.MIBInfo = &i
+		n.MIBInfo = i
 	}
 	if poid == "" {
 		mibTreeRoot = n
@@ -589,4 +643,61 @@ func rfc2mib(b []byte) []byte {
 		}
 	}
 	return []byte("")
+}
+
+func PrintHintedMIBIntVal(val int32, hint string, us bool) string {
+	if hint == "" {
+		if us {
+			return fmt.Sprintf("%d", uint32(val))
+		}
+		return fmt.Sprintf("%d", val)
+	}
+	h := hint[0:1]
+	switch h {
+	case "d":
+		r := ""
+		n := false
+		if us {
+			r = fmt.Sprintf("%d", uint32(val))
+		} else {
+			if val < 0 {
+				n = true
+				val = -val
+			}
+			r = fmt.Sprintf("%d", val)
+		}
+		if len(hint) > 2 && hint[1:2] == "-" {
+			s, err := strconv.Atoi(hint[2:])
+			if err == nil && s != 0 {
+				if s <= len(r) {
+					r = r[0:s] + "." + r[s:]
+				} else {
+					tmp := "."
+					for len(tmp) < s-len(r)+1 {
+						tmp += "0"
+					}
+					r = tmp + r
+				}
+			}
+		}
+		if n {
+			r = "-" + r
+		}
+		return r
+	case "x":
+		return fmt.Sprintf("%x", val)
+	case "o":
+		return fmt.Sprintf("%o", val)
+	case "b":
+		r := ""
+		for b := 0x80000000; b != 0; b >>= 1 {
+			if int32(b)&val != 0 {
+				r += "1"
+			} else {
+				r += "0"
+			}
+		}
+		return r
+	}
+	return ""
 }
