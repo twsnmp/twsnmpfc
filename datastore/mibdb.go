@@ -690,7 +690,7 @@ func PrintHintedMIBIntVal(val int32, hint string, us bool) string {
 		return fmt.Sprintf("%o", val)
 	case "b":
 		r := ""
-		for b := 0x80000000; b != 0; b >>= 1 {
+		for b := int64(0x80000000); b != 0; b >>= 1 {
 			if int32(b)&val != 0 {
 				r += "1"
 			} else {
