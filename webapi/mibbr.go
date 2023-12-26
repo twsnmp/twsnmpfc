@@ -149,7 +149,7 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 				case "PhysAddress", "OctetString":
 					a, ok := variable.Value.([]uint8)
 					if !ok {
-						a = []uint8(getMIBStringVal(variable.Value))
+						a = []uint8(datastore.PrintMIBStringVal(variable.Value))
 					}
 					mac := []string{}
 					for _, m := range a {
@@ -159,7 +159,7 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 				case "BITS":
 					a, ok := variable.Value.([]uint8)
 					if !ok {
-						a = []uint8(getMIBStringVal(variable.Value))
+						a = []uint8(datastore.PrintMIBStringVal(variable.Value))
 					}
 					hex := []string{}
 					ap := []string{}
@@ -183,20 +183,20 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 						value += " " + strings.Join(ap, " ")
 					}
 				case "DisplayString":
-					value = getMIBStringVal(variable.Value)
+					value = datastore.PrintMIBStringVal(variable.Value)
 					if datastore.MapConf.AutoCharCode {
 						value = logger.CheckCharCode(value)
 					}
 				case "DateAndTime":
-					value = getDateAndTime(variable.Value)
+					value = datastore.PrintDateAndTime(variable.Value)
 				default:
-					value = getMIBStringVal(variable.Value)
+					value = datastore.PrintMIBStringVal(variable.Value)
 				}
 			} else {
-				value = getMIBStringVal(variable.Value)
+				value = datastore.PrintMIBStringVal(variable.Value)
 			}
 		case gosnmp.ObjectIdentifier:
-			value = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
+			value = datastore.MIBDB.OIDToName(datastore.PrintMIBStringVal(variable.Value))
 		case gosnmp.TimeTicks:
 			t := gosnmp.ToBigInt(variable.Value).Uint64()
 			if p.Raw {
@@ -210,14 +210,18 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 					value = fmt.Sprintf("%d(%v)", t, time.Duration(t*10*uint64(time.Millisecond)))
 				}
 			}
+		case gosnmp.IPAddress:
+			value = datastore.PrintIPAddress(variable.Value)
 		default:
-			v := int(gosnmp.ToBigInt(variable.Value).Uint64())
-			if p.Raw {
-				value = fmt.Sprintf("%d", v)
+			if variable.Type == gosnmp.Integer {
+				value = fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Int64())
 			} else {
 				value = fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Uint64())
+			}
+			if !p.Raw {
 				mi := datastore.FindMIBInfo(name)
 				if mi != nil {
+					v := int(gosnmp.ToBigInt(variable.Value).Uint64())
 					if mi.Enum != "" {
 						if vn, ok := mi.EnumMap[v]; ok {
 							value += "(" + vn + ")"
@@ -240,35 +244,4 @@ func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
 		return nil
 	})
 	return ret, err
-}
-
-func getMIBStringVal(i interface{}) string {
-	switch v := i.(type) {
-	case string:
-		return v
-	case []uint8:
-		return string(v)
-	case int, int64, uint, uint64:
-		return fmt.Sprintf("%d", v)
-	}
-	return ""
-}
-
-// DISPLAY-HINT "2d-1d-1d,1d:1d:1d.1d,1a1d:1d"
-func getDateAndTime(i interface{}) string {
-	switch v := i.(type) {
-	case string:
-		return v
-	case []uint8:
-		if len(v) == 11 {
-			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d%c%02d%02d",
-				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10])
-		} else if len(v) == 8 {
-			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d",
-				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7])
-		}
-	case int, int64, uint, uint64:
-		return fmt.Sprintf("%d", v)
-	}
-	return fmt.Sprintf("Invalid Date And Time %v", i)
 }

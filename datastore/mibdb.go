@@ -701,3 +701,51 @@ func PrintHintedMIBIntVal(val int32, hint string, us bool) string {
 	}
 	return ""
 }
+
+func PrintIPAddress(i interface{}) string {
+	switch v := i.(type) {
+	case string:
+		return v
+	case []uint8:
+		if len(v) == 16 {
+			return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+				v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15])
+		} else if len(v) == 4 {
+			return fmt.Sprintf("%d.%d.%d.%d", v[0], v[1], v[2], v[3])
+		}
+	case int, int64, uint, uint64:
+		return fmt.Sprintf("%d", v)
+	}
+	return fmt.Sprintf("Invalid IP Address %v", i)
+}
+
+func PrintMIBStringVal(i interface{}) string {
+	switch v := i.(type) {
+	case string:
+		return v
+	case []uint8:
+		return string(v)
+	case int, int64, uint, uint64:
+		return fmt.Sprintf("%d", v)
+	}
+	return ""
+}
+
+// DISPLAY-HINT "2d-1d-1d,1d:1d:1d.1d,1a1d:1d"
+func PrintDateAndTime(i interface{}) string {
+	switch v := i.(type) {
+	case string:
+		return v
+	case []uint8:
+		if len(v) == 11 {
+			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d%c%02d%02d",
+				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10])
+		} else if len(v) == 8 {
+			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d",
+				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7])
+		}
+	case int, int64, uint, uint64:
+		return fmt.Sprintf("%d", v)
+	}
+	return fmt.Sprintf("Invalid Date And Time %v", i)
+}

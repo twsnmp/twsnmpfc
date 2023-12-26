@@ -75,7 +75,7 @@ func snmptrapd(stopCh chan bool) {
 			val := ""
 			switch vb.Type {
 			case gosnmp.ObjectIdentifier:
-				val = datastore.MIBDB.OIDToName(getSnmpString(vb.Value))
+				val = datastore.MIBDB.OIDToName(datastore.PrintMIBStringVal(vb.Value))
 			case gosnmp.OctetString:
 				mi := datastore.FindMIBInfo(key)
 				if mi != nil {
@@ -83,7 +83,7 @@ func snmptrapd(stopCh chan bool) {
 					case "PhysAddress", "OctetString":
 						a, ok := vb.Value.([]uint8)
 						if !ok {
-							a = []uint8(getSnmpString(vb.Value))
+							a = []uint8(datastore.PrintMIBStringVal(vb.Value))
 						}
 						mac := []string{}
 						for _, m := range a {
@@ -93,7 +93,7 @@ func snmptrapd(stopCh chan bool) {
 					case "BITS":
 						a, ok := vb.Value.([]uint8)
 						if !ok {
-							a = []uint8(getSnmpString(vb.Value))
+							a = []uint8(datastore.PrintMIBStringVal(vb.Value))
 						}
 						hex := []string{}
 						ap := []string{}
@@ -117,23 +117,25 @@ func snmptrapd(stopCh chan bool) {
 							val += " " + strings.Join(ap, " ")
 						}
 					case "DisplayString":
-						val = getSnmpString(vb.Value)
+						val = datastore.PrintMIBStringVal(vb.Value)
 						if datastore.MapConf.AutoCharCode {
 							val = CheckCharCode(val)
 						}
 					case "DateAndTime":
-						val = getDateAndTime(vb.Value)
+						val = datastore.PrintDateAndTime(vb.Value)
 					default:
-						val = getSnmpString(vb.Value)
+						val = datastore.PrintMIBStringVal(vb.Value)
 					}
 				} else {
-					val = getSnmpString(vb.Value)
+					val = datastore.PrintMIBStringVal(vb.Value)
 					if datastore.MapConf.AutoCharCode {
 						val = CheckCharCode(val)
 					}
 				}
 			case gosnmp.TimeTicks:
 				val = getTimeTickStr(gosnmp.ToBigInt(vb.Value).Int64())
+			case gosnmp.IPAddress:
+				val = datastore.PrintIPAddress(vb.Value)
 			default:
 				v := int(gosnmp.ToBigInt(vb.Value).Uint64())
 				val = fmt.Sprintf("%d", v)
@@ -174,16 +176,6 @@ func snmptrapd(stopCh chan bool) {
 	}()
 	<-stopCh
 	log.Printf("stop snmp trapd")
-}
-
-func getSnmpString(i interface{}) string {
-	switch v := i.(type) {
-	case string:
-		return v
-	case []uint8:
-		return string(v)
-	}
-	return fmt.Sprintf("%v", i)
 }
 
 func getTimeTickStr(t int64) string {
@@ -227,23 +219,4 @@ func isSjis(p []byte) bool {
 		}
 	}
 	return true
-}
-
-// DISPLAY-HINT "2d-1d-1d,1d:1d:1d.1d,1a1d:1d"
-func getDateAndTime(i interface{}) string {
-	switch v := i.(type) {
-	case string:
-		return v
-	case []uint8:
-		if len(v) == 11 {
-			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d%c%02d%02d",
-				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10])
-		} else if len(v) == 8 {
-			return fmt.Sprintf("%04d/%02d/%02d %02d:%02d:%02d.%02d",
-				(int(v[0])*256 + int(v[1])), v[2], v[3], v[4], v[5], v[6], v[7])
-		}
-	case int, int64, uint, uint64:
-		return fmt.Sprintf("%d", v)
-	}
-	return fmt.Sprintf("Invalid Date And Time %v", i)
 }
