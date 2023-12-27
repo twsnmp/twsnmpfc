@@ -68,6 +68,14 @@
         ポーリング作成しました
       </v-snackbar>
       <v-card-actions>
+        <v-select
+          v-model="mode"
+          :items="modeList"
+          label="モード"
+          @change="updateTable"
+        >
+        </v-select>
+        <v-spacer></v-spacer>
         <v-switch v-model="mibget.Raw" label="生データ"></v-switch>
         <v-spacer></v-spacer>
         <download-excel
@@ -401,6 +409,12 @@ export default {
       addPollingDone: false,
       mibTreeOpened: false,
       extractorList: [],
+      mode: 'auto',
+      modeList: [
+        { text: '自動', value: 'auto' },
+        { text: 'スカラー', value: 'scalar' },
+        { text: 'テーブル', value: 'table' },
+      ],
     }
   },
   async fetch() {
@@ -476,7 +490,7 @@ export default {
           this.mibs.forEach((e) => {
             e.Index = i++
           })
-          if (!this.mibget.Name.includes('Table')) {
+          if (!this.isTable()) {
             this.showList()
           } else {
             this.showTable()
@@ -490,6 +504,12 @@ export default {
           this.wait = false
           this.mibs = []
         })
+    },
+    isTable() {
+      return (
+        this.mode === 'table' ||
+        (this.mode === 'auto' && this.mibget.Name.endsWith('Table'))
+      )
     },
     waitAnimation() {
       if (!this.wait) {
@@ -536,7 +556,13 @@ export default {
         },
         { text: '操作', value: 'actions', width: '10%' },
       ]
-      this.items = this.mibs
+      if (this.mode === 'auto') {
+        this.items = this.mibs
+      } else {
+        this.items = this.mibs.filter(
+          (e) => e.Name.endsWith('.0') && e.Name.split('.').length === 2
+        )
+      }
     },
     showTable() {
       this.tableMode = true
@@ -550,6 +576,9 @@ export default {
         if (i > 0) {
           const base = name.substring(0, i)
           const index = name.substring(i + 1)
+          if (index === '0') {
+            return
+          }
           if (!names.includes(base)) {
             names.push(base)
           }
@@ -583,6 +612,13 @@ export default {
         }
         this.items.push(d)
       })
+    },
+    updateTable() {
+      if (this.isTable()) {
+        this.showTable()
+      } else {
+        this.showList()
+      }
     },
     selectMIB(s) {
       if (s && s.length === 1) {
