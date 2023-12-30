@@ -137,10 +137,14 @@ func snmptrapd(stopCh chan bool) {
 			case gosnmp.IPAddress:
 				val = datastore.PrintIPAddress(vb.Value)
 			default:
-				v := int(gosnmp.ToBigInt(vb.Value).Uint64())
-				val = fmt.Sprintf("%d", v)
+				if vb.Type == gosnmp.Integer {
+					val = fmt.Sprintf("%d", gosnmp.ToBigInt(vb.Value).Int64())
+				} else {
+					val = fmt.Sprintf("%d", gosnmp.ToBigInt(vb.Value).Uint64())
+				}
 				mi := datastore.FindMIBInfo(key)
 				if mi != nil {
+					v := int(gosnmp.ToBigInt(vb.Value).Uint64())
 					if mi.Enum != "" {
 						if vn, ok := mi.EnumMap[v]; ok {
 							val += "(" + vn + ")"
