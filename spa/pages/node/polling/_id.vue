@@ -185,63 +185,91 @@
             :highlight="highlighter"
             line-numbers
           ></prism-editor>
-          <v-slider
-            v-model="editPolling.PollInt"
-            label="ポーリング間隔(Sec)"
-            class="align-center"
-            max="3600"
-            min="5"
-            hide-details
-          >
-            <template #append>
-              <v-text-field
+          <v-row dense>
+            <v-col>
+              <v-slider
                 v-model="editPolling.PollInt"
-                class="mt-0 pt-0"
+                label="ポーリング間隔(Sec)"
+                class="align-center"
+                max="3600"
+                min="5"
                 hide-details
-                single-line
-                type="number"
-                style="width: 60px"
-              ></v-text-field>
-            </template>
-          </v-slider>
-          <v-slider
-            v-model="editPolling.Timeout"
-            label="タイムアウト(Sec)"
-            class="align-center"
-            max="60"
-            min="1"
-            hide-details
-          >
-            <template #append>
-              <v-text-field
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="editPolling.PollInt"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+            <v-col>
+              <v-slider
                 v-model="editPolling.Timeout"
-                class="mt-0 pt-0"
+                label="タイムアウト(Sec)"
+                class="align-center"
+                max="60"
+                min="1"
                 hide-details
-                single-line
-                type="number"
-                style="width: 60px"
-              ></v-text-field>
-            </template>
-          </v-slider>
-          <v-slider
-            v-model="editPolling.Retry"
-            label="リトライ回数"
-            class="align-center"
-            max="20"
-            min="0"
-            hide-details
-          >
-            <template #append>
-              <v-text-field
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="editPolling.Timeout"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+            <v-col>
+              <v-slider
                 v-model="editPolling.Retry"
-                class="mt-0 pt-0"
+                label="リトライ回数"
+                class="align-center"
+                max="20"
+                min="0"
                 hide-details
-                single-line
-                type="number"
-                style="width: 60px"
-              ></v-text-field>
-            </template>
-          </v-slider>
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="editPolling.Retry"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <label>障害時アクション</label>
+              <prism-editor
+                v-model="editPolling.FailAction"
+                class="script"
+                :highlight="actionHighlighter"
+                line-numbers
+              ></prism-editor>
+            </v-col>
+            <v-col>
+              <label>復帰時アクション</label>
+              <prism-editor
+                v-model="editPolling.RepairAction"
+                class="script"
+                :highlight="actionHighlighter"
+                line-numbers
+              ></prism-editor>
+            </v-col>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -620,6 +648,15 @@ export default {
   methods: {
     highlighter(code) {
       return highlight(code, languages.js)
+    },
+    actionHighlighter(code) {
+      return highlight(code, {
+        property:
+          /[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}/,
+        string: /(wol|mail|line|chat|wait|cmd)/,
+        number: /-?\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b/i,
+        keyword: /\b(?:false|true|up|down)\b/,
+      })
     },
     editPollingFunc(item) {
       this.editIndex = this.pollings.indexOf(item)

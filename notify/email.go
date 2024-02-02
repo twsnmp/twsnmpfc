@@ -61,6 +61,13 @@ func sendNotifyMail(list []*datastore.EventLogEnt) {
 	}
 }
 
+// SendActionMailは、通知メールを送信します。
+func SendActionMail(subject, body string) {
+	if err := sendMail(subject, body+"\r\n"+datastore.NotifyConf.URL); err != nil {
+		log.Printf("SendActionMail err=%v", err)
+	}
+}
+
 func sendMail(subject, body string) error {
 	if !canSendMail() {
 		return nil

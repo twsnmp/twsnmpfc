@@ -274,6 +274,18 @@ func GetDrawItem(id string) *DrawItemEnt {
 	return nil
 }
 
+func FindNodeFromName(name string) *NodeEnt {
+	var ret *NodeEnt
+	ForEachNodes(func(n *NodeEnt) bool {
+		if n.Name == name {
+			ret = n
+			return false
+		}
+		return true
+	})
+	return ret
+}
+
 func FindNodeFromIP(ip string) *NodeEnt {
 	var ret *NodeEnt
 	if strings.Contains(ip, ":") {

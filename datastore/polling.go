@@ -11,24 +11,26 @@ import (
 )
 
 type PollingEnt struct {
-	ID        string
-	Name      string
-	NodeID    string
-	Type      string
-	Mode      string
-	Params    string
-	Filter    string
-	Extractor string
-	Script    string
-	Level     string
-	PollInt   int
-	Timeout   int
-	Retry     int
-	LogMode   int
-	NextTime  int64
-	LastTime  int64
-	Result    map[string]interface{}
-	State     string
+	ID           string
+	Name         string
+	NodeID       string
+	Type         string
+	Mode         string
+	Params       string
+	Filter       string
+	Extractor    string
+	Script       string
+	Level        string
+	PollInt      int
+	Timeout      int
+	Retry        int
+	LogMode      int
+	NextTime     int64
+	LastTime     int64
+	Result       map[string]interface{}
+	State        string
+	FailAction   string
+	RepairAction string
 }
 
 type PollingLogEnt struct {

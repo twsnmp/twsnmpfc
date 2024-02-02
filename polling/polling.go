@@ -23,14 +23,20 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os/exec"
+	"path/filepath"
 	"runtime"
 	"sort"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/Songmu/timeout"
 	"github.com/robertkrimen/otto"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/notify"
+	"github.com/twsnmp/twsnmpfc/wol"
 )
 
 const maxPolling = 300
@@ -110,16 +116,20 @@ func CheckAllPoll() {
 	})
 }
 
+var stopPolling = false
+
 // pollingBackend :  ポーリングのバックグランド処理
 func pollingBackend(ctx context.Context, wg *sync.WaitGroup) {
 	log.Println("start polling")
 	defer wg.Done()
 	time.Sleep(time.Millisecond * 100)
 	timer := time.NewTicker(time.Second * 5)
+	stopPolling = false
 	for {
 		select {
 		case <-ctx.Done():
 			log.Println("stop polling")
+			stopPolling = true
 			return
 		case <-timer.C:
 			checkPolling()
@@ -265,6 +275,151 @@ func setPollingState(pe *datastore.PollingEnt, newState string) {
 		}
 		datastore.AddEventLog(l)
 		notify.SendNotifyChat(l)
+		go doAction(pe)
+	}
+}
+
+func doAction(pe *datastore.PollingEnt) {
+	if pe.State == "unknown" {
+		return
+	}
+	action := pe.FailAction
+	if pe.State == "repair" || pe.State == "normal" {
+		action = pe.RepairAction
+	}
+	if action == "" {
+		return
+	}
+	for _, a := range strings.Split(action, "\n") {
+		a = strings.TrimSpace(a)
+		al := strings.Split(a, " ")
+		if !doOneAction(al) {
+			// アクションをwaitの条件で途中で終了できる
+			break
+		}
+	}
+}
+
+func doOneAction(alin []string) bool {
+	al := []string{}
+	for _, a := range alin {
+		if a != "" {
+			al = append(al, a)
+		}
+	}
+	if len(al) < 2 {
+		return true
+	}
+	log.Printf("doOneAction %v", al)
+	switch al[0] {
+	case "wol":
+		{
+			mac := al[1]
+			if n := datastore.FindNodeFromName(al[1]); n != nil {
+				mac = n.MAC
+			} else if n := datastore.FindNodeFromIP(al[1]); n != nil {
+				mac = n.MAC
+			}
+			if strings.Contains(mac, ":") {
+				wol.SendWakeOnLanPacket(mac)
+			}
+		}
+	case "mail":
+		{
+			subject := al[1]
+			body := subject
+			if len(al) > 2 {
+				body = al[2]
+			}
+			if subject != "" {
+				notify.SendActionMail(subject, body)
+			}
+		}
+	case "chat":
+		{
+			subject := al[1]
+			level := "info"
+			message := subject
+			if len(al) > 2 {
+				level = al[2]
+				if len(al) > 3 {
+					message = al[3]
+				}
+			}
+			notify.SendChat(&datastore.NotifyConf, subject, level, message)
+		}
+	case "line":
+		{
+			message := al[1]
+			stickerPackageId := 0
+			stickerId := 0
+			if len(al) > 3 {
+				if n, err := strconv.Atoi(al[2]); err == nil {
+					stickerPackageId = n
+					if n, err := strconv.Atoi(al[3]); err == nil {
+						stickerId = n
+					}
+				}
+			}
+			if stickerId > 0 && stickerPackageId > 0 && message != "" {
+				log.Println("send line with sticker")
+			}
+			//notify.SendLine(message,stickerPackageId,stickerId)
+		}
+	case "wait":
+		{
+			if to, err := strconv.Atoi(al[1]); err == nil {
+				node := ""
+				state := ""
+				if len(al) > 3 {
+					node = al[2]
+					state = al[3]
+				}
+				if !doWait(to, node, state) {
+					return false
+				}
+			}
+		}
+	case "cmd":
+		doActionCmd(al[1:])
+	}
+	return true
+}
+
+func doWait(to int, node, state string) bool {
+	for i := 0; i < to && !stopPolling; i++ {
+		if node != "" {
+			if n := datastore.FindNodeFromName(node); n != nil {
+				if state == "up" && (n.State == "normal" || n.State == "repair") {
+					return false
+				} else if state == "down" && (n.State == "low" || n.State == "high" || n.State == "warn") {
+					return false
+				}
+			}
+		}
+		time.Sleep(time.Second)
+	}
+	return true
+}
+
+func doActionCmd(cl []string) {
+	tio := &timeout.Timeout{
+		Duration:  30 * time.Second,
+		KillAfter: 5 * time.Second,
+	}
+	if filepath.Ext(cl[0]) == ".sh" {
+		cl[0] = filepath.Join(datastore.GetDataStorePath(), "cmd", filepath.Base(cl[0]))
+		tio.Cmd = exec.Command("/bin/sh", "-c", strings.Join(cl, " "))
+	} else {
+		exe := filepath.Join(datastore.GetDataStorePath(), "cmd", filepath.Base(cl[0]))
+		if len(cl) == 1 {
+			tio.Cmd = exec.Command(exe)
+		} else {
+			tio.Cmd = exec.Command(exe, cl[1:]...)
+		}
+	}
+	if _, _, _, err := tio.Run(); err != nil {
+		log.Printf("doActionCmd err=%v", err)
 	}
 }
 

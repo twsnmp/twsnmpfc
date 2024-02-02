@@ -187,6 +187,8 @@ func postPollingUpdate(c echo.Context) error {
 	p.Timeout = pu.Timeout
 	p.Retry = pu.Retry
 	p.LogMode = pu.LogMode
+	p.FailAction = pu.FailAction
+	p.RepairAction = pu.RepairAction
 	p.NextTime = 0
 	p.State = "unknown"
 	if err := datastore.UpdatePolling(p); err != nil {
