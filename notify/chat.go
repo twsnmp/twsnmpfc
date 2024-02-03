@@ -25,7 +25,7 @@ type discordMsg struct {
 }
 
 func SendChat(c *datastore.NotifyConfEnt, title, level, message string) error {
-	if c.ChatType != "discord" || c.ChatWebhookURL == "" {
+	if !strings.Contains(c.ChatType, "discord") || c.ChatWebhookURL == "" {
 		return fmt.Errorf("invalid chat params")
 	}
 	color := "10070709"
@@ -80,18 +80,12 @@ func SendChat(c *datastore.NotifyConfEnt, title, level, message string) error {
 	return nil
 }
 
-func canSendChat() bool {
-	if datastore.NotifyConf.ChatType != "discord" || datastore.NotifyConf.ChatWebhookURL == "" {
-		return false
-	}
-	return true
-}
-
-// SendNotifyChat : 通知のチャットメッセージを送信する
-func SendNotifyChat(l *datastore.EventLogEnt) {
-	if !canSendChat() {
+// sendNotifyDiscord : Discordへ通知メッセージを送信する
+func sendNotifyDiscord(l *datastore.EventLogEnt) {
+	if datastore.NotifyConf.ChatWebhookURL == "" {
 		return
 	}
+
 	nl := getLevelNum(datastore.NotifyConf.Level)
 	if nl == 3 {
 		return

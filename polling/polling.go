@@ -361,10 +361,7 @@ func doOneAction(alin []string) bool {
 					}
 				}
 			}
-			if stickerId > 0 && stickerPackageId > 0 && message != "" {
-				log.Println("send line with sticker")
-			}
-			//notify.SendLine(message,stickerPackageId,stickerId)
+			notify.SendLine(&datastore.NotifyConf, message, stickerPackageId, stickerId)
 		}
 	case "wait":
 		{

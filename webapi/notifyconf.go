@@ -30,6 +30,7 @@ func getNotifyConf(c echo.Context) error {
 	r.URL = datastore.NotifyConf.URL
 	r.HTMLMail = datastore.NotifyConf.HTMLMail
 	r.ChatType = datastore.NotifyConf.ChatType
+	r.LineToken = datastore.NotifyConf.LineToken
 	r.ChatWebhookURL = datastore.NotifyConf.ChatWebhookURL
 	r.ExecCmd = datastore.NotifyConf.ExecCmd
 	return c.JSON(http.StatusOK, r)
@@ -59,6 +60,7 @@ func postNotifyConf(c echo.Context) error {
 	datastore.NotifyConf.ChatType = nc.ChatType
 	datastore.NotifyConf.ChatWebhookURL = nc.ChatWebhookURL
 	datastore.NotifyConf.ExecCmd = nc.ExecCmd
+	datastore.NotifyConf.LineToken = nc.LineToken
 	if nc.Password != "" {
 		datastore.NotifyConf.Password = nc.Password
 	}
@@ -108,19 +110,44 @@ func postNotifyChatTest(c echo.Context) error {
 	if nc.URL == "" {
 		nc.URL = fmt.Sprintf("%s://%s", c.Scheme(), c.Request().Host)
 	}
-	title := fmt.Sprintf("%s（試験メッセージ）", datastore.NotifyConf.Subject)
+	title := fmt.Sprintf("%s（試験メッセージ）", nc.Subject)
 	if err := notify.SendChat(nc, title, "info", "テストです。"); err != nil {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "user",
 			Level: "warn",
-			Event: fmt.Sprintf("試験メッセージの送信に失敗しました err=%v", err),
+			Event: fmt.Sprintf("チャットへの試験メッセージの送信に失敗しました err=%v", err),
 		})
 		return echo.ErrBadRequest
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:  "user",
 		Level: "info",
-		Event: "試験メッセージ通知を送信しました",
+		Event: "チャットへ試験メッセージを送信しました",
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postNotifyLineTest(c echo.Context) error {
+	nc := new(datastore.NotifyConfEnt)
+	if err := c.Bind(nc); err != nil {
+		return echo.ErrBadRequest
+	}
+	if nc.URL == "" {
+		nc.URL = fmt.Sprintf("%s://%s", c.Scheme(), c.Request().Host)
+	}
+	title := fmt.Sprintf("%s（試験メッセージ）\n%s", nc.Subject, nc.URL)
+	if err := notify.SendLine(nc, title, 8515, 16581242); err != nil {
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "user",
+			Level: "warn",
+			Event: fmt.Sprintf("LINEへの試験メッセージの送信に失敗しました err=%v", err),
+		})
+		return echo.ErrBadRequest
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "LINEへ試験メッセージを送信しました",
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

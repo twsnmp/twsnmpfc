@@ -35,6 +35,12 @@
         <template #[`item.LogMode`]="{ item }">
           {{ $getLogModeName(item.LogMode) }}
         </template>
+        <template #[`item.FailAction`]="{ item }">
+          {{ item.FailAction ? 'あり' : '' }}
+        </template>
+        <template #[`item.RepairAction`]="{ item }">
+          {{ item.RepairAction ? 'あり' : '' }}
+        </template>
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="$router.push({ path: '/polling/' + item.ID })">
             mdi-eye
@@ -487,7 +493,7 @@ export default {
             return value.includes(this.conf.name)
           },
         },
-        { text: 'レベル', value: 'Level', width: '15%' },
+        { text: 'レベル', value: 'Level', width: '10%' },
         {
           text: '種別',
           value: 'Type',
@@ -497,7 +503,9 @@ export default {
             return this.conf.polltype === value
           },
         },
-        { text: 'ログ', value: 'LogMode', width: '10%' },
+        { text: 'ログ', value: 'LogMode', width: '5%' },
+        { text: '障害', value: 'FailAction', width: '5%' },
+        { text: '復帰', value: 'RepairAction', width: '5%' },
         { text: '最終実施', value: 'TimeStr', width: '15%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],

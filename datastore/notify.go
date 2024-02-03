@@ -33,6 +33,7 @@ type NotifyConfEnt struct {
 	ChatType           string
 	ChatWebhookURL     string
 	ExecCmd            string
+	LineToken          string
 }
 
 func SaveNotifyConf() error {

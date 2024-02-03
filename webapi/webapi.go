@@ -104,6 +104,7 @@ func setup(p *WebAPI) {
 	r.DELETE("/conf/notifySchedule/:id", deleteNotifySchedule)
 	r.POST("/notify/test", postNotifyTest)
 	r.POST("/notify/chat/test", postNotifyChatTest)
+	r.POST("/notify/line/test", postNotifyLineTest)
 	r.POST("/notify/exec/test", postNotifyExecTest)
 	r.GET("/conf/influxdb", getInfluxdb)
 	r.POST("/conf/influxdb", postInfluxdb)

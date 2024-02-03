@@ -186,9 +186,15 @@
             </v-col>
             <v-col>
               <v-text-field
-                v-if="notify.ChatType"
+                v-if="notify.ChatType.startsWith('discord')"
                 v-model="notify.ChatWebhookURL"
                 label="チャットWebhookのURL"
+              />
+              <v-text-field
+                v-if="notify.ChatType.startsWith('line')"
+                v-model="notify.LineToken"
+                type="password"
+                label="Line Notifyのトークン"
               />
             </v-col>
           </v-row>
@@ -208,9 +214,23 @@
             <v-icon>mdi-email-send</v-icon>
             テスト
           </v-btn>
-          <v-btn v-if="notify.ChatType" color="normal" dark @click="chatTest">
-            <v-icon>mdi-email-send</v-icon>
+          <v-btn
+            v-if="notify.ChatType.startsWith('discord')"
+            color="normal"
+            dark
+            @click="chatTest"
+          >
+            <v-icon>mdi-chat-alert</v-icon>
             チャットテスト
+          </v-btn>
+          <v-btn
+            v-if="notify.ChatType.startsWith('line')"
+            color="normal"
+            dark
+            @click="lineTest"
+          >
+            <v-icon>mdi-chat-alert</v-icon>
+            LINEテスト
           </v-btn>
           <v-btn v-if="notify.ExecCmd" color="normal" dark @click="execTest">
             <v-icon>mdi-run</v-icon>
@@ -316,6 +336,7 @@ export default {
         ChatType: '',
         ChatWebhookURL: '',
         ExecCmd: '',
+        LineToken: '',
       },
       error: false,
       saved: false,
@@ -326,6 +347,9 @@ export default {
       chatList: [
         { text: '使用しない', value: '' },
         { text: 'Discord', value: 'discord' },
+        { text: 'Discord(アクションのみ)', value: 'discord_action' },
+        { text: 'Line', value: 'line' },
+        { text: 'Line(アクションのみ)', value: 'line_action' },
       ],
       nodeList: [],
       scheduleDialog: false,
@@ -375,6 +399,17 @@ export default {
       this.clearMsg()
       this.$axios
         .post('/api/notify/chat/test', this.notify)
+        .then((r) => {
+          this.sent = true
+        })
+        .catch((e) => {
+          this.failed = true
+        })
+    },
+    lineTest() {
+      this.clearMsg()
+      this.$axios
+        .post('/api/notify/line/test', this.notify)
         .then((r) => {
           this.sent = true
         })
