@@ -153,6 +153,8 @@ const getLineColor = (state) => {
   return 250
 }
 
+let scale = 1.0
+
 const mapMain = (p5) => {
   let startMouseX
   let startMouseY
@@ -170,6 +172,9 @@ const mapMain = (p5) => {
   p5.draw = () => {
     if (!mapRedraw){
       return
+    }
+    if(scale !== 1.0) {
+      p5.scale(scale)
     }
     mapRedraw = false
     p5.background(backImage.Color || 23)
@@ -412,6 +417,22 @@ const mapMain = (p5) => {
       updateItemsPos()
     }
     return false
+  }
+
+  p5.keyTyped = () => {
+    if (p5.key === '+') {
+      scale +=0.05
+      if (scale > 3.0) {
+        scale = 3.0
+      }
+      mapRedraw = true
+    } else if (p5.key === '-') {
+      scale -=0.05
+      if (scale < 0.1) {
+        scale = 0.1
+      }
+      mapRedraw = true
+    }
   }
 
   p5.keyReleased = () => {
