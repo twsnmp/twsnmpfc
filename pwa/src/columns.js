@@ -110,7 +110,7 @@ export const pollingColumns = [
   {
     name : "詳細",
     width: "5%",
-    formatter: (cell, row) => {
+    formatter: (cell) => {
         return cell ?  h('button', {
           className: 'btn-link',
           onClick: () => {
@@ -156,7 +156,7 @@ export const sensorColumns = [
   {
     name : "詳細",
     width: "5%",
-    formatter: (cell, row) => {
+    formatter: (cell) => {
         return h('button', {
           className: 'btn-link',
           onClick: () => {
@@ -191,7 +191,7 @@ export const aiColumns = [
   {
     name : "詳細",
     width: "5%",
-    formatter: (cell, row) => {
+    formatter: (cell) => {
         return h('button', {
           className: 'btn-link',
           onClick: () => {

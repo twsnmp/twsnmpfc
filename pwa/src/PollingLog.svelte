@@ -1,6 +1,6 @@
 <script>
   import * as echarts from "echarts";
-  import { twsnmpApiPostJSONWithData } from "./twsnmpapi.js";
+  import { twsnmpApiPostJSONWithData,twsnmpApiGetJSON } from "./twsnmpapi.js";
   import { onMount } from "svelte";
   export let id;
   let chart;
@@ -197,17 +197,23 @@
   };
 
   onMount(async () => {
-    const r = await twsnmpApiPostJSONWithData("/api/polling/" + id,{
+    const polling = await twsnmpApiGetJSON("/api/polling/" + id);
+    if (!polling) {
+      return;
+    }
+    console.log(polling);
+    const logs = await twsnmpApiPostJSONWithData("/api/pollingLogs/" + id,{
         StartDate: '',
         StartTime: '',
         EndDate: '',
         EndTime: '',
       });
-    if (!r || !r.Logs) {
+    if (!logs) {
       return;
     }
-    title = r.Node.Name + ":" + r.Polling.Name;
-    showPollingLog(r.Logs);
+    console.log(logs);
+    title = polling.Node.Name + ":" + polling.Polling.Name;
+    showPollingLog(logs);
   });
 </script>
 

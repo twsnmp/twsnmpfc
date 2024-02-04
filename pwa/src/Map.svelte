@@ -53,6 +53,27 @@ import PollingLog from "./PollingLog.svelte";
     setMAP(map);
   };
 
+  const getStateNum = (s)=> {
+    switch (s){
+      case "high":
+        return 0;
+      case "low":
+        return 1;
+      case "warn":
+        return 2;
+      case "repair":
+        return 3
+      case "unknown":
+        return 5;
+      default:
+        return 4;
+    }
+  }
+
+  const compSate = (a,b) => {
+    return getStateNum(a[0]) - getStateNum(b[0]);
+  }
+
   let nodes = [];
 
   const refreshNodes = async () => {
@@ -65,6 +86,7 @@ import PollingLog from "./PollingLog.svelte";
     r.forEach((n) => {
       tmp.push([n.State, n.Name, n.IP, n.MAC, n.Descr]);
     });
+    tmp.sort(compSate);
     nodes = tmp;
   };
 
@@ -95,6 +117,7 @@ import PollingLog from "./PollingLog.svelte";
         p.LogMode ? p.ID : '',
       ]);
     });
+    tmp.sort(compSate);
     pollings = tmp;
   };
 
@@ -123,6 +146,7 @@ import PollingLog from "./PollingLog.svelte";
         s.ID,
       ]);
     });
+    tmp.sort((a,b)=> b[4] - a[4]);
     sensors = tmp;
   };
 
@@ -141,6 +165,7 @@ import PollingLog from "./PollingLog.svelte";
       aiMap[a.ID] = a;
       tmp.push([a.Score, a.NodeName, a.PollingName, a.Count, a.LastTime, a.ID]);
     });
+    tmp.sort((a,b)=>b[0] - a[0]);
     ais = tmp;
   };
 
@@ -156,6 +181,7 @@ import PollingLog from "./PollingLog.svelte";
     r.forEach((d) => {
       tmp.push([d.Score, d.ID, d.Name, d.IP,d.Vendor,d.FirstTime, d.LastTime]);
     });
+    tmp.sort((a,b)=>a[0] - b[0]);
     devices = tmp;
   };
 
@@ -171,6 +197,7 @@ import PollingLog from "./PollingLog.svelte";
     r.forEach((i) => {
       tmp.push([i.Score, i.IP, i.Name,i.Loc,i.MAC,i.Vendor,i.FirstTime, i.LastTime]);
     });
+    tmp.sort((a,b)=>a[0] - b[0]);
     ips = tmp;
   };
 
@@ -221,13 +248,15 @@ import PollingLog from "./PollingLog.svelte";
       pollingID = id;
     },100);
   };
-
+  const getSensorStats = async (id) => {
+    sensorStats = await twsnmpApiGetJSON("/api/report/sensor/stats/" +id);
+  }
   const showSensor = (id) => {
     sensorStats = undefined;
     setTimeout(()=>{
       const s = sensorMap[id];
-      if (s && s.Stats){
-        sensorStats = s.Stats;
+      if (s && s.Host){
+        getSensorStats(id);
         sesnorTitle = s.Host + ":" + s.Type;
       }
     },100);
@@ -246,7 +275,7 @@ import PollingLog from "./PollingLog.svelte";
     pollingID = "";
     sensorStats = undefined;
     aiID = "";
-    pagination.limit = 10;
+    pagination.limit = 15;
     setTableCallback(undefined);
     switch(page){
       case "polling":
@@ -263,7 +292,8 @@ import PollingLog from "./PollingLog.svelte";
         break;
       case "node":
       case "device":
-        pagination.limit = 25;
+      case "ip":
+        pagination.limit = 30;
         break;
     }
     refresh();
