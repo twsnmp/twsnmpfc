@@ -63,3 +63,22 @@ func deletePowerMonitor(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
+
+func getMotionSensor(c echo.Context) error {
+	r := []*datastore.MotionSensorEnt{}
+	datastore.ForEachMotionSensor(func(e *datastore.MotionSensorEnt) bool {
+		r = append(r, e)
+		return true
+	})
+	return c.JSON(http.StatusOK, r)
+}
+
+func deleteMotionSensor(c echo.Context) error {
+	id := c.Param("id")
+	if id == "all" {
+		go datastore.ClearReport("motionSensor")
+	} else {
+		datastore.DeleteReport("motionSensor", []string{id})
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}

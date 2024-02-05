@@ -234,3 +234,82 @@ func savePowerMonitor(b *bbolt.Bucket, last int64) {
 		return true
 	})
 }
+
+type MotionSensorDataEnt struct {
+	Time         int64
+	Moving       bool
+	Light        bool
+	Battery      int64
+	LastMove     int64
+	LastMoveDiff int64
+	Event        string
+	RSSI         int
+}
+
+type MotionSensorEnt struct {
+	ID        string // Host + Address
+	Host      string
+	Name      string
+	Address   string
+	Data      []MotionSensorDataEnt
+	Count     int64
+	FirstTime int64
+	LastTime  int64
+}
+
+func GetMotionSensor(id string) *MotionSensorEnt {
+	if v, ok := motionSensor.Load(id); ok {
+		return v.(*MotionSensorEnt)
+	}
+	return nil
+}
+
+func AddMotionSensor(e *MotionSensorEnt) {
+	motionSensor.Store(e.ID, e)
+}
+
+func ForEachMotionSensor(f func(*MotionSensorEnt) bool) {
+	motionSensor.Range(func(k, v interface{}) bool {
+		e := v.(*MotionSensorEnt)
+		return f(e)
+	})
+}
+
+func loadMotionSensor(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("motionSensor"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var e MotionSensorEnt
+			if err := json.Unmarshal(v, &e); err == nil {
+				motionSensor.Store(e.ID, &e)
+			}
+			return nil
+		})
+	}
+}
+
+func saveMotionSensor(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("motionSensor"))
+	if r == nil {
+		return
+	}
+	motionSensor.Range(func(k, v interface{}) bool {
+		e, ok := v.(*MotionSensorEnt)
+		if !ok {
+			return true
+		}
+		if e.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(e)
+		if err != nil {
+			log.Printf("save motionSensor report err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(e.ID), s)
+		if err != nil {
+			log.Printf("save motionSensor report err=%v", err)
+		}
+		return true
+	})
+}

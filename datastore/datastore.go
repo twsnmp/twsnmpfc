@@ -66,6 +66,7 @@ var (
 	blueDevice   sync.Map
 	envMonitor   sync.Map
 	powerMonitor sync.Map
+	motionSensor sync.Map
 	// twWifiScan
 	wifiAP sync.Map
 	// MAP Changed check

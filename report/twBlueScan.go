@@ -44,6 +44,8 @@ func checkTWBlueScanReport(l map[string]interface{}) {
 		checkSwitchBotEnvReport(h, m)
 	case "SwitchBotPlugMini":
 		checkSwitchBotPlugMiniReport(h, m)
+	case "SwitchBotMotionSensor":
+		checkSwitchBotMotionSensorReport(h, m)
 	case "Stats":
 		checkStats(h, "twBlueScan", m)
 	case "Monitor":
@@ -237,6 +239,66 @@ func checkSwitchBotPlugMiniReport(h string, m map[string]string) {
 				Over:   over,
 				Load:   load,
 				RSSI:   int(rssi),
+			},
+		},
+		LastTime:  now,
+		FirstTime: now,
+	})
+}
+
+// 2024/02/06 06:13:49.663 info:local5 twBlueScan type=SwitchBotMotionSensor,address=d7:bb:ea:e7:cf:58,name=,rssi=-64,moving=false,event=report,lastMoveDiff=513,lastMove=2024-02-06T06:05:16+09:00,battery=228,light=false
+func checkSwitchBotMotionSensorReport(h string, m map[string]string) {
+	addr, ok := m["address"]
+	if !ok {
+		return
+	}
+	if _, ok := m["moving"]; !ok {
+		return
+	}
+	event := m["event"]
+	rssi := getNumberFromTWLog(m["rssi"])
+	battery := getNumberFromTWLog(m["battery"])
+	lastMoveDiff := getNumberFromTWLog(m["lastMoveDiff"])
+	moving := m["moving"] == "true"
+	light := m["light"] == "true"
+	lastMove := getTimeFromTWLog(m["lastMove"])
+	id := makeID(h + ":" + addr)
+	now := time.Now().UnixNano()
+	e := datastore.GetMotionSensor(id)
+	if e != nil {
+		e.Count++
+		e.LastTime = time.Now().UnixNano()
+		e.Data = append(e.Data, datastore.MotionSensorDataEnt{
+			Time:         now,
+			Event:        event,
+			Moving:       moving,
+			Light:        light,
+			Battery:      battery,
+			LastMove:     lastMove,
+			LastMoveDiff: lastMoveDiff,
+			RSSI:         int(rssi),
+		})
+		if len(e.Data) > MAX_DATA_SIZE*2 {
+			e.Data = e.Data[1:]
+		}
+		return
+	}
+	datastore.AddMotionSensor(&datastore.MotionSensorEnt{
+		ID:      id,
+		Host:    h,
+		Address: addr,
+		Name:    m["name"],
+		Count:   1,
+		Data: []datastore.MotionSensorDataEnt{
+			{
+				Time:         now,
+				Event:        event,
+				Moving:       moving,
+				Light:        light,
+				Battery:      battery,
+				LastMove:     lastMove,
+				LastMoveDiff: lastMoveDiff,
+				RSSI:         int(rssi),
 			},
 		},
 		LastTime:  now,

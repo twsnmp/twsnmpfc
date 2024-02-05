@@ -36,6 +36,7 @@ func LoadReport() error {
 		loadEnvMonitor(r)
 		loadWifiAP(r)
 		loadPowerMonitor(r)
+		loadMotionSensor(r)
 		return nil
 	})
 }
@@ -69,6 +70,7 @@ func SaveReport(last int64) error {
 		saveEnvMonitor(b, last)
 		saveWifiAP(b, last)
 		savePowerMonitor(b, last)
+		saveMotionSensor(b, last)
 		log.Printf("SaveReport dur=%v", time.Since(st))
 		return nil
 	})
@@ -97,6 +99,7 @@ var reportNameToMap = map[string]*sync.Map{
 	"envMonitor":   &envMonitor,
 	"wifiAP":       &wifiAP,
 	"powerMonitor": &powerMonitor,
+	"motionSensor": &motionSensor,
 }
 
 func DeleteReport(report string, ids []string) error {

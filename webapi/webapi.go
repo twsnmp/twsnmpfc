@@ -236,6 +236,8 @@ func setup(p *WebAPI) {
 	r.GET("/report/sdrPowerKeys", getSdrPowerKeys)
 	r.POST("/report/sdrPowerData", getSdrPowerData)
 	r.POST("/report/sdrPower/delete", deleteSdrPower)
+	r.GET("/report/MotionSensor", getMotionSensor)
+	r.DELETE("/report/MotionSensor/:id", deleteMotionSensor)
 	// AI
 	r.GET("/report/ailist", getAIList)
 	r.GET("/report/ai/:id", getAIResult)

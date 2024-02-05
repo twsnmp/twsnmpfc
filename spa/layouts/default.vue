@@ -453,6 +453,11 @@ export default {
           to: '/report/powerMonitor',
         },
         {
+          icon: 'mdi-motion-sensor',
+          title: '人感センサー',
+          to: '/report/motionSensor',
+        },
+        {
           icon: 'mdi-radio-tower',
           title: '電波強度',
           to: '/report/sdrpower',
