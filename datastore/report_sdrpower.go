@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"go.etcd.io/bbolt"
@@ -127,7 +128,36 @@ func DeleteSdrPower(st int64, h string) error {
 		for k, _ := c.Seek([]byte(sk)); bytes.HasPrefix(k, []byte(sk)); k, _ = c.Next() {
 			c.Delete()
 		}
-		log.Printf("DeleteSdrPoer dur=%v", time.Since(s))
+		log.Printf("DeleteSdrPower dur=%v", time.Since(s))
+		return nil
+	})
+}
+
+// DeleteOldSdrPower は古い電波強度レポートを削除します。
+func DeleteOldSdrPower(delOld int64) error {
+	s := time.Now()
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	dk := fmt.Sprintf("%016x", delOld)
+	return db.Batch(func(tx *bbolt.Tx) error {
+		r := tx.Bucket([]byte("report"))
+		b := r.Bucket([]byte("sdrPower"))
+		if b == nil {
+			return fmt.Errorf("no bucket sdrPower")
+		}
+		c := b.Cursor()
+		count := 0
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			a := strings.Split(string(k), ":")
+			if len(a) > 2 && a[0] > dk {
+				log.Printf("DeleteOldSdrPower end %v %s", a, dk)
+				break
+			}
+			c.Delete()
+			count++
+		}
+		log.Printf("DeleteOldSdrPower count=%d dur=%v", count, time.Since(s))
 		return nil
 	})
 }

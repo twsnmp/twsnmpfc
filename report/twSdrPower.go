@@ -1,7 +1,6 @@
 package report
 
 import (
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -74,16 +73,7 @@ func saveSdrPowerReport() {
 	}
 }
 
-func checkOldEnvSdrPower() {
-	ids := []string{}
+func checkOldSdrPower() {
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
-	datastore.ForEachSdrPower(0, "", func(e *datastore.SdrPowerEnt) bool {
-		if e.Time < delOld {
-			ids = append(ids, fmt.Sprintf("%016x:%s:%016x", e.Time, e.Host, e.Freq))
-		}
-		return true
-	})
-	if len(ids) > 0 {
-		datastore.DeleteReport("sdrPower", ids)
-	}
+	datastore.DeleteOldSdrPower(delOld)
 }

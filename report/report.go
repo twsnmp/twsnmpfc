@@ -222,7 +222,7 @@ func checkOldReport() {
 	checkOldBlueDevice()
 	checkOldEnvMonitor()
 	checkOldWifiAP()
-	checkOldEnvSdrPower()
+	checkOldSdrPower()
 	checkOldMotionSensor()
 	log.Printf("check old report dur=%v", time.Since(st))
 	oldCheck = false
