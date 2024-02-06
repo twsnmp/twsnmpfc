@@ -108,7 +108,10 @@ func loadMIBDBNameOnly(f io.ReadCloser) {
 	}
 }
 
-var mibs = `AGENTX-MIB.txt
+var mibs = `RFC-1215.txt
+RFC1155-SMI.txt
+RFC1213-MIB.txt
+AGENTX-MIB.txt
 BRIDGE-MIB.txt
 DISMAN-EVENT-MIB.txt
 DISMAN-SCHEDULE-MIB.txt
@@ -140,9 +143,6 @@ NET-SNMP-PASS-MIB.txt
 NET-SNMP-TC.txt
 NET-SNMP-VACM-MIB.txt
 NOTIFICATION-LOG-MIB.txt
-RFC-1215.txt
-RFC1155-SMI.txt
-RFC1213-MIB.txt
 RMON-MIB.txt
 TOKEN-RING-RMON-MIB.txt
 RMON2.txt
