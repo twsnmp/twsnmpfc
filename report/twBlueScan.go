@@ -334,3 +334,17 @@ func checkOldEnvMonitor() {
 		datastore.DeleteReport("envMonitor", ids)
 	}
 }
+
+func checkOldMotionSensor() {
+	ids := []string{}
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
+	datastore.ForEachMotionSensor(func(e *datastore.MotionSensorEnt) bool {
+		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		}
+		return true
+	})
+	if len(ids) > 0 {
+		datastore.DeleteReport("motionSensor", ids)
+	}
+}

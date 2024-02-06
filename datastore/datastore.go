@@ -289,7 +289,7 @@ func initDB() error {
 		"winEventID", "winLogon", "winAccount", "winKerberos",
 		"winPrivilege", "winProcess", "winTask",
 		"wifiAP", "blueDevice", "envMonitor", "powerMonitor",
-		"sdrPower", "powerMonitor",
+		"sdrPower", "motionSensor",
 	}
 	initConf()
 	return db.Update(func(tx *bbolt.Tx) error {
