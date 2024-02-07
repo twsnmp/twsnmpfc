@@ -33,6 +33,16 @@ func GetBlueDevice(id string) *BlueDeviceEnt {
 	return nil
 }
 
+func SetBlueDeviceName(id, name string) bool {
+	if v, ok := blueDevice.Load(id); ok {
+		if e, ok := v.(*BlueDeviceEnt); ok {
+			e.Name = name
+			return true
+		}
+	}
+	return false
+}
+
 func AddBlueDevice(e *BlueDeviceEnt) {
 	blueDevice.Store(e.ID, e)
 }
@@ -74,6 +84,16 @@ func GetEnvMonitor(id string) *EnvMonitorEnt {
 		return v.(*EnvMonitorEnt)
 	}
 	return nil
+}
+
+func SetEnvMonitorName(id, name string) bool {
+	if v, ok := envMonitor.Load(id); ok {
+		if e, ok := v.(*EnvMonitorEnt); ok {
+			e.Name = name
+			return true
+		}
+	}
+	return false
 }
 
 func AddEnvMonitor(e *EnvMonitorEnt) {
@@ -185,6 +205,16 @@ func GetPowerMonitor(id string) *PowerMonitorEnt {
 	return nil
 }
 
+func SetPowerMonitorName(id, name string) bool {
+	if v, ok := powerMonitor.Load(id); ok {
+		if e, ok := v.(*PowerMonitorEnt); ok {
+			e.Name = name
+			return true
+		}
+	}
+	return false
+}
+
 func AddPowerMonitor(e *PowerMonitorEnt) {
 	powerMonitor.Store(e.ID, e)
 }
@@ -262,6 +292,16 @@ func GetMotionSensor(id string) *MotionSensorEnt {
 		return v.(*MotionSensorEnt)
 	}
 	return nil
+}
+
+func SetMotionSensorName(id, name string) bool {
+	if v, ok := motionSensor.Load(id); ok {
+		if e, ok := v.(*MotionSensorEnt); ok {
+			e.Name = name
+			return true
+		}
+	}
+	return false
 }
 
 func AddMotionSensor(e *MotionSensorEnt) {

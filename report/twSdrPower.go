@@ -74,6 +74,6 @@ func saveSdrPowerReport() {
 }
 
 func checkOldSdrPower() {
-	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
+	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).Unix()
 	datastore.DeleteOldSdrPower(delOld)
 }

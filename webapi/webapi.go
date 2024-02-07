@@ -227,6 +227,7 @@ func setup(p *WebAPI) {
 	r.DELETE("/report/WinTask/:id", deleteWinTask)
 	r.GET("/report/WifiAP", getWifiAP)
 	r.DELETE("/report/WifiAP/:id", deleteWifiAP)
+	r.POST("/report/BlueScan/name", postBlueScanName)
 	r.GET("/report/BlueDevice", getBlueDevice)
 	r.DELETE("/report/BlueDevice/:id", deleteBlueDevice)
 	r.GET("/report/EnvMonitor", getEnvMonitor)

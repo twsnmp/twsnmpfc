@@ -8,6 +8,12 @@
       <v-alert v-if="$fetchState.error" color="error" dense>
         レポートのデータを取得できません
       </v-alert>
+      <v-alert v-if="deleteError" color="error" dense dismissible>
+        環境センサーを削除できません
+      </v-alert>
+      <v-alert v-if="setNameError" color="error" dense dismissible>
+        環境センサーの名前を変更できません
+      </v-alert>
       <v-data-table
         :headers="headers"
         :items="envMonitor"
@@ -28,6 +34,9 @@
         </template>
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
+          <v-icon v-if="!readOnly" small @click="openEditNameDialog(item)">
+            mdi-pencil
+          </v-icon>
           <v-icon v-if="!readOnly" small @click="openDeleteDialog(item)">
             mdi-delete
           </v-icon>
@@ -132,6 +141,27 @@
           <v-btn color="error" @click="doDelete">
             <v-icon>mdi-delete</v-icon>
             削除
+          </v-btn>
+          <v-btn color="normal" @click="deleteDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="setNameDialog" persistent max-width="50vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">名前変更</span>
+        </v-card-title>
+        <v-card-text>
+          <v-text-field v-model="selected.Name" label="名前"></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="setName">
+            <v-icon>mdi-content-save</v-icon>
+            保存
           </v-btn>
           <v-btn color="normal" @click="deleteDialog = false">
             <v-icon>mdi-cancel</v-icon>
@@ -354,6 +384,8 @@ export default {
       env2DDialog: false,
       chartTitle: '',
       selectedType: 'Temp',
+      setNameDialog: false,
+      setNameError: false,
     }
   },
   async fetch() {
@@ -415,6 +447,28 @@ export default {
     openDeleteDialog(item) {
       this.selected = item
       this.deleteDialog = true
+    },
+    openEditNameDialog(item) {
+      this.selected = item
+      this.setNameDialog = true
+      this.setNameError = false
+    },
+    setName() {
+      const req = {
+        Type: 'env',
+        ID: this.selected.ID,
+        Name: this.selected.Name,
+      }
+      this.$axios
+        .post('/api/report/BlueScan/name', req)
+        .then((r) => {
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.setNameError = true
+          this.$fetch()
+        })
+      this.setNameDialog = false
     },
     openInfoDialog(item) {
       this.selected = item
