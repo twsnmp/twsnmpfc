@@ -163,7 +163,7 @@
             <v-icon>mdi-content-save</v-icon>
             保存
           </v-btn>
-          <v-btn color="normal" @click="deleteDialog = false">
+          <v-btn color="normal" @click="setNameDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
