@@ -158,11 +158,11 @@ func getChatMessage(l *datastore.EventLogEnt, repair bool) (string, string) {
 	return fmt.Sprintf("%s(%s)", datastore.NotifyConf.Subject, subtitle),
 		fmt.Sprintf(
 			`発生日時: %s
-		状態: %s
-		タイプ: %s
-		関連ノード: %s
-		イベント: %s
-		`,
+状態: %s
+タイプ: %s
+関連ノード: %s
+イベント: %s
+`,
 			formatLogTime(l.Time),
 			levelName(l.Level),
 			l.Type,
