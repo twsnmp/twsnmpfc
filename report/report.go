@@ -358,8 +358,10 @@ var hitCache = 0
 func findNodeInfoFromIP(ip string) (string, string) {
 	if v, ok := ipToNameCache.Load(ip); ok {
 		if c, ok := v.(*ipToNameCacheEnt); ok {
-			hitCache++
-			return c.Name, c.NodeID
+			if c.NodeID == "" || datastore.GetNode(c.NodeID) != nil {
+				hitCache++
+				return c.Name, c.NodeID
+			}
 		}
 	}
 	n := datastore.FindNodeFromIP(ip)
@@ -391,7 +393,8 @@ func clearIpToNameCache() {
 	sz := 0
 	now := time.Now().Unix()
 	ipToNameCache.Range(func(k, v interface{}) bool {
-		if c, ok := v.(*ipToNameCacheEnt); !ok || c.TimeLimit < now {
+		if c, ok := v.(*ipToNameCacheEnt); !ok || c.TimeLimit < now ||
+			(c.NodeID != "" && datastore.GetNode(c.NodeID) == nil) {
 			del++
 			ipToNameCache.Delete(k)
 		} else {

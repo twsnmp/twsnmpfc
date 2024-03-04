@@ -57,26 +57,26 @@ func checkTWWinLogReport(l map[string]interface{}) {
 	case "Monitor":
 		checkMonitor(h, "twwinlog", m)
 	case "EventID":
-		checkWinEventID(h, m, l)
+		checkWinEventID(m, l)
 	case "Logon", "Logoff", "LogonFailed":
 		checkWinLogon(m)
 	case "Account":
-		checkWinAccount(h, m)
+		checkWinAccount(m)
 	case "Kerberos":
-		checkWinKerberos(h, m)
+		checkWinKerberos(m)
 	case "Privilege":
-		checkWinPrivilege(h, m)
+		checkWinPrivilege(m)
 	case "Process":
-		checkWinProcess(h, m)
+		checkWinProcess(m)
 	case "Task":
-		checkWinTask(h, m)
+		checkWinTask(m)
 	default:
 		log.Printf("twwinlog unknown type=%s", t)
 	}
 }
 
 // type=EventID,computer=%s,channel=%s,provider=%s,eventID=%d,total=%d,count=%d,ft=%s,lt=%s
-func checkWinEventID(h string, m map[string]string, l map[string]interface{}) {
+func checkWinEventID(m map[string]string, l map[string]interface{}) {
 	eventID := getNumberFromTWLog(m["eventID"])
 	if eventID < 1 {
 		return
@@ -237,7 +237,7 @@ func calcWinLogonScore() {
 }
 
 // type=Account,subject=%s,target=%s,computer=%s,count=%d,edit=%d,password=%d,other=%d,ft=%s,lt=%s",
-func checkWinAccount(h string, m map[string]string) {
+func checkWinAccount(m map[string]string) {
 	target, ok := m["target"]
 	if !ok {
 		return
@@ -275,7 +275,7 @@ func checkWinAccount(h string, m map[string]string) {
 }
 
 // type=Kerberos,target=%s,computer=%s,ip=%s,service=%s,ticketType=%s,count=%d,failed=%d,status=%s,cert=%s,ft=%s,lt=%s
-func checkWinKerberos(h string, m map[string]string) {
+func checkWinKerberos(m map[string]string) {
 	target, ok := m["target"]
 	if !ok {
 		return
@@ -342,7 +342,7 @@ func calcWinKerberosScore() {
 }
 
 // type=Privilege,subject=%s,computer=%s,count=%d,ft=%s,lt=%s
-func checkWinPrivilege(h string, m map[string]string) {
+func checkWinPrivilege(m map[string]string) {
 	subject, ok := m["subject"]
 	if !ok {
 		return
@@ -370,7 +370,7 @@ func checkWinPrivilege(h string, m map[string]string) {
 }
 
 // type=Process,computer=%s,process=%s,count=%d,start=%d,exit=%d,subject=%s,status=%s,parent=%s,ft=%s,lt=%s",
-func checkWinProcess(h string, m map[string]string) {
+func checkWinProcess(m map[string]string) {
 	process, ok := m["process"]
 	if !ok {
 		return
@@ -416,7 +416,7 @@ func checkWinProcess(h string, m map[string]string) {
 }
 
 // type=Task,subject=%s,taskname=%s,computer=%s,count=%d,ft=%s,lt=%s
-func checkWinTask(h string, m map[string]string) {
+func checkWinTask(m map[string]string) {
 	taskname, ok := m["taskname"]
 	if !ok {
 		return
