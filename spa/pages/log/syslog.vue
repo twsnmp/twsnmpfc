@@ -175,10 +175,6 @@
           <v-icon>mdi-view-list</v-icon>
           抽出情報
         </v-btn>
-        <v-btn color="info" @click="aiAssistDialog = true">
-          <v-icon>mdi-brain</v-icon>
-          AIアシスト
-        </v-btn>
         <v-btn color="normal" dark @click="doFilter()">
           <v-icon>mdi-cached</v-icon>
           再検索
@@ -796,109 +792,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="aiAssistDialog" persistent max-width="98vw">
-      <v-card style="width: 100%">
-        <v-card-title> AIアシスト分析 </v-card-title>
-        <v-card-text>
-          <div
-            v-if="hasAIErrorChart"
-            id="aiAssist"
-            style="width: 95vw; height: 200px"
-          ></div>
-          <v-data-table
-            v-model="selectedAILogs"
-            :headers="aiAssistHeaders"
-            :items="logs"
-            sort-by="TimeStr"
-            sort-desc
-            dense
-            item-key="ID"
-            show-select
-            :loading="aiProcessing"
-            loading-text="AI Thinking... Please wait"
-            class="log"
-          >
-            <template #[`item.Level`]="{ item }">
-              <v-icon :color="$getStateColor(item.Level)">{{
-                $getStateIconName(item.Level)
-              }}</v-icon>
-              {{ $getStateName(item.Level) }}
-            </template>
-            <template #[`body.append`]>
-              <tr>
-                <td></td>
-                <td colspan="3">
-                  <v-switch
-                    v-model="aiFilter.hasAIResult"
-                    label="結果があるもの"
-                  ></v-switch>
-                </td>
-                <td></td>
-                <td>
-                  <v-text-field
-                    v-model="aiFilter.host"
-                    label="Host"
-                  ></v-text-field>
-                </td>
-                <td>
-                  <v-text-field
-                    v-model="aiFilter.tag"
-                    label="Tag"
-                  ></v-text-field>
-                </td>
-                <td>
-                  <v-text-field
-                    v-model="aiFilter.msg"
-                    label="Message"
-                  ></v-text-field>
-                </td>
-              </tr>
-            </template>
-          </v-data-table>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            v-if="hasSelectedAILogs"
-            color="info"
-            dark
-            @click="setAIClassDialog = true"
-          >
-            <v-icon>mdi-teach</v-icon>
-            教育
-          </v-btn>
-          <v-btn color="primary" dark @click="doAIAssist">
-            <v-icon>mdi-brain</v-icon>
-            分析
-          </v-btn>
-          <v-btn color="normal" dark @click="aiAssistDialog = false">
-            <v-icon>mdi-cancel</v-icon>
-            閉じる
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="setAIClassDialog" persistent max-width="50vw">
-      <v-card>
-        <v-card-title>
-          <span class="headline">分類を教える</span>
-        </v-card-title>
-        <v-card-text>
-          <v-text-field v-model="AIClass" dense></v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" @click="setAIClass">
-            <v-icon>mdi-content-save</v-icon>
-            設定
-          </v-btn>
-          <v-btn color="normal" @click="setAIClassDialog = false">
-            <v-icon>mdi-cancel</v-icon>
-            キャンセル
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
     <v-dialog v-model="fftDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
@@ -1145,59 +1038,6 @@ export default {
         },
         { text: '総数', value: 'Total', width: '30%' },
       ],
-      aiAssistDialog: false,
-      aiFilter: {
-        host: '',
-        tag: '',
-        msg: '',
-        hasAIResult: false,
-      },
-      hasAIErrorChart: false,
-      aiProcessing: false,
-      setAIClassDialog: false,
-      selectedAILogs: [],
-      AIClass: '',
-      aiAssistHeaders: [
-        { text: '状態', value: 'Level', width: '13%' },
-        { text: '教育', value: 'AIClass', width: '8%' },
-        {
-          text: 'AI回答',
-          value: 'AIResult',
-          width: '8%',
-          filter: (value) => {
-            if (!this.aiFilter.hasAIResult) return true
-            return value && value !== ''
-          },
-        },
-        { text: '日時', value: 'TimeStr', width: '13%' },
-        {
-          text: 'ホスト名',
-          value: 'Host',
-          width: '10%',
-          filter: (value) => {
-            if (!this.aiFilter.host) return true
-            return value.includes(this.aiFilter.host)
-          },
-        },
-        {
-          text: 'タグ',
-          value: 'Tag',
-          width: '10%',
-          filter: (value) => {
-            if (!this.aiFilter.tag) return true
-            return value.includes(this.aiFilter.tag)
-          },
-        },
-        {
-          text: 'メッセージ',
-          value: 'Message',
-          width: '40%',
-          filter: (value) => {
-            if (!this.aiFilter.msg) return true
-            return value.includes(this.aiFilter.msg)
-          },
-        },
-      ],
       fftDialog: false,
       fftMap: null,
       fftType: 't',
@@ -1241,8 +1081,6 @@ export default {
     this.logs.forEach((e) => {
       const t = new Date(e.Time / (1000 * 1000))
       e.TimeStr = this.$timeFormat(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}.{SSS}')
-      e.AIClass = ''
-      e.AIResult = ''
       e.ID = id++
       if (this.ft === '') {
         this.ft = this.$timeFormat(t, '{yyyy}/{MM}/{dd} {HH}:{mm}')
@@ -1325,11 +1163,6 @@ export default {
       this.extractDatas.push(e)
     })
     this.checkNextlog(r)
-  },
-  computed: {
-    hasSelectedAILogs() {
-      return this.selectedAILogs.length > 0
-    },
   },
   created() {
     const c = this.$store.state.log.logs.syslog
@@ -1504,24 +1337,6 @@ export default {
         this.extractTopListType
       )
       this.$showSyslogExtractTopList('extractTopList', this.extractTopList)
-    },
-    doAIAssist() {
-      this.hasAIErrorChart = false
-      this.aiProcessing = true
-      this.$syslogAIAssist(this.getFilteredSyslog()).then(() => {
-        this.aiFilter.hasAIResult = true
-        this.aiProcessing = false
-        this.hasAIErrorChart = true
-        this.$nextTick(() => {
-          this.$showSyslogAIAssistChart('aiAssist')
-        })
-      })
-    },
-    setAIClass() {
-      this.selectedAILogs.forEach((l) => {
-        l.AIClass = this.AIClass
-      })
-      this.setAIClassDialog = false
     },
     formatCount(n) {
       return numeral(n).format('0,0')

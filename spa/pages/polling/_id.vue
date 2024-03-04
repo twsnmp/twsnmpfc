@@ -137,38 +137,6 @@
                 <v-list-item-title>ヒストグラム</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-            <v-list-item v-if="aiScores.length < 1" @click="doAI">
-              <v-list-item-icon>
-                <v-icon>mdi-brain</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>AI分析</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item v-if="aiScores.length > 0" @click="showAIHeatMap">
-              <v-list-item-icon>
-                <v-icon>mdi-calendar-check</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>AI分析ヒートマップ</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item v-if="aiScores.length" @click="showAIPieChart">
-              <v-list-item-icon>
-                <v-icon>mdi-chart-pie</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>AI分析異常割合</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item v-if="aiScores.length" @click="showAITimeChart">
-              <v-list-item-icon>
-                <v-icon>mdi-chart-timeline-variant</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>AI分析時系列</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
             <v-list-item @click="pollingLogSTL">
               <v-list-item-icon>
                 <v-icon>mdi-chart-timeline-variant</v-icon>
@@ -480,89 +448,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="aiTrainDialog" persistent max-width="98vw">
-      <v-card>
-        <v-card-title>
-          <span class="headline">AI学習状況</span>
-        </v-card-title>
-        <v-alert v-model="aiError" color="error" dense dismissible>
-          AI分析に失敗しました
-        </v-alert>
-        <v-spacer></v-spacer>
-        <v-card-subtitle> 学習状況 </v-card-subtitle>
-        <v-card-text>
-          <div
-            id="error"
-            style="width: 95vw; height: 20vh; margin: 0 auto"
-          ></div>
-        </v-card-text>
-        <v-card-subtitle> モデル </v-card-subtitle>
-        <v-card-text>
-          <div id="model" style="background-color: #ccc"></div>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="normal" @click="aiTrainDialog = false">
-            <v-icon>mdi-cancel</v-icon>
-            閉じる
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="aiHeatMapDialog" persistent max-width="98vw">
-      <v-card>
-        <v-card-title>
-          <span class="headline"> AI分析ヒートマップ </span>
-        </v-card-title>
-        <div
-          id="heatMap"
-          style="width: 95vw; height: 50vh; margin: 0 atuo"
-        ></div>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="normal" @click="aiHeatMapDialog = false">
-            <v-icon>mdi-cancel</v-icon>
-            閉じる
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="aiPieChartDialog" persistent max-width="98vw">
-      <v-card>
-        <v-card-title>
-          <span class="headline"> AI分析異常割合 </span>
-        </v-card-title>
-        <div
-          id="pieChart"
-          style="width: 95vw; height: 60vh; margin: 0 auto"
-        ></div>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="normal" @click="aiPieChartDialog = false">
-            <v-icon>mdi-cancel</v-icon>
-            閉じる
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="aiTimeChartDialog" persistent max-width="98vw">
-      <v-card>
-        <v-card-title>
-          <span class="headline"> AI分析時系列 </span>
-        </v-card-title>
-        <div
-          id="timeChart"
-          style="width: 95vw; height: 50vh; margin: 0 auto"
-        ></div>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="normal" @click="aiTimeChartDialog = false">
-            <v-icon>mdi-cancel</v-icon>
-            閉じる
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
     <v-dialog v-model="stlDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
@@ -748,12 +633,6 @@ export default {
       per1h: false,
       at: undefined,
       pollingHistogramDialog: false,
-      aiTrainDialog: false,
-      aiHeatMapDialog: false,
-      aiPieChartDialog: false,
-      aiTimeChartDialog: false,
-      aiError: false,
-      aiScores: [],
       stlDialog: false,
       fftDialog: false,
       timeAnalyzeData: null,
@@ -789,7 +668,6 @@ export default {
         value: r.Polling.Result[k],
       })
     })
-    this.aiScores = []
     this.logs = null
   },
   methods: {
@@ -896,27 +774,6 @@ export default {
         )
       })
     },
-    doAI() {
-      if (this.aiScores.length > 0) {
-        this.showAIHeatMap()
-        return
-      }
-      this.aiTrainDialog = true
-      this.aiError = false
-      this.$axios.$get('/api/aidata/' + this.$route.params.id).then((r) => {
-        this.$nextTick(() => {
-          this.$autoEncoder('error', 'model', r, (done) => {
-            if (done) {
-              this.aiScores = r.AIScores
-              this.aiTrainDialog = false
-              this.showAIHeatMap()
-            } else {
-              this.aiError = true
-            }
-          })
-        })
-      })
-    },
     pollingLogSTL() {
       this.stlDialog = true
       if (this.timeAnalyzeData) {
@@ -986,28 +843,6 @@ export default {
         this.calcUnit,
         this.fftType
       )
-    },
-    showAIHeatMap() {
-      this.aiHeatMapDialog = true
-      this.$nextTick(() => {
-        this.$showAIHeatMap('heatMap', this.aiScores, this.showPollingResult)
-      })
-    },
-    showAIPieChart() {
-      this.aiPieChartDialog = true
-      this.$nextTick(() => {
-        this.$showAIPieChart('pieChart', this.aiScores)
-      })
-    },
-    showAITimeChart() {
-      this.aiTimeChartDialog = true
-      this.$nextTick(() => {
-        this.$showAITimeChart(
-          'timeChart',
-          this.aiScores,
-          this.showPollingResult
-        )
-      })
     },
     doClearPollingLog() {
       this.clearPollingLogDialog = false
