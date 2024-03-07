@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
+	"sort"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -136,7 +138,9 @@ func postSyslog(c echo.Context) error {
 	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	grokCap := ""
 	var grokExtractor *grok.Grok
-	if filter.Extractor != "" {
+	regExtractor := getExtractType(filter.Extractor)
+	log.Printf("regExtractor=%d", regExtractor)
+	if regExtractor == none && filter.Extractor != "" {
 		grokEnt := datastore.GetGrokEnt(filter.Extractor)
 		if grokEnt != nil {
 			var err error
@@ -250,8 +254,14 @@ func postSyslog(c echo.Context) error {
 		if hostFilter != nil && !hostFilter.Match([]byte(re.Host)) {
 			return true
 		}
-		if grokExtractor != nil {
-			values, err := grokExtractor.Parse(grokCap, re.Message)
+		if grokExtractor != nil || regExtractor > 0 {
+			var values map[string]string
+			var err error
+			if grokExtractor != nil {
+				values, err = grokExtractor.Parse(grokCap, re.Message)
+			} else {
+				values, err = regExtract(regExtractor, re.Message)
+			}
 			if err != nil {
 				log.Printf("parse grok err=%v", err)
 			} else if len(values) > 0 {
@@ -261,9 +271,12 @@ func postSyslog(c echo.Context) error {
 					r.ExtractHeader = append(r.ExtractHeader, "Type")
 					r.ExtractHeader = append(r.ExtractHeader, "Host")
 					r.ExtractHeader = append(r.ExtractHeader, "Tag")
+					keys := []string{}
 					for k := range values {
-						r.ExtractHeader = append(r.ExtractHeader, k)
+						keys = append(keys, k)
 					}
+					sort.Strings(keys)
+					r.ExtractHeader = append(r.ExtractHeader, keys...)
 				}
 				e := []string{}
 				for _, k := range r.ExtractHeader {
@@ -291,4 +304,66 @@ func postSyslog(c echo.Context) error {
 	})
 	r.Limit = datastore.MapConf.LogDispSize
 	return c.JSON(http.StatusOK, r)
+}
+
+// Extract by regexp
+var reSplunk = regexp.MustCompile(`([-a-zA-Z0-1_]+)=([^, ;]+)`)
+var reNumber = regexp.MustCompile(`-?[.0-9]+`)
+var reIPv4 = regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}`)
+var reMAC = regexp.MustCompile(`[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}`)
+var reEMail = regexp.MustCompile(`[A-Za-z]+[A-Za-z0-1]+@[A-Za-z.]+`)
+
+const (
+	none = iota
+	splunk
+	number
+	other
+)
+
+func getExtractType(t string) int {
+	switch t {
+	case "re_splunk":
+		return splunk
+	case "re_number":
+		return number
+	case "re_other":
+		return other
+	}
+	return none
+}
+
+func regExtract(t int, msg string) (map[string]string, error) {
+	r := make(map[string]string)
+	switch t {
+	case splunk:
+		m := reSplunk.FindAllStringSubmatch(msg, -1)
+		for _, e := range m {
+			if len(e) > 2 {
+				r[e[1]] = e[2]
+			}
+		}
+	case number:
+		m := reNumber.FindAllString(msg, -1)
+		for i, e := range m {
+			k := fmt.Sprintf("number%d", i+1)
+			r[k] = e
+		}
+	default:
+		m := reIPv4.FindAllString(msg, -1)
+		for i, e := range m {
+			k := fmt.Sprintf("ip%d", i+1)
+			r[k] = e
+		}
+		m = reMAC.FindAllString(msg, -1)
+		for i, e := range m {
+			k := fmt.Sprintf("mac%d", i+1)
+			r[k] = e
+		}
+		m = reEMail.FindAllString(msg, -1)
+		for i, e := range m {
+			k := fmt.Sprintf("email%d", i+1)
+			r[k] = e
+		}
+	}
+	return r, nil
 }

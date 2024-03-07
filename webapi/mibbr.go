@@ -43,13 +43,12 @@ type mibEnt struct {
 }
 
 func postMIBBr(c echo.Context) error {
-	api := c.Get("api").(*WebAPI)
 	p := new(mibGetReqWebAPI)
 	if err := c.Bind(p); err != nil {
 		log.Printf("MIBBR err=%v", err)
 		return echo.ErrBadRequest
 	}
-	r, err := snmpWalk(api, p)
+	r, err := snmpWalk(p)
 	if err != nil {
 		log.Printf("MIBBR err=%v", err)
 		if len(r) > 0 {
@@ -79,7 +78,7 @@ func nameToOID(name string) string {
 	return oid
 }
 
-func snmpWalk(api *WebAPI, p *mibGetReqWebAPI) ([]*mibEnt, error) {
+func snmpWalk(p *mibGetReqWebAPI) ([]*mibEnt, error) {
 	ret := []*mibEnt{}
 	n := datastore.GetNode(p.NodeID)
 	if n == nil {

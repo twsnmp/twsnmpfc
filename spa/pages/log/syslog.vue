@@ -513,7 +513,7 @@
         </v-card-title>
         <div
           id="host3d"
-          style="width: 95vw; height: 80vh; margin: 0 auto"
+          style="width: 95vw; height: 40vh; margin: 0 auto"
         ></div>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -533,7 +533,7 @@
         <v-card-text>
           <div
             id="hostList"
-            style="width: 95vw; height: 80vh; margin: 0 auto"
+            style="width: 95vw; height: 40vh; margin: 0 auto"
           ></div>
           <v-data-table
             :headers="hostListHeader"
@@ -691,7 +691,7 @@
           </v-row>
           <div
             id="extract3d"
-            style="width: 95vw; height: 80vh; margin: 0 auto"
+            style="width: 95vw; height: 40vh; margin: 0 auto"
           ></div>
         </v-card-text>
         <v-card-actions>
@@ -720,7 +720,7 @@
         <v-card-text>
           <div
             id="extractTopList"
-            style="width: 95vw; height: 80vh; margin: 0 auto"
+            style="width: 95vw; height: 40vh; margin: 0 auto"
           ></div>
           <v-data-table
             :headers="extractTopListHeader"
@@ -851,7 +851,7 @@
         <v-card-text>
           <div
             id="FFTChart3D"
-            style="width: 95vw; height: 60vh; margin: 0 auto"
+            style="width: 95vw; height: 40vh; margin: 0 auto"
           ></div>
         </v-card-text>
         <v-card-actions>
@@ -871,7 +871,7 @@
         <v-card-text>
           <div
             id="heatmap"
-            style="width: 95vw; height: 60vh; margin: 0 auto"
+            style="width: 95vw; height: 40vh; margin: 0 auto"
           ></div>
         </v-card-text>
         <v-card-actions>
@@ -1109,21 +1109,17 @@ export default {
     if (this.filterExtractorList.length < 1) {
       const groks = await this.$axios.$get('/api/conf/grok')
       if (groks) {
-        this.filterExtractorList = [{ text: '指定しない', value: '' }]
+        this.filterExtractorList = [
+          { text: '指定しない', value: '' },
+          { text: 'SPLUNK風', value: 're_splunk' },
+          { text: '自動数値', value: 're_number' },
+          { text: '自動(IP,MAC,EMail)', value: 're_other' },
+        ]
         groks.forEach((g) => {
           this.filterExtractorList.push({
             text: g.Name,
             value: g.ID,
           })
-        })
-        this.filterExtractorList.sort((a, b) => {
-          if (a.value < b.value) {
-            return -1
-          }
-          if (a.value < b.value) {
-            return 1
-          }
-          return 0
         })
       }
     }
@@ -1131,12 +1127,14 @@ export default {
       this.checkNextlog(r)
       return
     }
-    r.ExtractHeader.forEach((col) => {
-      this.extractHeader.push({
-        text: col,
-        value: col,
+    if (this.filter.NextTime === 0) {
+      r.ExtractHeader.forEach((col) => {
+        this.extractHeader.push({
+          text: col,
+          value: col,
+        })
       })
-    })
+    }
     let firstData = true
     r.ExtractDatas.forEach((row) => {
       if (row.length !== r.ExtractHeader.length) {
