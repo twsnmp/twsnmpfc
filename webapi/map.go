@@ -79,11 +79,25 @@ func checkDrawItem(di *datastore.DrawItemEnt) {
 	if di.Type == 4 {
 		di.Text = "値なし"
 	}
-	if di.Type == 5 {
+	if di.Type >= 5 {
 		di.Value = 0.0
 	}
 	p := datastore.GetPolling(di.PollingID)
 	if p == nil {
+		return
+	}
+	if di.Type == datastore.DrawItemTypePollingLine {
+		switch p.State {
+		case "high":
+			di.Color = "#e31a1c"
+		case "low":
+			di.Color = "#fb9a99"
+		case "warn":
+			di.Color = "#dfdf22"
+		default:
+			di.Color = "#1f78b4"
+		}
+		setPollingLogValuesForLine(di)
 		return
 	}
 	varName, format, scale := autoGetPollingSetting(di, p)
@@ -119,7 +133,7 @@ func checkDrawItem(di *datastore.DrawItemEnt) {
 		text = "値なし"
 	}
 	switch di.Type {
-	case datastore.DrawItemTypePollingGauge:
+	case datastore.DrawItemTypePollingGauge, datastore.DrawItemTypePollingNewGauge, datastore.DrawItemTypePollingBar:
 		if val > 100.0 {
 			val = 100.0
 		}
@@ -145,6 +159,20 @@ func checkDrawItem(di *datastore.DrawItemEnt) {
 		}
 		di.Value = val
 	}
+}
+
+func setPollingLogValuesForLine(di *datastore.DrawItemEnt) {
+	st := time.Now().Add(-time.Hour * 24).UnixNano()
+	et := time.Now().UnixNano()
+	di.Values = []float64{}
+	datastore.ForEachPollingLog(st, et, di.PollingID, func(l *datastore.PollingLogEnt) bool {
+		if v, ok := l.Result[di.VarName]; ok {
+			if val, ok := v.(float64); ok {
+				di.Values = append(di.Values, val)
+			}
+		}
+		return true
+	})
 }
 
 func autoGetPollingSetting(di *datastore.DrawItemEnt, p *datastore.PollingEnt) (varName, format string, scale float64) {

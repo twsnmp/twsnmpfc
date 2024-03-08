@@ -119,7 +119,7 @@
               </v-select>
             </v-col>
             <v-col>
-              <v-icon x-large style="magin-top: 10px; margin-left: 10px">
+              <v-icon x-large style="margin-top: 10px; margin-left: 10px">
                 {{ $getIconName(editNode.Icon) }}
               </v-icon>
             </v-col>
@@ -225,7 +225,11 @@
                 label="幅"
               ></v-text-field>
             </v-col>
-            <v-col v-if="editItem.Type < 2 || editItem.Type == 3">
+            <v-col
+              v-if="
+                editItem.Type < 2 || editItem.Type == 3 || editItem.Type >= 6
+              "
+            >
               <v-text-field
                 v-model="editItem.H"
                 type="number"
@@ -235,7 +239,11 @@
                 label="高さ"
               ></v-text-field>
             </v-col>
-            <v-col v-if="editItem.Type == 2 || editItem.Type > 3">
+            <v-col
+              v-if="
+                editItem.Type == 2 || (editItem.Type > 3 && editItem.Type < 6)
+              "
+            >
               <v-text-field
                 v-model="editItem.Size"
                 type="number"
@@ -255,14 +263,14 @@
           >
           </v-text-field>
           <v-autocomplete
-            v-if="editItem.Type == 4 || editItem.Type == 5"
+            v-if="editItem.Type >= 4"
             v-model="editItem.PollingID"
             :items="itemPollingList"
             label="ポーリング"
           >
           </v-autocomplete>
           <v-text-field
-            v-if="editItem.Type == 4 || editItem.Type == 5"
+            v-if="editItem.Type >= 4"
             v-model="editItem.VarName"
             label="結果の変数名"
           >
@@ -274,9 +282,9 @@
           >
           </v-text-field>
           <v-text-field
-            v-if="editItem.Type == 5"
+            v-if="editItem.Type >= 5"
             v-model="editItem.Text"
-            label="ゲージのラベル"
+            label="ラベル"
           >
           </v-text-field>
           <v-text-field
@@ -1002,6 +1010,9 @@ export default {
         { text: 'イメージ', value: 3 },
         { text: 'ポーリング結果(テキスト)', value: 4 },
         { text: 'ポーリング結果(ゲージ)', value: 5 },
+        { text: 'ポーリング結果(新ゲージ)', value: 6 },
+        { text: 'ポーリング結果(バー)', value: 7 },
+        { text: 'ポーリング結果(ライン)', value: 8 },
       ],
       selectedImagePath: '',
       imageFile: '',

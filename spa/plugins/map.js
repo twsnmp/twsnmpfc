@@ -1,4 +1,5 @@
 import P5 from 'p5'
+import { gauge,bar, line } from './echarts/drawitem'
 
 let mapSize = 0
 let mapSizeX = 2500
@@ -15,9 +16,9 @@ let nodes = {}
 let lines = []
 let items = {}
 let backImage = {
-  X:0,
-  Y:0,
-  Width:0,
+  X: 0,
+  Y: 0,
+  Width: 0,
   Height: 0,
   Path: '',
   Color: 23,
@@ -33,24 +34,23 @@ const selectedItems = []
 const iconCodeMap = {}
 const imageMap = {}
 
-
 /* eslint prettier/prettier: 0 */
 const setIconCodeMap = (list) => {
   list.forEach((e) => {
     iconCodeMap[e.value] = String.fromCodePoint(e.code)
   })
-  iconCodeMap.unknown = String.fromCodePoint(0xF0A39)
+  iconCodeMap.unknown = String.fromCodePoint(0xf0a39)
 }
 
 const setIconToMap = (e) => {
   iconCodeMap[e.Icon] = String.fromCodePoint(e.Code)
-} 
+}
 
-const showMAP = (div,m,url,ro) => {
-  const ms = (m.MapConf.MapSize || 0)
-  if (!mapP5 || ms !== mapSize ) {
+const showMAP = (div, m, url, ro) => {
+  const ms = m.MapConf.MapSize || 0
+  if (!mapP5 || ms !== mapSize) {
     mapSize = m.mapSize
-    initMap(div,ms)
+    initMap(div, ms)
   }
   if (!url || url === '/') {
     url = window.location.origin
@@ -63,38 +63,85 @@ const showMAP = (div,m,url,ro) => {
   fontSize = m.MapConf.FontSize || 12
   iconSize = m.MapConf.IconSize || 24
   backImage.Image = null
-  if (backImage.Path && mapP5){
-    mapP5.loadImage(url+'/backimage',(img)=>{
+  if (backImage.Path && mapP5) {
+    mapP5.loadImage(url + '/backimage', (img) => {
       backImage.Image = img
       mapRedraw = true
     })
   }
 
-  for(const k in items) {
+  for (const k in items) {
+    if (items[k].H < 10) {
+      items[k].H = 100
+    }
+    if (items[k].W < 10) {
+      items[k].W = 100
+    }
     switch (items[k].Type) {
-    case 3:
-      if (!imageMap[items[k].Path] && mapP5) {
-        mapP5.loadImage(url+'/image/' + items[k].Path,(img)=>{
-          imageMap[items[k].Path] = img
-          mapRedraw = true
-        })
-      }  
-      break
-    case 2:
-    case 4:
-      items[k].W = items[k].Size *  items[k].Text.length
-      items[k].H = items[k].Size
-      break
-    case 5:
-      items[k].H = items[k].Size * 10
-      items[k].W = items[k].Size * 10
-      break
-    } 
+      case 3:
+        if (!imageMap[items[k].Path] && mapP5) {
+          mapP5.loadImage(url + '/image/' + items[k].Path, (img) => {
+            imageMap[items[k].Path] = img
+            mapRedraw = true
+          })
+        }
+        break
+      case 2:
+      case 4:
+        items[k].W = items[k].Size * items[k].Text.length
+        items[k].H = items[k].Size
+        break
+      case 5: // Gauge
+        items[k].H = items[k].Size * 10
+        items[k].W = items[k].Size * 10
+        break
+      case 6: // New Gauge
+        items[k].W = items[k].H
+        mapP5.loadImage(
+          gauge(
+            items[k].Text || '',
+            items[k].Value || 0,
+            backImage.Color || 23
+          ),
+          (img) => {
+            imageMap[k] = img
+          }
+        )
+        break
+      case 7: // Bar
+        items[k].W = items[k].H * 4
+        mapP5.loadImage(
+          bar(
+            items[k].Text || '',
+            items[k].Color || 'white',
+            items[k].Value || 0,
+            backImage.Color || 23
+          ),
+          (img) => {
+            imageMap[k] = img
+          }
+        )
+        break
+      case 8: // Line
+        items[k].W = items[k].H * 4
+        mapP5.loadImage(
+          line(
+            items[k].Text || '',
+            items[k].Color || 'white',
+            items[k].Values || [],
+            backImage.Color || 23
+          ),
+          (img) => {
+            imageMap[k] = img
+          }
+        )
+        break
+    }
   }
   mapRedraw = true
 }
 
-const initMap = (div,ms) => {
+const initMap = (div, ms) => {
   if (mapP5) {
     mapP5.remove()
   }
@@ -122,7 +169,7 @@ const initMap = (div,ms) => {
       mapSizeX = 2500
       mapSizeY = 5000
       break
-    }
+  }
   mapP5 = new P5(mapMain, div) // eslint-disable-line no-new
 }
 
@@ -160,7 +207,7 @@ const mapMain = (p5) => {
   let startMouseY
   let lastMouseX
   let lastMouseY
-  let dragMode  = 0 // 0 : None , 1: Select , 2 :Move
+  let dragMode = 0 // 0 : None , 1: Select , 2 :Move
   const draggedNodes = []
   const draggedItems = []
   let clickInCanvas = false
@@ -170,19 +217,25 @@ const mapMain = (p5) => {
   }
 
   p5.draw = () => {
-    if (!mapRedraw){
+    if (!mapRedraw) {
       return
     }
-    if(scale !== 1.0) {
+    if (scale !== 1.0) {
       p5.scale(scale)
     }
     mapRedraw = false
     p5.background(backImage.Color || 23)
-    if(backImage.Image){
-      if(backImage.Width){
-        p5.image(backImage.Image,backImage.X,backImage.Y,backImage.Width,backImage.Height);
-      }else {
-        p5.image(backImage.Image,backImage.X,backImage.Y);
+    if (backImage.Image) {
+      if (backImage.Width) {
+        p5.image(
+          backImage.Image,
+          backImage.X,
+          backImage.Y,
+          backImage.Width,
+          backImage.Height
+        )
+      } else {
+        p5.image(backImage.Image, backImage.X, backImage.Y)
       }
     }
     for (const k in lines) {
@@ -196,22 +249,22 @@ const mapMain = (p5) => {
       const xm = (x1 + x2) / 2
       const ym = (y1 + y2) / 2
       p5.push()
-      p5.strokeWeight(lines[k].Width || 1 )
+      p5.strokeWeight(lines[k].Width || 1)
       p5.stroke(getStateColor(lines[k].State1))
       p5.line(x1, y1, xm, ym)
       p5.stroke(getStateColor(lines[k].State2))
       p5.line(xm, ym, x2, y2)
       if (lines[k].Info) {
         const color = getLineColor(lines[k].State)
-        const dx = Math.abs(x1-x2)
-        const dy = Math.abs(y1-y2)
+        const dx = Math.abs(x1 - x2)
+        const dy = Math.abs(y1 - y2)
         p5.textFont('Roboto')
         p5.textSize(fontSize)
         p5.fill(color)
-        if (dx === 0 || dy/dx > 0.8) {
-          p5.text(lines[k].Info, xm + 10, ym)  
+        if (dx === 0 || dy / dx > 0.8) {
+          p5.text(lines[k].Info, xm + 10, ym)
         } else {
-          p5.text(lines[k].Info, xm - dx/4, ym + 20)  
+          p5.text(lines[k].Info, xm - dx / 4, ym + 20)
         }
       }
       p5.pop()
@@ -219,66 +272,89 @@ const mapMain = (p5) => {
     for (const k in items) {
       p5.push()
       p5.translate(items[k].X, items[k].Y)
-      if (selectedItems.includes(items[k].ID) ) {
+      if (selectedItems.includes(items[k].ID)) {
         p5.fill('rgba(23,23,23,0.9)')
         p5.stroke('#ccc')
-        const w =  items[k].W +10
-        const h =  items[k].H +10
+        const w = items[k].W + 10
+        const h = items[k].H + 10
         p5.rect(-5, -5, w, h)
       }
       switch (items[k].Type) {
-      case 0: // rect
-        p5.fill(items[k].Color)
-        p5.stroke('rgba(23,23,23,0.9)')
-        p5.rect(0,0,items[k].W, items[k].H)
-        break
-      case 1: // ellipse
-        p5.fill(items[k].Color)
-        p5.stroke('rgba(23,23,23,0.9)')
-        p5.ellipse(items[k].W/2,items[k].H/2,items[k].W, items[k].H)
-        break
-      case 2: // text
-      case 4: // Polling
-        p5.textSize(items[k].Size || 12)
-        p5.fill(items[k].Color)
-        p5.text(items[k].Text, 0, 0,items[k].Size *  items[k].Text.length + 10, items[k].Size + 10)
-        break
-      case 3: // Image
-        if (imageMap[items[k].Path]) {
-          p5.image(imageMap[items[k].Path],0,0,items[k].W,items[k].H)
-        }
-        break
-      case 5: { // Gauge
-          const x = items[k].W / 2
-          const y = items[k].H / 2
-          const r0 = items[k].W 
-          const r1 = (items[k].W - items[k].Size) 
-          const r2 = (items[k].W - items[k].Size *4)
-          p5.noStroke()
-          p5.fill('#eee')
-          p5.arc(x, y, r0, r0, 5*p5.QUARTER_PI, -p5.QUARTER_PI)
-          if(items[k].Value > 0){
-            p5.fill(items[k].Color)
-            p5.arc(x, y, r0, r0, 5*p5.QUARTER_PI, -p5.QUARTER_PI - (p5.HALF_PI - p5.HALF_PI * items[k].Value/100))
+        case 0: // rect
+          p5.fill(items[k].Color)
+          p5.stroke('rgba(23,23,23,0.9)')
+          p5.rect(0, 0, items[k].W, items[k].H)
+          break
+        case 1: // ellipse
+          p5.fill(items[k].Color)
+          p5.stroke('rgba(23,23,23,0.9)')
+          p5.ellipse(items[k].W / 2, items[k].H / 2, items[k].W, items[k].H)
+          break
+        case 2: // text
+        case 4: // Polling
+          p5.textSize(items[k].Size || 12)
+          p5.fill(items[k].Color)
+          p5.text(
+            items[k].Text,
+            0,
+            0,
+            items[k].Size * items[k].Text.length + 10,
+            items[k].Size + 10
+          )
+          break
+        case 3: // Image
+          if (imageMap[items[k].Path]) {
+            p5.image(imageMap[items[k].Path], 0, 0, items[k].W, items[k].H)
           }
-          p5.fill(backImage.Color || 23)
-          p5.arc(x, y, r1, r1, -p5.PI, 0)
-          p5.textAlign(p5.CENTER)
-          p5.textSize(8)
-          p5.fill('#fff')
-          p5.text( items[k].Value + '%', x, y - 10 )
-          p5.textSize(items[k].Size)
-          p5.text( items[k].Text || "", x, y + 5)
-          p5.fill('#e31a1c')
-          const angle = -p5.QUARTER_PI + (p5.HALF_PI * items[k].Value/100)
-          const x1 = x + r1/2 * p5.sin(angle)
-          const y1 = y - r1/2 * p5.cos(angle)
-          const x2 = x + r2/2 * p5.sin(angle) + 5  * p5.cos(angle)
-          const y2 = y - r2/2 * p5.cos(angle) + 5  * p5.sin(angle)
-          const x3 = x + r2/2 * p5.sin(angle) - 5  * p5.cos(angle)
-          const y3 = y - r2/2 * p5.cos(angle) - 5  * p5.sin(angle)
-          p5.triangle(x1, y1, x2, y2, x3, y3)
-        }
+          break
+        case 5:
+          {
+            const x = items[k].W / 2
+            const y = items[k].H / 2
+            const r0 = items[k].W
+            const r1 = items[k].W - items[k].Size
+            const r2 = items[k].W - items[k].Size * 4
+            p5.noStroke()
+            p5.fill('#eee')
+            p5.arc(x, y, r0, r0, 5 * p5.QUARTER_PI, -p5.QUARTER_PI)
+            if (items[k].Value > 0) {
+              p5.fill(items[k].Color)
+              p5.arc(
+                x,
+                y,
+                r0,
+                r0,
+                5 * p5.QUARTER_PI,
+                -p5.QUARTER_PI -
+                  (p5.HALF_PI - (p5.HALF_PI * items[k].Value) / 100)
+              )
+            }
+            p5.fill(backImage.Color || 23)
+            p5.arc(x, y, r1, r1, -p5.PI, 0)
+            p5.textAlign(p5.CENTER)
+            p5.textSize(8)
+            p5.fill('#fff')
+            p5.text(items[k].Value + '%', x, y - 10)
+            p5.textSize(items[k].Size)
+            p5.text(items[k].Text || '', x, y + 5)
+            p5.fill('#e31a1c')
+            const angle = -p5.QUARTER_PI + (p5.HALF_PI * items[k].Value) / 100
+            const x1 = x + (r1 / 2) * p5.sin(angle)
+            const y1 = y - (r1 / 2) * p5.cos(angle)
+            const x2 = x + (r2 / 2) * p5.sin(angle) + 5 * p5.cos(angle)
+            const y2 = y - (r2 / 2) * p5.cos(angle) + 5 * p5.sin(angle)
+            const x3 = x + (r2 / 2) * p5.sin(angle) - 5 * p5.cos(angle)
+            const y3 = y - (r2 / 2) * p5.cos(angle) - 5 * p5.sin(angle)
+            p5.triangle(x1, y1, x2, y2, x3, y3)
+          }
+          break
+        case 6: // New Gauge,Line,Bar
+        case 7:
+        case 8:
+          if (imageMap[k]) {
+            p5.image(imageMap[k], 0, 0, items[k].W, items[k].H)
+          }
+          break
       }
       p5.pop()
     }
@@ -290,12 +366,12 @@ const mapMain = (p5) => {
         const w = iconSize + 16
         p5.fill('rgba(23,23,23,0.9)')
         p5.stroke(getStateColor(nodes[k].State))
-        p5.rect(-w/2, -w/2, w, w)
+        p5.rect(-w / 2, -w / 2, w, w)
       } else {
         const w = iconSize - 8
         p5.fill('rgba(23,23,23,0.9)')
         p5.stroke('rgba(23,23,23,0.9)')
-        p5.rect(-w/2, -w/2, w, w)
+        p5.rect(-w / 2, -w / 2, w, w)
       }
       p5.textFont('Material Design Icons')
       p5.textSize(iconSize)
@@ -311,22 +387,22 @@ const mapMain = (p5) => {
     if (dragMode === 1) {
       let x = startMouseX
       let y = startMouseY
-      let w = lastMouseX  - startMouseX
-      let h = lastMouseY  - startMouseY
-      if (startMouseX > lastMouseX){
+      let w = lastMouseX - startMouseX
+      let h = lastMouseY - startMouseY
+      if (startMouseX > lastMouseX) {
         x = lastMouseX
         w = startMouseX - lastMouseX
       }
-      if (startMouseY > lastMouseY){
+      if (startMouseY > lastMouseY) {
         y = lastMouseY
         h = startMouseY - lastMouseY
       }
       p5.push()
       p5.fill('rgba(250,250,250,0.6)')
       p5.stroke(0)
-      p5.rect(x,y,w,h)
+      p5.rect(x, y, w, h)
       p5.pop()
-    } 
+    }
   }
 
   p5.mouseDragged = () => {
@@ -334,7 +410,7 @@ const mapMain = (p5) => {
       return true
     }
     if (dragMode === 0) {
-      if (selectedNodes.length > 0 || selectedItems.length > 0 ){
+      if (selectedNodes.length > 0 || selectedItems.length > 0) {
         dragMode = 2
       } else {
         dragMode = 1
@@ -364,9 +440,9 @@ const mapMain = (p5) => {
       editLine()
       selectedNodes.length = 0
       return false
-    } else  if (dragMode !== 3) {
-        setSelectNode(false)
-        setSelectItem()
+    } else if (dragMode !== 3) {
+      setSelectNode(false)
+      setSelectItem()
     }
     lastMouseX = p5.mouseX
     lastMouseY = p5.mouseY
@@ -381,12 +457,15 @@ const mapMain = (p5) => {
       return true
     }
     mapRedraw = true
-    if(!clickInCanvas){
+    if (!clickInCanvas) {
       selectedNodes.length = 0
       selectedItems.length = 0
       return true
     }
-    if(p5.mouseButton === p5.RIGHT && (selectedNodes.length + selectedItems.length) < 2 ) {
+    if (
+      p5.mouseButton === p5.RIGHT &&
+      selectedNodes.length + selectedItems.length < 2
+    ) {
       if (mapCallBack) {
         mapCallBack({
           Cmd: 'contextMenu',
@@ -397,13 +476,13 @@ const mapMain = (p5) => {
         })
       }
     }
-    clickInCanvas = false 
+    clickInCanvas = false
     if (dragMode === 0 || dragMode === 3) {
       dragMode = 0
       return false
     }
     if (dragMode === 1) {
-      if (selectedNodes.length > 0 || selectedItems.length > 0 ){
+      if (selectedNodes.length > 0 || selectedItems.length > 0) {
         dragMode = 3
       } else {
         dragMode = 0
@@ -421,13 +500,13 @@ const mapMain = (p5) => {
 
   p5.keyTyped = () => {
     if (p5.key === '+') {
-      scale +=0.05
+      scale += 0.05
       if (scale > 3.0) {
         scale = 3.0
       }
       mapRedraw = true
     } else if (p5.key === '-') {
-      scale -=0.05
+      scale -= 0.05
       if (scale < 0.1) {
         scale = 0.1
       }
@@ -441,7 +520,7 @@ const mapMain = (p5) => {
     }
     if (p5.keyCode === p5.DELETE || p5.keyCode === p5.BACKSPACE) {
       // Delete
-      if (selectedNodes.length > 0){
+      if (selectedNodes.length > 0) {
         deleteNodes()
       }
     }
@@ -452,9 +531,9 @@ const mapMain = (p5) => {
   }
 
   p5.doubleClicked = () => {
-    if (selectedNodes.length === 1 ){
+    if (selectedNodes.length === 1) {
       nodeDoubleClicked()
-    } else if (selectedItems.length === 1 ){
+    } else if (selectedItems.length === 1) {
       itemDoubleClicked()
     }
     return true
@@ -499,7 +578,7 @@ const mapMain = (p5) => {
       }
     })
     selectedItems.forEach((id) => {
-      if ( items[id] ) {
+      if (items[id]) {
         items[id].X += p5.mouseX - lastMouseX
         items[id].Y += p5.mouseY - lastMouseY
         checkItemPos(items[id])
@@ -568,8 +647,11 @@ const mapMain = (p5) => {
   // 描画アイテムを選択する
   const setSelectItem = () => {
     for (const k in items) {
-      const w =  items[k].Type === 2 ?  (items[k].Size *  items[k].Text.length) + 10 : items[k].W +10
-      const h =  items[k].Type === 2 ?  items[k].Size + 10 : items[k].H +10
+      const w =
+        items[k].Type === 2
+          ? items[k].Size * items[k].Text.length + 10
+          : items[k].W + 10
+      const h = items[k].Type === 2 ? items[k].Size + 10 : items[k].H + 10
       if (
         items[k].X + w > p5.mouseX &&
         items[k].X - 10 < p5.mouseX &&
@@ -587,7 +669,7 @@ const mapMain = (p5) => {
   }
   // ノードを削除する
   const deleteNodes = () => {
-    if (mapCallBack){
+    if (mapCallBack) {
       mapCallBack({
         Cmd: 'deleteNodes',
         Param: selectedNodes,
@@ -597,7 +679,7 @@ const mapMain = (p5) => {
   }
   // Nodeの位置を保存する
   const updateNodesPos = () => {
-    const list  = []
+    const list = []
     draggedNodes.forEach((id) => {
       if (nodes[id]) {
         // 位置を保存するノード
@@ -618,7 +700,7 @@ const mapMain = (p5) => {
   }
   // 描画アイテムの位置を保存する
   const updateItemsPos = () => {
-    const list  = []
+    const list = []
     draggedItems.forEach((id) => {
       if (items[id]) {
         // 位置を保存するノード
@@ -657,7 +739,7 @@ const mapMain = (p5) => {
   }
   // lineの編集
   const editLine = () => {
-    if (selectedNodes.length !== 2 ){
+    if (selectedNodes.length !== 2) {
       return
     }
     if (mapCallBack) {
@@ -685,7 +767,7 @@ const refreshMAP = () => {
 }
 
 const selectNode = (id) => {
-  if( nodes[id] ) {
+  if (nodes[id]) {
     selectedNodes.length = 0
     selectedNodes.push(id)
     mapRedraw = true
