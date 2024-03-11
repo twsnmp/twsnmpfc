@@ -87,6 +87,8 @@ func setup(p *WebAPI) {
 	r.GET("/me", getMe)
 	r.GET("/conf/map", getMapConf)
 	r.POST("/conf/map", postMapConf)
+	r.GET("/conf/sshPublicKey", getSshPublicKey)
+	r.POST("/conf/sshPublicKey", postSshPublicKey)
 	r.POST("/conf/sshkey", postReGenarateSSHKey)
 	r.GET("/conf/icons", getIcons)
 	r.POST("/conf/icon", postIcon)

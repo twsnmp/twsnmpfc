@@ -2,6 +2,7 @@ package webapi
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -30,6 +31,7 @@ func getMapConf(c echo.Context) error {
 	r.EnableTrapd = datastore.MapConf.EnableTrapd
 	r.EnableNetflowd = datastore.MapConf.EnableNetflowd
 	r.EnableArpWatch = datastore.MapConf.EnableArpWatch
+	r.EnableSshd = datastore.MapConf.EnableSshd
 	r.AILevel = datastore.MapConf.AILevel
 	r.AIThreshold = datastore.MapConf.AIThreshold
 	r.AIMode = datastore.MapConf.AIMode
@@ -78,6 +80,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.EnableTrapd = mc.EnableTrapd
 	datastore.MapConf.EnableNetflowd = mc.EnableNetflowd
 	datastore.MapConf.EnableArpWatch = mc.EnableArpWatch
+	datastore.MapConf.EnableSshd = mc.EnableSshd
 	datastore.MapConf.EnableMobileAPI = mc.EnableMobileAPI
 	datastore.MapConf.AILevel = mc.AILevel
 	datastore.MapConf.AIThreshold = mc.AIThreshold
@@ -247,5 +250,26 @@ func postReGenarateSSHKey(c echo.Context) error {
 		Level: "info",
 		Event: "SSHの鍵を再作成しました。",
 	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func getSshPublicKey(c echo.Context) error {
+	return c.String(http.StatusOK, datastore.GetSshdPublicKeys())
+}
+
+type SshPublicKeyPostEnt struct {
+	PublicKey string
+}
+
+func postSshPublicKey(c echo.Context) error {
+	pk := new(SshPublicKeyPostEnt)
+	if err := c.Bind(pk); err != nil {
+		log.Printf("postSshPublicKey c=%+v err=%v", c, err)
+		return echo.ErrBadRequest
+	}
+	if err := datastore.SaveSshdPublicKeys(pk.PublicKey); err != nil {
+		log.Printf("SaveSshdPublicKeys err=%v", err)
+		return echo.ErrBadRequest
+	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

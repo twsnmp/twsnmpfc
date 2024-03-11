@@ -181,6 +181,10 @@
               label="ARP Watch"
             ></v-switch>
             <v-switch
+              v-model="mapconf.EnableSshd"
+              label="SSH Server"
+            ></v-switch>
+            <v-switch
               v-model="mapconf.DisableOperLog"
               label="稼働率ログを停止"
             ></v-switch>
@@ -300,8 +304,12 @@
             GeoIPデータベース
           </v-btn>
           <v-btn color="normal" dark @click="sshKeyDialog = true">
-            <v-icon>mdi-database-marker</v-icon>
-            SSH鍵
+            <v-icon>mdi-key</v-icon>
+            自身のSSH公開鍵
+          </v-btn>
+          <v-btn color="info" dark @click="sshPublicKeyDialog = true">
+            <v-icon>mdi-shield-key</v-icon>
+            許可するSSH公開鍵
           </v-btn>
           <v-btn color="error" dark @click="stopDialog = true">
             <v-icon>mdi-stop</v-icon>
@@ -509,6 +517,36 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="sshPublicKeyDialog" persistent max-width="60vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">アクセスを許可するホストのSSH公開鍵</span>
+        </v-card-title>
+        <v-card-text>
+          <v-textarea
+            v-model="sshPublicKey"
+            label="SSH公開鍵"
+            clearable
+            rows="5"
+            clear-icon="mdi-close-circle"
+          ></v-textarea>
+        </v-card-text>
+        <v-snackbar v-model="sshPublicKeyError" absolute centered color="error">
+          SSH公開鍵を保存できません。
+        </v-snackbar>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="savePublicKey">
+            <v-icon>mdi-content-save</v-icon>
+            保存
+          </v-btn>
+          <v-btn color="normal" @click="sshPublicKeyDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -594,6 +632,9 @@ export default {
       sshKeyDialog: false,
       sshKeyReGenDialog: false,
       sshKeyError: false,
+      sshPublicKeyDialog: false,
+      sshPublicKeyError: false,
+      sshPublicKey: '',
     }
   },
   async fetch() {
@@ -602,6 +643,7 @@ export default {
     if (!this.backImage.Color) {
       this.backImage.Color = '#171717'
     }
+    this.sshPublicKey = await this.$axios.$get('/api/conf/sshPublicKey')
   },
   methods: {
     submit() {
@@ -720,6 +762,19 @@ export default {
         })
         .catch((e) => {
           this.sshKeyerror = true
+        })
+    },
+    savePublicKey() {
+      this.sshPublicKeyError = false
+      this.$axios
+        .post('/api/conf/sshPublicKey', {
+          PublicKey: this.sshPublicKey,
+        })
+        .then((r) => {
+          this.sshPublicKeyDialog = false
+        })
+        .catch((e) => {
+          this.sshPublicKeyError = true
         })
     },
   },

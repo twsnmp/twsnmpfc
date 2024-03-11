@@ -42,6 +42,7 @@ type MapConfEnt struct {
 	EnableTrapd     bool
 	EnableNetflowd  bool
 	EnableArpWatch  bool
+	EnableSshd      bool
 	EnableMobileAPI bool
 	AILevel         string
 	AIThreshold     int
@@ -329,5 +330,34 @@ func saveIcons() error {
 		}
 		log.Printf("saveIcons dur=%v", time.Since(st))
 		return b.Put([]byte("icons"), s)
+	})
+}
+
+func GetSshdPublicKeys() string {
+	r := ""
+	if db == nil {
+		return r
+	}
+	db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("config"))
+		if b == nil {
+			return fmt.Errorf("bucket config is nil")
+		}
+		r = string(b.Get([]byte("sshdPublicKeys")))
+		return nil
+	})
+	return r
+}
+
+func SaveSshdPublicKeys(pk string) error {
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	return db.Batch(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("config"))
+		if b == nil {
+			return fmt.Errorf("bucket config is nil")
+		}
+		return b.Put([]byte("sshdPublicKeys"), []byte(pk))
 	})
 }

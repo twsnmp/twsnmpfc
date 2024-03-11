@@ -103,11 +103,6 @@ var (
 	NotifySchedule map[string]string
 )
 
-const (
-	// MaxDispLog : ログの検索結果の最大値
-	MaxDispLog = 20000
-)
-
 // Define errors
 var (
 	ErrNoPayload     = fmt.Errorf("no payload")

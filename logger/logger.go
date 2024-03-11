@@ -30,10 +30,12 @@ func logger(ctx context.Context, wg *sync.WaitGroup) {
 	var trapdRunning = false
 	var netflowdRunning = false
 	var arpWatchRunning = false
+	var sshdRunning = false
 	var stopSyslogd chan bool
 	var stopTrapd chan bool
 	var stopNetflowd chan bool
 	var stopArpWatch chan bool
+	var stopSshd chan bool
 	log.Println("start logger")
 	timer1 := time.NewTicker(time.Second * 10)
 	timer2 := time.NewTicker(time.Second * 1)
@@ -55,6 +57,9 @@ func logger(ctx context.Context, wg *sync.WaitGroup) {
 				}
 				if arpWatchRunning {
 					close(stopArpWatch)
+				}
+				if sshdRunning {
+					close(stopSshd)
 				}
 				if len(logBuffer) > 0 {
 					datastore.SaveLogBuffer(logBuffer)
@@ -101,6 +106,14 @@ func logger(ctx context.Context, wg *sync.WaitGroup) {
 			} else if !datastore.MapConf.EnableArpWatch && arpWatchRunning {
 				close(stopArpWatch)
 				arpWatchRunning = false
+			}
+			if datastore.MapConf.EnableSshd && !sshdRunning {
+				stopSshd = make(chan bool)
+				sshdRunning = true
+				go sshd(stopSshd)
+			} else if !datastore.MapConf.EnableSshd && sshdRunning {
+				close(stopSshd)
+				sshdRunning = false
 			}
 			if datastore.RestartSnmpTrapd && trapdRunning {
 				close(stopTrapd)

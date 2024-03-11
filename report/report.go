@@ -380,6 +380,11 @@ func findNodeInfoFromIP(ip string) (string, string) {
 	return ip, ""
 }
 
+func FindoHostFromIP(ip string) string {
+	n, _ := findNodeInfoFromIP(ip)
+	return n
+}
+
 func addIpToNameChahe(ip, name, nodeID string) {
 	ipToNameCache.Store(ip, &ipToNameCacheEnt{
 		Name:      name,
