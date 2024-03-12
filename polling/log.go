@@ -17,25 +17,23 @@ import (
 	"github.com/vjeantet/grok"
 )
 
-func getLogContent(l string) string {
-	sm := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(l), &sm); err != nil {
-		return ""
-	}
-	if s, ok := sm["content"]; ok {
-		return s.(string)
-	}
-	return ""
-}
-
 func doPollingLog(pe *datastore.PollingEnt) {
 	var err error
 	var regexFilter *regexp.Regexp
 	var grokExtractor *grok.Grok
 	filter := pe.Filter
+	params := strings.TrimSpace(pe.Params)
 	extractor := pe.Extractor
 	script := pe.Script
 	mode := pe.Mode
+	if params != "" && mode == "count" {
+		switch pe.Type {
+		case "trap":
+			filter = `From.*` + regexp.QuoteMeta(params) + `:[\s\S\n]*` + filter
+		case "syslog":
+			filter = filter + `[\s\S\n]*hostname\s+` + regexp.QuoteMeta(params) + `\s+`
+		}
+	}
 	if filter != "" {
 		if regexFilter, err = regexp.Compile(filter); err != nil {
 			setPollingError("log", pe, fmt.Errorf("invalid log watch format"))

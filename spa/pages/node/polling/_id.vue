@@ -157,7 +157,7 @@
             <v-col>
               <v-text-field
                 v-model="editPolling.Params"
-                label="パラメータ"
+                :label="getParamsName()"
               ></v-text-field>
             </v-col>
             <v-col>
@@ -864,6 +864,27 @@ export default {
     },
     filterAutoAdd(value, search, item) {
       return !(this.autoAdd && item.AutoMode === 'disable')
+    },
+    getParamsName() {
+      if (
+        this.editPolling.Type === 'trap' &&
+        this.editPolling.Mode === 'count'
+      ) {
+        return '送信元IP'
+      }
+      if (
+        this.editPolling.Type === 'syslog' &&
+        this.editPolling.Mode === 'count'
+      ) {
+        return 'ホスト名'
+      }
+      if (
+        this.editPolling.Type === 'syslog' &&
+        this.editPolling.Mode === 'state'
+      ) {
+        return '正常フィルター'
+      }
+      return 'パラメーター'
     },
   },
 }
