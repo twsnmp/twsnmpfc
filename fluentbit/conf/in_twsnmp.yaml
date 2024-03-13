@@ -1,0 +1,11 @@
+service:
+  plugins_file: ./in_twsnmp.conf
+
+pipeline:
+    inputs:
+        - name: twsnmp
+          log_type: syslog
+          twsnmp: 127.0.0.1:2222
+          private_key: ~/.ssh/id_rsa
+    outputs:
+        - name: stdout
