@@ -7,6 +7,7 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/user"
@@ -21,8 +22,8 @@ import (
 
 // Params
 var twsnmp = ""
-var privateKeyPath = ""
-var hostKeyPath = ""
+var privateKey = []byte{}
+var hostKey = []byte{}
 var logType = "syslog"
 
 // local vars
@@ -38,6 +39,7 @@ var logList = []*logEnt{}
 
 //export FLBPluginRegister
 func FLBPluginRegister(def unsafe.Pointer) int {
+	log.Printf("[in_twsnmp] Register called")
 	return input.FLBPluginRegister(def, "twsnmp", "Input plugin for TWSNMP")
 }
 
@@ -46,23 +48,34 @@ func FLBPluginRegister(def unsafe.Pointer) int {
 //
 //export FLBPluginInit
 func FLBPluginInit(plugin unsafe.Pointer) int {
+	var err error
 	twsnmp = input.FLBPluginConfigKey(plugin, "twsnmp")
-	privateKeyPath = replaceHomeDir(input.FLBPluginConfigKey(plugin, "private_key"))
+	privateKeyPath := replaceHomeDir(input.FLBPluginConfigKey(plugin, "private_key"))
 	if privateKeyPath == "" {
 		privateKeyPath = replaceHomeDir("~/.ssh/id_rsa")
 	}
-	hostKeyPath = replaceHomeDir(input.FLBPluginConfigKey(plugin, "host_key"))
+	privateKey, err = os.ReadFile(privateKeyPath)
+	if err != nil {
+		return input.FLB_ERROR
+	}
+	hostKeyPath := replaceHomeDir(input.FLBPluginConfigKey(plugin, "host_key"))
+	if hostKeyPath != "" {
+		hostKey, err = os.ReadFile(hostKeyPath)
+		if err != nil {
+			return input.FLB_ERROR
+		}
+	}
 	logType = input.FLBPluginConfigKey(plugin, "log_type")
 	if p := input.FLBPluginConfigKey(plugin, "send_all"); strings.ToLower(p) != "true" {
 		lastTime = time.Now().UnixNano()
 	}
-	fmt.Printf("[in_twsnmp] twsnmp= '%s'\n", twsnmp)
-	fmt.Printf("[in_twsnmp] privateKeyPath= '%s'\n", privateKeyPath)
-	fmt.Printf("[in_twsnmp] hostKeyPath= '%s'\n", hostKeyPath)
-	fmt.Printf("[in_twsnmp] logType= '%s'\n", logType)
-	fmt.Printf("[in_twsnmp] lastTime = '%s'\n", time.Unix(0, lastTime).Format(time.RFC3339))
+	log.Printf("[in_twsnmp] twsnmp= '%s'", twsnmp)
+	log.Printf("[in_twsnmp] privateKeyPath= '%s'", privateKeyPath)
+	log.Printf("[in_twsnmp] hostKeyPath= '%s'", hostKeyPath)
+	log.Printf("[in_twsnmp] logType= '%s'", logType)
+	log.Printf("[in_twsnmp] lastTime = '%s'", time.Unix(0, lastTime).Format(time.RFC3339))
 	if err := getTWSNMPLogs(); err != nil {
-		fmt.Println(err)
+		log.Printf("[in_twsnmp] getTWSNMPLogs err:%v", err)
 		return input.FLB_ERROR
 	}
 	return input.FLB_OK
@@ -81,7 +94,6 @@ func FLBPluginInputCallback(data *unsafe.Pointer, size *C.size_t) int {
 	if len(logList) < 1 {
 		if err := getTWSNMPLogs(); err != nil || len(logList) < 1 {
 			time.Sleep(time.Second * 5)
-			fmt.Println("no data retry")
 			return input.FLB_RETRY
 		}
 	}
@@ -93,7 +105,7 @@ func FLBPluginInputCallback(data *unsafe.Pointer, size *C.size_t) int {
 	enc := input.NewEncoder()
 	packed, err := enc.Encode(entry)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("[in_twsnmp] encode err:%v", err)
 		return input.FLB_ERROR
 	}
 
@@ -110,14 +122,11 @@ func FLBPluginInputCleanupCallback(data unsafe.Pointer) int {
 
 //export FLBPluginExit
 func FLBPluginExit() int {
+	log.Printf("[in_twsnmp] Exit called")
 	return input.FLB_OK
 }
 
 func getTWSNMPLogs() error {
-	privateKey, err := os.ReadFile(privateKeyPath)
-	if err != nil {
-		return err
-	}
 	signer, err := ssh.ParsePrivateKey(privateKey)
 	if err != nil {
 		return err
@@ -128,13 +137,10 @@ func getTWSNMPLogs() error {
 		Timeout: time.Second * 1,
 	}
 	sshConfig.Auth = append(sshConfig.Auth, ssh.PublicKeys(signer))
-	if hostKeyPath != "" {
-		hostKey, err := os.ReadFile(hostKeyPath)
-		if err != nil {
-			return err
-		}
+	if len(hostKey) > 0 {
 		pubkey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(hostKey))
 		if err != nil {
+			log.Printf("[in_twsnmp] parse host key err:%v", err)
 			return err
 		}
 		sshConfig.HostKeyCallback = ssh.FixedHostKey(pubkey)

@@ -1,15 +1,18 @@
 .PHONY: all clean mac linux_windows
 
-all: mac linux mac
+all: mac linux_windows
 
-mac: in_twsnmp/in_twsnmp.darwin.so
+mac: in_twsnmp/in_twsnmp.darwin.so out_twsnmp/out_twsnmp.darwin.so
 
 in_twsnmp/in_twsnmp.darwin.so: in_twsnmp/in_twsnmp.go
 	(cd in_twsnmp;go build -buildmode=c-shared -o in_twsnmp.darwin.so .)
 
-linux_windows: in_twsnmp/in_twsnmp.dll
+out_twsnmp/out_twsnmp.darwin.so: out_twsnmp/out_twsnmp.go
+	(cd out_twsnmp;go build -buildmode=c-shared -o out_twsnmp.darwin.so .)
 
-in_twsnmp/in_twsnmp.dll: fluentbit_builder.txt in_twsnmp/in_twsnmp.go
+linux_windows: in_twsnmp/in_twsnmp.windows.dll
+
+in_twsnmp/in_twsnmp.windows.dll: fluentbit_builder.txt in_twsnmp/in_twsnmp.go out_twsnmp/out_twsnmp.go
 	docker run -it --rm -v $(CURDIR):/go/src fluentbit_builder
 	
 

@@ -1,0 +1,11 @@
+service:
+  plugins_file: ./out_twsnmp.conf
+
+pipeline:
+    outputs:
+        - name: twsnmp
+          id: test1
+          twsnmp: 127.0.0.1:2222
+          private_key: ~/.ssh/id_rsa
+    inputs:
+        - name: dummy

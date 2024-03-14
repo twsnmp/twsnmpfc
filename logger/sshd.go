@@ -125,7 +125,7 @@ func sshdGetlog(t string, s ssh.Session) {
 func sshdPutSyslog(s ssh.Session) {
 	client := s.RemoteAddr().String()
 	if a := strings.Split(client, ":"); len(a) == 2 {
-		client = a[1]
+		client = a[0]
 	} else if a := strings.Split(client, "]:"); len(a) == 2 && len(a[0]) > 1 {
 		client = a[0][1:]
 	}
@@ -134,15 +134,15 @@ func sshdPutSyslog(s ssh.Session) {
 	host := report.FindoHostFromIP(client)
 	cmds := s.Command()
 	if len(cmds) > 2 {
-		if v, err := strconv.ParseInt(cmds[3], 10, 64); err == nil {
+		if v, err := strconv.ParseInt(cmds[2], 10, 64); err == nil {
 			facility = int(v)
 		}
 		if len(cmds) > 3 {
-			if v, err := strconv.ParseInt(cmds[4], 10, 64); err == nil {
+			if v, err := strconv.ParseInt(cmds[3], 10, 64); err == nil {
 				severity = int(v)
 			}
 			if len(cmds) > 4 {
-				host = cmds[5]
+				host = cmds[4]
 			}
 		}
 	}
@@ -151,8 +151,10 @@ func sshdPutSyslog(s ssh.Session) {
 	r := bufio.NewScanner(s)
 	for r.Scan() {
 		l := r.Text()
+		log.Println(l)
 		a := strings.SplitN(l, "\t", 3)
 		if len(a) != 3 {
+			log.Println("slit != 3")
 			continue
 		}
 		ts, err := strconv.ParseInt(a[0], 10, 64)
@@ -176,7 +178,7 @@ func sshdPutSyslog(s ssh.Session) {
 			continue
 		}
 		logCh <- &datastore.LogEnt{
-			Time: time.Now().UnixNano(),
+			Time: time.Unix(0, ts).UnixNano(),
 			Type: "syslog",
 			Log:  string(j),
 		}
@@ -188,6 +190,7 @@ func sshdPutSyslog(s ssh.Session) {
 	if count > 0 {
 		report.UpdateSensor(host, "sshd", count)
 	}
+	log.Printf("sshd count=%d", count)
 }
 
 // Node list

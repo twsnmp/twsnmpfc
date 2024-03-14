@@ -1,4 +1,4 @@
-module github.com/twsnmp/twsnmpfc/fluentbit/in_twsnmp
+module github.com/twsnmp/twsnmpfc/fluentbit/out_twsnmp
 
 go 1.22.0
 
