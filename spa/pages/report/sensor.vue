@@ -244,7 +244,7 @@
         </v-card-title>
         <div
           id="statsChart"
-          style="width: 95vw height: 50vh; margin: 0 auto"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
         ></div>
         <v-card-actions>
           <v-spacer></v-spacer>

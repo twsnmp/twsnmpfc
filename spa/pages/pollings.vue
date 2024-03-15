@@ -949,10 +949,15 @@ export default {
       this.updateError = false
       if (this.editIndex > -1) {
         Object.assign(this.pollings[this.editIndex], this.editPolling)
-        this.$axios.post('/api/polling/update', this.editPolling).catch((e) => {
-          this.updateError = true
-          this.$fetch()
-        })
+        this.$axios
+          .post('/api/polling/update', this.editPolling)
+          .then(() => {
+            this.$fetch()
+          })
+          .catch((e) => {
+            this.updateError = true
+            this.$fetch()
+          })
       } else {
         this.$axios
           .post('/api/polling/add', this.editPolling)
