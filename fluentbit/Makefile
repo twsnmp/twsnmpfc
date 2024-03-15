@@ -2,13 +2,16 @@
 
 all: mac linux_windows
 
-mac: in_twsnmp/in_twsnmp.darwin.so out_twsnmp/out_twsnmp.darwin.so
+mac: in_twsnmp/in_twsnmp.darwin.so out_twsnmp/out_twsnmp.darwin.so in_gopsutil/in_gopsutil.darwin.so
 
 in_twsnmp/in_twsnmp.darwin.so: in_twsnmp/in_twsnmp.go
 	(cd in_twsnmp;go build -buildmode=c-shared -o in_twsnmp.darwin.so .)
 
 out_twsnmp/out_twsnmp.darwin.so: out_twsnmp/out_twsnmp.go
 	(cd out_twsnmp;go build -buildmode=c-shared -o out_twsnmp.darwin.so .)
+
+in_gopsutil/in_gopsutil.darwin.so: in_gopsutil/in_gopsutil.go
+	(cd in_gopsutil;go build -buildmode=c-shared -o in_gopsutil.darwin.so .)
 
 linux_windows: in_twsnmp/in_twsnmp.windows.dll
 

@@ -1,0 +1,10 @@
+service:
+  plugins_file: ./in_gopsutil.conf
+
+pipeline:
+    inputs:
+        - name: gopsutil
+          collection: disk.usage
+          tag:  disk.usage.root
+    outputs:
+        - name: stdout
