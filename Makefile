@@ -1,4 +1,4 @@
-.PHONY: all test clean zip mac clean_spa docker trivy
+.PHONY: all test clean zip mac clean_spa docker trivy fluentbit_plugin
 
 ### バージョンの定義
 VERSION     := "v1.35.0"
@@ -19,10 +19,10 @@ TARGETS     = $(DIST)/twsnmpfc.exe $(DIST)/twsnmpfc.app $(DIST)/twsnmpfc $(DIST)
 GO_PKGROOT  = ./...
 
 ### PHONY ターゲットのビルドルール
-all: $(TARGETS)
+all: $(TARGETS) fluentbit_plugin
 test:
 	env GOOS=$(GOOS) $(GO_TEST) $(GO_PKGROOT)
-clean: clean_spa
+clean: clean_spa clean_fluentbit_plugin
 	rm -rf $(TARGETS) $(DIST)/*.zip
 mac: $(DIST)/twsnmpfc.app
 zip: $(TARGETS)
@@ -82,3 +82,17 @@ clean_spa:
 
 trivy:
 	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(HOME)/Library/Caches:/root/.cache/ aquasec/trivy image twsnmp/twsnmpfc:latest
+
+fluentbit_plugin:
+	make -C fluentbit all
+	cp -a fluentbit/in_twsnmp/*.so $(DIST)/
+	cp -a fluentbit/in_twsnmp/*.dll $(DIST)/
+	cp -a fluentbit/out_twsnmp/*.so $(DIST)/
+	cp -a fluentbit/out_twsnmp/*.dll $(DIST)/
+	cp -a fluentbit/in_gopsutil/*.so $(DIST)/
+	cp -a fluentbit/in_gopsutil/*.dll $(DIST)/
+
+clean_fluentbit_plugin:
+	make -C fluentbit clean
+	rm -f $(DIST)/*.so
+	rm -f $(DIST)/*.dll
