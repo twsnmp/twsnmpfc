@@ -105,6 +105,7 @@ func FLBPluginExit() int {
 	return input.FLB_OK
 }
 
+// get CPU usage Percent
 func getCPUPercent(percpu bool) map[string]interface{} {
 	ret := make(map[string]interface{})
 	if cpus, err := cpu.Percent(0, percpu); err == nil {
@@ -119,6 +120,7 @@ func getCPUPercent(percpu bool) map[string]interface{} {
 	return ret
 }
 
+// get CPU adn hardware temperatures info
 func getSensorTemp() map[string]interface{} {
 	ret := make(map[string]interface{})
 	if stl, err := host.SensorsTemperatures(); err == nil {
@@ -129,7 +131,6 @@ func getSensorTemp() map[string]interface{} {
 		}
 	}
 	return ret
-
 }
 
 func main() {
