@@ -1,6 +1,6 @@
 module github.com/twsnmp/twsnmpfc/fluentbit/in_twsnmp
 
-go 1.22.0
+go 1.22
 
 require (
 	github.com/fluent/fluent-bit-go v0.0.0-20230731091245-a7a013e2473c

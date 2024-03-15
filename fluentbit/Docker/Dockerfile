@@ -1,4 +1,4 @@
-FROM golang:bookworm
+FROM golang:buster
 RUN  apt update && apt upgrade -yq && apt install -yq  \
 gcc-multilib gcc-mingw-w64 binutils-mingw-w64
 RUN  apt install -yq g++-aarch64-linux-gnu g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
