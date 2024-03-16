@@ -38,6 +38,9 @@
           </tr>
         </template>
       </v-data-table>
+      <v-snackbar v-model="addPollingDone" absolute centered color="primary">
+        ポーリング作成しました
+      </v-snackbar>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" dark @click="filterDialog = true">
@@ -443,6 +446,7 @@ export default {
       addPollingError: false,
       polling: {},
       nodeList: [],
+      addPollingDone: false,
     }
   },
   async fetch() {
@@ -559,6 +563,7 @@ export default {
         .post('/api/polling/add', this.polling)
         .then(() => {
           this.editPollingDialog = false
+          this.addPollingDone = true
         })
         .catch((e) => {
           this.addPollingError = true

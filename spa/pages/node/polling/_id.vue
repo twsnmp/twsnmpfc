@@ -161,10 +161,12 @@
               ></v-text-field>
             </v-col>
             <v-col>
-              <v-text-field
+              <label>フィルター</label>
+              <prism-editor
                 v-model="editPolling.Filter"
-                label="フィルター"
-              ></v-text-field>
+                class="filter"
+                :highlight="regexHighlighter"
+              ></prism-editor>
             </v-col>
           </v-row>
           <v-row dense>
@@ -457,6 +459,7 @@ import 'vue-prism-editor/dist/prismeditor.min.css'
 import { highlight, languages } from 'prismjs/components/prism-core'
 import 'prismjs/components/prism-clike'
 import 'prismjs/components/prism-javascript'
+import 'prismjs/components/prism-regex'
 import 'prismjs/themes/prism-tomorrow.css'
 export default {
   components: {
@@ -656,6 +659,9 @@ export default {
   methods: {
     highlighter(code) {
       return highlight(code, languages.js)
+    },
+    regexHighlighter(code) {
+      return highlight(code, languages.regex)
     },
     actionHighlighter(code) {
       return highlight(code, {
@@ -892,6 +898,12 @@ export default {
 <style>
 .script {
   height: 100px;
+  overflow: auto;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.filter {
   overflow: auto;
   margin-top: 5px;
   margin-bottom: 5px;

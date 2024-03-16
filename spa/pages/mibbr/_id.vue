@@ -208,7 +208,7 @@
     </v-dialog>
     <v-dialog v-model="addPollingDialog" persistent max-width="70vw">
       <v-card>
-        <v-card-title> ポーリング設定 </v-card-title>
+        <v-card-title> ポーリング追加 </v-card-title>
         <v-alert v-model="addPollingError" color="error" dense dismissible>
           ポーリングを追加できませんでした
         </v-alert>
@@ -224,8 +224,11 @@
               </v-select>
             </v-col>
             <v-col>
-              <v-select v-model="polling.Type" :items="$typeList" label="種別">
-              </v-select>
+              <v-text-field
+                v-model="polling.Type"
+                label="種別"
+                readonly
+              ></v-text-field>
             </v-col>
             <v-col>
               <v-text-field
@@ -238,23 +241,8 @@
             <v-col>
               <v-text-field
                 v-model="polling.Params"
-                label="パラメータ"
+                label="取得するMIB"
               ></v-text-field>
-            </v-col>
-            <v-col>
-              <v-text-field
-                v-model="polling.Filter"
-                label="フィルター"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row dense>
-            <v-col>
-              <v-select
-                v-model="polling.Extractor"
-                :items="extractorList"
-                label="抽出パターン"
-              ></v-select>
             </v-col>
             <v-col>
               <v-select
