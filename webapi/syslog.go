@@ -312,11 +312,13 @@ var reNumber = regexp.MustCompile(`-?[.0-9]+`)
 var reIPv4 = regexp.MustCompile(`[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}`)
 var reMAC = regexp.MustCompile(`[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}`)
 var reEMail = regexp.MustCompile(`[A-Za-z]+[A-Za-z0-1]+@[A-Za-z.]+`)
+var reJSON = regexp.MustCompile(`\{.+\}`)
 
 const (
 	none = iota
 	splunk
 	number
+	json_type
 	other
 )
 
@@ -326,6 +328,8 @@ func getExtractType(t string) int {
 		return splunk
 	case "re_number":
 		return number
+	case "re_json":
+		return json_type
 	case "re_other":
 		return other
 	}
@@ -347,6 +351,15 @@ func regExtract(t int, msg string) (map[string]string, error) {
 		for i, e := range m {
 			k := fmt.Sprintf("number%d", i+1)
 			r[k] = e
+		}
+	case json_type:
+		if m := reJSON.FindString(msg); m != "" {
+			jd := make(map[string]interface{})
+			if err := json.Unmarshal([]byte(m), &jd); err == nil {
+				for k, v := range jd {
+					r[k] = fmt.Sprintf("%v", v)
+				}
+			}
 		}
 	default:
 		m := reIPv4.FindAllString(msg, -1)

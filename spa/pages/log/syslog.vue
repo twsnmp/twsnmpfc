@@ -297,22 +297,30 @@
               mdi-calendar-today
             </v-icon>
           </v-row>
-          <v-text-field
+          <label>種別（正規表現）</label>
+          <prism-editor
             v-model="filter.Type"
-            label="種別（正規表現）"
-          ></v-text-field>
-          <v-text-field
+            class="filter"
+            :highlight="regexHighlighter"
+          ></prism-editor>
+          <label>ホスト名（正規表現）</label>
+          <prism-editor
             v-model="filter.Host"
-            label="ホスト名（正規表現）"
-          ></v-text-field>
-          <v-text-field
+            class="filter"
+            :highlight="regexHighlighter"
+          ></prism-editor>
+          <label>タグ（正規表現）</label>
+          <prism-editor
             v-model="filter.Tag"
-            label="タグ（正規表現）"
-          ></v-text-field>
-          <v-text-field
+            class="filter"
+            :highlight="regexHighlighter"
+          ></prism-editor>
+          <label>メッセージ（パイプライン正規表現）</label>
+          <prism-editor
             v-model="filter.Message"
-            label="メッセージ（パイプライン正規表現）"
-          ></v-text-field>
+            class="filter"
+            :highlight="regexHighlighter"
+          ></prism-editor>
           <v-autocomplete
             v-model="filter.Extractor"
             :items="filterExtractorList"
@@ -1257,6 +1265,7 @@ export default {
           { text: '指定しない', value: '' },
           { text: 'SPLUNK風', value: 're_splunk' },
           { text: '自動数値', value: 're_number' },
+          { text: 'JSON', value: 're_json' },
           { text: '自動(IP,MAC,EMail)', value: 're_other' },
         ]
         groks.forEach((g) => {

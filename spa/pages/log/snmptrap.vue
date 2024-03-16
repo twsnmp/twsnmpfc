@@ -196,18 +196,24 @@
               mdi-calendar-today
             </v-icon>
           </v-row>
-          <v-text-field
+          <label>送信元（正規表現）</label>
+          <prism-editor
             v-model="filter.FromAddress"
-            label="送信元（正規表現）"
-          ></v-text-field>
-          <v-text-field
+            class="filter"
+            :highlight="regexHighlighter"
+          ></prism-editor>
+          <label>TRAP種別（正規表現）</label>
+          <prism-editor
             v-model="filter.TrapType"
-            label="TRAP種別（正規表現）"
-          ></v-text-field>
-          <v-text-field
+            class="filter"
+            :highlight="regexHighlighter"
+          ></prism-editor>
+          <label>付帯MIB値（正規表現）</label>
+          <prism-editor
             v-model="filter.Variables"
-            label="付帯MIB値（正規表現）"
-          ></v-text-field>
+            class="filter"
+            :highlight="regexHighlighter"
+          ></prism-editor>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
