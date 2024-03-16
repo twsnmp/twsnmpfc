@@ -28,6 +28,9 @@
           }}</v-icon>
           {{ $getStateName(item.Level) }}
         </template>
+        <template #[`item.actions`]="{ item }">
+          <v-icon small @click="editPolling(item)"> mdi-card-plus </v-icon>
+        </template>
         <template #[`body.append`]>
           <tr>
             <td></td>
@@ -883,12 +886,149 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="editPollingDialog" persistent max-width="70vw">
+      <v-card>
+        <v-card-title> ポーリング追加 </v-card-title>
+        <v-alert v-model="addPollingError" color="error" dense dismissible>
+          ポーリングを変更できませんでした
+        </v-alert>
+        <v-card-text>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="polling.NodeID"
+                :items="nodeList"
+                label="ノード"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-text-field v-model="polling.Name" label="名前"></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="polling.Level"
+                :items="$levelList"
+                label="レベル"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="polling.Type"
+                readonly
+                label="種別"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="polling.Mode"
+                label="モード"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="polling.Params"
+                label="送信元ホスト"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-slider
+                v-model="polling.PollInt"
+                label="ポーリング間隔(Sec)"
+                class="align-center"
+                max="3600"
+                min="5"
+                hide-details
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="polling.PollInt"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="polling.LogMode"
+                :items="$logModeList"
+                label="ログモード"
+              >
+              </v-select>
+            </v-col>
+          </v-row>
+          <label>フィルター</label>
+          <prism-editor
+            v-model="polling.Filter"
+            class="filter"
+            :highlight="regexHighlighter"
+          ></prism-editor>
+          <label>判定スクリプト</label>
+          <prism-editor
+            v-model="polling.Script"
+            class="script"
+            :highlight="highlighter"
+            line-numbers
+          ></prism-editor>
+          <v-row dense>
+            <v-col>
+              <label>障害時アクション</label>
+              <prism-editor
+                v-model="polling.FailAction"
+                class="script"
+                :highlight="actionHighlighter"
+                line-numbers
+              ></prism-editor>
+            </v-col>
+            <v-col>
+              <label>復帰時アクション</label>
+              <prism-editor
+                v-model="polling.RepairAction"
+                class="script"
+                :highlight="actionHighlighter"
+                line-numbers
+              ></prism-editor>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="doAddPolling">
+            <v-icon>mdi-content-save</v-icon>
+            保存
+          </v-btn>
+          <v-btn color="normal" dark @click="editPollingDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
 <script>
 import * as numeral from 'numeral'
+import { PrismEditor } from 'vue-prism-editor'
+import 'vue-prism-editor/dist/prismeditor.min.css'
+import { highlight, languages } from 'prismjs/components/prism-core'
+import 'prismjs/components/prism-clike'
+import 'prismjs/components/prism-javascript'
+import 'prismjs/components/prism-regex'
+import 'prismjs/themes/prism-tomorrow.css'
+
 export default {
+  components: {
+    PrismEditor,
+  },
   data() {
     return {
       count: 0,
@@ -898,7 +1038,6 @@ export default {
       filterDialog: false,
       sdMenuShow: false,
       edMenuShow: false,
-      nodeList: [],
       filter: {
         Level: '',
         StartDate: '',
@@ -958,12 +1097,13 @@ export default {
         {
           text: 'メッセージ',
           value: 'Message',
-          width: '45%',
+          width: '40%',
           filter: (value) => {
             if (!this.conf.msg) return true
             return value.includes(this.conf.msg)
           },
         },
+        { text: `操作`, value: `actions`, width: '5%' },
       ],
       logs: [],
       extractDialog: false,
@@ -1053,6 +1193,10 @@ export default {
       heatmapDialog: false,
       startTimeOp: '',
       endTimeOp: '',
+      editPollingDialog: false,
+      addPollingError: false,
+      polling: {},
+      nodeList: [],
     }
   },
   async fetch() {
@@ -1494,6 +1638,98 @@ export default {
       })
       return exports
     },
+    async editPolling(i) {
+      if (this.nodeList.length < 1) {
+        const r = await this.$axios.$get('/api/nodes')
+        r.forEach((n) => {
+          this.nodeList.push({ text: n.Name, value: n.ID, ip: n.IP })
+        })
+      }
+      let ip = i.Host
+      const a = ip.split('(')
+      if (a.length > 1) {
+        ip = a[0]
+      }
+      let nodeID
+      for (let j = 0; j < this.nodeList.length; j++) {
+        if (this.nodeList[j].text === i.Host) {
+          nodeID = this.nodeList[j].value
+          break
+        } else if (this.nodeList[j].ip === ip) {
+          nodeID = this.nodeList[j].value
+          break
+        } else if (this.nodeList[j].text.startsWith(i.Host)) {
+          nodeID = this.nodeList[j].value
+        } else if (!nodeID) {
+          const lcName = this.nodeList[j].text.toLowerCase()
+          const lcHost = i.Host.toLowerCase()
+          if (lcName === lcHost || lcName.includes(lcHost)) {
+            nodeID = this.nodeList[j].value
+          }
+        }
+      }
+      let filter = i.Message.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
+      if (i.Tag) {
+        filter += `[\\s\\S\\n]*` + 'tag\\s*' + i.Tag
+      }
+      this.polling = {
+        ID: '',
+        Name: 'syslog監視',
+        NodeID: nodeID,
+        Type: 'syslog',
+        Mode: 'count',
+        Params: i.Host,
+        Filter: filter,
+        Extractor: '',
+        Script: 'count < 1',
+        Level: 'low',
+        PollInt: 600,
+        Timeout: 1,
+        Retry: 0,
+        LogMode: 0,
+      }
+      this.editPollingDialog = true
+    },
+    doAddPolling() {
+      this.$axios
+        .post('/api/polling/add', this.polling)
+        .then(() => {
+          this.editPollingDialog = false
+        })
+        .catch((e) => {
+          this.addPollingError = true
+        })
+    },
+    highlighter(code) {
+      return highlight(code, languages.js)
+    },
+    regexHighlighter(code) {
+      return highlight(code, languages.regex)
+    },
+    actionHighlighter(code) {
+      return highlight(code, {
+        property:
+          /[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}/,
+        string: /(wol|mail|line|chat|wait|cmd)/,
+        number: /-?\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b/i,
+        keyword: /\b(?:false|true|up|down)\b/,
+      })
+    },
   },
 }
 </script>
+
+<style>
+.script {
+  height: 100px;
+  overflow: auto;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.filter {
+  overflow: auto;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+</style>
