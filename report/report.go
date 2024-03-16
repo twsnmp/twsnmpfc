@@ -38,7 +38,7 @@ var (
 )
 
 func Start(ctx context.Context, wg *sync.WaitGroup) error {
-	datastore.LaodReportConf()
+	datastore.LoadReportConf()
 	UpdateReportConf()
 	deviceReportCh = make(chan *deviceReportEnt, 100)
 	userReportCh = make(chan *userReportEnt, 100)

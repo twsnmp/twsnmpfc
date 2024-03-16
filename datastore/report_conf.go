@@ -28,8 +28,8 @@ type ReportConfEnt struct {
 
 var ReportConf ReportConfEnt
 
-// LaodReportConf : レポート設定を読み込む
-func LaodReportConf() error {
+// LoadReportConf : レポート設定を読み込む
+func LoadReportConf() error {
 	ReportConf.DropFlowThTCPPacket = 3
 	ReportConf.SensorTimeout = 1
 	ReportConf.AICleanup = false

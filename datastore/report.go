@@ -14,6 +14,7 @@ func LoadReport() error {
 	}
 	return db.View(func(tx *bbolt.Tx) error {
 		r := tx.Bucket([]byte("report"))
+		loadSensor(r)
 		loadDevices(r)
 		loadUsers(r)
 		loadServers(r)
@@ -24,7 +25,6 @@ func LoadReport() error {
 		loadRADIUS(r)
 		loadTLS(r)
 		loadCert(r)
-		loadSensor(r)
 		loadWinEventID(r)
 		loadWinLogon(r)
 		loadWinAccount(r)
