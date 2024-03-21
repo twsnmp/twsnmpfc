@@ -612,8 +612,16 @@ export default {
           value: 'State',
           width: '10%',
           filter: (value) => {
-            if (!this.conf.state) return true
-            return this.conf.state === value
+            if (this.conf.state === '') return true
+            const l = this.$levelNum(value)
+            return this.conf.state >= 4
+              ? this.conf.state === l
+              : this.conf.state >= l
+          },
+          sort: (a, b) => {
+            const al = this.$levelNum(a)
+            const bl = this.$levelNum(b)
+            return al - bl
           },
         },
         {
@@ -692,12 +700,13 @@ export default {
       newRetry: 1,
       stateList: [
         { text: '', value: '' },
-        { text: '重度', value: 'high' },
-        { text: '軽度', value: 'low' },
-        { text: '注意', value: 'warn' },
-        { text: '正常', value: 'normal' },
-        { text: '復帰', value: 'repair' },
-        { text: '不明', value: 'unknown' },
+        { text: 'すべて', value: '' },
+        { text: '重度', value: 0 },
+        { text: '軽度以上', value: 1 },
+        { text: '注意以上', value: 2 },
+        { text: '復帰以上', value: 3 },
+        { text: '正常', value: 4 },
+        { text: '不明', value: 5 },
       ],
       typeList: [
         { text: '', value: '' },

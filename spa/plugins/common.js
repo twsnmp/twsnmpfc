@@ -388,6 +388,22 @@ const getRSSIIconName = (rssi) => {
   return 'mdi-wifi-strength-1'
 }
 
+const  levelNum = (s) => {
+	switch (s) {
+	case "high":
+		return 0;
+	case "low":
+		return 1;
+	case "warn":
+		return 2;
+	case "normal":
+		return 4
+	case "repair":
+		return 3
+	}
+	return 5
+}
+
 
 export default (context, inject) => {
   inject('getIconName', getIconName)
@@ -417,4 +433,5 @@ export default (context, inject) => {
   inject('getLogModeName', getLogModeName)
   inject('setIcon', setIcon)
   inject('delIcon', delIcon)
+  inject('levelNum', levelNum)
 }
