@@ -91,7 +91,8 @@ func doAI(pe *datastore.PollingEnt) {
 		log.Printf("make ai data id=%s name=%s err=%v", pe.ID, pe.Name, err)
 		return
 	}
-	if err != nil || len(req.Data) < 10 {
+	if len(req.Data) < 10 {
+		log.Println("make ai data length < 10 skip")
 		return
 	}
 	nextAIReqTimeMap[pe.ID] = time.Now().Unix() + 60*60

@@ -138,11 +138,14 @@ func updateNodeState(n *datastore.NodeEnt) {
 				n.State = "repair"
 			} else {
 				p.State = "normal"
-				s = "normal"
 			}
-		}
-		if n.State == "repair" || n.State != "unknown" {
 			return true
+		}
+		if n.State != "unknown" {
+			return true
+		}
+		if s == "info" {
+			s = "normal"
 		}
 		n.State = s
 		return true
