@@ -146,15 +146,12 @@ func sshdPutSyslog(s ssh.Session) {
 			}
 		}
 	}
-	log.Printf("put syslog host=%s client=%s", host, client)
 	count := 0
 	r := bufio.NewScanner(s)
 	for r.Scan() {
 		l := r.Text()
-		log.Println(l)
 		a := strings.SplitN(l, "\t", 3)
 		if len(a) != 3 {
-			log.Println("slit != 3")
 			continue
 		}
 		ts, err := strconv.ParseInt(a[0], 10, 64)
@@ -190,7 +187,6 @@ func sshdPutSyslog(s ssh.Session) {
 	if count > 0 {
 		report.UpdateSensor(host, "sshd", count)
 	}
-	log.Printf("sshd count=%d", count)
 }
 
 // Node list
