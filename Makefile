@@ -1,7 +1,7 @@
 .PHONY: all test clean zip mac clean_spa docker trivy fluentbit_plugin
 
 ### バージョンの定義
-VERSION     := "v1.36.0"
+VERSION     := "v1.36.1"
 COMMIT      := $(shell git rev-parse --short HEAD)
 
 ### コマンドの定義
@@ -40,7 +40,7 @@ dockerarm: Docker/Dockerfile dist/twsnmpfc.arm dist/twsnmpfc.arm64
 	cp dist/twsnmpfc.arm Docker/twsnmpfc
 	cd Docker && docker buildx build --platform linux/arm/v7 -t twsnmp/twsnmpfc:armv7_$(VERSION) --push .
 	cp dist/twsnmpfc.arm64 Docker/twsnmpfc
-	cd Docker && docker buildx build --platform linux/arm64 -t twsnmp/twsnmpfc:arm64_$(VERSION) --push .
+	cd Docker && docker buildx build --platform linux/arm64/v8 -t twsnmp/twsnmpfc:arm64_$(VERSION) --push .
 
 ### 実行ファイルのビルドルール
 $(DIST)/twsnmpfc.exe: statik/statik.go $(SRC)
