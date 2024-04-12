@@ -23,6 +23,7 @@
         :items-per-page="15"
         sort-by="RSSI"
         class="log"
+        :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
       >
         <template #[`item.LastRSSI`]="{ item }">
           <v-icon :color="$getRSSIColor(item.LastRSSI)">{{

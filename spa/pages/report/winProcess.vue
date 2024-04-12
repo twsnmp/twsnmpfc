@@ -19,6 +19,7 @@
         :sort-desc="conf.sortDesc"
         :options.sync="options"
         class="log"
+        :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
       >
         <template #[`item.LastStatus`]="{ item }">
           <v-icon :color="item.LastStatus === '0x0' ? '#1f78b4' : '#e31a1c'">{{

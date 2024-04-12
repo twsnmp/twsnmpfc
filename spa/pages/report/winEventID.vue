@@ -18,6 +18,7 @@
         :sort-by="conf.sortBy"
         :sort-desc="conf.sortDesc"
         :options.sync="options"
+        :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
       >
         <template #[`item.Level`]="{ item }">
           <v-icon :color="$getStateColor(item.Level)">{{

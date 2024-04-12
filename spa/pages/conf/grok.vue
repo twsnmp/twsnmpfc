@@ -22,6 +22,10 @@
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
+        :items-per-page="20"
+        :footer-props="{
+          'items-per-page-options': [10, 20, 30, 50, 100, -1],
+        }"
       >
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="editGrok(item)"> mdi-pencil </v-icon>
@@ -138,8 +142,11 @@
           <v-data-table
             :headers="extractHeader"
             :items="extractDatas"
-            :items-per-page="10"
+            :items-per-page="20"
             dense
+            :footer-props="{
+              'items-per-page-options': [10, 20, 30, 50, 100, -1],
+            }"
           >
           </v-data-table>
         </v-card-text>

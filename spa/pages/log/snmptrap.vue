@@ -17,6 +17,7 @@
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"
+        :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
       >
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="editPolling(item)"> mdi-card-plus </v-icon>

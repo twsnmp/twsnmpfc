@@ -20,6 +20,7 @@
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"
+        :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
         @dblclick:row="copyLog"
       >
         <template #[`item.Level`]="{ item }">
@@ -360,9 +361,12 @@
           :headers="extractHeader"
           :items="extractDatas"
           :search="searchExtract"
-          :items-per-page="15"
+          :items-per-page="20"
           sort-by="TimeStr"
           dense
+          :footer-props="{
+            'items-per-page-options': [10, 20, 30, 50, 100, -1],
+          }"
         >
         </v-data-table>
         <v-card-actions>

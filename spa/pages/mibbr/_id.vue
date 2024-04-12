@@ -34,6 +34,7 @@
         sort-by="Index"
         :items-per-page="conf.itemsPerPage"
         :options.sync="options"
+        :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
       >
         <template v-if="!tableMode" #[`body.append`]>
           <tr>

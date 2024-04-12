@@ -5,12 +5,13 @@
       <v-data-table
         :headers="headers"
         :items="ai"
-        :items-per-page="15"
+        :items-per-page="20"
         sort-by="Score"
         sort-desc
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
+        :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
       >
         <template #[`item.Score`]="{ item }">
           <v-icon :color="$getScoreColor(item.IconScore)">{{

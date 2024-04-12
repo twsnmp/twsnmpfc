@@ -38,11 +38,12 @@
       <v-data-table
         :headers="headers"
         :items="info"
-        :items-per-page="15"
+        :items-per-page="20"
         dense
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"
+        :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
         @dblclick:row="copy1Info"
       >
         <template #[`item.Level`]="{ item }">

@@ -19,6 +19,7 @@
         :sort-by="conf.sortBy"
         :sort-desc="conf.sortDesc"
         :options.sync="options"
+        :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
       >
         <template #[`item.State`]="{ item }">
           <v-icon :color="$getStateColor(item.State)">{{
@@ -327,13 +328,13 @@ export default {
         {
           text: '説明',
           value: 'Descr',
-          width: '30%',
+          width: '25%',
           filter: (value) => {
             if (!this.conf.descr) return true
             return value.includes(this.conf.descr)
           },
         },
-        { text: '操作', value: 'actions', width: '13%' },
+        { text: '操作', value: 'actions', width: '18%' },
       ],
       nodes: [],
       conf: {
