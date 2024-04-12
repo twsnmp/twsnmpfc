@@ -577,7 +577,6 @@ export default {
         return window.innerHeight + 'px'
       }
       if (window.innerHeight > 900) {
-        console.log(window.innerHeight - 400)
         return window.innerHeight - 400 + 'px'
       }
       return '600px'
