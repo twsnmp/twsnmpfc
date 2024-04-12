@@ -7,24 +7,15 @@
       Wake on LANパケットを送信しました
     </v-snackbar>
     <v-card min-width="1000px" width="100%">
-      <v-card-title>
-        イベントログ
-        <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="検索"
-          single-line
-          hide-details
-        ></v-text-field>
-      </v-card-title>
       <v-data-table
         :headers="headers"
         :items="map.Logs"
-        :search="search"
         sort-by="TimeStr"
         sort-desc
         dense
+        disable-pagination
+        height="300"
+        hide-default-footer
         :loading="$fetchState.pending"
         loading-text="Loading... Please wait"
         class="log"

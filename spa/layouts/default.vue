@@ -219,7 +219,7 @@
         hide-details
         @change="$selectNode"
       ></v-select>
-      <v-btn v-if="showMAP" icon @click="$refreshMAP()">
+      <v-btn v-if="showMAP" icon @click="$refreshMAP">
         <v-icon>mdi-cached</v-icon>
       </v-btn>
       <v-btn v-if="!isAuthenticated" to="/login">
@@ -240,7 +240,12 @@
     </v-app-bar>
     <v-main>
       <v-container :fluid="true">
-        <div v-show="showMAP" id="map" :style="{ height: mapHeight }"></div>
+        <div
+          v-show="showMAP"
+          id="map"
+          v-resize="resizeMap"
+          :style="{ height: mapHeight }"
+        ></div>
         <nuxt />
       </v-container>
     </v-main>
@@ -571,8 +576,9 @@ export default {
       if (this.mapMax) {
         return window.innerHeight + 'px'
       }
-      if (window.innerHeight > 1190) {
-        return window.innerHeight - 590 + 'px'
+      if (window.innerHeight > 900) {
+        console.log(window.innerHeight - 400)
+        return window.innerHeight - 400 + 'px'
       }
       return '600px'
     },
@@ -591,6 +597,16 @@ export default {
   methods: {
     async logout() {
       await this.$auth.logout()
+    },
+    resizeMap() {
+      const m = document.getElementById('map')
+      if (m) {
+        m.style.height = this.mapMax
+          ? window.innerHeight + 'px'
+          : window.innerHeight > 900
+          ? window.innerHeight - 400 + 'px'
+          : '600px'
+      }
     },
     cron() {
       if (this.$auth.loggedIn) {

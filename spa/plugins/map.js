@@ -49,7 +49,7 @@ const setIconToMap = (e) => {
 const showMAP = (div, m, url, ro) => {
   const ms = m.MapConf.MapSize || 0
   if (!mapP5 || ms !== mapSize) {
-    mapSize = m.mapSize
+    mapSize = m.MapConf.mapSize
     initMap(div, ms)
   }
   if (!url || url === '/') {
