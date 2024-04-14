@@ -193,6 +193,26 @@ export default {
       return this.$auth.loggedIn
     },
   },
+  async mounted() {
+    const url = new URL(window.location.href)
+    const params = url.searchParams
+    const login = {
+      UserID: params.get('UserID') || params.get('user'),
+      Password: params.get('Password') || params.get('password'),
+    }
+    if (!this.$auth.loggedIn && login.UserID) {
+      try {
+        await this.$auth.loginWith('local', {
+          data: login,
+        })
+        this.$router.push('/map')
+      } catch (e) {
+        this.$router.push('/login')
+      }
+    } else if (!this.$auth.loggedIn && login.UserID) {
+      this.$router.push('/map')
+    }
+  },
   methods: {
     doFeedback() {
       this.feedbackDone = false

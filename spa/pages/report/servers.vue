@@ -408,7 +408,7 @@
               </v-select>
             </v-col>
             <v-col>
-              <v-icon x-large style="magin-top: 10px; margin-left: 10px">
+              <v-icon x-large style="margin-top: 10px; margin-left: 10px">
                 {{ $getIconName(node.Icon) }}
               </v-icon>
             </v-col>
