@@ -963,7 +963,6 @@ export default {
       selectedLinePolling2: 0,
       editNode: {},
       editItem: {},
-      nodeList: [],
       deleteNodes: [],
       map: {
         Nodes: {},
@@ -1019,6 +1018,7 @@ export default {
       selectedURL: '',
       gridDialog: false,
       selectedGrid: 20,
+      itemPollingList: [],
     }
   },
   async fetch() {
@@ -1026,6 +1026,16 @@ export default {
     const mb = document.getElementById('map')
     const sbt = mb ? mb.scrollTop : 0
     const sbl = mb ? mb.scrollLeft : 0
+    this.itemPollingList = []
+    for (const k in this.map.Pollings) {
+      this.map.Pollings[k].forEach((p) => {
+        const nodeName = this.map.Nodes[k].Name + ':'
+        this.itemPollingList.push({
+          text: nodeName + p.Name,
+          value: p.ID,
+        })
+      })
+    }
     this.$showMAP(
       'map',
       this.map,
@@ -1073,21 +1083,6 @@ export default {
       const l2 = this.pollingList(this.editLine.NodeID1, true)
       const l3 = this.pollingList(this.editLine.NodeID2, true)
       return l1.concat(l2, l3)
-    },
-    itemPollingList() {
-      const l = []
-      const keys = Object.keys(this.map.Pollings)
-      for (const id of keys) {
-        this.map.Pollings[id].forEach((p) => {
-          const nodeName = this.map.Nodes[id].Name + ':'
-          l.push({
-            text: nodeName + p.Name,
-            state: p.State,
-            value: p.ID,
-          })
-        })
-      }
-      return l
     },
     discoverURL() {
       return `/discover?x=${this.x}&y=${this.y}`
