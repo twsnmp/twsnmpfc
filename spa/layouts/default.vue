@@ -240,12 +240,7 @@
     </v-app-bar>
     <v-main>
       <v-container :fluid="true">
-        <div
-          v-show="showMAP"
-          id="map"
-          v-resize="resizeMap"
-          :style="{ height: mapHeight }"
-        ></div>
+        <div v-show="showMAP" id="map" v-resize="resizeMap"></div>
         <nuxt />
       </v-container>
     </v-main>
@@ -571,15 +566,6 @@ export default {
     },
     readOnly() {
       return this.$store.state.map.readOnly
-    },
-    mapHeight() {
-      if (this.mapMax) {
-        return window.innerHeight + 'px'
-      }
-      if (window.innerHeight > 900) {
-        return window.innerHeight - 400 + 'px'
-      }
-      return '600px'
     },
   },
   mounted() {
