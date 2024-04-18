@@ -40,6 +40,13 @@
                 dense
               ></v-switch>
             </v-col>
+            <v-col>
+              <v-switch
+                v-model="notify.InsecureCipherSuites"
+                label="暗号強度を下げる"
+                dense
+              ></v-switch>
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col>

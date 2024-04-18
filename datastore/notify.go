@@ -34,6 +34,8 @@ type NotifyConfEnt struct {
 	ChatWebhookURL     string
 	ExecCmd            string
 	LineToken          string
+	//
+	InsecureCipherSuites bool
 }
 
 func SaveNotifyConf() error {

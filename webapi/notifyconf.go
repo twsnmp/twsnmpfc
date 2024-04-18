@@ -16,6 +16,7 @@ func getNotifyConf(c echo.Context) error {
 	r.MailServer = datastore.NotifyConf.MailServer
 	r.User = datastore.NotifyConf.User
 	r.InsecureSkipVerify = datastore.NotifyConf.InsecureSkipVerify
+	r.InsecureCipherSuites = datastore.NotifyConf.InsecureCipherSuites
 	r.MailTo = datastore.NotifyConf.MailTo
 	r.MailFrom = datastore.NotifyConf.MailFrom
 	r.Subject = datastore.NotifyConf.Subject
@@ -44,6 +45,7 @@ func postNotifyConf(c echo.Context) error {
 	datastore.NotifyConf.MailServer = nc.MailServer
 	datastore.NotifyConf.User = nc.User
 	datastore.NotifyConf.InsecureSkipVerify = nc.InsecureSkipVerify
+	datastore.NotifyConf.InsecureCipherSuites = nc.InsecureCipherSuites
 	datastore.NotifyConf.MailTo = nc.MailTo
 	datastore.NotifyConf.MailFrom = nc.MailFrom
 	datastore.NotifyConf.Subject = nc.Subject
