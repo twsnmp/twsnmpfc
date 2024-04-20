@@ -1028,12 +1028,17 @@ export default {
     const sbl = mb ? mb.scrollLeft : 0
     this.itemPollingList = []
     for (const k in this.map.Pollings) {
+      if (!this.map.Nodes[k]) {
+        continue
+      }
       this.map.Pollings[k].forEach((p) => {
-        const nodeName = this.map.Nodes[k].Name + ':'
-        this.itemPollingList.push({
-          text: nodeName + p.Name,
-          value: p.ID,
-        })
+        try {
+          const nodeName = this.map.Nodes[k].Name + ':'
+          this.itemPollingList.push({
+            text: nodeName + p.Name,
+            value: p.ID,
+          })
+        } catch {}
       })
     }
     this.$showMAP(
