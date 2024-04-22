@@ -205,15 +205,14 @@ func ClearStat() {
 
 func getSnmpInfo(t string, dent *discoverInfoEnt) {
 	agent := &gosnmp.GoSNMP{
-		Target:             t,
-		Port:               161,
-		Transport:          "udp",
-		Community:          datastore.MapConf.Community,
-		Version:            gosnmp.Version2c,
-		Timeout:            time.Duration(datastore.DiscoverConf.Timeout) * time.Second,
-		Retries:            datastore.DiscoverConf.Retry,
-		ExponentialTimeout: true,
-		MaxOids:            gosnmp.MaxOids,
+		Target:    t,
+		Port:      161,
+		Transport: "udp",
+		Community: datastore.MapConf.Community,
+		Version:   gosnmp.Version2c,
+		Timeout:   time.Duration(datastore.DiscoverConf.Timeout) * time.Second,
+		Retries:   datastore.DiscoverConf.Retry,
+		MaxOids:   gosnmp.MaxOids,
 	}
 	switch datastore.MapConf.SnmpMode {
 	case "v3auth":

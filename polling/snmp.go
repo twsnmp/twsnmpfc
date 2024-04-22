@@ -21,15 +21,14 @@ func doPollingSnmp(pe *datastore.PollingEnt) {
 		return
 	}
 	agent := &gosnmp.GoSNMP{
-		Target:             n.IP,
-		Port:               161,
-		Transport:          "udp",
-		Community:          n.Community,
-		Version:            gosnmp.Version2c,
-		Timeout:            time.Duration(pe.Timeout) * time.Second,
-		Retries:            pe.Retry,
-		ExponentialTimeout: true,
-		MaxOids:            gosnmp.MaxOids,
+		Target:    n.IP,
+		Port:      161,
+		Transport: "udp",
+		Community: n.Community,
+		Version:   gosnmp.Version2c,
+		Timeout:   time.Duration(pe.Timeout) * time.Second,
+		Retries:   pe.Retry,
+		MaxOids:   gosnmp.MaxOids,
 	}
 	switch n.SnmpMode {
 	case "v3auth":
@@ -533,15 +532,14 @@ func autoAddSnmpPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) 
 func getSnmpIndex(n *datastore.NodeEnt, name string) []string {
 	ret := []string{}
 	agent := &gosnmp.GoSNMP{
-		Target:             n.IP,
-		Port:               161,
-		Transport:          "udp",
-		Community:          n.Community,
-		Version:            gosnmp.Version2c,
-		Timeout:            time.Duration(datastore.MapConf.Timeout) * time.Second,
-		Retries:            datastore.MapConf.Retry,
-		ExponentialTimeout: true,
-		MaxOids:            gosnmp.MaxOids,
+		Target:    n.IP,
+		Port:      161,
+		Transport: "udp",
+		Community: n.Community,
+		Version:   gosnmp.Version2c,
+		Timeout:   time.Duration(datastore.MapConf.Timeout) * time.Second,
+		Retries:   datastore.MapConf.Retry,
+		MaxOids:   gosnmp.MaxOids,
 	}
 	switch n.SnmpMode {
 	case "v3auth":

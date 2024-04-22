@@ -85,15 +85,14 @@ func snmpWalk(p *mibGetReqWebAPI) ([]*mibEnt, error) {
 		return ret, fmt.Errorf("node not found")
 	}
 	agent := &gosnmp.GoSNMP{
-		Target:             n.IP,
-		Port:               161,
-		Transport:          "udp",
-		Community:          n.Community,
-		Version:            gosnmp.Version2c,
-		Timeout:            time.Duration(datastore.MapConf.Timeout) * time.Second,
-		Retries:            datastore.MapConf.Retry,
-		ExponentialTimeout: true,
-		MaxOids:            gosnmp.MaxOids,
+		Target:    n.IP,
+		Port:      161,
+		Transport: "udp",
+		Community: n.Community,
+		Version:   gosnmp.Version2c,
+		Timeout:   time.Duration(datastore.MapConf.Timeout) * time.Second,
+		Retries:   datastore.MapConf.Retry,
+		MaxOids:   gosnmp.MaxOids,
 	}
 	switch n.SnmpMode {
 	case "v3auth":
