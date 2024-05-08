@@ -137,15 +137,17 @@
         <v-card-title>
           <span class="headline">更新版の確認</span>
         </v-card-title>
-        <v-alert v-model="checkUpdateError" color="error" dense dismissible>
-          更新版の確認に失敗しました。
-        </v-alert>
-        <v-alert v-if="hasNewVersion" color="error" dense dismissible>
-          新しいバージョン{{ newVersion }}があります。
-        </v-alert>
-        <v-alert v-else color="info" dense dismissible>
-          お使いのバージョンは最新です。
-        </v-alert>
+        <v-card-text>
+          <v-alert v-if="checkUpdateError" color="error" dense>
+            更新版の確認に失敗しました。
+          </v-alert>
+          <v-alert v-else-if="hasNewVersion" color="error" dense>
+            新しいバージョン{{ newVersion }}があります。
+          </v-alert>
+          <v-alert v-else color="info" dense>
+            お使いのバージョンは最新です。
+          </v-alert>
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" dark @click="checkUpdateDialog = false">
