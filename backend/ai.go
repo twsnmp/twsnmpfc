@@ -49,11 +49,12 @@ func makeYasumiMap() {
 }
 
 func checkAI() {
+	st := time.Now().Unix()
 	datastore.ForEachPollings(func(pe *datastore.PollingEnt) bool {
 		if pe.LogMode == datastore.LogModeAI {
 			doAI(pe)
 		}
-		return true
+		return time.Now().Unix()-st < 50
 	})
 }
 
