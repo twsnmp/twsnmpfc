@@ -117,6 +117,7 @@ func CheckAllPoll() {
 }
 
 var stopPolling = false
+var checkingPolling = false
 
 // pollingBackend :  ポーリングのバックグランド処理
 func pollingBackend(ctx context.Context, wg *sync.WaitGroup) {
@@ -132,7 +133,9 @@ func pollingBackend(ctx context.Context, wg *sync.WaitGroup) {
 			stopPolling = true
 			return
 		case <-timer.C:
-			checkPolling()
+			if !checkingPolling {
+				go checkPolling()
+			}
 		case id := <-doPollingCh:
 			pe := datastore.GetPolling(id)
 			if pe != nil && pe.NextTime <= time.Now().UnixNano() {
@@ -145,27 +148,35 @@ func pollingBackend(ctx context.Context, wg *sync.WaitGroup) {
 	}
 }
 
+// checkPolling :実行するポーリングをチェックする
 func checkPolling() {
 	now := time.Now().UnixNano()
 	list := []*datastore.PollingEnt{}
+	total := 0
+	st := time.Now()
 	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
-		if p.Level != "off" && p.NextTime <= now {
-			if _, busy := busyPollings.Load(p.ID); !busy {
-				list = append(list, p)
+		if p.Level != "off" {
+			if p.NextTime <= now {
+				if _, busy := busyPollings.Load(p.ID); !busy {
+					list = append(list, p)
+				}
 			}
+			total++
 		}
 		return true
 	})
 	if len(list) < 1 {
+		checkingPolling = false
 		return
 	}
-	log.Printf("check polling len=%d NumGoroutine=%d", len(list), runtime.NumGoroutine())
+	log.Printf("check polling len=%d total=%d NumGoroutine=%d dur=%v", len(list), total, runtime.NumGoroutine(), time.Since(st))
 	sort.Slice(list, func(i, j int) bool {
 		return list[i].NextTime < list[j].NextTime
 	})
 	for i := 0; i < len(list) && i < maxPolling; i++ {
 		doPollingCh <- list[i].ID
 	}
+	checkingPolling = false
 }
 
 func doPolling(pe *datastore.PollingEnt) {
