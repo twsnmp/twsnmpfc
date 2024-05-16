@@ -173,7 +173,7 @@ func snmptrapd(stopCh chan bool) {
 	}
 	defer tl.Close()
 	go func() {
-		if err := tl.Listen("0.0.0.0:162"); err != nil {
+		if err := tl.Listen(trapListen); err != nil {
 			log.Printf("snmp trap listen err=%v", err)
 		}
 		log.Printf("close snmp trapd")

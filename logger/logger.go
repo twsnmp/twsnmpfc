@@ -7,6 +7,7 @@ package logger
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 
@@ -17,7 +18,14 @@ import (
 
 var logCh = make(chan *datastore.LogEnt, 5000)
 
-func Start(ctx context.Context, wg *sync.WaitGroup) error {
+var trapListen = "0.0.0.0:162"
+var netflowListen = ":2055"
+var syslogListen = "0.0.0.0:514"
+
+func Start(ctx context.Context, wg *sync.WaitGroup, trap, netflow, syslog int) error {
+	trapListen = fmt.Sprintf("0.0.0.0:%d", trap)
+	netflowListen = fmt.Sprintf(":%d", netflow)
+	syslogListen = fmt.Sprintf("0.0.0.0:%d", syslog)
 	logCh = make(chan *datastore.LogEnt, 100)
 	wg.Add(1)
 	go logger(ctx, wg)

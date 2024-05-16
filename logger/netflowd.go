@@ -28,7 +28,7 @@ func netflowd(stopCh chan bool) {
 	var addr *net.UDPAddr
 	var err error
 	log.Println("start netflowd ")
-	if addr, err = net.ResolveUDPAddr("udp", ":2055"); err != nil {
+	if addr, err = net.ResolveUDPAddr("udp", netflowListen); err != nil {
 		log.Printf("netflowd err=%v", err)
 		return
 	}

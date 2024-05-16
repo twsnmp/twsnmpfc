@@ -49,6 +49,10 @@ var copyBackup bool
 var version = "vx.x.x"
 var commit = ""
 
+var trapPort = 162
+var netflowPort = 2055
+var syslogPort = 514
+
 func init() {
 	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
 	flag.StringVar(&password, "password", "twsnmpfc!", "Master Password")
@@ -65,6 +69,9 @@ func init() {
 	flag.StringVar(&backupPath, "backup", "", "Backup path")
 	flag.StringVar(&compact, "compact", "", "DB Conmact path")
 	flag.BoolVar(&copyBackup, "copybackup", false, "Use copy mode on backup")
+	flag.IntVar(&trapPort, "trapPort", 162, "snmp trap port")
+	flag.IntVar(&netflowPort, "netflowPort", 2055, "snmp trap port")
+	flag.IntVar(&syslogPort, "syslogPort", 514, "snmp trap port")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
 			f.Value.Set(s)
@@ -157,7 +164,7 @@ func main() {
 		log.Fatalf("start report err=%v", err)
 	}
 	log.Println("call logger.Start")
-	if err = logger.Start(ctx, wg); err != nil {
+	if err = logger.Start(ctx, wg, trapPort, netflowPort, syslogPort); err != nil {
 		log.Fatalf("start logger err=%v", err)
 	}
 	log.Println("call polling.Start")

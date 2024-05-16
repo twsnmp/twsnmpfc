@@ -20,8 +20,8 @@ func syslogd(stopCh chan bool) {
 	server := syslog.NewServer()
 	server.SetFormat(syslog.Automatic)
 	server.SetHandler(syslog.NewChannelHandler(syslogCh))
-	_ = server.ListenUDP("0.0.0.0:514")
-	_ = server.ListenTCP("0.0.0.0:514")
+	_ = server.ListenUDP(syslogListen)
+	_ = server.ListenTCP(syslogListen)
 	_ = server.Boot()
 	log.Printf("start syslogd")
 	for {
