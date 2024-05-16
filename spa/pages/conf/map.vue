@@ -47,7 +47,7 @@
                 v-model="mapconf.PollInt"
                 label="ポーリング間隔(Sec)"
                 class="align-center"
-                max="3600"
+                max="86400"
                 min="5"
                 hide-details
               >
