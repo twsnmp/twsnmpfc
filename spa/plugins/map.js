@@ -421,8 +421,8 @@ const mapMain = (p5) => {
     } else if (dragMode === 2 && lastMouseX) {
       dragMoveNodes()
     }
-    lastMouseX = p5.mouseX
-    lastMouseY = p5.mouseY
+    lastMouseX = p5.mouseX / scale
+    lastMouseY = p5.mouseY / scale
     return true
   }
 
@@ -444,10 +444,10 @@ const mapMain = (p5) => {
       setSelectNode(false)
       setSelectItem()
     }
-    lastMouseX = p5.mouseX
-    lastMouseY = p5.mouseY
-    startMouseX = p5.mouseX
-    startMouseY = p5.mouseY
+    lastMouseX = p5.mouseX / scale
+    lastMouseY = p5.mouseY / scale
+    startMouseX = p5.mouseX / scale
+    startMouseY = p5.mouseY / scale
     dragMode = 0
     return false
   }
@@ -569,8 +569,8 @@ const mapMain = (p5) => {
   const dragMoveNodes = () => {
     selectedNodes.forEach((id) => {
       if (nodes[id]) {
-        nodes[id].X += p5.mouseX - lastMouseX
-        nodes[id].Y += p5.mouseY - lastMouseY
+        nodes[id].X += (p5.mouseX /scale) - lastMouseX
+        nodes[id].Y += (p5.mouseY /scale) - lastMouseY
         checkNodePos(nodes[id])
         if (!draggedNodes.includes(id)) {
           draggedNodes.push(id)
@@ -579,8 +579,8 @@ const mapMain = (p5) => {
     })
     selectedItems.forEach((id) => {
       if (items[id]) {
-        items[id].X += p5.mouseX - lastMouseX
-        items[id].Y += p5.mouseY - lastMouseY
+        items[id].X += (p5.mouseX / scale) - lastMouseX
+        items[id].Y += (p5.mouseY / scale) - lastMouseY
         checkItemPos(items[id])
         if (!draggedItems.includes(id)) {
           draggedItems.push(id)
@@ -622,12 +622,14 @@ const mapMain = (p5) => {
 
   const setSelectNode = (bMulti) => {
     const l = selectedNodes.length
+    const x = p5.mouseX / scale
+    const y = p5.mouseY / scale
     for (const k in nodes) {
       if (
-        nodes[k].X + 32 > p5.mouseX &&
-        nodes[k].X - 32 < p5.mouseX &&
-        nodes[k].Y + 32 > p5.mouseY &&
-        nodes[k].Y - 32 < p5.mouseY
+        nodes[k].X + 32 > x &&
+        nodes[k].X - 32 < x &&
+        nodes[k].Y + 32 > y &&
+        nodes[k].Y - 32 < y
       ) {
         if (selectedNodes.includes(nodes[k].ID)) {
           return false
@@ -646,6 +648,8 @@ const mapMain = (p5) => {
   }
   // 描画アイテムを選択する
   const setSelectItem = () => {
+    const x = p5.mouseX / scale
+    const y = p5.mouseY / scale
     for (const k in items) {
       const w =
         items[k].Type === 2
@@ -653,10 +657,10 @@ const mapMain = (p5) => {
           : items[k].W + 10
       const h = items[k].Type === 2 ? items[k].Size + 10 : items[k].H + 10
       if (
-        items[k].X + w > p5.mouseX &&
-        items[k].X - 10 < p5.mouseX &&
-        items[k].Y + h > p5.mouseY &&
-        items[k].Y - 10 < p5.mouseY
+        items[k].X + w > x &&
+        items[k].X - 10 < x &&
+        items[k].Y + h > y &&
+        items[k].Y - 10 < y
       ) {
         if (selectedItems.includes(items[k].ID)) {
           return
