@@ -225,8 +225,17 @@
       <v-btn v-if="!isAuthenticated" to="/login">
         <v-icon>mdi-login</v-icon>
       </v-btn>
-      <v-btn v-if="isAuthenticated" @click="mapMax = !mapMax">
-        <v-icon>mdi-window-maximize</v-icon>
+      <v-btn
+        v-if="isAuthenticated"
+        @click="
+          () => {
+            mapMax = !mapMax
+            resizeMap()
+          }
+        "
+      >
+        <v-icon v-if="!mapMax">mdi-window-maximize</v-icon>
+        <v-icon v-if="mapMax">mdi-window-minimize</v-icon>
       </v-btn>
       <v-btn v-if="isAuthenticated" @click="logout">
         <v-icon>mdi-logout</v-icon>
