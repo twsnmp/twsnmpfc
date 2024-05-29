@@ -103,11 +103,19 @@ func logIPFIX(p *ipfix.Message) int {
 				if f.Translated != nil {
 					if f.Translated.Name != "" {
 						record[f.Translated.Name] = f.Translated.Value
-						if f.Translated.Name == "protocolIdentifier" {
+						switch f.Translated.Name {
+						case "protocolIdentifier":
 							record["protocolStr"] = read.Protocol(f.Translated.Value.(uint8))
-						}
-						if f.Translated.Name == "tcpControlBits" {
+						case "tcpControlBits":
 							record["tcpflagsStr"] = read.TCPFlags(uint8(f.Translated.Value.(uint16)))
+						case "sourceMacAddress":
+							if mac, ok := f.Translated.Value.(net.HardwareAddr); ok {
+								record["sourceMacAddress"] = mac.String()
+							}
+						case "destinationMacAddress":
+							if mac, ok := f.Translated.Value.(net.HardwareAddr); ok {
+								record["destinationMacAddress"] = mac.String()
+							}
 						}
 					} else {
 						record[fmt.Sprintf("%d.%d", f.Translated.EnterpriseNumber, f.Translated.InformationElementID)] = f.Bytes
@@ -125,7 +133,7 @@ func logIPFIX(p *ipfix.Message) int {
 				Type: "ipfix",
 				Log:  string(s),
 			}
-			if _, ok := record["sourceIPv4Address"]; ok {
+			if ip, ok := record["sourceIPv4Address"]; ok {
 				defer func() {
 					if r := recover(); r != nil {
 						log.Printf("recover ipfix err=%v", r)
@@ -134,6 +142,9 @@ func logIPFIX(p *ipfix.Message) int {
 						}
 					}
 				}()
+				if mac, ok := record["sourceMacAddress"]; ok {
+					report.ReportDevice(mac.(string), ip.(net.IP).String(), time.Now().UnixNano())
+				}
 				if _, ok := record["sourceTransportPort"]; ok {
 					report.ReportFlow(
 						record["sourceIPv4Address"].(net.IP).String(),

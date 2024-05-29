@@ -297,10 +297,26 @@ func postIPFIX(c echo.Context) error {
 		var lt float64
 		re := new(netflowWebAPILogEnt)
 		if ft, ok = sl["flowStartSysUpTime"].(float64); !ok {
-			return true
+			st, ok := sl["flowStartMilliseconds"].(string)
+			if !ok {
+				return true
+			}
+			t, err := time.Parse(time.RFC3339Nano, st)
+			if err != nil {
+				return true
+			}
+			ft = float64(t.UnixMilli() / 10)
 		}
 		if lt, ok = sl["flowEndSysUpTime"].(float64); !ok {
-			return true
+			st, ok := sl["flowEndMilliseconds"].(string)
+			if !ok {
+				return true
+			}
+			t, err := time.Parse(time.RFC3339Nano, st)
+			if err != nil {
+				return true
+			}
+			lt = float64(t.UnixMilli() / 10)
 		}
 		if sa, ok = sl["sourceIPv4Address"].(string); !ok {
 			if sa, ok = sl["sourceIPv6Address"].(string); !ok {
