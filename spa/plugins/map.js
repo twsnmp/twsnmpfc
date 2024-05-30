@@ -689,8 +689,8 @@ const mapMain = (p5) => {
         // 位置を保存するノード
         list.push({
           ID: id,
-          X: nodes[id].X,
-          Y: nodes[id].Y,
+          X: Math.trunc(nodes[id].X),
+          Y: Math.trunc(nodes[id].Y),
         })
       }
     })
@@ -710,8 +710,8 @@ const mapMain = (p5) => {
         // 位置を保存するノード
         list.push({
           ID: id,
-          X: items[id].X,
-          Y: items[id].Y,
+          X: Math.trunc(items[id].X),
+          Y: Math.trunc(items[id].Y),
         })
       }
     })
