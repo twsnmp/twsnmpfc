@@ -143,7 +143,9 @@ func logIPFIX(p *ipfix.Message) int {
 					}
 				}()
 				if mac, ok := record["sourceMacAddress"]; ok {
-					report.ReportDevice(mac.(string), ip.(net.IP).String(), time.Now().UnixNano())
+					if ip.(net.IP).IsPrivate() {
+						report.ReportDevice(mac.(string), ip.(net.IP).String(), time.Now().UnixNano())
+					}
 				}
 				if _, ok := record["sourceTransportPort"]; ok {
 					report.ReportFlow(

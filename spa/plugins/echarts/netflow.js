@@ -716,7 +716,7 @@ const showNetFlowGraph = (div, logs, type) => {
     } else {
       e.value += l.Bytes
     }
-    let n = nodeMap.get(l.Src)
+    let n = nodeMap.get(l.SrcIP)
     if (!n) {
       nodeMap.set(l.SrcIP, {
         name: l.SrcIP,
