@@ -930,6 +930,39 @@
         </v-list-item>
       </v-list>
     </v-menu>
+    <v-menu
+      v-model="showFormatNodesMenu"
+      :position-x="x"
+      :position-y="y"
+      absolute
+    >
+      <v-list dense>
+        <v-list-item @click="horizontal()">
+          <v-list-item-icon>
+            <v-icon>mdi-format-vertical-align-center</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>水平に整列</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="vertical()">
+          <v-list-item-icon>
+            <v-icon>mdi-format-horizontal-align-center</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>垂直に整列</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="circle()">
+          <v-list-item-icon>
+            <v-icon> mdi-circle-outline</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>円形に整列</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-menu>
   </v-row>
 </template>
 
@@ -1019,6 +1052,8 @@ export default {
       gridDialog: false,
       selectedGrid: 20,
       itemPollingList: [],
+      showFormatNodesMenu: false,
+      formatNodes: [],
     }
   },
   async fetch() {
@@ -1218,6 +1253,12 @@ export default {
             this.deleteNodes = [r.Node]
             this.showNodeContextMenu = true
           }
+          break
+        case 'formatNodes':
+          this.x = r.x
+          this.y = r.y
+          this.formatNodes = Array.from(r.Param)
+          this.showFormatNodesMenu = true
           break
       }
     },
@@ -1557,6 +1598,80 @@ export default {
           this.imageDeleteError = true
           this.$fetch()
         })
+    },
+    async horizontal() {
+      const list = []
+      if (!this.formatNodes || this.formatNodes.length < 2) {
+        return
+      }
+      this.formatNodes.sort((a, b) => {
+        return this.map.Nodes[a].X - this.map.Nodes[b].X
+      })
+      const id0 = this.formatNodes[0]
+      for (const id of this.formatNodes) {
+        if (id !== id0) {
+          this.map.Nodes[id].Y = this.map.Nodes[id0].Y
+          list.push({
+            ID: id,
+            X: this.map.Nodes[id].X,
+            Y: this.map.Nodes[id].Y,
+          })
+        }
+      }
+      if (list.length > 0) {
+        await this.$axios.post('/api/map/update', list)
+      }
+    },
+    async vertical() {
+      const list = []
+      if (!this.formatNodes || this.formatNodes.length < 2) {
+        return
+      }
+      this.formatNodes.sort((a, b) => {
+        return this.map.Nodes[a].Y - this.map.Nodes[b].Y
+      })
+      const id0 = this.formatNodes[0]
+      for (const id of this.formatNodes) {
+        if (id !== id0) {
+          this.map.Nodes[id].X = this.map.Nodes[id0].X
+          list.push({
+            ID: id,
+            X: this.map.Nodes[id].X,
+            Y: this.map.Nodes[id].Y,
+          })
+        }
+      }
+      if (list.length > 0) {
+        await this.$axios.post('/api/map/update', list)
+      }
+    },
+    async circle() {
+      const list = []
+      if (!this.formatNodes || this.formatNodes.length < 2) {
+        return
+      }
+      this.formatNodes.sort((a, b) => {
+        return this.map.Nodes[a].X - this.map.Nodes[b].X
+      })
+      const c = 120 * this.formatNodes.length
+      const r = Math.trunc(c / 3.14 / 2)
+      const cx = this.map.Nodes[this.formatNodes[0]].X + r
+      const cy = this.map.Nodes[this.formatNodes[0]].Y
+      for (let i = 0; i < this.formatNodes.length; i++) {
+        const id = this.formatNodes[i]
+        const d = 180 - i * (360 / this.formatNodes.length)
+        const a = (d * Math.PI) / 180
+        this.map.Nodes[id].X = Math.trunc(r * Math.cos(a) + cx)
+        this.map.Nodes[id].Y = Math.trunc(r * Math.sin(a) + cy)
+        list.push({
+          ID: id,
+          X: this.map.Nodes[id].X,
+          Y: this.map.Nodes[id].Y,
+        })
+      }
+      if (list.length > 0) {
+        await this.$axios.post('/api/map/update', list)
+      }
     },
   },
 }

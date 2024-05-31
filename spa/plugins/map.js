@@ -476,6 +476,19 @@ const mapMain = (p5) => {
         })
       }
     }
+    if (
+      p5.mouseButton === p5.RIGHT &&
+      selectedNodes.length > 1
+    ) {
+      if (mapCallBack) {
+        mapCallBack({
+          Cmd: 'formatNodes',
+          Param: selectedNodes,
+          x: p5.winMouseX,
+          y: p5.winMouseY,
+        })
+      }
+    }
     clickInCanvas = false
     if (dragMode === 0 || dragMode === 3) {
       dragMode = 0
