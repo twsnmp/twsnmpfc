@@ -1653,16 +1653,19 @@ export default {
       this.formatNodes.sort((a, b) => {
         return this.map.Nodes[a].X - this.map.Nodes[b].X
       })
-      const c = 120 * this.formatNodes.length
-      const r = Math.trunc(c / 3.14 / 2)
+      const c = 80 * this.formatNodes.length
+      const r = Math.min(Math.trunc(c / 3.14 / 2), 1250 - 80)
       const cx = this.map.Nodes[this.formatNodes[0]].X + r
-      const cy = this.map.Nodes[this.formatNodes[0]].Y
+      let cy = this.map.Nodes[this.formatNodes[0]].Y
+      if (cy - r < 0) {
+        cy = 40 + r
+      }
       for (let i = 0; i < this.formatNodes.length; i++) {
         const id = this.formatNodes[i]
         const d = 180 - i * (360 / this.formatNodes.length)
         const a = (d * Math.PI) / 180
-        this.map.Nodes[id].X = Math.trunc(r * Math.cos(a) + cx)
-        this.map.Nodes[id].Y = Math.trunc(r * Math.sin(a) + cy)
+        this.map.Nodes[id].X = Math.max(Math.trunc(r * Math.cos(a) + cx), 0)
+        this.map.Nodes[id].Y = Math.max(Math.trunc(r * Math.sin(a) + cy), 0)
         list.push({
           ID: id,
           X: this.map.Nodes[id].X,
