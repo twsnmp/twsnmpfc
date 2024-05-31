@@ -108,11 +108,11 @@ func logIPFIX(p *ipfix.Message) int {
 							record["protocolStr"] = read.Protocol(f.Translated.Value.(uint8))
 						case "tcpControlBits":
 							record["tcpflagsStr"] = read.TCPFlags(uint8(f.Translated.Value.(uint16)))
-						case "sourceMacAddress":
+						case "sourceMacAddress", "postSourceMacAddress":
 							if mac, ok := f.Translated.Value.(net.HardwareAddr); ok {
 								record["sourceMacAddress"] = mac.String()
 							}
-						case "destinationMacAddress":
+						case "destinationMacAddress", "postDestinationMacAddress":
 							if mac, ok := f.Translated.Value.(net.HardwareAddr); ok {
 								record["destinationMacAddress"] = mac.String()
 							}

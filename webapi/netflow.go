@@ -40,8 +40,10 @@ type netflowWebAPILogEnt struct {
 	Time     int64
 	Src      string
 	SrcIP    string
+	SrcMAC   string
 	SrcPort  int
 	DstIP    string
+	DstMAC   string
 	DstPort  int
 	Dst      string
 	Protocol string
@@ -297,26 +299,24 @@ func postIPFIX(c echo.Context) error {
 		var lt float64
 		re := new(netflowWebAPILogEnt)
 		if ft, ok = sl["flowStartSysUpTime"].(float64); !ok {
-			st, ok := sl["flowStartMilliseconds"].(string)
-			if !ok {
-				return true
+			for _, k := range []string{"flowStartMilliseconds", "flowStartSeconds", "flowStartNanoSeconds"} {
+				if st, ok := sl[k].(string); ok {
+					if t, err := time.Parse(time.RFC3339Nano, st); err == nil {
+						ft = float64(t.UnixMilli() / 10)
+						break
+					}
+				}
 			}
-			t, err := time.Parse(time.RFC3339Nano, st)
-			if err != nil {
-				return true
-			}
-			ft = float64(t.UnixMilli() / 10)
 		}
 		if lt, ok = sl["flowEndSysUpTime"].(float64); !ok {
-			st, ok := sl["flowEndMilliseconds"].(string)
-			if !ok {
-				return true
+			for _, k := range []string{"flowEndMilliseconds", "flowEndSeconds", "flowEndNanoSeconds"} {
+				if st, ok := sl[k].(string); ok {
+					if t, err := time.Parse(time.RFC3339Nano, st); err == nil {
+						lt = float64(t.UnixMilli() / 10)
+						break
+					}
+				}
 			}
-			t, err := time.Parse(time.RFC3339Nano, st)
-			if err != nil {
-				return true
-			}
-			lt = float64(t.UnixMilli() / 10)
 		}
 		if sa, ok = sl["sourceIPv4Address"].(string); !ok {
 			if sa, ok = sl["sourceIPv6Address"].(string); !ok {
@@ -387,6 +387,16 @@ func postIPFIX(c echo.Context) error {
 		}
 		if bytes, ok = sl["octetDeltaCount"].(float64); !ok {
 			return true
+		}
+		if v, ok := sl["sourceMacAddress"]; ok {
+			if mac, ok := v.(string); ok {
+				re.SrcMAC = mac
+			}
+		}
+		if v, ok := sl["destinationMacAddress"]; ok {
+			if mac, ok := v.(string); ok {
+				re.DstMAC = mac
+			}
 		}
 		spi := int(sp)
 		dpi := int(dp)

@@ -29,7 +29,13 @@
               <v-text-field v-model="conf.src" label="src"></v-text-field>
             </td>
             <td>
+              <v-text-field v-model="conf.srcMac" label="sMAC"></v-text-field>
+            </td>
+            <td>
               <v-text-field v-model="conf.dst" label="dst"></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="conf.dstMac" label="dMAC"></v-text-field>
             </td>
             <td>
               <v-text-field v-model="conf.prot" label="prot"></v-text-field>
@@ -823,7 +829,7 @@ export default {
         {
           text: '受信日時',
           value: 'TimeStr',
-          width: '15%',
+          width: '12%',
           filter: (t, s, i) => {
             if (!this.zoom.st || !this.zoom.et) return true
             return i.Time >= this.zoom.st && i.Time <= this.zoom.et
@@ -832,25 +838,43 @@ export default {
         {
           text: '送信元',
           value: 'Src',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.src) return true
             return value.includes(this.conf.src)
           },
         },
         {
+          text: '送信元MAC',
+          value: 'SrcMAC',
+          width: '8%',
+          filter: (value) => {
+            if (!this.conf.srcMac) return true
+            return value.includes(this.conf.srcMac)
+          },
+        },
+        {
           text: '宛先',
           value: 'Dst',
-          width: '20%',
+          width: '15%',
           filter: (value) => {
             if (!this.conf.dst) return true
             return value.includes(this.conf.dst)
           },
         },
         {
+          text: '宛先MAC',
+          value: 'DstMAC',
+          width: '8%',
+          filter: (value) => {
+            if (!this.conf.dstMAC) return true
+            return value.includes(this.conf.dstMAC)
+          },
+        },
+        {
           text: 'プロトコル',
           value: 'Protocol',
-          width: '10%',
+          width: '8%',
           filter: (value) => {
             if (!this.conf.prot) return true
             return value.includes(this.conf.prot)
@@ -859,20 +883,22 @@ export default {
         {
           text: 'TCPフラグ',
           value: 'TCPFlags',
-          width: '10%',
+          width: '8%',
           filter: (value) => {
             if (!this.conf.tcpflag) return true
             return value.includes(this.conf.tcpflag)
           },
         },
-        { text: 'パケット数', value: 'Packets', width: '5%' },
-        { text: 'バイト数', value: 'Bytes', width: '10%' },
-        { text: '期間(Sec)', value: 'Duration', width: '10%' },
+        { text: 'パケット数', value: 'Packets', width: '8%' },
+        { text: 'バイト数', value: 'Bytes', width: '8%' },
+        { text: '期間(Sec)', value: 'Duration', width: '8%' },
       ],
       logs: [],
       conf: {
         src: '',
         dst: '',
+        srcMAC: '',
+        dstMAC: '',
         prot: '',
         tcpflag: '',
         sortBy: 'TimeStr',
@@ -938,7 +964,7 @@ export default {
       graphTypeList: [
         { text: '力学モデル', value: 'force' },
         { text: '円形', value: 'circular' },
-        { text: '３D', value: 'gl' },
+        { text: '3D', value: 'gl' },
       ],
       service3DDialog: false,
       service3DType: 'Bytes',
