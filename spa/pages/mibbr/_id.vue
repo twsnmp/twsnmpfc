@@ -124,6 +124,10 @@
           <v-icon>mdi-copy</v-icon>
           コピー
         </v-btn>
+        <v-btn v-if="mibs.length > 0" color="info" dark @click="resultMIBTree">
+          <v-icon>mdi-file-tree</v-icon>
+          結果MIBツリー
+        </v-btn>
         <v-btn color="info" dark @click="mibTreeDialog = true">
           <v-icon>mdi-file-tree</v-icon>
           MIBツリー
@@ -203,6 +207,61 @@
           <v-btn color="normal" dark @click="mibTreeDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="resultMibTreeDialog" persistent width="70vw">
+      <v-card max-height="95%">
+        <v-card-title> 取得結果MIBツリー </v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="searchResultMIBTree"
+            label="オブジェクト名の検索"
+          ></v-text-field>
+          <div style="height: 350px; overflow: auto">
+            <v-treeview
+              ref="tree"
+              :items="resultMibtree"
+              item-key="oid"
+              :search="searchResultMIBTree"
+              hoverable
+              activatable
+              dense
+              @update:active="selectMIB"
+            >
+              <template #prepend="{ item, open }">
+                <v-icon v-if="item.children.length > 0">
+                  {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
+                </v-icon>
+                <v-icon v-else :color="getIconColor(item.MIBInfo)">
+                  {{ getMIBIcon(item.MIBInfo) }}
+                </v-icon>
+              </template>
+              <template #label="{ item }">
+                {{
+                  item.MIBInfo
+                    ? `${item.name}(${item.oid}: ${item.MIBInfo.Type} ) : ${item.count}`
+                    : `${item.name}(${item.oid}) : ${item.count}`
+                }}
+              </template>
+            </v-treeview>
+          </div>
+          <div style="height: 160px; overflow: auto">
+            <pre style="margin: 10px; background-color: #333">{{
+              mibInfoText
+            }}</pre>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="doMIBGet">
+            <v-icon>mdi-file-find</v-icon>
+            取得
+          </v-btn>
+          <v-btn color="normal" dark @click="resultMibTreeDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -396,6 +455,9 @@ export default {
       mibs: [],
       searchMIBTree: '',
       mibTreeDialog: false,
+      resultMibtree: [],
+      searchResultMIBTree: '',
+      resultMibTreeDialog: false,
       error: false,
       wait: false,
       conf: {
@@ -486,6 +548,8 @@ export default {
         this.mibget.Name +
         'のMIB情報'
       this.mibTreeDialog = false
+      this.resultMibTreeDialog = false
+      this.resultMibtree = []
       this.headers = []
       this.items = []
       this.wait = true
@@ -843,6 +907,67 @@ export default {
       if (this.$refs.tree) {
         this.$refs.tree.updateAll(this.mibTreeOpened)
       }
+    },
+    resultMIBTree() {
+      if (this.resultMibtree.length > 0) {
+        this.resultMibTreeDialog = true
+        return
+      }
+      const nameMap = new Map()
+      this.mibs.forEach((e) => {
+        const a = e.Name.split('.', 2)
+        const t = this.getTreePath(a[0], this.mibtree)
+        if (t) {
+          for (const n of t) {
+            if (nameMap.has(n)) {
+              nameMap.set(n, nameMap.get(n) + 1)
+            } else {
+              nameMap.set(n, 1)
+            }
+          }
+        }
+      })
+      this.resultMibtree = this.makeTreeData(nameMap, this.mibtree)
+      this.resultMibTreeDialog = true
+    },
+    getTreePath(name, list) {
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].name === name) {
+          return [name]
+        }
+        if (list[i].children) {
+          const n = this.getTreePath(name, list[i].children)
+          if (n) {
+            n.push(list[i].name)
+            return n
+          }
+        }
+      }
+      return undefined
+    },
+    makeTreeData(nameMap, list) {
+      const r = []
+      for (let i = 0; i < list.length; i++) {
+        if (nameMap.has(list[i].name)) {
+          const e = {
+            name: list[i].name,
+            oid: list[i].oid,
+            children: [],
+            MIBInfo: list[i].MIBInfo,
+            count: nameMap.get(list[i].name),
+          }
+          if (list[i].children) {
+            const cl = this.makeTreeData(nameMap, list[i].children)
+            if (cl) {
+              for (const c of cl) {
+                e.children.push(c)
+              }
+            }
+          }
+          r.push(e)
+        }
+      }
+      return r
     },
   },
 }
