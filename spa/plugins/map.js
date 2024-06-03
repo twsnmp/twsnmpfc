@@ -582,8 +582,8 @@ const mapMain = (p5) => {
   const dragMoveNodes = () => {
     selectedNodes.forEach((id) => {
       if (nodes[id]) {
-        nodes[id].X += (p5.mouseX /scale) - lastMouseX
-        nodes[id].Y += (p5.mouseY /scale) - lastMouseY
+        nodes[id].X += Math.trunc((p5.mouseX /scale) - lastMouseX)
+        nodes[id].Y += Math.trunc((p5.mouseY /scale) - lastMouseY)
         checkNodePos(nodes[id])
         if (!draggedNodes.includes(id)) {
           draggedNodes.push(id)
@@ -592,8 +592,8 @@ const mapMain = (p5) => {
     })
     selectedItems.forEach((id) => {
       if (items[id]) {
-        items[id].X += (p5.mouseX / scale) - lastMouseX
-        items[id].Y += (p5.mouseY / scale) - lastMouseY
+        items[id].X += Math.trunc((p5.mouseX / scale) - lastMouseX)
+        items[id].Y += Math.trunc((p5.mouseY / scale) - lastMouseY)
         checkItemPos(items[id])
         if (!draggedItems.includes(id)) {
           draggedItems.push(id)

@@ -63,6 +63,7 @@ func deleteNodes(c echo.Context) error {
 func postNodeUpdate(c echo.Context) error {
 	nu := new(datastore.NodeEnt)
 	if err := c.Bind(nu); err != nil {
+		log.Printf("update node bind err=%v", err)
 		return echo.ErrBadRequest
 	}
 	if nu.ID == "" {
@@ -78,6 +79,7 @@ func postNodeUpdate(c echo.Context) error {
 	// ここで入力チェック
 	n := datastore.GetNode(nu.ID)
 	if n == nil {
+		log.Printf("update node node not found node=%v", nu)
 		return echo.ErrBadRequest
 	}
 	n.Name = nu.Name
