@@ -214,7 +214,18 @@
     <v-dialog v-model="resultMibTreeDialog" persistent width="70vw">
       <v-card max-height="95%">
         <v-card-title> 取得結果MIBツリー </v-card-title>
-        <v-card-text>
+        <v-card-text v-if="resultMibTreeWait">
+          <v-progress-linear
+            v-model="resultMibTreeProgress"
+            height="50"
+            color="teal"
+          >
+            <template #default>
+              分析中.. {{ resultMibTreeProgress.toFixed(2) }} %
+            </template>
+          </v-progress-linear>
+        </v-card-text>
+        <v-card-text v-if="!resultMibTreeWait">
           <v-text-field
             v-model="searchResultMIBTree"
             label="オブジェクト名の検索"
@@ -253,7 +264,7 @@
             }}</pre>
           </div>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions v-if="!resultMibTreeWait">
           <v-spacer></v-spacer>
           <v-btn color="primary" dark @click="doMIBGet">
             <v-icon>mdi-file-find</v-icon>
@@ -262,6 +273,13 @@
           <v-btn color="normal" dark @click="resultMibTreeDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
+          </v-btn>
+        </v-card-actions>
+        <v-card-actions v-if="resultMibTreeWait">
+          <v-spacer></v-spacer>
+          <v-btn color="error" dark @click="stopResultMibTree = true">
+            <v-icon>mdi-cancel</v-icon>
+            中止
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -458,6 +476,9 @@ export default {
       resultMibtree: [],
       searchResultMIBTree: '',
       resultMibTreeDialog: false,
+      resultMibTreeWait: false,
+      resultMibTreeProgress: 0.0,
+      stopResultMibTree: false,
       error: false,
       wait: false,
       conf: {
@@ -908,13 +929,28 @@ export default {
         this.$refs.tree.updateAll(this.mibTreeOpened)
       }
     },
-    resultMIBTree() {
-      if (this.resultMibtree.length > 0) {
+    async resultMIBTree() {
+      if (this.resultMibtree.length > 0 && !this.stopResultMibTree) {
         this.resultMibTreeDialog = true
         return
       }
+      this.stopResultMibTree = false
+      this.resultMibTreeDialog = true
+      this.resultMibTreeWait = true
+      this.resultMibTreeProgress = 0.0
+      let i = 0
       const nameMap = new Map()
-      this.mibs.forEach((e) => {
+      for (const e of this.mibs) {
+        if (this.stopResultMibTree) {
+          break
+        }
+        if (i % 500 === 0) {
+          await new Promise((resolve) => {
+            setTimeout(resolve, 0)
+          })
+          this.resultMibTreeProgress = (100.0 * i) / this.mibs.length
+        }
+        i++
         const a = e.Name.split('.', 2)
         const t = this.getTreePath(a[0], this.mibtree)
         if (t) {
@@ -926,9 +962,9 @@ export default {
             }
           }
         }
-      })
+      }
+      this.resultMibTreeWait = false
       this.resultMibtree = this.makeTreeData(nameMap, this.mibtree)
-      this.resultMibTreeDialog = true
     },
     getTreePath(name, list) {
       for (let i = 0; i < list.length; i++) {
