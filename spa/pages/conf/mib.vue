@@ -5,7 +5,7 @@
         MIB管理
         <v-spacer></v-spacer>
       </v-card-title>
-      <v-card-row>
+      <v-card-text>
         <v-text-field
           v-model="filter"
           append-icon="mdi-magnify"
@@ -14,22 +14,22 @@
           hide-details
         >
         </v-text-field>
-      </v-card-row>
-      <v-data-table
-        :headers="headers"
-        :items="mibmods"
-        dense
-        sort-by="Error"
-        sort-desc
-        :search="filter"
-      >
-        <template #[`item.Type`]="{ item }">
-          <v-icon :color="item.Error == '' ? '#1f78b4' : '#e31a1c'">
-            {{ item.Errror == '' ? 'mdi-information' : 'mdi-alert-circle' }}
-          </v-icon>
-          {{ item.Type == 'int' ? '組み込み' : '拡張' }}
-        </template>
-      </v-data-table>
+        <v-data-table
+          :headers="headers"
+          :items="mibmods"
+          dense
+          sort-by="Error"
+          sort-desc
+          :search="filter"
+        >
+          <template #[`item.Type`]="{ item }">
+            <v-icon :color="item.Error == '' ? '#1f78b4' : '#e31a1c'">
+              {{ item.Errror == '' ? 'mdi-information' : 'mdi-alert-circle' }}
+            </v-icon>
+            {{ item.Type == 'int' ? '組み込み' : '拡張' }}
+          </template>
+        </v-data-table>
+      </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="info" dark @click="mibTreeDialog = true">

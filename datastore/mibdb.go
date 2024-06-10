@@ -211,7 +211,8 @@ func loadExtMIBs(root string) {
 	if MIBDB == nil {
 		return
 	}
-	skipList := []string{}
+	skipMap := make(map[string]bool)
+	hasHit := false
 	filepath.Walk(root,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -223,18 +224,35 @@ func loadExtMIBs(root string) {
 			log.Printf("load ext mib path=%s", path)
 			if asn1, err := os.ReadFile(path); err == nil {
 				if loadExtMIB(asn1, "ext", path, false) {
-					skipList = append(skipList, path)
+					skipMap[path] = true
+				} else {
+					hasHit = true
 				}
 			} else {
 				log.Printf("load ext mib err=%v", err)
 			}
 			return nil
 		})
-	for _, path := range skipList {
-		log.Printf("retry to load ext mib path=%s", path)
+	r := 1
+	for hasHit && len(skipMap) > 0 {
+		hasHit = false
+		for path := range skipMap {
+			log.Printf("retry %d to load ext mib path=%s", r, path)
+			if asn1, err := os.ReadFile(path); err == nil {
+				if loadExtMIB(asn1, "ext", path, false) {
+					log.Printf("has skip mib file=%s", path)
+				} else {
+					delete(skipMap, path)
+					hasHit = true
+				}
+			}
+		}
+		r++
+	}
+	for path := range skipMap {
 		if asn1, err := os.ReadFile(path); err == nil {
 			if loadExtMIB(asn1, "ext", path, true) {
-				log.Printf("skip error mib file=%s", path)
+				log.Printf("last retry has skip mib file=%s", path)
 			}
 		}
 	}
@@ -527,7 +545,7 @@ func addToMibTree(oid, name, poid string) {
 	} else {
 		p, ok := mibTreeMAP[poid]
 		if !ok {
-			log.Printf("no parent name=%s oid=%s poid=%s", name, oid, poid)
+			log.Printf("add MIB tree no parent name=%s oid=%s poid=%s", name, oid, poid)
 			return
 		}
 		p.Children = append(p.Children, n)
