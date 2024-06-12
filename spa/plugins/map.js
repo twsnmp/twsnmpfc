@@ -440,6 +440,8 @@ const mapMain = (p5) => {
       editLine()
       selectedNodes.length = 0
       return false
+    } else if (p5.keyIsDown(p5.ALT)) {
+      setSelectNode(true)
     } else if (dragMode !== 3) {
       setSelectNode(false)
       setSelectItem()

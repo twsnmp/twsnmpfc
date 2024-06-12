@@ -1608,15 +1608,25 @@ export default {
         return this.map.Nodes[a].X - this.map.Nodes[b].X
       })
       const id0 = this.formatNodes[0]
+      let idLast = ''
+      let dx = this.map.Nodes[this.formatNodes[1]].X - this.map.Nodes[id0].X
+      if (dx < 60) {
+        dx = 60
+      }
       for (const id of this.formatNodes) {
         if (id !== id0) {
           this.map.Nodes[id].Y = this.map.Nodes[id0].Y
+          this.map.Nodes[id].X = this.map.Nodes[idLast].X + dx
+          if (this.map.Nodes[id].X > 2500 - 40) {
+            this.map.Nodes[id].X = 2500 - 40
+          }
           list.push({
             ID: id,
             X: this.map.Nodes[id].X,
             Y: this.map.Nodes[id].Y,
           })
         }
+        idLast = id
       }
       if (list.length > 0) {
         await this.$axios.post('/api/map/update', list)
@@ -1631,15 +1641,25 @@ export default {
         return this.map.Nodes[a].Y - this.map.Nodes[b].Y
       })
       const id0 = this.formatNodes[0]
+      let idLast = ''
+      let dy = this.map.Nodes[this.formatNodes[1]].X - this.map.Nodes[id0].X
+      if (dy < 60) {
+        dy = 60
+      }
       for (const id of this.formatNodes) {
         if (id !== id0) {
           this.map.Nodes[id].X = this.map.Nodes[id0].X
+          this.map.Nodes[id].Y = this.map.Nodes[idLast].Y + dy
+          if (this.map.Nodes[id].Y > 5000 - 80) {
+            this.map.Nodes[id].Y = 5000 - 80
+          }
           list.push({
             ID: id,
             X: this.map.Nodes[id].X,
             Y: this.map.Nodes[id].Y,
           })
         }
+        idLast = id
       }
       if (list.length > 0) {
         await this.$axios.post('/api/map/update', list)
