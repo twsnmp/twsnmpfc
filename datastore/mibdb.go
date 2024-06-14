@@ -172,7 +172,13 @@ UCD-DISKIO-MIB.txt
 UCD-DLMOD-MIB.txt
 UCD-IPFWACC-MIB.txt
 UCD-SNMP-MIB.txt
-UDP-MIB.txt`
+UDP-MIB.txt
+ENTITY-MIB.mib
+ENTITY-STATE-MIB.mib
+IPMCAST-MIB.mib
+IPMROUTE-STD-MIB.mib
+VRRP-MIB.mib
+`
 
 func loadMIBsFromFS(fs http.FileSystem) {
 	skipList := []string{}
