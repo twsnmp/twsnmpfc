@@ -40,6 +40,9 @@
           <v-icon small @click="$router.push({ path: '/ping/' + item.IP })">
             mdi-check-network
           </v-icon>
+          <v-icon small @click="$router.push({ path: '/mibbr/' + item.ID })">
+            mdi-eye
+          </v-icon>
           <v-icon
             small
             @click="$router.push({ path: '/node/vpanel/' + item.ID })"
