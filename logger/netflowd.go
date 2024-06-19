@@ -17,6 +17,7 @@ import (
 	"github.com/tehmaze/netflow"
 	"github.com/tehmaze/netflow/ipfix"
 	"github.com/tehmaze/netflow/netflow5"
+	"github.com/tehmaze/netflow/netflow9"
 	"github.com/tehmaze/netflow/read"
 	"github.com/tehmaze/netflow/session"
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -75,15 +76,14 @@ func netflowd(stopCh chan bool) {
 				}
 				switch p := m.(type) {
 				case *netflow5.Packet:
-					{
-						logNetflow(p)
-						report.UpdateSensor(remote.IP.String(), "netflow", len(p.Records))
-					}
+					logNetflow(p)
+					report.UpdateSensor(remote.IP.String(), "netflow", len(p.Records))
+				case *netflow9.Packet:
+					report.UpdateSensor(remote.IP.String(), "netflow9", logNetflow9(p))
 				case *ipfix.Message:
-					{
-						r := logIPFIX(p)
-						report.UpdateSensor(remote.IP.String(), "ipfix", r)
-					}
+					report.UpdateSensor(remote.IP.String(), "ipfix", logIPFIX(p))
+				default:
+					log.Printf("not suppoted netflow p=%+v", p)
 				}
 			}
 		}
@@ -267,4 +267,128 @@ func logNetflow(p *netflow5.Packet) {
 			)
 		}
 	}
+}
+
+func logNetflow9(p *netflow9.Packet) int {
+	r := 0
+	for _, ds := range p.DataFlowSets {
+		if ds.Records == nil {
+			continue
+		}
+		for _, dr := range ds.Records {
+			r++
+			var record = make(map[string]interface{})
+			for _, f := range dr.Fields {
+				if f.Translated != nil {
+					if f.Translated.Name != "" {
+						record[f.Translated.Name] = f.Translated.Value
+						switch f.Translated.Name {
+						case "protocolIdentifier":
+							record["protocolStr"] = read.Protocol(f.Translated.Value.(uint8))
+						case "tcpControlBits":
+							record["tcpflagsStr"] = read.TCPFlags(uint8(f.Translated.Value.(uint16)))
+						case "sourceMacAddress", "postSourceMacAddress":
+							if mac, ok := f.Translated.Value.(net.HardwareAddr); ok {
+								record["sourceMacAddress"] = mac.String()
+							}
+						case "destinationMacAddress", "postDestinationMacAddress":
+							if mac, ok := f.Translated.Value.(net.HardwareAddr); ok {
+								record["destinationMacAddress"] = mac.String()
+							}
+						}
+					}
+				} else {
+					record["raw"] = f.Bytes
+				}
+			}
+			s, err := json.Marshal(record)
+			if err != nil {
+				continue
+			}
+			logCh <- &datastore.LogEnt{
+				Time: time.Now().UnixNano(),
+				Type: "ipfix",
+				Log:  string(s),
+			}
+			if ip, ok := record["sourceIPv4Address"]; ok {
+				defer func() {
+					if r := recover(); r != nil {
+						log.Printf("recover netflow9 err=%v", r)
+						for k, v := range record {
+							log.Printf("%v=%v", k, v)
+						}
+					}
+				}()
+				if mac, ok := record["sourceMacAddress"]; ok {
+					if ip.(net.IP).IsPrivate() {
+						report.ReportDevice(mac.(string), ip.(net.IP).String(), time.Now().UnixNano())
+					}
+				}
+				if _, ok := record["sourceTransportPort"]; ok {
+					report.ReportFlow(
+						record["sourceIPv4Address"].(net.IP).String(),
+						int(record["sourceTransportPort"].(uint16)),
+						record["destinationIPv4Address"].(net.IP).String(),
+						int(record["destinationTransportPort"].(uint16)),
+						int(record["protocolIdentifier"].(uint8)),
+						int64(record["packetDeltaCount"].(uint64)),
+						int64(record["octetDeltaCount"].(uint64)),
+						time.Now().UnixNano(),
+					)
+				} else if _, ok := record["icmpTypeCodeIPv4"]; ok {
+					report.ReportFlow(
+						record["sourceIPv4Address"].(net.IP).String(),
+						0,
+						record["destinationIPv4Address"].(net.IP).String(),
+						int(record["icmpTypeCodeIPv4"].(uint16)),
+						1,
+						int64(record["packetDeltaCount"].(uint64)),
+						int64(record["octetDeltaCount"].(uint64)),
+						time.Now().UnixNano(),
+					)
+				}
+			} else if _, ok := record["sourceIPv6Address"]; ok {
+				defer func() {
+					if r := recover(); r != nil {
+						log.Printf("recover netflow9 err=%v", r)
+						for k, v := range record {
+							log.Printf("%v=%v", k, v)
+						}
+					}
+				}()
+				prot, ok := record["protocolIdentifier"]
+				if ok {
+					switch prot.(uint8) {
+					case 6, 17:
+						report.ReportFlow(
+							record["sourceIPv6Address"].(net.IP).String(),
+							int(record["sourceTransportPort"].(uint16)),
+							record["destinationIPv6Address"].(net.IP).String(),
+							int(record["destinationTransportPort"].(uint16)),
+							int(record["protocolIdentifier"].(uint8)),
+							int64(record["packetDeltaCount"].(uint64)),
+							int64(record["octetDeltaCount"].(uint64)),
+							time.Now().UnixNano(),
+						)
+					case 1:
+						report.ReportFlow(
+							record["sourceIPv6Address"].(net.IP).String(),
+							0,
+							record["destinationIPv6Address"].(net.IP).String(),
+							int(record["icmpTypeCodeIPv6"].(uint16)),
+							1,
+							int64(record["packetDeltaCount"].(uint64)),
+							int64(record["octetDeltaCount"].(uint64)),
+							time.Now().UnixNano(),
+						)
+					}
+				} else {
+					log.Printf("unknown netflow9 record=%#v", record)
+				}
+			} else {
+				log.Printf("unknown netflow9 record=%#v", record)
+			}
+		}
+	}
+	return r
 }
