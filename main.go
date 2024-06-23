@@ -53,6 +53,8 @@ var trapPort = 162
 var netflowPort = 2055
 var syslogPort = 514
 
+var resetPassword bool
+
 func init() {
 	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
 	flag.StringVar(&password, "password", "twsnmpfc!", "Master Password")
@@ -72,6 +74,7 @@ func init() {
 	flag.IntVar(&trapPort, "trapPort", 162, "snmp trap port")
 	flag.IntVar(&netflowPort, "netflowPort", 2055, "snmp trap port")
 	flag.IntVar(&syslogPort, "syslogPort", 514, "snmp trap port")
+	flag.BoolVar(&resetPassword, "resetPassword", false, "Reset user:password to twsnmp:twsnmp")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
 			f.Value.Set(s)
@@ -136,6 +139,13 @@ func main() {
 		} else {
 			log.Printf("compact db done dur=%v", time.Since(st))
 		}
+		os.Exit(0)
+	}
+	if resetPassword {
+		if err := datastore.ResetPassword(dataStorePath); err != nil {
+			log.Fatalf("reset password err=%v", err)
+		}
+		log.Println("reset password")
 		os.Exit(0)
 	}
 	log.SetFlags(0)

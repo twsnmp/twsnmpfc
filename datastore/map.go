@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/security"
@@ -359,5 +361,39 @@ func SaveSshdPublicKeys(pk string) error {
 			return fmt.Errorf("bucket config is nil")
 		}
 		return b.Put([]byte("sshdPublicKeys"), []byte(pk))
+	})
+}
+
+// ResetPassword : set user:password to twsnmp:twsnmp
+func ResetPassword(ds string) error {
+	dbPath := filepath.Join(ds, "twsnmpfc.db")
+	_, err := os.Stat(dbPath)
+	if err != nil {
+		return err
+	}
+	d, err := bbolt.Open(dbPath, 0444, nil)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	return d.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("config"))
+		if b == nil {
+			return fmt.Errorf("no config bucket")
+		}
+		v := b.Get([]byte("mapConf"))
+		if v == nil {
+			return fmt.Errorf("no map config")
+		}
+		if err := json.Unmarshal(v, &MapConf); err != nil {
+			return err
+		}
+		MapConf.UserID = "twsnmp"
+		MapConf.Password = security.PasswordHash("twsnmp")
+		j, err := json.Marshal(&MapConf)
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte("mapConf"), []byte(j))
 	})
 }
