@@ -72,8 +72,8 @@ func init() {
 	flag.StringVar(&compact, "compact", "", "DB Conmact path")
 	flag.BoolVar(&copyBackup, "copybackup", false, "Use copy mode on backup")
 	flag.IntVar(&trapPort, "trapPort", 162, "snmp trap port")
-	flag.IntVar(&netflowPort, "netflowPort", 2055, "snmp trap port")
-	flag.IntVar(&syslogPort, "syslogPort", 514, "snmp trap port")
+	flag.IntVar(&netflowPort, "netflowPort", 2055, "netflow port")
+	flag.IntVar(&syslogPort, "syslogPort", 514, "syslog port")
 	flag.BoolVar(&resetPassword, "resetPassword", false, "Reset user:password to twsnmp:twsnmp")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
