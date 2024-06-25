@@ -175,6 +175,7 @@ func setup(p *WebAPI) {
 	r.POST("/log/sflow", postFlow)
 	r.POST("/log/ipfix", postIPFIX)
 	r.POST("/log/arp", postArp)
+	r.DELETE("/log/:id", deleteLog)
 	// report
 	r.GET("/report/devices", getDevices)
 	r.DELETE("/report/device/:id", deleteDevice)

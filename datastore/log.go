@@ -276,6 +276,25 @@ func DeleteAllLogs() {
 	log.Printf("DeleteAllLogs dur=%v", time.Since(st))
 }
 
+func DeleteLogs(b string) {
+	buckets := []string{"logs", "syslog", "trap", "netflow", "ipfix", "sflow", "sflowCounter"}
+	st := time.Now()
+	for _, bb := range buckets {
+		if bb == b {
+			db.Batch(func(tx *bbolt.Tx) error {
+				if err := tx.DeleteBucket([]byte(b)); err != nil {
+					return err
+				}
+				tx.CreateBucketIfNotExists([]byte(b))
+				return nil
+			})
+			log.Printf("DeleteLogs bucket=%s dur=%v", b, time.Since(st))
+			return
+		}
+	}
+	log.Println("DeleteLogs no bucket")
+}
+
 func DeleteArp() {
 	st := time.Now()
 	buckets := []string{"arp", "arplog"}

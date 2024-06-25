@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -60,5 +61,18 @@ func deleteArp(c echo.Context) error {
 		Level: "info",
 		Event: "ARP監視のログを削除しました",
 	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func deleteLog(c echo.Context) error {
+	id := c.Param("id")
+	if id != "" {
+		datastore.DeleteLogs(id)
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "user",
+			Level: "info",
+			Event: fmt.Sprintf("%sのログを全て削除しました", id),
+		})
+	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
