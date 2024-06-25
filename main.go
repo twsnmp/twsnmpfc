@@ -52,6 +52,7 @@ var commit = ""
 var trapPort = 162
 var netflowPort = 2055
 var syslogPort = 514
+var sflowPort = 6343
 
 var resetPassword bool
 
@@ -74,6 +75,7 @@ func init() {
 	flag.IntVar(&trapPort, "trapPort", 162, "snmp trap port")
 	flag.IntVar(&netflowPort, "netflowPort", 2055, "netflow port")
 	flag.IntVar(&syslogPort, "syslogPort", 514, "syslog port")
+	flag.IntVar(&sflowPort, "sflowPort", 6343, "sflow port")
 	flag.BoolVar(&resetPassword, "resetPassword", false, "Reset user:password to twsnmp:twsnmp")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
@@ -174,7 +176,7 @@ func main() {
 		log.Fatalf("start report err=%v", err)
 	}
 	log.Println("call logger.Start")
-	if err = logger.Start(ctx, wg, trapPort, netflowPort, syslogPort); err != nil {
+	if err = logger.Start(ctx, wg, trapPort, netflowPort, syslogPort, sflowPort); err != nil {
 		log.Fatalf("start logger err=%v", err)
 	}
 	log.Println("call polling.Start")

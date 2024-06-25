@@ -45,6 +45,7 @@ type MapConfEnt struct {
 	EnableNetflowd  bool
 	EnableArpWatch  bool
 	EnableSshd      bool
+	EnableSflowd    bool
 	EnableMobileAPI bool
 	AILevel         string
 	AIThreshold     int

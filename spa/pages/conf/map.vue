@@ -184,6 +184,7 @@
               v-model="mapconf.EnableSshd"
               label="SSH Server"
             ></v-switch>
+            <v-switch v-model="mapconf.EnableSflowd" label="sFlow"></v-switch>
             <v-switch
               v-model="mapconf.DisableOperLog"
               label="稼働率ログを停止"
@@ -573,6 +574,8 @@ export default {
         SnmpUser: '',
         SnmpPassword: '',
         EnableSyslogd: false,
+        EnableSshd: false,
+        EnableSflowd: false,
         EnableTrapd: false,
         EnableNetflowd: false,
         AILevel: 'high',

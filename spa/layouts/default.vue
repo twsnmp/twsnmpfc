@@ -499,6 +499,11 @@ export default {
           to: '/log/netflow/ipfix',
         },
         {
+          icon: 'mdi-clock-check-outline',
+          title: 'sFlow',
+          to: '/log/netflow/sflow',
+        },
+        {
           icon: 'mdi-check-network',
           title: 'ARPログ',
           to: '/log/arp',

@@ -32,6 +32,7 @@ func getMapConf(c echo.Context) error {
 	r.EnableNetflowd = datastore.MapConf.EnableNetflowd
 	r.EnableArpWatch = datastore.MapConf.EnableArpWatch
 	r.EnableSshd = datastore.MapConf.EnableSshd
+	r.EnableSflowd = datastore.MapConf.EnableSflowd
 	r.AILevel = datastore.MapConf.AILevel
 	r.AIThreshold = datastore.MapConf.AIThreshold
 	r.AIMode = datastore.MapConf.AIMode
@@ -81,6 +82,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.EnableNetflowd = mc.EnableNetflowd
 	datastore.MapConf.EnableArpWatch = mc.EnableArpWatch
 	datastore.MapConf.EnableSshd = mc.EnableSshd
+	datastore.MapConf.EnableSflowd = mc.EnableSflowd
 	datastore.MapConf.EnableMobileAPI = mc.EnableMobileAPI
 	datastore.MapConf.AILevel = mc.AILevel
 	datastore.MapConf.AIThreshold = mc.AIThreshold

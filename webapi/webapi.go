@@ -171,7 +171,8 @@ func setup(p *WebAPI) {
 	r.GET("/log/lastlogs/:st", postLastEventLogs)
 	r.POST("/log/syslog", postSyslog)
 	r.POST("/log/snmptrap", postSnmpTrap)
-	r.POST("/log/netflow", postNetFlow)
+	r.POST("/log/netflow", postFlow)
+	r.POST("/log/sflow", postFlow)
 	r.POST("/log/ipfix", postIPFIX)
 	r.POST("/log/arp", postArp)
 	// report

@@ -10,7 +10,8 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-type netflowFilter struct {
+type flowFilter struct {
+	Type      string
 	StartDate string
 	StartTime string
 	EndDate   string
@@ -28,15 +29,15 @@ type netflowFilter struct {
 	Filter    int
 }
 
-type netflowWebAPI struct {
-	Logs     []*netflowWebAPILogEnt
+type flowWebAPI struct {
+	Logs     []*flowWebAPILogEnt
 	NextTime int64
 	Process  int
 	Filter   int
 	Limit    int
 }
 
-type netflowWebAPILogEnt struct {
+type flowWebAPILogEnt struct {
 	Time     int64
 	Src      string
 	SrcIP    string
@@ -51,11 +52,12 @@ type netflowWebAPILogEnt struct {
 	Packets  int64
 	Bytes    int64
 	Duration float64
+	Reason   int
 }
 
-func postNetFlow(c echo.Context) error {
-	r := new(netflowWebAPI)
-	filter := new(netflowFilter)
+func postFlow(c echo.Context) error {
+	r := new(flowWebAPI)
+	filter := new(flowFilter)
 	if err := c.Bind(filter); err != nil {
 		return echo.ErrBadRequest
 	}
@@ -90,7 +92,11 @@ func postNetFlow(c echo.Context) error {
 		to = datastore.MapConf.LogTimeout
 	}
 	end := time.Now().Unix() + int64(to)
-	datastore.ForEachLog(st, et, "netflow", func(l *datastore.LogEnt) bool {
+	flowType := "netflow"
+	if filter.Type != "" {
+		flowType = filter.Type
+	}
+	datastore.ForEachLog(st, et, flowType, func(l *datastore.LogEnt) bool {
 		if i > 1000 {
 			// 検索期間が15秒を超えた場合
 			if time.Now().Unix() > end {
@@ -122,7 +128,7 @@ func postNetFlow(c echo.Context) error {
 		var ft float64
 		var lt float64
 		var pi int
-		re := new(netflowWebAPILogEnt)
+		re := new(flowWebAPILogEnt)
 		if sa, ok = sl["srcAddr"].(string); !ok {
 			return true
 		}
@@ -137,6 +143,21 @@ func postNetFlow(c echo.Context) error {
 		}
 		if prot, ok = sl["protocolStr"].(string); !ok {
 			return true
+		}
+		if v, ok := sl["sourceMacAddress"]; ok {
+			if mac, ok := v.(string); ok {
+				re.SrcMAC = mac
+			}
+		}
+		if v, ok := sl["destinationMacAddress"]; ok {
+			if mac, ok := v.(string); ok {
+				re.DstMAC = mac
+			}
+		}
+		if v, ok := sl["discardedReason"]; ok {
+			if reason, ok := v.(float64); ok {
+				re.Reason = int(reason)
+			}
 		}
 		if v, ok := sl["protocol"]; ok {
 			pi = int(v.(float64))
@@ -230,8 +251,8 @@ func postNetFlow(c echo.Context) error {
 const tcpFlags = "NCEUAPRSF"
 
 func postIPFIX(c echo.Context) error {
-	r := new(netflowWebAPI)
-	filter := new(netflowFilter)
+	r := new(flowWebAPI)
+	filter := new(flowFilter)
 	if err := c.Bind(filter); err != nil {
 		return echo.ErrBadRequest
 	}
@@ -297,7 +318,7 @@ func postIPFIX(c echo.Context) error {
 		var packets float64
 		var ft float64
 		var lt float64
-		re := new(netflowWebAPILogEnt)
+		re := new(flowWebAPILogEnt)
 		if ft, ok = sl["flowStartSysUpTime"].(float64); !ok {
 			for _, k := range []string{"flowStartMilliseconds", "flowStartSeconds", "flowStartNanoSeconds"} {
 				if st, ok := sl[k].(string); ok {

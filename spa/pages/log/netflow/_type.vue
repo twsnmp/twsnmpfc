@@ -10,7 +10,7 @@
       </v-card-title>
       <div id="logCountChart" style="width: 100%; height: 200px"></div>
       <v-data-table
-        :headers="headers"
+        :headers="type == 'sflow' ? headersSFlow : headers"
         :items="logs"
         :items-per-page="conf.itemsPerPage"
         :sort-by="conf.sortBy"
@@ -805,6 +805,7 @@ export default {
       edMenuShow: false,
       nodeList: [],
       filter: {
+        Type: '',
         StartDate: '',
         StartTime: '',
         EndDate: '',
@@ -892,6 +893,73 @@ export default {
         { text: 'パケット数', value: 'Packets', width: '8%' },
         { text: 'バイト数', value: 'Bytes', width: '8%' },
         { text: '期間(Sec)', value: 'Duration', width: '8%' },
+      ],
+      headersSFlow: [
+        {
+          text: '受信日時',
+          value: 'TimeStr',
+          width: '12%',
+          filter: (t, s, i) => {
+            if (!this.zoom.st || !this.zoom.et) return true
+            return i.Time >= this.zoom.st && i.Time <= this.zoom.et
+          },
+        },
+        {
+          text: '送信元',
+          value: 'Src',
+          width: '15%',
+          filter: (value) => {
+            if (!this.conf.src) return true
+            return value.includes(this.conf.src)
+          },
+        },
+        {
+          text: '送信元MAC',
+          value: 'SrcMAC',
+          width: '12%',
+          filter: (value) => {
+            if (!this.conf.srcMac) return true
+            return value.includes(this.conf.srcMac)
+          },
+        },
+        {
+          text: '宛先',
+          value: 'Dst',
+          width: '15%',
+          filter: (value) => {
+            if (!this.conf.dst) return true
+            return value.includes(this.conf.dst)
+          },
+        },
+        {
+          text: '宛先MAC',
+          value: 'DstMAC',
+          width: '12%',
+          filter: (value) => {
+            if (!this.conf.dstMAC) return true
+            return value.includes(this.conf.dstMAC)
+          },
+        },
+        {
+          text: 'プロトコル',
+          value: 'Protocol',
+          width: '6%',
+          filter: (value) => {
+            if (!this.conf.prot) return true
+            return value.includes(this.conf.prot)
+          },
+        },
+        {
+          text: 'TCPフラグ',
+          value: 'TCPFlags',
+          width: '6%',
+          filter: (value) => {
+            if (!this.conf.tcpflag) return true
+            return value.includes(this.conf.tcpflag)
+          },
+        },
+        { text: 'バイト数', value: 'Bytes', width: '7%' },
+        { text: '破棄理由', value: 'Reason', width: '7%' },
       ],
       logs: [],
       conf: {
@@ -993,6 +1061,7 @@ export default {
     }
   },
   async fetch() {
+    this.filter.Type = this.type
     const r = await this.$axios.$post('/api/log/' + this.type, this.filter)
     if (!r) {
       return
@@ -1040,7 +1109,12 @@ export default {
   },
   created() {
     this.type = this.$route.params.type || 'netflow'
-    this.title = this.type === 'netflow' ? 'NetFlow' : 'IPFIX'
+    this.title =
+      this.type === 'netflow'
+        ? 'NetFlow'
+        : this.type === 'sflow'
+        ? 'sFlow'
+        : 'IPFIX'
     const c = this.$store.state.log.logs.netflow
     if (c && c.sortBy) {
       Object.assign(this.conf, c)

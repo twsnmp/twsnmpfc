@@ -3,6 +3,7 @@ module github.com/twsnmp/twsnmpfc
 go 1.22
 
 require (
+	github.com/Cistern/sflow v0.0.0-20240622235316-ed105e3cf9fb
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/Songmu/timeout v0.4.0
 	github.com/beevik/ntp v0.3.0
@@ -12,6 +13,7 @@ require (
 	github.com/gliderlabs/ssh v0.3.6
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/google/gopacket v1.1.19
 	github.com/gosnmp/gosnmp v1.35.0
 	github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab
 	github.com/labstack/echo-jwt/v4 v4.2.0

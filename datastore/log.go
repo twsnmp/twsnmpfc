@@ -43,6 +43,12 @@ type LogFilterEnt struct {
 	LogType   string
 }
 
+type SFlowCounterEnt struct {
+	Remote string
+	Type   string
+	Data   string
+}
+
 func AddEventLog(e *EventLogEnt) {
 	e.Time = time.Now().UnixNano()
 	if e.NodeID != "" && e.NodeName == "" {
@@ -224,7 +230,7 @@ func deleteOldLogs() {
 		log.Printf("deleteOldLog err=%v", err)
 		return
 	}
-	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix", "arplog"}
+	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix", "arplog", "sflow", "sflowCounter"}
 	doneMap := make(map[string]bool)
 	doneCount := 0
 	lt := time.Now().Unix() + 50
@@ -257,7 +263,7 @@ func deleteOldLogs() {
 
 func DeleteAllLogs() {
 	st := time.Now()
-	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix"}
+	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix", "sflow", "sflowCounter"}
 	for _, b := range buckets {
 		db.Batch(func(tx *bbolt.Tx) error {
 			if err := tx.DeleteBucket([]byte(b)); err != nil {
@@ -395,6 +401,8 @@ func SaveLogBuffer(logBuffer []*LogEnt) {
 		}
 		syslog := tx.Bucket([]byte("syslog"))
 		netflow := tx.Bucket([]byte("netflow"))
+		sflow := tx.Bucket([]byte("sflow"))
+		sflowCounter := tx.Bucket([]byte("sflowCounter"))
 		ipfix := tx.Bucket([]byte("ipfix"))
 		trap := tx.Bucket([]byte("trap"))
 		arp := tx.Bucket([]byte("arplog"))
@@ -403,6 +411,7 @@ func SaveLogBuffer(logBuffer []*LogEnt) {
 		tc := 0
 		ac := 0
 		oc := 0
+		sf := 0
 		for i, l := range logBuffer {
 			k := fmt.Sprintf("%016x", l.Time+int64(i))
 			s, err := json.Marshal(l)
@@ -430,11 +439,17 @@ func SaveLogBuffer(logBuffer []*LogEnt) {
 			case "arplog":
 				ac++
 				arp.Put([]byte(k), []byte(s))
+			case "sflow":
+				sf++
+				sflow.Put([]byte(k), []byte(s))
+			case "sflowCounter":
+				sf++
+				sflowCounter.Put([]byte(k), []byte(s))
 			default:
 				oc++
 			}
 		}
-		log.Printf("syslog=%d,netflow=%d,trap=%d,arplog=%d,other=%d,dur=%v", sc, nfc, tc, ac, oc, time.Since(st))
+		log.Printf("syslog=%d,netflow=%d,trap=%d,arplog=%d,sflow=%d,other=%d,dur=%v", sc, nfc, tc, ac, sf, oc, time.Since(st))
 		return nil
 	})
 }
