@@ -173,6 +173,7 @@ func setup(p *WebAPI) {
 	r.POST("/log/snmptrap", postSnmpTrap)
 	r.POST("/log/netflow", postFlow)
 	r.POST("/log/sflow", postFlow)
+	r.POST("/log/sflowCounter", postSFlowCounter)
 	r.POST("/log/ipfix", postIPFIX)
 	r.POST("/log/arp", postArp)
 	r.DELETE("/log/:id", deleteLog)

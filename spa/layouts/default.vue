@@ -504,6 +504,11 @@ export default {
           to: '/log/netflow/sflow',
         },
         {
+          icon: ' mdi-counter',
+          title: 'sFlow Counter',
+          to: '/log/sflowCounter',
+        },
+        {
           icon: 'mdi-check-network',
           title: 'ARPログ',
           to: '/log/arp',

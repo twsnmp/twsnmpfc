@@ -51,6 +51,14 @@ export const state = () => ({
     page: 1,
     itemsPerPage: 15,
   },
+  sFlowCounter: {
+    remote: '',
+    type: '',
+    sortBy: 'TimeStr',
+    sortDesc: false,
+    page: 1,
+    itemsPerPage: 15,
+  },
 })
 
 export const mutations = {
@@ -68,5 +76,8 @@ export const mutations = {
   },
   setArpLog(state, c) {
     state.arpLog = c
+  },
+  setSFlowCounter(state, c) {
+    state.sFlowCounter = c
   },
 }
