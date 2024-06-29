@@ -2,7 +2,7 @@
   <v-row justify="center">
     <v-card min-width="1000px" width="100%">
       <v-card-title>
-        {{ title }}
+        sFlow
         <v-spacer></v-spacer>
         <span class="text-caption">
           {{ ft }}から{{ lt }} {{ count }} / {{ process }}件
@@ -63,8 +63,8 @@
         <download-excel
           :fetch="makeLogExports"
           type="csv"
-          :name="'TWSNMP_FC_' + title + '.csv'"
-          :header="'TWSNMP FCの' + title + 'ログ'"
+          :name="'TWSNMP_FC_sFlow.csv'"
+          :header="'TWSNMP FCのsFlowログ'"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -76,8 +76,8 @@
           :fetch="makeLogExports"
           type="csv"
           :escape-csv="false"
-          :name="'TWSNMP_FC_' + title + '.csv'"
-          :header="'TWSNMP FCの' + title + 'ログ'"
+          :name="'TWSNMP_FC_sFlow.csv'"
+          :header="'TWSNMP FCのsFlowログ'"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -88,9 +88,9 @@
         <download-excel
           :fetch="makeLogExports"
           type="xls"
-          :name="'TWSNMP_FC_' + title + '.xls'"
-          :header="'TWSNMP FCの' + title + 'ログ'"
-          :worksheet="title + 'ログ'"
+          :name="'TWSNMP_FC_sFlow.xls'"
+          :header="'TWSNMP FCのsFlowログ'"
+          :worksheet="'sFlowログ'"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -112,22 +112,6 @@
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title> 通信量 </v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item @click="showHistogram">
-              <v-list-item-icon
-                ><v-icon>mdi-chart-histogram</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title> ヒストグラム </v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item @click="showCluster">
-              <v-list-item-icon
-                ><v-icon>mdi-chart-scatter-plot</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title> クラスター分析 </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="showSender">
@@ -160,6 +144,14 @@
               </v-list-item-icon>
               <v-list-item-content>
                 <v-list-item-title> サービス別の集計 </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item @click="showReason">
+              <v-list-item-icon
+                ><v-icon>mdi-format-list-numbered</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> 破棄理由別の集計 </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="showService3D">
@@ -386,18 +378,24 @@
               ></v-text-field>
             </v-col>
           </v-row>
-          <v-select
-            v-model="filter.Protocol"
-            :items="$protocolFilterList"
-            label="プロトコル"
-          >
-          </v-select>
-          <v-select
-            v-model="filter.TCPFlag"
-            :items="$tcpFlagFilterList"
-            label="TCPフラグ"
-          >
-          </v-select>
+          <v-row justify="space-around">
+            <v-select
+              v-model="filter.Protocol"
+              :items="$protocolFilterList"
+              label="プロトコル"
+            >
+            </v-select>
+            <v-select
+              v-model="filter.TCPFlag"
+              :items="$tcpFlagFilterList"
+              label="TCPフラグ"
+            >
+            </v-select>
+            <v-text-field
+              v-model="filter.Reason"
+              label="破棄理由"
+            ></v-text-field>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -412,83 +410,11 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="histogramDialog" persistent max-width="98vw">
-      <v-card style="width: 100%">
-        <v-card-title>
-          ヒストグラム
-          <v-spacer></v-spacer>
-          <v-select
-            v-model="histogramType"
-            :items="histogramTypeList"
-            label="集計項目"
-            single-line
-            hide-details
-            @change="updateHistogram"
-          ></v-select>
-        </v-card-title>
-        <div
-          id="histogram"
-          style="width: 95vw; height: 50vh; margin: 0 auto"
-        ></div>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="normal" dark @click="histogramDialog = false">
-            <v-icon>mdi-cancel</v-icon>
-            閉じる
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="clusterDialog" persistent max-width="98vw">
-      <v-card style="width: 100%">
-        <v-card-title>
-          クラスター分析
-          <v-spacer></v-spacer>
-          <v-select
-            v-model="clusterType"
-            :items="clusterTypeList"
-            label="分類方法"
-            single-line
-            hide-details
-            dense
-            @change="updateCluster"
-          ></v-select>
-          <v-spacer></v-spacer>
-          <v-text-field
-            v-model="cluster"
-            label="クラスター数"
-            dense
-            @change="updateCluster"
-          ></v-text-field>
-        </v-card-title>
-        <v-card-text>
-          <div
-            id="cluster"
-            style="width: 95vw; height: 50vh; margin: 0 auto"
-          ></div>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="normal" dark @click="clusterDialog = false">
-            <v-icon>mdi-cancel</v-icon>
-            閉じる
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
     <v-dialog v-model="trafficDialog" persistent max-width="98vw">
       <v-card style="width: 100%">
         <v-card-title>
           通信量
           <v-spacer></v-spacer>
-          <v-select
-            v-model="trafficType"
-            :items="trafficTypeList"
-            label="表示項目"
-            single-line
-            hide-details
-            @change="updateTraffic"
-          ></v-select>
         </v-card-title>
         <div
           id="traffic"
@@ -535,14 +461,6 @@
         <v-card-title>
           サービス別の集計(3D)
           <v-spacer></v-spacer>
-          <v-select
-            v-model="service3DType"
-            :items="service3DTypeList"
-            label="表示タイプ"
-            single-line
-            hide-details
-            @change="updateService3D"
-          ></v-select>
         </v-card-title>
         <div
           id="service3d"
@@ -562,14 +480,6 @@
         <v-card-title>
           送信元別の集計(3D)
           <v-spacer></v-spacer>
-          <v-select
-            v-model="sender3DType"
-            :items="service3DTypeList"
-            label="表示タイプ"
-            single-line
-            hide-details
-            @change="updateSender3D"
-          ></v-select>
         </v-card-title>
         <div
           id="sender3d"
@@ -589,14 +499,6 @@
         <v-card-title>
           IPペアー別の集計(3D)
           <v-spacer></v-spacer>
-          <v-select
-            v-model="ipFlow3DType"
-            :items="service3DTypeList"
-            label="表示タイプ"
-            single-line
-            hide-details
-            @change="updateIPFlow3D"
-          ></v-select>
         </v-card-title>
         <div
           id="ipflow3d"
@@ -616,14 +518,6 @@
         <v-card-title>
           {{ topListTitle }}
           <v-spacer></v-spacer>
-          <v-select
-            v-model="topListType"
-            :items="topListTypeList"
-            label="表示項目"
-            single-line
-            hide-details
-            @change="updateTopList"
-          ></v-select>
         </v-card-title>
         <v-card-text>
           <div
@@ -633,7 +527,7 @@
           <v-data-table
             :headers="topListHeader"
             :items="topList"
-            sort-by="Bytes"
+            sort-by="Count"
             sort-desc
             dense
           >
@@ -659,8 +553,8 @@
           <download-excel
             :fetch="makeTopExports"
             type="csv"
-            :name="'TWSNMP_FC_' + title + '_TopList.csv'"
-            :header="'TWSNMP FCの' + title + '上位リスト'"
+            :name="'TWSNMP_FC_sFlow_TopList.csv'"
+            :header="'TWSNMP FCのsFlow 上位リスト'"
             class="v-btn"
           >
             <v-btn color="primary" dark>
@@ -672,8 +566,8 @@
             :fetch="makeTopExports"
             type="csv"
             :escape-csv="false"
-            :name="'TWSNMP_FC_' + title + '_TopList.csv'"
-            :header="'TWSNMP FCの' + title + '上位リスト'"
+            :name="'TWSNMP_FC_sFlow_TopList.csv'"
+            :header="'TWSNMP FCのsFlow上位リスト'"
             class="v-btn"
           >
             <v-btn color="primary" dark>
@@ -684,9 +578,9 @@
           <download-excel
             :fetch="makeTopExports"
             type="xls"
-            :name="'TWSNMP_FC_' + title + '_TopList.xls'"
-            :header="'TWSNMP FCの' + title + '上位リスト'"
-            :worksheet="title + '上位リスト'"
+            :name="'TWSNMP_FC_sFlow_TopList.xls'"
+            :header="'TWSNMP FCのsFlow上位リスト'"
+            :worksheet="'sFlow上位リスト'"
             class="v-btn"
           >
             <v-btn color="primary" dark>
@@ -704,7 +598,7 @@
     <v-dialog v-model="fftDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
-          {{ title }} - FFT分析
+          sFlow - FFT分析
           <v-spacer></v-spacer>
           <v-select
             v-model="fftType"
@@ -742,7 +636,7 @@
     <v-dialog v-model="fft3DDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
-          {{ title }} - FFT分析(3D)
+          sFlow - FFT分析(3D)
           <v-spacer></v-spacer>
           <v-select
             v-model="fftType"
@@ -756,7 +650,7 @@
         <v-card-text>
           <div
             id="FFTChart3D"
-            style="width: 95vw; height: 80vh; margin: 0 auto"
+            style="width: 95vw; height: 75vh; margin: 0 auto"
           ></div>
         </v-card-text>
         <v-card-actions>
@@ -771,7 +665,7 @@
     <v-dialog v-model="heatmapDialog" persistent max-width="98vw">
       <v-card>
         <v-card-title>
-          <span class="headline"> {{ title }} - ヒートマップ </span>
+          <span class="headline"> sFlow - ヒートマップ </span>
         </v-card-title>
         <v-card-text>
           <div
@@ -805,7 +699,6 @@ export default {
       edMenuShow: false,
       nodeList: [],
       filter: {
-        Type: '',
         StartDate: '',
         StartTime: '',
         EndDate: '',
@@ -819,6 +712,7 @@ export default {
         DstPort: '',
         Protocol: '',
         TCPFlag: '',
+        Reason: '',
         NextTime: 0,
         Filter: 0,
       },
@@ -830,7 +724,7 @@ export default {
         {
           text: '受信日時',
           value: 'TimeStr',
-          width: '12%',
+          width: '15%',
           filter: (t, s, i) => {
             if (!this.zoom.st || !this.zoom.et) return true
             return i.Time >= this.zoom.st && i.Time <= this.zoom.et
@@ -839,7 +733,7 @@ export default {
         {
           text: '送信元',
           value: 'Src',
-          width: '15%',
+          width: '13%',
           filter: (value) => {
             if (!this.conf.src) return true
             return value.includes(this.conf.src)
@@ -848,7 +742,7 @@ export default {
         {
           text: '送信元MAC',
           value: 'SrcMAC',
-          width: '8%',
+          width: '12%',
           filter: (value) => {
             if (!this.conf.srcMac) return true
             return value.includes(this.conf.srcMac)
@@ -857,7 +751,7 @@ export default {
         {
           text: '宛先',
           value: 'Dst',
-          width: '15%',
+          width: '13%',
           filter: (value) => {
             if (!this.conf.dst) return true
             return value.includes(this.conf.dst)
@@ -866,7 +760,7 @@ export default {
         {
           text: '宛先MAC',
           value: 'DstMAC',
-          width: '8%',
+          width: '12%',
           filter: (value) => {
             if (!this.conf.dstMAC) return true
             return value.includes(this.conf.dstMAC)
@@ -875,7 +769,7 @@ export default {
         {
           text: 'プロトコル',
           value: 'Protocol',
-          width: '8%',
+          width: '9%',
           filter: (value) => {
             if (!this.conf.prot) return true
             return value.includes(this.conf.prot)
@@ -884,82 +778,14 @@ export default {
         {
           text: 'TCPフラグ',
           value: 'TCPFlags',
-          width: '8%',
+          width: '9%',
           filter: (value) => {
             if (!this.conf.tcpflag) return true
             return value.includes(this.conf.tcpflag)
           },
         },
-        { text: 'パケット数', value: 'Packets', width: '8%' },
         { text: 'バイト数', value: 'Bytes', width: '8%' },
-        { text: '期間(Sec)', value: 'Duration', width: '8%' },
-      ],
-      headersSFlow: [
-        {
-          text: '受信日時',
-          value: 'TimeStr',
-          width: '12%',
-          filter: (t, s, i) => {
-            if (!this.zoom.st || !this.zoom.et) return true
-            return i.Time >= this.zoom.st && i.Time <= this.zoom.et
-          },
-        },
-        {
-          text: '送信元',
-          value: 'Src',
-          width: '15%',
-          filter: (value) => {
-            if (!this.conf.src) return true
-            return value.includes(this.conf.src)
-          },
-        },
-        {
-          text: '送信元MAC',
-          value: 'SrcMAC',
-          width: '12%',
-          filter: (value) => {
-            if (!this.conf.srcMac) return true
-            return value.includes(this.conf.srcMac)
-          },
-        },
-        {
-          text: '宛先',
-          value: 'Dst',
-          width: '15%',
-          filter: (value) => {
-            if (!this.conf.dst) return true
-            return value.includes(this.conf.dst)
-          },
-        },
-        {
-          text: '宛先MAC',
-          value: 'DstMAC',
-          width: '12%',
-          filter: (value) => {
-            if (!this.conf.dstMAC) return true
-            return value.includes(this.conf.dstMAC)
-          },
-        },
-        {
-          text: 'プロトコル',
-          value: 'Protocol',
-          width: '6%',
-          filter: (value) => {
-            if (!this.conf.prot) return true
-            return value.includes(this.conf.prot)
-          },
-        },
-        {
-          text: 'TCPフラグ',
-          value: 'TCPFlags',
-          width: '6%',
-          filter: (value) => {
-            if (!this.conf.tcpflag) return true
-            return value.includes(this.conf.tcpflag)
-          },
-        },
-        { text: 'バイト数', value: 'Bytes', width: '7%' },
-        { text: '破棄理由', value: 'Reason', width: '7%' },
+        { text: '破棄理由', value: 'Reason', width: '8%' },
       ],
       logs: [],
       conf: {
@@ -975,58 +801,24 @@ export default {
         itemsPerPage: 15,
       },
       options: {},
-      histogramDialog: false,
-      histogramType: 'size',
-      histogramTypeList: [
-        { text: '平均パケットサイズ', value: 'size' },
-        { text: '期間(sec)', value: 'dur' },
-        { text: '速度(bytes/sec)', value: 'speed' },
-      ],
-      clusterDialog: false,
-      clusterType: 'size-bps',
-      cluster: 2,
-      clusterTypeList: [
-        { text: '平均パケットサイズとバイト/秒', value: 'size-bps' },
-        { text: '平均パケットサイズとパケット/秒', value: 'size-pps' },
-        { text: 'バイト/秒とパケット/秒', value: 'pps-bps' },
-        { text: '送信元ポートと宛先ポート', value: 'sport-dport' },
-      ],
       trafficDialog: false,
-      trafficType: 'bytes',
-      trafficTypeList: [
-        { text: 'バイト数', value: 'bytes' },
-        { text: 'パケット数', value: 'packets' },
-        { text: 'バイト/秒', value: 'bps' },
-        { text: 'パケット/秒', value: 'pps' },
-      ],
       topListHeader: [
         {
           text: '名前',
           value: 'Name',
-          width: '50%',
+          width: '70%',
           filter: (value) => {
             if (!this.topListName) return true
             return value.includes(this.topListName)
           },
         },
-        { text: 'パケット', value: 'Packets', width: '10%' },
-        { text: 'バイト', value: 'Bytes', width: '10%' },
-        { text: '期間', value: 'Duration', width: '10%' },
-        { text: 'BPS', value: 'bps', width: '10%' },
-        { text: 'PPS', value: 'pps', width: '10%' },
+        { text: '回数', value: 'Count', width: '15%' },
+        { text: 'バイト', value: 'Bytes', width: '15%' },
       ],
       topList: [],
       topListDialog: false,
-      topListType: 'bytes',
       topListTitle: '',
       topListName: '',
-      topListTypeList: [
-        { text: 'バイト数', value: 'bytes' },
-        { text: 'パケット数', value: 'packets' },
-        { text: 'バイト/秒', value: 'bps' },
-        { text: 'パケット/秒', value: 'pps' },
-        { text: '通信期間', value: 'dur' },
-      ],
       graphDialog: false,
       graphType: 'force',
       graphTypeList: [
@@ -1035,16 +827,8 @@ export default {
         { text: '3D', value: 'gl' },
       ],
       service3DDialog: false,
-      service3DType: 'Bytes',
-      service3DTypeList: [
-        { text: 'バイト数', value: 'Bytes' },
-        { text: 'パケット数', value: 'Packets' },
-        { text: '通信期間', value: 'Duration' },
-      ],
       sender3DDialog: false,
-      sender3DType: 'Bytes',
       ipFlow3DDialog: false,
-      ipFlow3DType: 'Bytes',
       fftDialog: false,
       fftMap: null,
       fftType: 't',
@@ -1055,13 +839,11 @@ export default {
         { text: '周波数(Hz)', value: 'hz' },
       ],
       fft3DDialog: false,
-      type: 'netflow',
-      title: 'NetFlow',
       heatmapDialog: false,
     }
   },
   async fetch() {
-    const r = await this.$axios.$post('/api/log/' + this.type, this.filter)
+    const r = await this.$axios.$post('/api/log/sflow', this.filter)
     if (!r) {
       return
     }
@@ -1107,9 +889,7 @@ export default {
     this.checkNextlog(r)
   },
   created() {
-    this.type = this.$route.params.type || 'netflow'
-    this.title = this.type === 'netflow' ? 'NetFlow' : 'IPFIX'
-    const c = this.$store.state.log.logs.netflow
+    const c = this.$store.state.log.logs.sflow
     if (c && c.sortBy) {
       Object.assign(this.conf, c)
     }
@@ -1124,7 +904,7 @@ export default {
     this.conf.sortDesc = this.options.sortDesc[0]
     this.conf.page = this.options.page
     this.conf.itemsPerPage = this.options.itemsPerPage
-    this.$store.commit('log/logs/setNetFlow', this.conf)
+    this.$store.commit('log/logs/setSFlow', this.conf)
   },
   methods: {
     zoomCallBack(st, et) {
@@ -1161,33 +941,6 @@ export default {
       }
       this.$fetch()
     },
-    showHistogram() {
-      this.histogramDialog = true
-      this.$nextTick(() => {
-        this.updateHistogram()
-      })
-    },
-    updateHistogram() {
-      this.$showNetFlowHistogram(
-        'histogram',
-        this.getFilteredLog(),
-        this.histogramType
-      )
-    },
-    showCluster() {
-      this.clusterDialog = true
-      this.$nextTick(() => {
-        this.updateCluster()
-      })
-    },
-    updateCluster() {
-      this.$showNetFlowCluster(
-        'cluster',
-        this.getFilteredLog(),
-        this.clusterType,
-        this.cluster * 1
-      )
-    },
     showTraffic() {
       this.trafficDialog = true
       this.$nextTick(() => {
@@ -1195,11 +948,7 @@ export default {
       })
     },
     updateTraffic() {
-      this.$showNetFlowTraffic(
-        'traffic',
-        this.getFilteredLog(),
-        this.trafficType
-      )
+      this.$showSFlowTraffic('traffic', this.getFilteredLog())
     },
     showGraph() {
       this.graphDialog = true
@@ -1208,7 +957,7 @@ export default {
       })
     },
     updateGraph() {
-      this.$showNetFlowGraph('graph', this.getFilteredLog(), this.graphType)
+      this.$showSFlowGraph('graph', this.getFilteredLog())
     },
     showService3D() {
       this.service3DDialog = true
@@ -1217,11 +966,7 @@ export default {
       })
     },
     updateService3D() {
-      this.$showNetFlowService3D(
-        'service3d',
-        this.getFilteredLog(),
-        this.service3DType
-      )
+      this.$showSFlowService3D('service3d', this.getFilteredLog())
     },
     showSender3D() {
       this.sender3DDialog = true
@@ -1230,11 +975,7 @@ export default {
       })
     },
     updateSender3D() {
-      this.$showNetFlowSender3D(
-        'sender3d',
-        this.getFilteredLog(),
-        this.sender3DType
-      )
+      this.$showSFlowSender3D('sender3d', this.getFilteredLog())
     },
     showIPFlow3D() {
       this.ipFlow3DDialog = true
@@ -1243,34 +984,42 @@ export default {
       })
     },
     updateIPFlow3D() {
-      this.$showNetFlowIPFlow3D(
+      this.$showSFlowIPFlow3D(
         'ipflow3d',
         this.getFilteredLog(),
         this.ipFlow3DType
       )
     },
     showSender() {
-      this.topList = this.$getNetFlowSenderList(this.getFilteredLog())
+      this.topList = this.$getSFlowSenderList(this.getFilteredLog())
       this.topListDialog = true
       this.topListTitle = '送信元別の集計'
       this.$nextTick(() => {
-        this.$showNetFlowTop('topList', this.topList, this.topListType)
+        this.$showSFlowTop('topList', this.topList)
       })
     },
     showService() {
-      this.topList = this.$getNetFlowServiceList(this.getFilteredLog())
+      this.topList = this.$getSFlowServiceList(this.getFilteredLog())
       this.topListDialog = true
       this.topListTitle = 'サービス別の集計'
       this.$nextTick(() => {
-        this.$showNetFlowTop('topList', this.topList, this.topListType)
+        this.$showSFlowTop('topList', this.topList)
+      })
+    },
+    showReason() {
+      this.topList = this.$getSFlowReasonList(this.getFilteredLog())
+      this.topListDialog = true
+      this.topListTitle = '破棄理由別の集計'
+      this.$nextTick(() => {
+        this.$showSFlowTop('topList', this.topList)
       })
     },
     showIPFlow() {
-      this.topList = this.$getNetFlowIPFlowList(this.getFilteredLog())
+      this.topList = this.$getSFlowIPFlowList(this.getFilteredLog())
       this.topListDialog = true
       this.topListTitle = 'IPフロー別の集計'
       this.$nextTick(() => {
-        this.$showNetFlowTop('topList', this.topList, this.topListType)
+        this.$showSFlowTop('topList', this.topList)
       })
     },
     showHeatmap() {
@@ -1278,9 +1027,6 @@ export default {
       this.$nextTick(() => {
         this.$showLogHeatmap('heatmap', this.logs)
       })
-    },
-    updateTopList() {
-      this.$showNetFlowTop('topList', this.topList, this.topListType)
     },
     formatCount(n) {
       return numeral(n).format('0,0')
@@ -1291,7 +1037,7 @@ export default {
     updateFFT() {
       this.fftDialog = true
       if (!this.fftMap) {
-        this.fftMap = this.$getNetFlowFFTMap(this.getFilteredLog())
+        this.fftMap = this.$getSFlowFFTMap(this.getFilteredLog())
         this.fftSrcList = []
         this.fftMap.forEach((e) => {
           this.fftSrcList.push({ text: e.Name, value: e.Name })
@@ -1299,13 +1045,13 @@ export default {
         this.fftSrc = 'Total'
       }
       this.$nextTick(() => {
-        this.$showNetFlowFFT('FFTChart', this.fftMap, this.fftSrc, this.fftType)
+        this.$showSFlowFFT('FFTChart', this.fftMap, this.fftSrc, this.fftType)
       })
     },
     updateFFT3D() {
       this.fft3DDialog = true
       if (!this.fftMap) {
-        this.fftMap = this.$getNetFlowFFTMap(this.getFilteredLog())
+        this.fftMap = this.$getSFlowFFTMap(this.getFilteredLog())
         this.fftSrcList = []
         this.fftMap.forEach((e) => {
           this.fftSrcList.push({ text: e.Name, value: e.Name })
@@ -1313,7 +1059,7 @@ export default {
         this.fftSrc = 'Total'
       }
       this.$nextTick(() => {
-        this.$showNetFlowFFT3D('FFTChart3D', this.fftMap, this.fftType)
+        this.$showSFlowFFT3D('FFTChart3D', this.fftMap, this.fftType)
       })
     },
     makeLogExports() {

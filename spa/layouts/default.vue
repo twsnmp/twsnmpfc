@@ -501,7 +501,7 @@ export default {
         {
           icon: 'mdi-clock-check-outline',
           title: 'sFlow',
-          to: '/log/netflow/sflow',
+          to: '/log/sflow',
         },
         {
           icon: ' mdi-counter',

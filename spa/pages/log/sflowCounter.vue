@@ -22,6 +22,9 @@
         class="log"
         :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
       >
+        <template #[`item.Data`]="{ item }">
+          {{ formatCounterData(item.Data) }}
+        </template>
         <template #[`body.append`]>
           <tr>
             <td></td>
@@ -49,7 +52,7 @@
           :fetch="makeLogExports"
           type="csv"
           :name="'TWSNMP_FC_sFlowCounter.csv'"
-          :header="'TWSNMP FCのsFlowカウンターログ'"
+          :header="'TWSNMP FCのsFlow Counter Sample'"
           class="v-btn"
         >
           <v-btn color="primary" dark>
@@ -59,9 +62,22 @@
         </download-excel>
         <download-excel
           :fetch="makeLogExports"
+          type="csv"
+          :escape-csv="false"
+          :name="'TWSNMP_FC_sFlowCounter.csv'"
+          :header="'TWSNMP FCのsFlow Counter Sample'"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeLogExports"
           type="xls"
           :name="'TWSNMP_FC_sFlowCOunter.xls'"
-          :header="'TWSNMP FCのsFlowカウンターログ'"
+          :header="'TWSNMP FCのsFlow Counter Sample'"
           worksheet="sFlow Counterのログ"
           class="v-btn"
         >
@@ -83,19 +99,19 @@
                 ><v-icon>mdi-chart-bar</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title> I/Fカウンター </v-list-item-title>
+                <v-list-item-title> I/F </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item v-if="cpuCounters.size > 0" @click="showCpuCounter">
               <v-list-item-icon><v-icon>mdi-gauge</v-icon> </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title> CPUカウンター </v-list-item-title>
+                <v-list-item-title> CPU </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item v-if="memCounters.size > 0" @click="showMemCounter">
               <v-list-item-icon><v-icon>mdi-memory</v-icon> </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title> Memカウンター </v-list-item-title>
+                <v-list-item-title> Memory </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item v-if="diskCounters.size > 0" @click="showDiskCounter">
@@ -103,13 +119,13 @@
                 <v-icon>mdi-harddisk</v-icon>
               </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title> Diskカウンター </v-list-item-title>
+                <v-list-item-title> Disk </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item v-if="netCounters.size > 0" @click="showNetCounter">
               <v-list-item-icon><v-icon>mdi-network</v-icon> </v-list-item-icon>
               <v-list-item-content>
-                <v-list-item-title> Netカウンター </v-list-item-title>
+                <v-list-item-title> Network </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item @click="showHeatmap">
@@ -830,7 +846,7 @@ export default {
           受信日時: e.TimeStr,
           送信元: e.Remote,
           種別: e.Type,
-          データ: e.Data,
+          データ: this.formatCounterData(e.Data),
         })
       })
       return exports
@@ -856,6 +872,14 @@ export default {
         return false
       }
       return true
+    },
+    formatCounterData(d) {
+      const o = JSON.parse(d)
+      const a = []
+      Object.keys(o).forEach((k) => {
+        a.push(k + '=' + o[k])
+      })
+      return a.join(' ')
     },
   },
 }
