@@ -830,7 +830,7 @@ func GetRMON(n *datastore.NodeEnt, t string) *RMONEnt {
 			mi := datastore.FindMIBInfo(name)
 			if mi != nil {
 				switch mi.Type {
-				case "PhysAddress", "OctetString":
+				case "PhysAddress", "OctetString", "PtopoChassisId", "PtopoGenAddr":
 					a, ok := variable.Value.([]uint8)
 					if !ok {
 						a = []uint8(getMIBStringVal(variable.Value))

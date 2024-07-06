@@ -80,7 +80,7 @@ func snmptrapd(stopCh chan bool) {
 				mi := datastore.FindMIBInfo(key)
 				if mi != nil {
 					switch mi.Type {
-					case "PhysAddress", "OctetString":
+					case "PhysAddress", "OctetString", "PtopoChassisId", "PtopoGenAddr":
 						a, ok := vb.Value.([]uint8)
 						if !ok {
 							a = []uint8(datastore.PrintMIBStringVal(vb.Value))

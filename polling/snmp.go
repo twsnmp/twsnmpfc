@@ -218,7 +218,7 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			mi := datastore.FindMIBInfo(n)
 			if mi != nil {
 				switch mi.Type {
-				case "PhysAddress", "OctetString":
+				case "PhysAddress", "OctetString", "PtopoChassisId", "PtopoGenAddr":
 					a, ok := variable.Value.([]uint8)
 					if !ok {
 						a = []uint8(getMIBStringVal(variable.Value))
@@ -336,7 +336,7 @@ func doPollingSnmpCount(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			mi := datastore.FindMIBInfo(variable.Name)
 			if mi != nil {
 				switch mi.Type {
-				case "PhysAddress", "OctetString":
+				case "PhysAddress", "OctetString", "PtopoChassisId", "PtopoGenAddr":
 					a, ok := variable.Value.([]uint8)
 					if !ok {
 						a = []uint8(getMIBStringVal(variable.Value))
@@ -902,7 +902,7 @@ func snmpGet(agent *gosnmp.GoSNMP, name string) (string, error) {
 				mi := datastore.FindMIBInfo(variable.Name)
 				if mi != nil {
 					switch mi.Type {
-					case "PhysAddress", "OctetString":
+					case "PhysAddress", "OctetString", "PtopoChassisId", "PtopoGenAddr":
 						a, ok := variable.Value.([]uint8)
 						if !ok {
 							a = []uint8(getMIBStringVal(variable.Value))
