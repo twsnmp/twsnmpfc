@@ -530,46 +530,12 @@ const mapMain = (p5) => {
       }
       case 'u':
       case 'U': {
-        if (selectedItems.length < 1) {
-          return
-        }
-        selectedItems.forEach((id) => {
-          if (items[id]) {
-            items[id].W += 5
-            items[id].H += 5
-            if (mapCallBack) {
-              mapCallBack({
-                Cmd: 'updateItem',
-                Param: id,
-              })
-            }
-          }
-        })
-        mapRedraw = true
+        resizeDrawItem(1)
         break
       }
       case 'd':
       case 'D': {
-        if (selectedItems.length < 1) {
-          return
-        }
-        selectedItems.forEach((id) => {
-          if (items[id]) {
-            if (items[id].W > 10) {
-              items[id].W -= 5
-            }
-            if (items[id].H > 10) {
-              items[id].H -= 5
-            }
-            if (mapCallBack) {
-              mapCallBack({
-                Cmd: 'updateItem',
-                Param: id,
-              })
-            }
-          }
-        })
-        mapRedraw = true
+        resizeDrawItem(-1)
         break
       }
     }
@@ -599,6 +565,67 @@ const mapMain = (p5) => {
     }
     return true
   }
+
+  const resizeDrawItem = (add) => {
+    if (selectedItems.length < 1) {
+      return
+    }
+    selectedItems.forEach((id) => {
+      if (items[id]) {
+        switch (items[id].Type) {
+          case 2:
+          case 4:
+            if (items[id].Size > 1) {
+              items[id].Size += add;
+            }
+            items[id].W = items[id].Size * items[id].Text.length;
+            items[id].H = items[id].Size;
+            break;
+          case 5:
+            if (items[id].Size > 1) {
+              items[id].Size += add;
+            }
+            items[id].H = items[id].Size * 10;
+            items[id].W = items[id].Size * 10;
+            break;
+          case 6: // New Gauge
+            if (items[id].H > 20) {
+              items[id].H += add * 5;
+            }
+            items[id].W = items[id].H;
+            break;
+          case 7: // Bar
+          case 8: // Line
+            if (items[id].H > 20) {
+              items[id].H += add * 5;
+            }
+            items[id].W = items[id].H * 4;
+            break;
+          default:
+            items[id].W += add * 5;
+            items[id].H += add * 5;
+            items[id].Size += add;
+            if (items[id].W < 10) {
+              items[id].W = 10;
+            }
+            if (items[id].H < 10) {
+              items[id].H = 10;
+            }
+            if (items[id].Size < 5) {
+              items[id].Size = 5;
+            }
+        }
+        if (mapCallBack) {
+          mapCallBack({
+            Cmd: 'updateItem',
+            Param: id,
+          })
+        }
+      }
+    })
+    mapRedraw = true
+  }
+
   const checkNodePos = (n) => {
     if (n.X < 16) {
       n.X = 16
