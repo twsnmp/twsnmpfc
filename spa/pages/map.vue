@@ -1190,6 +1190,10 @@ export default {
         case 'updateItemsPos':
           this.$axios.post('/api/map/update_item', r.Param)
           break
+        case 'updateItem':
+          this.editItem = this.map.Items[r.Param]
+          this.doUpdateItem()
+          break
         case 'deleteNodes':
           this.deleteNodes = Array.from(r.Param)
           this.deleteDialog = true

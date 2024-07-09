@@ -1,5 +1,5 @@
 import P5 from 'p5'
-import { gauge,bar, line } from './echarts/drawitem'
+import { gauge, bar, line } from './echarts/drawitem'
 
 let mapSize = 0
 let mapSizeX = 2500
@@ -478,10 +478,7 @@ const mapMain = (p5) => {
         })
       }
     }
-    if (
-      p5.mouseButton === p5.RIGHT &&
-      selectedNodes.length > 1
-    ) {
+    if (p5.mouseButton === p5.RIGHT && selectedNodes.length > 1) {
       if (mapCallBack) {
         mapCallBack({
           Cmd: 'formatNodes',
@@ -514,18 +511,67 @@ const mapMain = (p5) => {
   }
 
   p5.keyTyped = () => {
-    if (p5.key === '+') {
-      scale += 0.05
-      if (scale > 3.0) {
-        scale = 3.0
+    switch (p5.key) {
+      case '+': {
+        scale += 0.05
+        if (scale > 3.0) {
+          scale = 3.0
+        }
+        mapRedraw = true
+        break
       }
-      mapRedraw = true
-    } else if (p5.key === '-') {
-      scale -= 0.05
-      if (scale < 0.1) {
-        scale = 0.1
+      case '-': {
+        scale -= 0.05
+        if (scale < 0.1) {
+          scale = 0.1
+        }
+        mapRedraw = true
+        break
       }
-      mapRedraw = true
+      case 'u':
+      case 'U': {
+        if (selectedItems.length < 1) {
+          return
+        }
+        selectedItems.forEach((id) => {
+          if (items[id]) {
+            items[id].W += 5
+            items[id].H += 5
+            if (mapCallBack) {
+              mapCallBack({
+                Cmd: 'updateItem',
+                Param: id,
+              })
+            }
+          }
+        })
+        mapRedraw = true
+        break
+      }
+      case 'd':
+      case 'D': {
+        if (selectedItems.length < 1) {
+          return
+        }
+        selectedItems.forEach((id) => {
+          if (items[id]) {
+            if (items[id].W > 10) {
+              items[id].W -= 5
+            }
+            if (items[id].H > 10) {
+              items[id].H -= 5
+            }
+            if (mapCallBack) {
+              mapCallBack({
+                Cmd: 'updateItem',
+                Param: id,
+              })
+            }
+          }
+        })
+        mapRedraw = true
+        break
+      }
     }
   }
 
@@ -584,8 +630,8 @@ const mapMain = (p5) => {
   const dragMoveNodes = () => {
     selectedNodes.forEach((id) => {
       if (nodes[id]) {
-        nodes[id].X += Math.trunc((p5.mouseX /scale) - lastMouseX)
-        nodes[id].Y += Math.trunc((p5.mouseY /scale) - lastMouseY)
+        nodes[id].X += Math.trunc(p5.mouseX / scale - lastMouseX)
+        nodes[id].Y += Math.trunc(p5.mouseY / scale - lastMouseY)
         checkNodePos(nodes[id])
         if (!draggedNodes.includes(id)) {
           draggedNodes.push(id)
@@ -594,8 +640,8 @@ const mapMain = (p5) => {
     })
     selectedItems.forEach((id) => {
       if (items[id]) {
-        items[id].X += Math.trunc((p5.mouseX / scale) - lastMouseX)
-        items[id].Y += Math.trunc((p5.mouseY / scale) - lastMouseY)
+        items[id].X += Math.trunc(p5.mouseX / scale - lastMouseX)
+        items[id].Y += Math.trunc(p5.mouseY / scale - lastMouseY)
         checkItemPos(items[id])
         if (!draggedItems.includes(id)) {
           draggedItems.push(id)
@@ -649,7 +695,7 @@ const mapMain = (p5) => {
         if (selectedNodes.includes(nodes[k].ID)) {
           if (bMulti) {
             const i = selectedNodes.indexOf(nodes[k].ID)
-            selectedNodes.splice(i,1)
+            selectedNodes.splice(i, 1)
           }
           return false
         }
