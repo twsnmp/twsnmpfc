@@ -679,11 +679,13 @@ export default {
           }
           if (!indexes.includes(index)) {
             indexes.push(index)
-            rows.push([index])
+            const m = new Map()
+            m.set('Index', index)
+            rows.push(m)
           }
           const r = indexes.indexOf(index)
           if (r >= 0) {
-            rows[r].push(val)
+            rows[r].set(base, val)
           }
         }
       })
@@ -701,10 +703,10 @@ export default {
       })
       this.items = []
       rows.forEach((e) => {
-        const d = { Index: e[0] }
-        for (let i = 1; i < e.length; i++) {
-          d[names[i - 1]] = e[i]
-        }
+        const d = {}
+        this.headers.forEach((h) => {
+          d[h.value] = e.get(h.value) || ''
+        })
         this.items.push(d)
       })
     },
