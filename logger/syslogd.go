@@ -36,7 +36,7 @@ func syslogd(stopCh chan bool) {
 			{
 				if datastore.MapConf.AutoCharCode {
 					if c, ok := sl["content"].(string); ok {
-						sl["content"] = CheckCharCode(c)
+						sl["content"] = datastore.CheckCharCode(c)
 					}
 				}
 				s, err := json.Marshal(sl)

@@ -7,7 +7,6 @@ package logger
 import (
 	"encoding/json"
 	"log"
-	"strings"
 
 	"fmt"
 	"net"
@@ -16,8 +15,6 @@ import (
 	gosnmp "github.com/gosnmp/gosnmp"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
-	"golang.org/x/text/encoding/japanese"
-	"golang.org/x/text/transform"
 )
 
 func snmptrapd(stopCh chan bool) {
@@ -72,93 +69,7 @@ func snmptrapd(stopCh chan bool) {
 		vbs := ""
 		for _, vb := range s.Variables {
 			key := datastore.MIBDB.OIDToName(vb.Name)
-			val := ""
-			switch vb.Type {
-			case gosnmp.ObjectIdentifier:
-				val = datastore.MIBDB.OIDToName(datastore.PrintMIBStringVal(vb.Value))
-			case gosnmp.OctetString:
-				mi := datastore.FindMIBInfo(key)
-				if mi != nil {
-					switch mi.Type {
-					case "PhysAddress", "OctetString", "PtopoChassisId", "PtopoGenAddr":
-						a, ok := vb.Value.([]uint8)
-						if !ok {
-							a = []uint8(datastore.PrintMIBStringVal(vb.Value))
-						}
-						mac := []string{}
-						for _, m := range a {
-							mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
-						}
-						val = strings.Join(mac, ":")
-					case "BITS":
-						a, ok := vb.Value.([]uint8)
-						if !ok {
-							a = []uint8(datastore.PrintMIBStringVal(vb.Value))
-						}
-						hex := []string{}
-						ap := []string{}
-						bit := 0
-						for _, m := range a {
-							hex = append(hex, fmt.Sprintf("%02X", m&0x00ff))
-							if mi.Enum != "" {
-								for i := 0; i < 8; i++ {
-									if (m & 0x80) == 0x80 {
-										if n, ok := mi.EnumMap[bit]; ok {
-											ap = append(ap, fmt.Sprintf("%s(%d)", n, bit))
-										}
-									}
-									m <<= 1
-									bit++
-								}
-							}
-						}
-						val = strings.Join(hex, " ")
-						if len(ap) > 0 {
-							val += " " + strings.Join(ap, " ")
-						}
-					case "DisplayString":
-						val = datastore.PrintMIBStringVal(vb.Value)
-						if datastore.MapConf.AutoCharCode {
-							val = CheckCharCode(val)
-						}
-					case "DateAndTime":
-						val = datastore.PrintDateAndTime(vb.Value)
-					default:
-						val = datastore.PrintMIBStringVal(vb.Value)
-					}
-				} else {
-					val = datastore.PrintMIBStringVal(vb.Value)
-					if datastore.MapConf.AutoCharCode {
-						val = CheckCharCode(val)
-					}
-				}
-			case gosnmp.TimeTicks:
-				val = getTimeTickStr(gosnmp.ToBigInt(vb.Value).Int64())
-			case gosnmp.IPAddress:
-				val = datastore.PrintIPAddress(vb.Value)
-			default:
-				if vb.Type == gosnmp.Integer {
-					val = fmt.Sprintf("%d", gosnmp.ToBigInt(vb.Value).Int64())
-				} else {
-					val = fmt.Sprintf("%d", gosnmp.ToBigInt(vb.Value).Uint64())
-				}
-				mi := datastore.FindMIBInfo(key)
-				if mi != nil {
-					v := int(gosnmp.ToBigInt(vb.Value).Uint64())
-					if mi.Enum != "" {
-						if vn, ok := mi.EnumMap[v]; ok {
-							val += "(" + vn + ")"
-						}
-					} else {
-						if mi.Hint != "" {
-							val = datastore.PrintHintedMIBIntVal(int32(v), mi.Hint, vb.Type != gosnmp.Integer)
-						}
-						if mi.Units != "" {
-							val += " " + mi.Units
-						}
-					}
-				}
-			}
+			val := datastore.GetMIBValueString(key, &vb, false)
 			vbs += fmt.Sprintf("%s=%s\n", key, val)
 		}
 		record["Variables"] = vbs
@@ -190,37 +101,4 @@ func getTimeTickStr(t int64) string {
 		return fmt.Sprintf("%.2f時間(%d)", ft/(3600), t)
 	}
 	return fmt.Sprintf("%.2f秒(%d)", ft, t)
-}
-
-func CheckCharCode(s string) string {
-	if isSjis([]byte(s)) {
-		dec := japanese.ShiftJIS.NewDecoder()
-		if b, _, err := transform.Bytes(dec, []byte(s)); err == nil {
-			return string(b)
-		}
-	}
-	return s
-}
-
-func isSjis(p []byte) bool {
-	f := false
-	for _, c := range p {
-		if f {
-			if c < 0x0040 || c > 0x00fc {
-				return false
-			}
-			f = false
-			continue
-		}
-		if c < 0x007f {
-			continue
-		}
-		if (c >= 0x0081 && c <= 0x9f) ||
-			(c >= 0x00e0 && c <= 0x00ef) {
-			f = true
-		} else {
-			return false
-		}
-	}
-	return true
 }

@@ -823,56 +823,13 @@ func GetRMON(n *datastore.NodeEnt, t string) *RMONEnt {
 		}
 		name := a[0]
 		index := a[1]
-		value := ""
+		value := datastore.GetMIBValueString(name, &variable, false)
 		vendor := ""
-		switch variable.Type {
-		case gosnmp.OctetString:
-			mi := datastore.FindMIBInfo(name)
-			if mi != nil {
-				switch mi.Type {
-				case "PhysAddress", "OctetString", "PtopoChassisId", "PtopoGenAddr":
-					a, ok := variable.Value.([]uint8)
-					if !ok {
-						a = []uint8(getMIBStringVal(variable.Value))
-					}
-					mac := []string{}
-					for _, m := range a {
-						mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
-					}
-					value = strings.Join(mac, ":")
-					vendor = datastore.FindVendor(value)
-				case "BITS":
-					a, ok := variable.Value.([]uint8)
-					if !ok {
-						a = []uint8(getMIBStringVal(variable.Value))
-					}
-					hex := []string{}
-					ap := []string{}
-					for _, m := range a {
-						hex = append(hex, fmt.Sprintf("%02X", m&0x00ff))
-					}
-					value = strings.Join(hex, " ")
-					if len(ap) > 0 {
-						value += " " + strings.Join(ap, " ")
-					}
-				case "DisplayString":
-					value = getMIBStringVal(variable.Value)
-				default:
-					value = getMIBStringVal(variable.Value)
-				}
-			} else {
-				value = getMIBStringVal(variable.Value)
-			}
-		case gosnmp.ObjectIdentifier:
-			value = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
-		case gosnmp.TimeTicks:
-			t := gosnmp.ToBigInt(variable.Value).Uint64()
-			value = fmt.Sprintf("%d", t)
-		default:
-			v := int(gosnmp.ToBigInt(variable.Value).Uint64())
-			value = fmt.Sprintf("%d", v)
+		mi := datastore.FindMIBInfo(name)
+		if mi != nil && mi.Type == "PhysAddress" {
+			vendor = datastore.FindVendor(value)
 		}
-		if _, ok := ret.MIBs[a[1]]; !ok {
+		if _, ok := ret.MIBs[index]; !ok {
 			ret.MIBs[index] = make(map[string]string)
 		}
 		ret.MIBs[index][name] = value

@@ -1,3 +1,13 @@
+.1
+.iso
+.1.0
+.iso.std
+.1.0.8802
+.iso.std.iso8802
+.1.0.8802.1
+.iso.std.iso8802.ieee802dot1
+.1.0.8802.1.1
+.iso.std.iso8802.ieee802dot1.ieee802dot1mibs
 .1.3
 .iso.org
 .1.3.6

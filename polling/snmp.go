@@ -212,26 +212,8 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		n := datastore.MIBDB.OIDToName(variable.Name)
 		vn := getValueName(n)
 		switch variable.Type {
-
 		case gosnmp.OctetString:
-			v := getMIBStringVal(variable.Value)
-			mi := datastore.FindMIBInfo(n)
-			if mi != nil {
-				switch mi.Type {
-				case "PhysAddress", "OctetString", "PtopoChassisId", "PtopoGenAddr":
-					a, ok := variable.Value.([]uint8)
-					if !ok {
-						a = []uint8(getMIBStringVal(variable.Value))
-					}
-					mac := []string{}
-					for _, m := range a {
-						mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
-					}
-					v = strings.Join(mac, ":")
-				case "DisplayString":
-				default:
-				}
-			}
+			v := datastore.GetMIBValueString(n, &variable, false)
 			vm.Set(vn, v)
 			lr[n] = v
 		case gosnmp.ObjectIdentifier:
@@ -329,32 +311,8 @@ func doPollingSnmpCount(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		}
 	}
 	if err := agent.Walk(oid, func(variable gosnmp.SnmpPDU) error {
-		s := ""
-		switch variable.Type {
-		case gosnmp.OctetString:
-			s = getMIBStringVal(variable.Value)
-			mi := datastore.FindMIBInfo(variable.Name)
-			if mi != nil {
-				switch mi.Type {
-				case "PhysAddress", "OctetString", "PtopoChassisId", "PtopoGenAddr":
-					a, ok := variable.Value.([]uint8)
-					if !ok {
-						a = []uint8(getMIBStringVal(variable.Value))
-					}
-					mac := []string{}
-					for _, m := range a {
-						mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
-					}
-					s = strings.Join(mac, ":")
-				case "DisplayString":
-				default:
-				}
-			}
-		case gosnmp.ObjectIdentifier:
-			s = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
-		default:
-			s = fmt.Sprintf("%d", gosnmp.ToBigInt(variable.Value).Uint64())
-		}
+		name := datastore.MIBDB.OIDToName(variable.Name)
+		s := datastore.GetMIBValueString(name, &variable, false)
 		if regexFilter != nil && !regexFilter.Match([]byte(s)) {
 			return nil
 		}
@@ -898,24 +856,7 @@ func snmpGet(agent *gosnmp.GoSNMP, name string) (string, error) {
 			s := ""
 			switch variable.Type {
 			case gosnmp.OctetString:
-				s = getMIBStringVal(variable.Value)
-				mi := datastore.FindMIBInfo(variable.Name)
-				if mi != nil {
-					switch mi.Type {
-					case "PhysAddress", "OctetString", "PtopoChassisId", "PtopoGenAddr":
-						a, ok := variable.Value.([]uint8)
-						if !ok {
-							a = []uint8(getMIBStringVal(variable.Value))
-						}
-						mac := []string{}
-						for _, m := range a {
-							mac = append(mac, fmt.Sprintf("%02X", m&0x00ff))
-						}
-						s = strings.Join(mac, ":")
-					case "DisplayString":
-					default:
-					}
-				}
+				s = datastore.GetMIBValueString(name, &variable, true)
 			case gosnmp.ObjectIdentifier:
 				s = datastore.MIBDB.OIDToName(getMIBStringVal(variable.Value))
 			default:
