@@ -207,7 +207,7 @@ func loadMIBsFromFS(fs http.FileSystem) {
 		log.Printf("load mib path=%s", path)
 		if r, err := fs.Open(path); err == nil {
 			if asn1, err := io.ReadAll(r); err == nil {
-				if !loadExtMIB(asn1, "int", path, false) {
+				if loadExtMIB(asn1, "int", path, false) {
 					skipList = append(skipList, path)
 				}
 			} else {
