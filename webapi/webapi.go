@@ -147,6 +147,8 @@ func setup(p *WebAPI) {
 	r.POST("/map/update_item", postItemPos)
 	r.POST("/line/delete", deleteLine)
 	r.POST("/line/add", postLine)
+	r.POST("/networks/delete", deleteNetworks)
+	r.POST("/network/update", postNetwork)
 	r.POST("/wol/:id", postWOL)
 	// Ping画面
 	r.POST("/ping", postPing)
