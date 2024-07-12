@@ -15,6 +15,7 @@ let mapCallBack
 let nodes = {}
 let lines = []
 let items = {}
+let networks = {}
 let backImage = {
   X: 0,
   Y: 0,
@@ -30,6 +31,7 @@ let iconSize = 32
 
 const selectedNodes = []
 const selectedItems = []
+let selectedNetwork = ''
 
 const iconCodeMap = {}
 const imageMap = {}
@@ -59,6 +61,7 @@ const showMAP = (div, m, url, ro) => {
   nodes = m.Nodes
   lines = m.Lines
   items = m.Items || {}
+  networks = m.Networks || {}
   backImage = m.MapConf.BackImage
   fontSize = m.MapConf.FontSize || 12
   iconSize = m.MapConf.IconSize || 24
@@ -200,6 +203,40 @@ const getLineColor = (state) => {
   return 250
 }
 
+const getLinePos = (id,polling) => {
+  if (id.startsWith('NET:')) {
+    const a = id.split(":")
+    if(a.length !== 2 ) {
+      return undefined
+    }
+    const net = networks[a[1]]
+    if (!net) {
+      return undefined
+    }
+    let pi =  -1
+    for(let i = 0; i <  net.Ports.length;i++) {
+      if (net.Ports[i].Polling === polling) {
+        pi = i
+        break
+      }
+    }
+    if (pi < 0 ) {
+      return undefined
+    }
+    return {
+      X: net.X + net.Ports[pi].X * 45 + 10 + 20,
+      Y: net.Y + net.Ports[pi].Y * 45 + 15 + fontSize + 20
+    }
+  }
+  if (!nodes[id]) {
+    return undefined
+  }
+  return {
+    X:nodes[id].X,
+    Y:nodes[id].Y + 6,
+  }
+}
+
 let scale = 1.0
 
 const mapMain = (p5) => {
@@ -210,7 +247,13 @@ const mapMain = (p5) => {
   let dragMode = 0 // 0 : None , 1: Select , 2 :Move
   const draggedNodes = []
   const draggedItems = []
+  let draggedNetwork = ""
   let clickInCanvas = false
+  let portImage
+  p5.preload = () => {
+    portImage = p5.loadImage("/images/port.png")
+  }
+
   p5.setup = () => {
     const c = p5.createCanvas(mapSizeX, mapSizeY)
     c.mousePressed(canvasMousePressed)
@@ -238,14 +281,55 @@ const mapMain = (p5) => {
         p5.image(backImage.Image, backImage.X, backImage.Y)
       }
     }
+    for (const k in networks) {
+      p5.push()
+      p5.translate(networks[k].X,networks[k].Y)
+      if (selectedNetwork === networks[k].ID) {
+        p5.stroke('#02c')
+      } else {
+        p5.stroke('#999')
+      }
+      p5.fill('rgba(23,23,23,0.9)')
+      p5.rect(0,0,networks[k].W,networks[k].H)
+      p5.textFont('Roboto')
+      p5.textSize(fontSize)
+      p5.fill('#eee')
+      p5.text(networks[k].Name,5, fontSize + 5)
+      if (networks[k].Ports.length < 1) {
+        if (networks[k].Error !== ""){
+          p5.fill('#cc3300')
+          p5.text(networks[k].Error,15,fontSize * 2 + 15)
+        } else {
+          p5.fill('#11ee00')
+          p5.text('構成を分析中...',15,fontSize * 2 + 15)
+        }
+      } else {
+        p5.textSize(8)
+        for(const p of networks[k].Ports) {
+          const x = p.X * 45 + 10
+          const y = p.Y * 45 + fontSize + 15
+          p5.image(portImage,x, y ,40,40)
+          p5.fill(p.State === 'up' ? '#11ee00' : ' #999')
+          p5.circle(x+4,y+4,8)
+          p5.fill('#eee')
+          p5.text(p.Name,x,y + 40 + 10)
+        }
+      }
+      p5.pop()
+    }
     for (const k in lines) {
-      if (!nodes[lines[k].NodeID1] || !nodes[lines[k].NodeID2]) {
+      const lp1 = getLinePos(lines[k].NodeID1,lines[k].PollingID1)
+      if (!lp1) {
         continue
       }
-      const x1 = nodes[lines[k].NodeID1].X
-      const x2 = nodes[lines[k].NodeID2].X
-      const y1 = nodes[lines[k].NodeID1].Y + 6
-      const y2 = nodes[lines[k].NodeID2].Y + 6
+      const lp2 = getLinePos(lines[k].NodeID2,lines[k].PollingID2)
+      if(!lp2){
+        continue
+      }
+      const x1 = lp1.X
+      const x2 = lp2.X
+      const y1 = lp1.Y
+      const y2 = lp2.Y
       const xm = (x1 + x2) / 2
       const ym = (y1 + y2) / 2
       p5.push()
@@ -410,7 +494,7 @@ const mapMain = (p5) => {
       return true
     }
     if (dragMode === 0) {
-      if (selectedNodes.length > 0 || selectedItems.length > 0) {
+      if (selectedNodes.length > 0 || selectedItems.length > 0 || selectedNetwork !== "") {
         dragMode = 2
       } else {
         dragMode = 1
@@ -445,6 +529,7 @@ const mapMain = (p5) => {
     } else if (dragMode !== 3) {
       setSelectNode(false)
       setSelectItem()
+      setSelectNetwork()
     }
     lastMouseX = p5.mouseX / scale
     lastMouseY = p5.mouseY / scale
@@ -473,6 +558,7 @@ const mapMain = (p5) => {
           Cmd: 'contextMenu',
           Node: selectedNodes[0] || '',
           Item: selectedItems[0] || '',
+          Network: selectedNetwork || '',
           x: p5.winMouseX,
           y: p5.winMouseY,
         })
@@ -506,6 +592,19 @@ const mapMain = (p5) => {
     }
     if (draggedItems.length > 0) {
       updateItemsPos()
+    }
+    if (draggedNetwork !== "") {
+      if (mapCallBack) {
+        mapCallBack({
+          Cmd: 'updateNetworkPos',
+          Param: {
+            ID: networks[draggedNetwork].ID,
+            X: networks[draggedNetwork].X,
+            Y: networks[draggedNetwork].Y,
+          },
+        })
+      }
+      draggedNetwork = ""
     }
     return false
   }
@@ -562,6 +661,13 @@ const mapMain = (p5) => {
       nodeDoubleClicked()
     } else if (selectedItems.length === 1) {
       itemDoubleClicked()
+    } else if (selectedNetwork !== "") {
+      if (mapCallBack) {
+        mapCallBack({
+          Cmd: 'networkDoubleClicked',
+          Param: selectedNetwork,
+        })
+      }
     }
     return true
   }
@@ -675,6 +781,11 @@ const mapMain = (p5) => {
         }
       }
     })
+    if (selectedNetwork !== "" && networks[selectedNetwork]) {
+      networks[selectedNetwork].X += Math.trunc(p5.mouseX / scale - lastMouseX)
+      networks[selectedNetwork].Y += Math.trunc(p5.mouseY / scale - lastMouseY)
+      draggedNetwork = selectedNetwork
+    }
     mapRedraw = true
   }
 
@@ -763,6 +874,27 @@ const mapMain = (p5) => {
     }
     selectedItems.length = 0
   }
+
+  // Networkを選択する
+  const setSelectNetwork = () => {
+    const x = p5.mouseX / scale
+    const y = p5.mouseY / scale
+    for (const k in networks) {
+      const w = networks[k].W + 10
+      const h = networks[k].H
+      if (
+        networks[k].X + w > x &&
+        networks[k].X - 10 < x &&
+        networks[k].Y + h > y &&
+        networks[k].Y - 10 < y
+      ) {
+        selectedNetwork = networks[k].ID
+        return
+      }
+    }
+    selectedNetwork = ''
+  }
+
   // ノードを削除する
   const deleteNodes = () => {
     if (mapCallBack) {

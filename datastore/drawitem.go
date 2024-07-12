@@ -100,6 +100,9 @@ func GetDrawItem(id string) *DrawItemEnt {
 
 func ForEachItems(f func(*DrawItemEnt) bool) {
 	items.Range(func(_, p interface{}) bool {
-		return f(p.(*DrawItemEnt))
+		if d, ok := p.(*DrawItemEnt); ok {
+			return f(d)
+		}
+		return true
 	})
 }

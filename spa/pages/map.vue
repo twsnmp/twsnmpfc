@@ -55,7 +55,7 @@
         <v-card-title>
           <span class="headline">描画アイテム</span>
         </v-card-title>
-        <v-alert v-model="deleteError" color="error" dense dismissible>
+        <v-alert v-model="deleteItemError" color="error" dense dismissible>
           描画アイテムを削除できませんでした
         </v-alert>
         <v-card-text> 選択した描画アイテムを削除しますか？ </v-card-text>
@@ -66,6 +66,28 @@
             削除
           </v-btn>
           <v-btn color="normal" @click="deleteItemDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="deleteNetworkDialog" persistent max-width="50vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ネットワーク</span>
+        </v-card-title>
+        <v-alert v-model="deleteNetworkError" color="error" dense dismissible>
+          ネットワークを削除できませんでした
+        </v-alert>
+        <v-card-text> 選択したネットワークを削除しますか？ </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="doDeleteNetwork">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" @click="deleteNetworkDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -323,6 +345,156 @@
               $fetch()
             "
           >
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="editNetworkDialog" persistent max-width="70vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ネットワーク設定</span>
+        </v-card-title>
+        <v-alert v-model="editNetworkError" color="error" dense dismissible>
+          ネットワークの保存に失敗しました
+        </v-alert>
+        <v-card-text>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="editNetwork.Name"
+                label="名前"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNetwork.IP"
+                label="IPアドレス"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="editNetwork.SnmpMode"
+                :items="$snmpModeList"
+                label="SNMPモード"
+              >
+              </v-select>
+            </v-col>
+            <v-col v-if="editNetwork.SnmpMode == ''">
+              <v-text-field
+                v-model="editNetwork.Community"
+                label="Community"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="editNetwork.User"
+                autocomplete="username"
+                label="ユーザー"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNetwork.Password"
+                autocomplete="new-password"
+                type="password"
+                label="パスワード"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-text-field v-model="editNetwork.URL" label="URL"></v-text-field>
+          <v-text-field v-model="editNetwork.Descr" label="説明"></v-text-field>
+          <v-data-table
+            :headers="netPortHeaders"
+            :items="editNetwork.Ports"
+            :items-per-page="5"
+            dense
+          >
+            <template #[`item.State`]="{ item }">
+              <v-icon :color="$getStateColor(item.State)">{{
+                $getStateIconName(item.State)
+              }}</v-icon>
+              {{ $getStateName(item.State) }}
+            </template>
+            <template #[`item.actions`]="{ item }">
+              <v-icon small @click="editNetworkPortFunc(item)">
+                mdi-pencil
+              </v-icon>
+              <v-icon small color="red" @click="deleteNetPort(item)">
+                mdi-delete
+              </v-icon>
+            </template>
+          </v-data-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="doUpdateNetwork">
+            <v-icon>mdi-content-save</v-icon>
+            保存
+          </v-btn>
+          <v-btn
+            color="normal"
+            dark
+            @click="
+              editNetworkDialog = false
+              $fetch()
+            "
+          >
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="editNetworkPortDialog" persistent max-width="50vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ポート設定</span>
+        </v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="editNetworkPort.Name"
+            label="名前"
+          ></v-text-field>
+          <v-text-field
+            v-model="editNetworkPort.Polling"
+            label="ポーリング"
+          ></v-text-field>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="editNetworkPort.X"
+                type="number"
+                min="0"
+                max="100"
+                style="width: 80px"
+                label="X"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNetworkPort.Y"
+                type="number"
+                min="0"
+                max="100"
+                style="width: 80px"
+                label="Y"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="saveNetworkPort">
+            <v-icon>mdi-content-save</v-icon>
+            保存
+          </v-btn>
+          <v-btn color="normal" dark @click="editNetworkPortDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -672,6 +844,12 @@
             <v-list-item-title>描画アイテム</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item @click="addNetwork()">
+          <v-list-item-icon><v-icon>mdi-lan</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>新規ネットワーク</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item @click="checkPolling(true)">
           <v-list-item-icon><v-icon>mdi-cached</v-icon></v-list-item-icon>
           <v-list-item-content>
@@ -963,6 +1141,29 @@
         </v-list-item>
       </v-list>
     </v-menu>
+    <v-menu
+      v-model="showNetworkContextMenu"
+      :position-x="x"
+      :position-y="y"
+      absolute
+    >
+      <v-list dense>
+        <v-list-item @click="editNetworkDialog = true">
+          <v-list-item-icon><v-icon>mdi-pencil</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>編集</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="deleteNetworkDialog = true">
+          <v-list-item-icon
+            ><v-icon color="red">mdi-delete</v-icon></v-list-item-icon
+          >
+          <v-list-item-content>
+            <v-list-item-title>削除</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-menu>
   </v-row>
 </template>
 
@@ -981,7 +1182,11 @@ export default {
       editItemError: false,
       deleteItemDialog: false,
       deleteItemError: false,
-      selectedNodeID: '',
+      editNetworkDialog: false,
+      editNetworkPortDialog: false,
+      editNetworkError: false,
+      deleteNetworkDialog: false,
+      deleteNetworkError: false,
       showNode: {},
       editLine: {
         NodeID1: '',
@@ -996,11 +1201,16 @@ export default {
       selectedLinePolling2: 0,
       editNode: {},
       editItem: {},
+      editNetwork: {},
+      editNetworkPortIndex: 0,
+      editNetworkPort: {},
       deleteNodes: [],
       map: {
         Nodes: {},
-        Pollings: [],
+        Pollings: {},
         Lines: [],
+        Items: {},
+        Networks: {},
         MapConf: { MapName: '' },
         Logs: [],
       },
@@ -1015,6 +1225,7 @@ export default {
       showMapContextMenu: false,
       showNodeContextMenu: false,
       showItemContextMenu: false,
+      showNetworkContextMenu: false,
       x: 0,
       y: 0,
       copyFrom: '',
@@ -1054,6 +1265,14 @@ export default {
       itemPollingList: [],
       showFormatNodesMenu: false,
       formatNodes: [],
+      netPortHeaders: [
+        { text: '状態', value: 'State' },
+        { text: '名前', value: 'Name' },
+        { text: 'ポーリング', value: 'Polling' },
+        { text: 'X', value: 'X' },
+        { text: 'Y', value: 'Y' },
+        { text: '操作', value: 'actions' },
+      ],
     }
   },
   async fetch() {
@@ -1190,6 +1409,9 @@ export default {
         case 'updateItemsPos':
           this.$axios.post('/api/map/update_item', r.Param)
           break
+        case 'updateNetworkPos':
+          this.$axios.post('/api/map/update_network', r.Param)
+          break
         case 'updateItem':
           this.editItem = this.map.Items[r.Param]
           this.doUpdateItem()
@@ -1232,16 +1454,7 @@ export default {
         case 'contextMenu':
           this.x = r.x
           this.y = r.y
-          if (!r.Node && !r.Item) {
-            this.showMapContextMenu = true
-            this.editNode.ID = ''
-          } else if (!r.Node) {
-            if (!this.map.Items[r.Item]) {
-              return
-            }
-            this.editItem = this.map.Items[r.Item]
-            this.showItemContextMenu = true
-          } else {
+          if (r.Node) {
             if (!this.map.Nodes[r.Node]) {
               return
             }
@@ -1256,6 +1469,21 @@ export default {
             })
             this.deleteNodes = [r.Node]
             this.showNodeContextMenu = true
+          } else if (r.Item) {
+            if (!this.map.Items[r.Item]) {
+              return
+            }
+            this.editItem = this.map.Items[r.Item]
+            this.showItemContextMenu = true
+          } else if (r.Network) {
+            if (!this.map.Networks[r.Network]) {
+              return
+            }
+            this.editNetwork = this.map.Networks[r.Network]
+            this.showNetworkContextMenu = true
+          } else {
+            this.showMapContextMenu = true
+            this.editNode.ID = ''
           }
           break
         case 'formatNodes':
@@ -1319,6 +1547,42 @@ export default {
           this.deleteItemError = true
         })
     },
+    doDeleteNetwork() {
+      this.deleteNetworkError = false
+      this.$axios
+        .delete('/api/network/' + this.editNetwork.ID)
+        .then(() => {
+          this.$fetch()
+          this.deleteNetworkDialog = false
+        })
+        .catch((e) => {
+          this.deleteNetworkError = true
+        })
+    },
+    editNetworkPortFunc(item) {
+      const i = this.editNetwork.Ports.indexOf(item)
+      this.editNetworkPortIndex = i
+      this.editNetworkPort = {
+        Name: item.Name,
+        Polling: item.Polling,
+        X: item.X,
+        Y: item.Y,
+        State: 'unknown',
+      }
+      this.editNetworkPortDialog = true
+    },
+    saveNetworkPort() {
+      this.editNetwork.Ports.splice(
+        this.editNetworkPortIndex,
+        1,
+        this.editNetworkPort
+      )
+      this.editNetworkPortDialog = false
+    },
+    deleteNetPort(item) {
+      const i = this.editNetwork.Ports.indexOf(item)
+      this.editNetwork.Ports.splice(i, 1)
+    },
     doUpdateNode() {
       let url = '/api/node/update'
       if (this.copyFrom && this.copyPolling) {
@@ -1352,6 +1616,22 @@ export default {
         })
         .catch((e) => {
           this.editItemError = true
+        })
+    },
+    doUpdateNetwork() {
+      this.editNetworkError = false
+      this.editNetwork.X *= 1
+      this.editNetwork.Y *= 1
+      this.editNetwork.H *= 1
+      this.editNetwork.W *= 1
+      this.$axios
+        .post('/api/network/update', this.editNetwork)
+        .then(() => {
+          this.$fetch()
+          this.editNetworkDialog = false
+        })
+        .catch((e) => {
+          this.editnNetworkError = true
         })
     },
     addNode() {
@@ -1394,15 +1674,24 @@ export default {
       }
       this.editItemDialog = true
     },
-    deleteNode() {
-      this.showNodeDialog = false
-      this.deleteNodes = [this.editNode.ID]
-      this.deleteDialog = true
-    },
-    deleteItem() {
-      this.showNodeDialog = false
-      this.deleteNodes = [this.editNode.ID]
-      this.deleteDialog = true
+    addNetwork() {
+      this.editNetwork = {
+        ID: '',
+        Name: '新規ネットワーク',
+        IP: '',
+        X: this.x,
+        Y: this.y,
+        W: 0,
+        H: 0,
+        Descr: '',
+        SnmpMode: '',
+        Community: '',
+        User: '',
+        Password: '',
+        URL: '',
+        Ports: [],
+      }
+      this.editNetworkDialog = true
     },
     copyNode() {
       this.showNodeDialog = false
@@ -1419,10 +1708,6 @@ export default {
       this.editItem.ID = ''
       this.editItem.Text += 'のコピー'
       this.editItemDialog = true
-    },
-    showEditNodeDialog() {
-      this.showNodeDialog = false
-      this.editNodeDialog = true
     },
     showNodePollingPage() {
       this.$router.push({ path: '/node/polling/' + this.editNode.ID })

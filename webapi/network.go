@@ -9,15 +9,10 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func deleteNetworks(c echo.Context) error {
-	ids := []string{}
-	if err := c.Bind(&ids); err != nil {
+func deleteNetwork(c echo.Context) error {
+	id := c.Param("id")
+	if err := datastore.DeleteNetwok(id); err != nil {
 		return echo.ErrBadRequest
-	}
-	for _, id := range ids {
-		if err := datastore.DeleteNetwok(id); err != nil {
-			return echo.ErrBadRequest
-		}
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
@@ -45,5 +40,19 @@ func postNetwork(c echo.Context) error {
 		NodeName: nu.Name,
 		Event:    fmt.Sprintf("ネットワークを更新しました(%s)", nu.ID),
 	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postNetworkPos(c echo.Context) error {
+	var pos itemPosWebAPI
+	if err := c.Bind(&pos); err != nil {
+		return echo.ErrBadRequest
+	}
+	n := datastore.GetNetwork(pos.ID)
+	if n == nil {
+		return echo.ErrBadRequest
+	}
+	n.X = pos.X
+	n.Y = pos.Y
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

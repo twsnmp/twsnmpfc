@@ -62,7 +62,7 @@ func loadMapData() error {
 			_ = b.ForEach(func(k, v []byte) error {
 				var n NetworkEnt
 				if err := json.Unmarshal(v, &n); err == nil {
-					items.Store(n.ID, &n)
+					networks.Store(n.ID, &n)
 				}
 				return nil
 			})
