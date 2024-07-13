@@ -1451,6 +1451,24 @@ export default {
             this.editItemDialog = true
           }
           break
+        case 'networkDoubleClicked':
+          if (this.map.Networks[r.Param]) {
+            const n = this.map.Networks[r.Param]
+            if (n.URL) {
+              this.urls = n.URL.split(',')
+              if (this.urls.length === 1) {
+                this.openURL(this.urls[0])
+                return
+              } else if (this.urls.length > 1) {
+                this.openURLDialog = true
+                return
+              }
+            }
+            this.urls = []
+            this.editNetwork = n
+            this.editNetworkDialog = true
+          }
+          break
         case 'contextMenu':
           this.x = r.x
           this.y = r.y
