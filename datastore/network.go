@@ -31,6 +31,7 @@ type NetworkEnt struct {
 	W         int
 	H         int
 	Error     string
+	LLDP      bool
 	Ports     []PortEnt
 }
 
@@ -72,6 +73,7 @@ func UpdateNetwork(n *NetworkEnt) error {
 	if err != nil {
 		return err
 	}
+	networks.Store(n.ID, n)
 	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("networks"))
 		return b.Put([]byte(n.ID), s)
@@ -110,8 +112,10 @@ func GetNetwork(id string) *NetworkEnt {
 	if db == nil {
 		return nil
 	}
-	if n, ok := networks.Load(id); ok {
-		return n.(*NetworkEnt)
+	if v, ok := networks.Load(id); ok {
+		if n, ok := v.(*NetworkEnt); ok {
+			return n
+		}
 	}
 	return nil
 }
@@ -119,14 +123,17 @@ func GetNetwork(id string) *NetworkEnt {
 // ForEachNetworks : Network毎の処理
 func ForEachNetworks(f func(*NetworkEnt) bool) {
 	networks.Range(func(_, v interface{}) bool {
-		return f(v.(*NetworkEnt))
+		if n, ok := v.(*NetworkEnt); ok {
+			return f(n)
+		}
+		return true
 	})
 }
 
 // 保存する前にサイズを補正する
 func checkNetwork(n *NetworkEnt) {
 	xMax := 5 // 最小幅は5ポート分
-	yMax := 1 // 最小の高さは１ポート分
+	yMax := 0 // 最小の高さは１ポート分
 	for _, p := range n.Ports {
 		if xMax < p.X {
 			xMax = p.X
@@ -135,6 +142,7 @@ func checkNetwork(n *NetworkEnt) {
 			yMax = p.Y
 		}
 	}
-	n.W = xMax*45 + 10
-	n.H = yMax*45 + MapConf.FontSize + 15
+	n.W = (xMax+1)*45 + 20
+	n.H = (yMax+1)*55 + MapConf.FontSize + 20
+	n.Error = ""
 }

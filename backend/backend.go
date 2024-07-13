@@ -24,6 +24,8 @@ func Start(ctx context.Context, dsp, vn string, wg *sync.WaitGroup) error {
 	go mapBackend(ctx, wg)
 	wg.Add(1)
 	go aiBackend(ctx, wg)
+	wg.Add(1)
+	go networkBackend(ctx, wg)
 	return nil
 }
 

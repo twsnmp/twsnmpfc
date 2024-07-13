@@ -51,7 +51,7 @@ const setIconToMap = (e) => {
 const showMAP = (div, m, url, ro) => {
   const ms = m.MapConf.MapSize || 0
   if (!mapP5 || ms !== mapSize) {
-    mapSize = m.MapConf.mapSize
+    mapSize = m.MapConf.MapSize
     initMap(div, ms)
   }
   if (!url || url === '/') {
@@ -225,7 +225,7 @@ const getLinePos = (id,polling) => {
     }
     return {
       X: net.X + net.Ports[pi].X * 45 + 10 + 20,
-      Y: net.Y + net.Ports[pi].Y * 45 + 15 + fontSize + 20
+      Y: net.Y + net.Ports[pi].Y * 55 + fontSize + 20
     }
   }
   if (!nodes[id]) {
@@ -304,10 +304,10 @@ const mapMain = (p5) => {
           p5.text('構成を分析中...',15,fontSize * 2 + 15)
         }
       } else {
-        p5.textSize(8)
+        p5.textSize(6)
         for(const p of networks[k].Ports) {
           const x = p.X * 45 + 10
-          const y = p.Y * 45 + fontSize + 15
+          const y = p.Y * 55 + fontSize +15
           p5.image(portImage,x, y ,40,40)
           p5.fill(p.State === 'up' ? '#11ee00' : ' #999')
           p5.circle(x+4,y+4,8)

@@ -17,7 +17,7 @@ import (
 
 func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Println("start map")
+	log.Println("start map backend")
 	clearPollingState()
 	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
 		updateNodeState(n)
@@ -34,7 +34,7 @@ func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 		case <-ctx.Done():
 			timer.Stop()
 			newVersionTimer.Stop()
-			log.Println("stop map")
+			log.Println("stop map backend")
 			return
 		case <-newVersionTimer.C:
 			datastore.SaveMapData()
