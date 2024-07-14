@@ -1420,6 +1420,7 @@ export default {
     this.$setIconCodeMap(this.$iconList)
     this.$setStateColorMap(this.$stateList)
     this.$setCallback(this.callback)
+    this.$setMapContextMenu(false)
   },
   beforeDestroy() {
     this.$setMapContextMenu(true)
