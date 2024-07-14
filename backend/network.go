@@ -78,6 +78,7 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 	defer agent.Conn.Close()
 	setName := n.Name == ""
 	setDescr := n.Descr == ""
+	portMap := make(map[string]string)
 	x := 0
 	y := 0
 	// LLDP-MIBの対応をチェック
@@ -87,11 +88,13 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 			return nil
 		}
 		switch a[0] {
+		case "lldpLocChassisId":
+			n.SystemID = datastore.GetMIBValueString(a[0], &variable, false)
 		case "lldpLocSysName":
 			if setName {
 				n.Name = datastore.GetMIBValueString(a[0], &variable, false)
 			}
-		case "lldpLocSysDescr":
+		case "lldpLocSysDesc":
 			if setDescr {
 				n.Descr = datastore.GetMIBValueString(a[0], &variable, false)
 			}
@@ -99,9 +102,20 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 			if setDescr {
 				n.Descr += " " + datastore.GetMIBValueString(a[0], &variable, false)
 			}
+		case "lldpLocPortId":
+			portMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, false)
 		case "lldpLocPortDesc":
+			id, ok := portMap[a[1]]
+			if !ok {
+				id = a[1]
+			}
+			name := datastore.GetMIBValueString(a[0], &variable, false)
+			if name == "" {
+				name = id
+			}
 			n.Ports = append(n.Ports, datastore.PortEnt{
-				Name:    datastore.GetMIBValueString(a[0], &variable, false),
+				Name:    name,
+				ID:      id,
 				X:       x,
 				Y:       y,
 				Polling: fmt.Sprintf("ifOperStatus.%s", a[1]),
@@ -173,10 +187,15 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 		}
 		for _, variable := range r.Variables {
 			if datastore.MIBDB.OIDToName(variable.Name) == name {
+				pn := datastore.GetMIBValueString(name, &variable, false)
+				if pn == "" {
+					pn = "#" + index
+				}
 				n.Ports = append(n.Ports, datastore.PortEnt{
-					Name:    datastore.GetMIBValueString(name, &variable, false),
+					Name:    pn,
 					X:       x,
 					Y:       y,
+					ID:      index,
 					Polling: fmt.Sprintf("ifOperStatus.%s", index),
 				})
 				x++
@@ -196,12 +215,12 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 func checkNetworkPortState(n *datastore.NetworkEnt) {
 	agent := getSNMPAgentForNetwork(n)
 	if agent == nil {
-		n.Error = "SNMPのパラメータエラー"
+		n.Error = "SNMPパラメータエラー"
 		return
 	}
 	err := agent.Connect()
 	if err != nil {
-		n.Error = fmt.Sprintf("SNMP Connect err=%s", err)
+		n.Error = fmt.Sprintf("SNMPアクセス err=%s", err)
 		log.Printf("checkNetworkPortState err=%v", err)
 		return
 	}
@@ -216,7 +235,7 @@ func checkNetworkPortState(n *datastore.NetworkEnt) {
 		}
 		r, err := agent.Get([]string{datastore.MIBDB.NameToOID(a[0])})
 		if err != nil {
-			n.Error = fmt.Sprintf("SNMP get %s err=%s", p.Polling, err)
+			n.Error = fmt.Sprintf("SNMP%s取得 err=%s", p.Polling, err)
 			log.Printf("checkNetworkPortState err=%v", err)
 			continue
 		}

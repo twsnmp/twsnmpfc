@@ -9,6 +9,7 @@ import (
 )
 
 type PortEnt struct {
+	ID      string
 	Name    string
 	Polling string
 	X       int
@@ -26,10 +27,13 @@ type NetworkEnt struct {
 	User      string
 	Password  string
 	URL       string
+	AutoCon   bool
+	HPorts    int
 	X         int
 	Y         int
 	W         int
 	H         int
+	SystemID  string
 	Error     string
 	LLDP      bool
 	Ports     []PortEnt
@@ -145,4 +149,10 @@ func checkNetwork(n *NetworkEnt) {
 	n.W = (xMax+1)*45 + 20
 	n.H = (yMax+1)*55 + MapConf.FontSize + 20
 	n.Error = ""
+	if n.HPorts < 1 {
+		n.HPorts = 24
+	}
+	if n.SystemID == "" {
+		n.SystemID = n.IP
+	}
 }

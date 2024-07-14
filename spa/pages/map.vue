@@ -359,6 +359,9 @@
         <v-alert v-model="editNetworkError" color="error" dense dismissible>
           ネットワークの保存に失敗しました
         </v-alert>
+        <v-alert v-if="editNetwork.Error != ''" color="error" dense>
+          {{ editNetwork.Error }}
+        </v-alert>
         <v-card-text>
           <v-row dense>
             <v-col>
@@ -376,6 +379,31 @@
           </v-row>
           <v-row dense>
             <v-col>
+              <v-text-field
+                v-model="editNetwork.HPorts"
+                type="number"
+                min="5"
+                max="100"
+                label="横の最大ポート数"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-chip v-if="editNetwork.LLDP" color="primary" variant="flat">
+                LLDP
+              </v-chip>
+              <v-chip v-if="!editNetwork.LLDP" color="error" variant="flat">
+                Not LLDP
+              </v-chip>
+            </v-col>
+            <v-col>
+              <v-switch
+                v-model="editNetwork.AutoConn"
+                label="自動で接続先を探す"
+              ></v-switch>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
               <v-select
                 v-model="editNetwork.SnmpMode"
                 :items="$snmpModeList"
@@ -389,16 +417,15 @@
                 label="Community"
               ></v-text-field>
             </v-col>
-          </v-row>
-          <v-row dense>
-            <v-col>
+            <v-col v-if="editNetwork.SnmpMode == ''"></v-col>
+            <v-col v-if="editNetwork.SnmpMode != ''">
               <v-text-field
                 v-model="editNetwork.User"
                 autocomplete="username"
                 label="ユーザー"
               ></v-text-field>
             </v-col>
-            <v-col>
+            <v-col v-if="editNetwork.SnmpMode != ''">
               <v-text-field
                 v-model="editNetwork.Password"
                 autocomplete="new-password"
@@ -408,7 +435,20 @@
             </v-col>
           </v-row>
           <v-text-field v-model="editNetwork.URL" label="URL"></v-text-field>
-          <v-text-field v-model="editNetwork.Descr" label="説明"></v-text-field>
+          <v-textarea
+            v-model="editNetwork.Descr"
+            clear-icon="mdi-close-circle"
+            label="説明"
+            rows="3"
+            clearable
+          >
+          </v-textarea>
+          <v-text-field
+            v-if="editNetwork.LLDP"
+            v-model="editNetwork.SystemID"
+            label="ID"
+            readonly
+          ></v-text-field>
           <v-data-table
             :headers="netPortHeaders"
             :items="editNetwork.Ports"
@@ -433,6 +473,14 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn color="error" @click="researchNetwork">
+            <v-icon>mdi-refresh</v-icon>
+            再検索
+          </v-btn>
+          <v-btn color="error" @click="reNumberNetworkPort">
+            <v-icon>mdi-order-numeric-ascending</v-icon>
+            ポート再配置
+          </v-btn>
           <v-btn color="primary" dark @click="doUpdateNetwork">
             <v-icon>mdi-content-save</v-icon>
             保存
@@ -1642,6 +1690,7 @@ export default {
       this.editNetwork.Y *= 1
       this.editNetwork.H *= 1
       this.editNetwork.W *= 1
+      this.editNetwork.HPorts *= 1
       this.$axios
         .post('/api/network/update', this.editNetwork)
         .then(() => {
@@ -1652,14 +1701,54 @@ export default {
           this.editnNetworkError = true
         })
     },
+    researchNetwork() {
+      this.editNetworkError = false
+      this.editNetwork.X *= 1
+      this.editNetwork.Y *= 1
+      this.editNetwork.H *= 1
+      this.editNetwork.W *= 1
+      this.editNetwork.Ports = [] // ポートをクリア
+      this.editNetwork.Error = '' // エラーをクリア
+      this.editNetwork.LLDP = false // LLDPをクリア
+      this.editNetwork.HPorts *= 1
+      this.$axios
+        .post('/api/network/update', this.editNetwork)
+        .then(() => {
+          this.$fetch()
+          this.editNetworkDialog = false
+        })
+        .catch((e) => {
+          this.editnNetworkError = true
+        })
+    },
+    reNumberNetworkPort() {
+      const ports = []
+      let x = 0
+      let y = 0
+      const HPorts = this.editNetwork.HPorts || 24
+      this.editNetwork.Ports.forEach((p) => {
+        p.X = x
+        p.Y = y
+        x++
+        if (x >= HPorts) {
+          x = 0
+          y++
+        }
+        ports.push(p)
+      })
+      this.editNetwork.Ports = ports
+    },
     addNode() {
+      const m = document.getElementById('map')
+      const x = Math.trunc(m && m.scrollLeft ? this.x + m.scrollLeft : this.x)
+      const y = Math.trunc(m && m.scrollTop ? this.y + m.scrollTop : this.y)
       this.copyFrom = ''
       this.editNode = {
         ID: '',
         Name: '新規ノード',
         IP: '',
-        X: this.x,
-        Y: this.y,
+        X: x,
+        Y: y,
         Descr: '',
         Icon: 'desktop',
         MAC: '',
@@ -1676,11 +1765,14 @@ export default {
       this.editNodeDialog = true
     },
     addItem() {
+      const m = document.getElementById('map')
+      const x = Math.trunc(m && m.scrollLeft ? this.x + m.scrollLeft : this.x)
+      const y = Math.trunc(m && m.scrollTop ? this.y + m.scrollTop : this.y)
       this.editItem = {
         ID: '',
         Type: 2, // Text
-        X: this.x,
-        Y: this.y,
+        X: x,
+        Y: y,
         W: 100,
         H: 32,
         Text: '新しいラベル',
@@ -1693,14 +1785,19 @@ export default {
       this.editItemDialog = true
     },
     addNetwork() {
+      const m = document.getElementById('map')
+      const x = Math.trunc(m && m.scrollLeft ? this.x + m.scrollLeft : this.x)
+      const y = Math.trunc(m && m.scrollTop ? this.y + m.scrollTop : this.y)
       this.editNetwork = {
         ID: '',
         Name: '',
         IP: '',
-        X: this.x,
-        Y: this.y,
+        X: x,
+        Y: y,
         W: 0,
         H: 0,
+        HPorts: 24,
+        AutoCon: false,
         Descr: '',
         SnmpMode: this.map.MapConf.SnmpMode,
         Community: this.map.MapConf.Community,
@@ -1708,6 +1805,8 @@ export default {
         Password: '',
         URL: '',
         Ports: [],
+        Error: '',
+        LLDP: false,
       }
       this.editNetworkDialog = true
     },
