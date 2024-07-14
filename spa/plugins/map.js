@@ -215,7 +215,7 @@ const getLinePos = (id,polling) => {
     }
     let pi =  -1
     for(let i = 0; i <  net.Ports.length;i++) {
-      if (net.Ports[i].Polling === polling) {
+      if (net.Ports[i].ID === polling) {
         pi = i
         break
       }

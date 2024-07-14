@@ -462,10 +462,20 @@
               {{ $getStateName(item.State) }}
             </template>
             <template #[`item.actions`]="{ item }">
+              <v-icon small @click="topNetworkPort(item)">
+                mdi-arrow-collapse-up
+              </v-icon>
+              <v-icon small @click="upNetworkPort(item)"> mdi-arrow-up </v-icon>
+              <v-icon small @click="downNetworkPort(item)">
+                mdi-arrow-down
+              </v-icon>
+              <v-icon small @click="bottomNetworkPort(item)">
+                mdi-arrow-collapse-down
+              </v-icon>
               <v-icon small @click="editNetworkPortFunc(item)">
                 mdi-pencil
               </v-icon>
-              <v-icon small color="red" @click="deleteNetPort(item)">
+              <v-icon small color="red" @click="deleteNetworkPort(item)">
                 mdi-delete
               </v-icon>
             </template>
@@ -473,11 +483,15 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" @click="researchNetwork">
+          <v-btn v-if="editNetwork.ID" color="error" @click="researchNetwork">
             <v-icon>mdi-refresh</v-icon>
             再検索
           </v-btn>
-          <v-btn color="error" @click="reNumberNetworkPort">
+          <v-btn
+            v-if="editNetwork.ID"
+            color="error"
+            @click="reNumberNetworkPort"
+          >
             <v-icon>mdi-order-numeric-ascending</v-icon>
             ポート再配置
           </v-btn>
@@ -532,6 +546,13 @@
                 max="100"
                 style="width: 80px"
                 label="Y"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNetworkPort.ID"
+                label="ID"
+                readonly
               ></v-text-field>
             </v-col>
           </v-row>
@@ -1633,7 +1654,8 @@ export default {
         Polling: item.Polling,
         X: item.X,
         Y: item.Y,
-        State: 'unknown',
+        ID: item.ID,
+        State: item.State,
       }
       this.editNetworkPortDialog = true
     },
@@ -1645,9 +1667,41 @@ export default {
       )
       this.editNetworkPortDialog = false
     },
-    deleteNetPort(item) {
+    deleteNetworkPort(item) {
       const i = this.editNetwork.Ports.indexOf(item)
       this.editNetwork.Ports.splice(i, 1)
+    },
+    upNetworkPort(item) {
+      const i = this.editNetwork.Ports.indexOf(item)
+      if (i <= 0) {
+        return
+      }
+      const r = this.editNetwork.Ports.splice(i, 1)
+      this.editNetwork.Ports.splice(i - 1, 0, r[0])
+    },
+    topNetworkPort(item) {
+      const i = this.editNetwork.Ports.indexOf(item)
+      if (i <= 0) {
+        return
+      }
+      const r = this.editNetwork.Ports.splice(i, 1)
+      this.editNetwork.Ports.unshift(r[0])
+    },
+    downNetworkPort(item) {
+      const i = this.editNetwork.Ports.indexOf(item)
+      if (i >= this.editNetwork.Ports.length - 1) {
+        return
+      }
+      const r = this.editNetwork.Ports.splice(i, 1)
+      this.editNetwork.Ports.splice(i + 1, 0, r[0])
+    },
+    bottomNetworkPort(item) {
+      const i = this.editNetwork.Ports.indexOf(item)
+      if (i >= this.editNetwork.Ports.length - 1) {
+        return
+      }
+      const r = this.editNetwork.Ports.splice(i, 1)
+      this.editNetwork.Ports.push(r[0])
     },
     doUpdateNode() {
       let url = '/api/node/update'
