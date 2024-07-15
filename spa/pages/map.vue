@@ -586,6 +586,59 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="showEditNetworkLineDialog" persistent max-width="70vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ネットワークのライン編集</span>
+        </v-card-title>
+        <v-alert v-model="lineError" color="error" dense dismissible>
+          ラインの編集に失敗しました
+        </v-alert>
+        <v-card-text>
+          <v-data-table
+            :headers="linesHeaders"
+            :items="selectedNetworkLines"
+            :items-per-page="5"
+            dense
+          >
+            <template #[`item.NodeID1`]="{ item }">
+              {{ getNodeName(item.NodeID1) }}
+            </template>
+            <template #[`item.NodeID2`]="{ item }">
+              {{ getNodeName(item.NodeID2) }}
+            </template>
+            <template #[`item.PollingID1`]="{ item }">
+              {{ getPollingName(item.PollingID1) }}
+            </template>
+            <template #[`item.PollingID2`]="{ item }">
+              {{ getPollingName(item.PollingID2) }}
+            </template>
+            <template #[`item.actions`]="{ item }">
+              <v-icon small @click="editNetworkLine(item)"> mdi-pencil </v-icon>
+              <v-icon small color="red" @click="deleteNetworkLine(item)">
+                mdi-delete
+              </v-icon>
+            </template>
+          </v-data-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="normal"
+            dark
+            @click="
+              {
+                showEditNetworkLineDialog = false
+                $fetch()
+              }
+            "
+          >
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="editNetworkPortDialog" persistent max-width="50vw">
       <v-card>
         <v-card-title>
@@ -1302,6 +1355,14 @@
             <v-list-item-title>接続先を探す</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item @click="showEditNetworkLines">
+          <v-list-item-icon>
+            <v-icon>mdi-playlist-edit</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>ライン編集</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item @click="deleteNetworkDialog = true">
           <v-list-item-icon
             ><v-icon color="red">mdi-delete</v-icon></v-list-item-icon
@@ -1437,8 +1498,10 @@ export default {
         { text: 'ポーリング1', value: 'PollingID1' },
         { text: 'ノード２', value: 'NodeID2' },
         { text: 'ポーリング2', value: 'PollingID2' },
-        { text: '接続', value: 'actions' },
+        { text: '操作', value: 'actions' },
       ],
+      showEditNetworkLineDialog: false,
+      selectedNetworkLines: {},
     }
   },
   async fetch() {
@@ -1525,11 +1588,22 @@ export default {
     this.$setMapContextMenu(true)
   },
   methods: {
-    nodeName(id) {
-      return this.map.Nodes[id] ? this.map.Nodes[id].Name : ''
-    },
     pollingList(id, lineMode) {
       const l = []
+      if (id.startsWith('NET:')) {
+        const a = id.split(':')
+        const net = this.map.Networks[a[1]]
+        if (!net) {
+          return l
+        }
+        for (const p of net.Ports) {
+          l.push({
+            text: net.Name + ':' + p.Name,
+            state: p.State,
+            value: p.ID,
+          })
+        }
+      }
       if (!this.map.Nodes[id] || !this.map.Pollings[id]) {
         return l
       }
@@ -1549,6 +1623,19 @@ export default {
       return l
     },
     getPollingIndex(nid, pid) {
+      if (nid.startsWith('NET:')) {
+        const a = nid.split(':')
+        const net = this.map.Networks[a[1]]
+        if (!net) {
+          return -1
+        }
+        for (let i = 0; i < net.Ports.length; i++) {
+          if (net.Ports[i].ID === pid) {
+            return i
+          }
+        }
+        return -1
+      }
       if (!this.map.Pollings[nid]) {
         return -1
       }
@@ -1706,8 +1793,8 @@ export default {
         this.editLine.NodeID2,
         this.editLine.PollingID2
       )
-      this.editLine.NodeName1 = this.nodeName(this.editLine.NodeID1)
-      this.editLine.NodeName2 = this.nodeName(this.editLine.NodeID2)
+      this.editLine.NodeName1 = this.getNodeName(this.editLine.NodeID1)
+      this.editLine.NodeName2 = this.getNodeName(this.editLine.NodeID2)
       this.lineDialog = true
     },
     doDeleteNode() {
@@ -2004,7 +2091,6 @@ export default {
     addLineFromList(l) {
       const i = this.foundNeighborNetworksAndLines.Lines.indexOf(l)
       if (i >= 0) {
-        this.foundNeighborNetworksAndLines.Lines.splice(i, 1)
         this.$axios
           .post('/api/line/add', l)
           .then(() => {
@@ -2014,6 +2100,42 @@ export default {
             this.lineError = true
           })
       }
+    },
+    showEditNetworkLines() {
+      this.selectedNetworkLines = []
+      for (const l of this.map.Lines) {
+        if (
+          l.NodeID1.endsWith(this.editNetwork.ID) ||
+          l.NodeID2.endsWith(this.editNetwork.ID)
+        ) {
+          this.selectedNetworkLines.push(l)
+        }
+      }
+      this.showEditNetworkLineDialog = true
+    },
+    editNetworkLine(l) {
+      this.editLine = l
+      this.showEditNetworkLineDialog = false
+      this.selectedLinePolling1 = this.getPollingIndex(
+        this.editLine.NodeID1,
+        this.editLine.PollingID1
+      )
+      this.selectedLinePolling2 = this.getPollingIndex(
+        this.editLine.NodeID2,
+        this.editLine.PollingID2
+      )
+      this.editLine.NodeName1 = this.getNodeName(this.editLine.NodeID1)
+      this.editLine.NodeName2 = this.getNodeName(this.editLine.NodeID2)
+      this.lineDialog = true
+    },
+    deleteNetworkLine(l) {
+      const i = this.selectedNetworkLines.indexOf(l)
+      if (i < 0) {
+        return
+      }
+      this.editLine = l
+      this.deleteLine()
+      this.selectedNetworkLines.splice(i, 1)
     },
     copyNode() {
       this.showNodeDialog = false
@@ -2060,7 +2182,19 @@ export default {
       window.open(url, '_blank')
     },
     addLine() {
-      if (
+      if (this.editLine.NodeID1.startsWith('NET:')) {
+        const a = this.editLine.NodeID1.split(':')
+        const net = this.map.Networks[a[1]]
+        if (
+          net &&
+          this.selectedLinePolling1 >= 0 &&
+          this.selectedLinePolling1 < net.Ports.length
+        ) {
+          this.editLine.PollingID1 = net.Ports[this.selectedLinePolling1].ID
+        } else {
+          this.editLine.PollingID1 = ''
+        }
+      } else if (
         this.map.Pollings[this.editLine.NodeID1] &&
         this.selectedLinePolling1 >= 0 &&
         this.selectedLinePolling1 <
@@ -2071,7 +2205,19 @@ export default {
       } else {
         this.editLine.PollingID1 = ''
       }
-      if (
+      if (this.editLine.NodeID2.startsWith('NET:')) {
+        const a = this.editLine.NodeID2.split(':')
+        const net = this.map.Networks[a[1]]
+        if (
+          net &&
+          this.selectedLinePolling2 >= 0 &&
+          this.selectedLinePolling2 < net.Ports.length
+        ) {
+          this.editLine.PollingID2 = net.Ports[this.selectedLinePolling2].ID
+        } else {
+          this.editLine.PollingID2 = ''
+        }
+      } else if (
         this.map.Pollings[this.editLine.NodeID2] &&
         this.selectedLinePolling2 >= 0 &&
         this.selectedLinePolling2 <
