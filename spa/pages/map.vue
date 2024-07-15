@@ -395,12 +395,6 @@
                 Not LLDP
               </v-chip>
             </v-col>
-            <v-col>
-              <v-switch
-                v-model="editNetwork.AutoConn"
-                label="自動で接続先を探す"
-              ></v-switch>
-            </v-col>
           </v-row>
           <v-row dense>
             <v-col>
@@ -509,6 +503,85 @@
           >
             <v-icon>mdi-cancel</v-icon>
             キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog
+      v-model="showNeighborNetworksAndLinesDialog"
+      persistent
+      max-width="70vw"
+    >
+      <v-card>
+        <v-card-title>
+          <span class="headline">ネットワーク接続先の検索</span>
+        </v-card-title>
+        <v-alert v-model="showNeighborNetworksAndLinesWait" dense>
+          接続先を探しています...
+        </v-alert>
+        <v-alert
+          v-model="showNeighborNetworksAndLinesError"
+          color="error"
+          dense
+        >
+          接続先の検索に失敗しました。
+        </v-alert>
+        <v-alert v-model="lineError" color="error" dense dismissible>
+          ラインの接続に失敗しました
+        </v-alert>
+        <v-card-text>
+          <v-data-table
+            :headers="networksHeaders"
+            :items="foundNeighborNetworksAndLines.Networks"
+            :items-per-page="5"
+            dense
+          >
+            <template #[`item.actions`]="{ item }">
+              <v-icon small @click="addNetworkFromList(item)">
+                mdi-plus
+              </v-icon>
+            </template>
+          </v-data-table>
+          <v-data-table
+            :headers="linesHeaders"
+            :items="foundNeighborNetworksAndLines.Lines"
+            :items-per-page="5"
+            dense
+          >
+            <template #[`item.NodeID1`]="{ item }">
+              {{ getNodeName(item.NodeID1) }}
+            </template>
+            <template #[`item.NodeID2`]="{ item }">
+              {{ getNodeName(item.NodeID2) }}
+            </template>
+            <template #[`item.PollingID1`]="{ item }">
+              {{ getPollingName(item.PollingID1) }}
+            </template>
+            <template #[`item.PollingID2`]="{ item }">
+              {{ getPollingName(item.PollingID2) }}
+            </template>
+            <template #[`item.actions`]="{ item }">
+              <v-icon small @click="addLineFromList(item)">
+                mdi-lan-connect
+              </v-icon>
+            </template>
+          </v-data-table>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="normal"
+            dark
+            @click="
+              {
+                showNeighborNetworksAndLinesDialog = false
+                $fetch()
+              }
+            "
+          >
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -1223,6 +1296,12 @@
             <v-list-item-title>編集</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item @click="findNeighborNetworksAndLines">
+          <v-list-item-icon><v-icon>mdi-lan-connect</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>接続先を探す</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item @click="deleteNetworkDialog = true">
           <v-list-item-icon
             ><v-icon color="red">mdi-delete</v-icon></v-list-item-icon
@@ -1342,6 +1421,24 @@ export default {
         { text: 'Y', value: 'Y' },
         { text: '操作', value: 'actions' },
       ],
+      foundNeighborNetworksAndLines: { Networks: [], Lines: [] },
+      showNeighborNetworksAndLinesDialog: false,
+      showNeighborNetworksAndLinesWait: false,
+      showNeighborNetworksAndLinesError: false,
+      pollingNameMap: {},
+      networksHeaders: [
+        { text: '名前', value: 'Name' },
+        { text: 'ID', value: 'SystemID' },
+        { text: '管理IP', value: 'IP' },
+        { text: '追加', value: 'actions' },
+      ],
+      linesHeaders: [
+        { text: 'ノード1', value: 'NodeID1' },
+        { text: 'ポーリング1', value: 'PollingID1' },
+        { text: 'ノード２', value: 'NodeID2' },
+        { text: 'ポーリング2', value: 'PollingID2' },
+        { text: '接続', value: 'actions' },
+      ],
     }
   },
   async fetch() {
@@ -1350,6 +1447,7 @@ export default {
     const sbt = mb ? mb.scrollTop : 0
     const sbl = mb ? mb.scrollLeft : 0
     this.itemPollingList = []
+    this.pollingNameMap = {}
     for (const k in this.map.Pollings) {
       if (!this.map.Nodes[k]) {
         continue
@@ -1361,6 +1459,7 @@ export default {
             text: nodeName + p.Name,
             value: p.ID,
           })
+          this.pollingNameMap[p.ID] = p.Name
         } catch {}
       })
     }
@@ -1852,7 +1951,6 @@ export default {
         W: 0,
         H: 0,
         HPorts: 24,
-        AutoCon: false,
         Descr: '',
         SnmpMode: this.map.MapConf.SnmpMode,
         Community: this.map.MapConf.Community,
@@ -1864,6 +1962,58 @@ export default {
         LLDP: false,
       }
       this.editNetworkDialog = true
+    },
+    findNeighborNetworksAndLines() {
+      this.foundNeighborNetworksAndLines = {
+        Networks: [],
+        Lines: [],
+      }
+      this.lineError = false
+      this.showNeighborNetworksAndLinesWait = true
+      this.showNeighborNetworksAndLinesError = false
+      this.showNeighborNetworksAndLinesDialog = true
+      this.$axios
+        .get('/api/findNeighborNetworksAndLines/' + this.editNetwork.ID)
+        .then((r) => {
+          this.showNeighborNetworksAndLinesWait = false
+          this.foundNeighborNetworksAndLines = r.data
+        })
+        .catch((e) => {
+          this.showNeighborNetworksAndLinesWait = false
+          this.showNeighborNetworksAndLinesError = true
+        })
+    },
+    getNodeName(id) {
+      const a = id.split(':')
+      if (a.length > 1) {
+        return this.map.Networks[a[1]] ? this.map.Networks[a[1]].Name : id
+      }
+      return this.map.Nodes[id] ? this.map.Nodes[id].Name : id
+    },
+    getPollingName(id) {
+      return this.pollingNameMap[id] || id
+    },
+    addNetworkFromList(n) {
+      const i = this.foundNeighborNetworksAndLines.Networks.indexOf(n)
+      if (i >= 0) {
+        this.showNeighborNetworksAndLinesDialog = false
+        this.editNetworkDialog = true
+        this.editNetwork = n
+      }
+    },
+    addLineFromList(l) {
+      const i = this.foundNeighborNetworksAndLines.Lines.indexOf(l)
+      if (i >= 0) {
+        this.foundNeighborNetworksAndLines.Lines.splice(i, 1)
+        this.$axios
+          .post('/api/line/add', l)
+          .then(() => {
+            this.foundNeighborNetworksAndLines.Lines.splice(i, 1)
+          })
+          .catch((e) => {
+            this.lineError = true
+          })
+      }
     },
     copyNode() {
       this.showNodeDialog = false

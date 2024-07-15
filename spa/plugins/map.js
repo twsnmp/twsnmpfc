@@ -225,7 +225,7 @@ const getLinePos = (id,polling) => {
     }
     return {
       X: net.X + net.Ports[pi].X * 45 + 10 + 20,
-      Y: net.Y + net.Ports[pi].Y * 55 + fontSize + 20
+      Y: net.Y + net.Ports[pi].Y * 55 + fontSize + 20 + 10
     }
   }
   if (!nodes[id]) {

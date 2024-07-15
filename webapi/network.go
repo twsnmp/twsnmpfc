@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -55,4 +56,13 @@ func postNetworkPos(c echo.Context) error {
 	n.X = pos.X
 	n.Y = pos.Y
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func getFindNeighborNetworksAndLines(c echo.Context) error {
+	id := c.Param("id")
+	n := datastore.GetNetwork(id)
+	if n == nil {
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, backend.FindNeighborNetworksAndLines(n))
 }

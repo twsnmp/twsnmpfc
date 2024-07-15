@@ -39,7 +39,10 @@ func networkBackend(ctx context.Context, wg *sync.WaitGroup) {
 			now = time.Now().Unix()
 			j = 0
 			datastore.ForEachNetworks(func(n *datastore.NetworkEnt) bool {
-				if len(n.Ports) < 1 && n.Error == "" {
+				if n.Error != "" && len(n.Ports) < 1 {
+					return true
+				}
+				if len(n.Ports) < 1 {
 					log.Printf("get network port=%s", n.IP)
 					go getNetworkPorts(n)
 				} else if _, ok := checkNetworkMap[n.ID]; !ok {
@@ -71,8 +74,7 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 	}
 	err := agent.Connect()
 	if err != nil {
-		n.Error = fmt.Sprintf("SNMP Connect err=%s", err)
-		log.Printf("getNetworkPorts err=%v", err)
+		n.Error = fmt.Sprintf("SNMPアクセスエラー err=%s", err)
 		return
 	}
 	defer agent.Conn.Close()
@@ -116,6 +118,7 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 			n.Ports = append(n.Ports, datastore.PortEnt{
 				Name:    name,
 				ID:      id,
+				Index:   a[1],
 				X:       x,
 				Y:       y,
 				Polling: fmt.Sprintf("ifOperStatus.%s", a[1]),
@@ -156,8 +159,6 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 					}
 				}
 			}
-		} else {
-			log.Println(err)
 		}
 	}
 	ifIndexs := []string{}
@@ -173,17 +174,20 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 		return nil
 	})
 	if err != nil {
-		n.Error = fmt.Sprintf("SNMP get err=%v", err)
-		log.Println(err)
+		n.Error = fmt.Sprintf("SNMP取得エラー err=%v", err)
 		return
 	}
 	for _, index := range ifIndexs {
-		name := fmt.Sprintf("ifDescr.%s", index)
+		name := fmt.Sprintf("ifName.%s", index)
 		oid := datastore.MIBDB.NameToOID(name)
 		r, err := agent.Get([]string{oid})
 		if err != nil {
-			log.Println(err)
-			continue
+			name = fmt.Sprintf("ifDescr.%s", index)
+			oid = datastore.MIBDB.NameToOID(name)
+			r, err = agent.Get([]string{oid})
+			if err != nil {
+				continue
+			}
 		}
 		for _, variable := range r.Variables {
 			if datastore.MIBDB.OIDToName(variable.Name) == name {
@@ -196,6 +200,7 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 					X:       x,
 					Y:       y,
 					ID:      index,
+					Index:   index,
 					Polling: fmt.Sprintf("ifOperStatus.%s", index),
 				})
 				x++
@@ -212,6 +217,185 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 	}
 }
 
+type FindNeighborNetworksAndLinesResp struct {
+	Networks []*datastore.NetworkEnt
+	Lines    []*datastore.LineEnt
+}
+
+// FindNeighborNetworksAndLines 接続可能なLineと隣接する未登録のネットワークを検索する
+func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworksAndLinesResp {
+	ret := &FindNeighborNetworksAndLinesResp{
+		Networks: []*datastore.NetworkEnt{},
+		Lines:    []*datastore.LineEnt{},
+	}
+	agent := getSNMPAgentForNetwork(n)
+	if agent == nil {
+		n.Error = "SNMPパラメータエラー"
+		return ret
+	}
+	err := agent.Connect()
+	if err != nil {
+		n.Error = fmt.Sprintf("SNMP接続エラー err=%s", err)
+		return ret
+	}
+	defer agent.Conn.Close()
+	remoteMap := make(map[string]*datastore.NetworkEnt)
+	// LLDP-MIBのlldpRemoteSystemsDataから隣接するNetworkを探す
+	agent.Walk(datastore.MIBDB.NameToOID("lldpRemoteSystemsData"), func(variable gosnmp.SnmpPDU) error {
+		a := strings.SplitN(datastore.MIBDB.OIDToName(variable.Name), ".", 2)
+		if len(a) != 2 {
+			return nil
+		}
+		switch a[0] {
+		case "lldpRemChassisId":
+			remoteMap[a[1]] = &datastore.NetworkEnt{
+				SystemID: datastore.GetMIBValueString(a[0], &variable, false),
+			}
+		case "lldpRemPortId":
+			if rn, ok := remoteMap[a[1]]; ok {
+				b := strings.Split(a[1], ".")
+				if len(b) < 2 {
+					return nil
+				}
+				id := datastore.GetMIBValueString(a[0], &variable, false)
+				rn.Ports = append(rn.Ports, datastore.PortEnt{
+					ID:    id,
+					Index: b[1],
+					Name:  id,
+					X:     len(n.Ports),
+				})
+			}
+		case "lldpRemSysName":
+			if rn, ok := remoteMap[a[1]]; ok {
+				rn.Name = datastore.GetMIBValueString(a[0], &variable, false)
+			}
+		case "lldpRemSysDesc":
+			if rn, ok := remoteMap[a[1]]; ok {
+				rn.Descr = datastore.GetMIBValueString(a[0], &variable, false)
+			}
+		case "lldpRemSysCapEnabled":
+			if rn, ok := remoteMap[a[1]]; ok {
+				rn.Descr += " " + datastore.GetMIBValueString(a[0], &variable, false)
+			}
+		case "lldpRemManAddrIfId":
+			b := strings.Split(a[1], ".")
+			if len(b) == 3+2+4 {
+				if rn, ok := remoteMap[strings.Join(b[:3], ".")]; ok {
+					rn.IP = strings.Join(b[5:], ".")
+				}
+			}
+		}
+		return nil
+	})
+	// 見つけた隣接ネットワークを確認する
+	for _, rn := range remoteMap {
+		rnr := datastore.FindNetwork(rn.SystemID, rn.IP)
+		if rnr == nil {
+			// 未登録
+			rn.SnmpMode = n.SnmpMode
+			rn.Community = n.Community
+			rn.Password = n.Password
+			rn.User = n.User
+			rn.HPorts = n.HPorts
+			rn.Ports = []datastore.PortEnt{}
+			rn.Y = n.Y + n.H
+			rn.X = n.X
+			ret.Networks = append(ret.Networks, rn)
+		} else {
+			// 登録済みならラインの候補に
+			for _, rp := range rn.Ports {
+				for _, lp := range n.Ports {
+					if lp.Index == rp.Index {
+						l := &datastore.LineEnt{
+							NodeID1:    fmt.Sprintf("NET:%s", n.ID),
+							PollingID1: lp.ID,
+							NodeID2:    fmt.Sprintf("NET:%s", rnr.ID),
+							PollingID2: rp.ID,
+							Width:      2,
+						}
+						if !datastore.HasLine(l, true) {
+							ret.Lines = append(ret.Lines, l)
+						}
+
+					}
+				}
+			}
+		}
+	}
+	// ARPテーブルから接続先を探す
+	arpMap := make(map[string]string)
+	err = agent.Walk(datastore.MIBDB.NameToOID("ipNetToMediaPhysAddress"), func(variable gosnmp.SnmpPDU) error {
+		a := strings.SplitN(datastore.MIBDB.OIDToName(variable.Name), ".", 2)
+		if len(a) != 2 {
+			return nil
+		}
+		switch a[0] {
+		case "ipNetToMediaPhysAddress":
+			arpMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, false)
+		}
+		return nil
+	})
+	if err != nil {
+		// ipNetToMediaPhysAddress 未対応
+		agent.Walk(datastore.MIBDB.NameToOID("atPhysAddress"), func(variable gosnmp.SnmpPDU) error {
+			a := strings.SplitN(datastore.MIBDB.OIDToName(variable.Name), ".", 2)
+			if len(a) != 2 {
+				return nil
+			}
+			switch a[0] {
+			case "atPhysAddress":
+				arpMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, false)
+			}
+			return nil
+		})
+	}
+	for index, mac := range arpMap {
+		a := strings.Split(index, ".")
+		if len(a) < 1+4 {
+			continue
+		}
+		ip := strings.Join(a[len(a)-4:], ".")
+		node := datastore.FindNodeFromIP(ip)
+		if node == nil {
+			node = datastore.FindNodeFromMAC(mac)
+		}
+		if node == nil {
+			continue
+		}
+		pid := ""
+		pcmp := fmt.Sprintf("ifOperStatus.%s", a[0])
+		datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
+			if p.NodeID == node.ID {
+				if p.Type == "snmp" && p.Params == pcmp {
+					pid = p.ID
+					return false
+				}
+				if pid == "" {
+					pid = p.ID
+				} else if p.Type == "ping" {
+					pid = p.ID
+				}
+			}
+			return true
+		})
+		for _, lp := range n.Ports {
+			if lp.Index == a[0] {
+				l := &datastore.LineEnt{
+					NodeID1:    fmt.Sprintf("NET:%s", n.ID),
+					PollingID1: lp.ID,
+					NodeID2:    node.ID,
+					PollingID2: pid,
+					Width:      2,
+				}
+				if !datastore.HasLine(l, false) {
+					ret.Lines = append(ret.Lines, l)
+				}
+			}
+		}
+	}
+	return ret
+}
+
 func checkNetworkPortState(n *datastore.NetworkEnt) {
 	agent := getSNMPAgentForNetwork(n)
 	if agent == nil {
@@ -221,7 +405,6 @@ func checkNetworkPortState(n *datastore.NetworkEnt) {
 	err := agent.Connect()
 	if err != nil {
 		n.Error = fmt.Sprintf("SNMPアクセス err=%s", err)
-		log.Printf("checkNetworkPortState err=%v", err)
 		return
 	}
 	defer agent.Conn.Close()
@@ -236,7 +419,6 @@ func checkNetworkPortState(n *datastore.NetworkEnt) {
 		r, err := agent.Get([]string{datastore.MIBDB.NameToOID(a[0])})
 		if err != nil {
 			n.Error = fmt.Sprintf("SNMP%s取得 err=%s", p.Polling, err)
-			log.Printf("checkNetworkPortState err=%v", err)
 			continue
 		}
 		for _, variable := range r.Variables {

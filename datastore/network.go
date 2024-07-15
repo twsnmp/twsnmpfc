@@ -12,6 +12,7 @@ type PortEnt struct {
 	ID      string
 	Name    string
 	Polling string
+	Index   string
 	X       int
 	Y       int
 	State   string
@@ -27,7 +28,6 @@ type NetworkEnt struct {
 	User      string
 	Password  string
 	URL       string
-	AutoCon   bool
 	HPorts    int
 	X         int
 	Y         int
@@ -132,6 +132,24 @@ func ForEachNetworks(f func(*NetworkEnt) bool) {
 		}
 		return true
 	})
+}
+
+// FindNetwork : システムIDと管理IPでNetwrorkを検索する
+func FindNetwork(id, ip string) *NetworkEnt {
+	var ret *NetworkEnt
+	networks.Range(func(_, v interface{}) bool {
+		if n, ok := v.(*NetworkEnt); ok {
+			if n.SystemID == id {
+				ret = n
+				return false
+			}
+			if n.IP == ip {
+				ret = n
+			}
+		}
+		return true
+	})
+	return ret
 }
 
 // 保存する前にサイズを補正する

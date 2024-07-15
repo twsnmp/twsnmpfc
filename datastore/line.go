@@ -100,3 +100,35 @@ func ForEachLines(f func(*LineEnt) bool) {
 		return f(v.(*LineEnt))
 	})
 }
+
+// HasLine : 同じラインを探す
+func HasLine(l1 *LineEnt, isNet bool) bool {
+	ret := false
+	lines.Range(func(_, v interface{}) bool {
+		if l2, ok := v.(*LineEnt); ok {
+			if isNet {
+				if l1.NodeID1 == l2.NodeID1 && l1.PollingID1 == l2.PollingID1 &&
+					l1.NodeID2 == l2.NodeID2 && l1.PollingID2 == l2.PollingID2 {
+					ret = true
+					return false
+				}
+				if l1.NodeID1 == l2.NodeID2 && l1.PollingID1 == l2.PollingID2 &&
+					l1.NodeID2 == l2.NodeID1 && l1.PollingID2 == l2.PollingID1 {
+					ret = true
+					return false
+				}
+			} else {
+				if l1.NodeID1 == l2.NodeID1 && l1.NodeID2 == l2.NodeID2 {
+					ret = true
+					return false
+				}
+				if l1.NodeID1 == l2.NodeID2 && l1.NodeID2 == l2.NodeID1 {
+					ret = true
+					return false
+				}
+			}
+		}
+		return true
+	})
+	return ret
+}
