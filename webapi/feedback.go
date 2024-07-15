@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"net/url"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -45,13 +45,13 @@ func sendFeedback(fb *feedbackWebAPI) error {
 	if fb.IncludeSysInfo {
 		msg += fmt.Sprintf("\n-----\nGOOS=%s,GOARCH=%s\n", runtime.GOOS, runtime.GOARCH)
 		msg += fmt.Sprintf("DBSize=%d\n", datastore.DBStats.Size)
-		if len(backend.MonitorDataes) > 0 {
-			i := len(backend.MonitorDataes) - 1
+		if len(datastore.MonitorDataes) > 0 {
+			i := len(datastore.MonitorDataes) - 1
 			msg += fmt.Sprintf("CPU=%f,Mem=%f,Load=%f,Disk=%f\n",
-				backend.MonitorDataes[i].CPU,
-				backend.MonitorDataes[i].Mem,
-				backend.MonitorDataes[i].Load,
-				backend.MonitorDataes[i].Disk,
+				datastore.MonitorDataes[i].CPU,
+				datastore.MonitorDataes[i].Mem,
+				datastore.MonitorDataes[i].Load,
+				datastore.MonitorDataes[i].Disk,
 			)
 		}
 	}
@@ -111,5 +111,33 @@ func getCheckUpdate(c echo.Context) error {
 		return echo.ErrInternalServerError
 	}
 	sv := strings.TrimSpace(string(ba))
-	return c.JSON(http.StatusOK, map[string]interface{}{"Version": sv, "HasNew": backend.CmpVersion(api.Version, sv) < 0})
+	return c.JSON(http.StatusOK, map[string]interface{}{"Version": sv, "HasNew": cmpVersion(api.Version, sv) < 0})
+}
+
+func cmpVersion(mv, sv string) int {
+	mv = strings.ReplaceAll(mv, "(", " ")
+	mv = strings.ReplaceAll(mv, "v", "")
+	mv = strings.ReplaceAll(mv, "x", "0")
+	sv = strings.ReplaceAll(sv, "v", "")
+	mva := strings.Split(mv, ".")
+	sva := strings.Split(sv, ".")
+	for i := 0; i < len(mva) && i < len(sva) && i < 3; i++ {
+		sn, err := strconv.ParseInt(sva[i], 10, 64)
+		if err != nil {
+			log.Println(err)
+			return 0
+		}
+		mn, err := strconv.ParseInt(mva[i], 10, 64)
+		if err != nil {
+			log.Println(err)
+			return 0
+		}
+		if sn > mn {
+			return -1
+		}
+		if sn < mn {
+			return 1
+		}
+	}
+	return 0
 }

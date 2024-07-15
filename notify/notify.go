@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -53,7 +52,7 @@ func notifyBackend(ctx context.Context, wg *sync.WaitGroup) {
 			if datastore.NotifyConf.Report &&
 				lastSendReport.Day() != time.Now().Day() &&
 				len(datastore.DBStatsLog) > 1 &&
-				len(backend.MonitorDataes) > 1 {
+				len(datastore.MonitorDataes) > 1 {
 				lastSendReport = time.Now()
 				sendReport()
 			}

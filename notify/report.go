@@ -12,7 +12,6 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/montanaflynn/stats"
-	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -339,14 +338,14 @@ func getDBInfo(htmlMode bool) []string {
 }
 
 func getResInfo(htmlMode bool) []string {
-	if len(backend.MonitorDataes) < 1 {
+	if len(datastore.MonitorDataes) < 1 {
 		return []string{}
 	}
 	cpu := []float64{}
 	mem := []float64{}
 	disk := []float64{}
 	load := []float64{}
-	for _, m := range backend.MonitorDataes {
+	for _, m := range datastore.MonitorDataes {
 		cpu = append(cpu, m.CPU)
 		mem = append(mem, m.Mem)
 		disk = append(disk, m.Disk)

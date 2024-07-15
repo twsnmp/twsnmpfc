@@ -16,7 +16,6 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/security"
 )
@@ -272,7 +271,7 @@ func setup(p *WebAPI) {
 }
 
 func getMonitor(c echo.Context) error {
-	return c.JSON(http.StatusOK, backend.MonitorDataes)
+	return c.JSON(http.StatusOK, datastore.MonitorDataes)
 }
 
 func getMibMods(c echo.Context) error {

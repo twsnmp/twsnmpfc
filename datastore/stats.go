@@ -78,3 +78,19 @@ func UpdateDBStats() {
 		DBStatsLog = DBStatsLog[1:]
 	}
 }
+
+// MonitorDataEnt :
+type MonitorDataEnt struct {
+	CPU   float64
+	Mem   float64
+	Disk  float64
+	Load  float64
+	Bytes float64
+	Net   float64
+	Proc  int
+	Conn  int
+	At    int64
+}
+
+// MonitorDataes : モニターデータ
+var MonitorDataes []*MonitorDataEnt

@@ -29,6 +29,7 @@ type NetworkEnt struct {
 	User      string
 	Password  string
 	URL       string
+	ArpWatch  bool
 	HPorts    int
 	X         int
 	Y         int

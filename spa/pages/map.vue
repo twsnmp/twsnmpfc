@@ -395,6 +395,12 @@
                 Not LLDP
               </v-chip>
             </v-col>
+            <v-col>
+              <v-switch
+                v-model="editNetwork.ArpWatch"
+                label="ARP監視"
+              ></v-switch>
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col>
@@ -2037,6 +2043,7 @@ export default {
         Y: y,
         W: 0,
         H: 0,
+        ArpWatch: false,
         HPorts: 24,
         Descr: '',
         SnmpMode: this.map.MapConf.SnmpMode,

@@ -15,6 +15,17 @@ func deleteNetwork(c echo.Context) error {
 	if err := datastore.DeleteNetwok(id); err != nil {
 		return echo.ErrBadRequest
 	}
+	name := ""
+	n := datastore.GetNetwork(id)
+	if n != nil {
+		name = n.Name
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:     "user",
+		Level:    "info",
+		NodeName: name,
+		Event:    "ネットワークを削除しました",
+	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -24,11 +35,13 @@ func postNetwork(c echo.Context) error {
 		log.Printf("post network err=%v", err)
 		return echo.ErrBadRequest
 	}
+	op := "更新"
 	if n := datastore.GetNetwork(nu.ID); n == nil {
 		if err := datastore.AddNetwork(nu); err != nil {
 			log.Printf("post network err=%v", err)
 			return echo.ErrBadRequest
 		}
+		op = "追加"
 	} else {
 		if err := datastore.UpdateNetwork(nu); err != nil {
 			log.Printf("post network err=%v", err)
@@ -39,7 +52,7 @@ func postNetwork(c echo.Context) error {
 		Type:     "user",
 		Level:    "info",
 		NodeName: nu.Name,
-		Event:    fmt.Sprintf("ネットワークを更新しました(%s)", nu.ID),
+		Event:    fmt.Sprintf("ネットワークを%sしました", op),
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gosnmp/gosnmp"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/report"
 )
 
 func networkBackend(ctx context.Context, wg *sync.WaitGroup) {
@@ -430,6 +431,44 @@ func checkNetworkPortState(n *datastore.NetworkEnt) {
 				}
 			}
 		}
+	}
+	if !n.ArpWatch {
+		return
+	}
+	// ARP監視
+	arpMap := make(map[string]string)
+	err = agent.Walk(datastore.MIBDB.NameToOID("ipNetToMediaPhysAddress"), func(variable gosnmp.SnmpPDU) error {
+		a := strings.SplitN(datastore.MIBDB.OIDToName(variable.Name), ".", 2)
+		if len(a) != 2 {
+			return nil
+		}
+		switch a[0] {
+		case "ipNetToMediaPhysAddress":
+			arpMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, false)
+		}
+		return nil
+	})
+	if err != nil {
+		// ipNetToMediaPhysAddress 未対応
+		agent.Walk(datastore.MIBDB.NameToOID("atPhysAddress"), func(variable gosnmp.SnmpPDU) error {
+			a := strings.SplitN(datastore.MIBDB.OIDToName(variable.Name), ".", 2)
+			if len(a) != 2 {
+				return nil
+			}
+			switch a[0] {
+			case "atPhysAddress":
+				arpMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, false)
+			}
+			return nil
+		})
+	}
+	for index, mac := range arpMap {
+		a := strings.Split(index, ".")
+		if len(a) < 1+4 {
+			continue
+		}
+		ip := strings.Join(a[len(a)-4:], ".")
+		report.ReportDevice(mac, ip, time.Now().UnixNano())
 	}
 }
 

@@ -12,30 +12,15 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 	gopsnet "github.com/shirou/gopsutil/v3/net"
 	"github.com/shirou/gopsutil/v3/process"
+	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
 const (
 	maxMonitorData = 4 * 60 * 24
 )
 
-// MonitorDataEnt :
-type MonitorDataEnt struct {
-	CPU   float64
-	Mem   float64
-	Disk  float64
-	Load  float64
-	Bytes float64
-	Net   float64
-	Proc  int
-	Conn  int
-	At    int64
-}
-
-// MonitorDataes : モニターデータ
-var MonitorDataes []*MonitorDataEnt
-
 func updateMonData() {
-	m := &MonitorDataEnt{}
+	m := &datastore.MonitorDataEnt{}
 	cpus, err := cpu.Percent(0, false)
 	if err == nil {
 		m.CPU = cpus[0]
@@ -57,8 +42,8 @@ func updateMonData() {
 	if err == nil {
 		m.Bytes = float64(n[0].BytesRecv)
 		m.Bytes += float64(n[0].BytesSent)
-		if len(MonitorDataes) > 1 {
-			o := MonitorDataes[len(MonitorDataes)-1]
+		if len(datastore.MonitorDataes) > 1 {
+			o := datastore.MonitorDataes[len(datastore.MonitorDataes)-1]
 			m.Net = float64(8.0 * (m.Bytes - o.Bytes) / float64(m.At-o.At))
 		}
 	}
@@ -70,10 +55,10 @@ func updateMonData() {
 	if err == nil {
 		m.Proc = len(pids)
 	}
-	for len(MonitorDataes) > maxMonitorData {
-		MonitorDataes = append(MonitorDataes[:0], MonitorDataes[1:]...)
+	for len(datastore.MonitorDataes) > maxMonitorData {
+		datastore.MonitorDataes = append(datastore.MonitorDataes[:0], datastore.MonitorDataes[1:]...)
 	}
-	MonitorDataes = append(MonitorDataes, m)
+	datastore.MonitorDataes = append(datastore.MonitorDataes, m)
 }
 
 // monitor :
