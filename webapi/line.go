@@ -19,12 +19,7 @@ func deleteLine(c echo.Context) error {
 		log.Printf("delete line err=%v", err)
 		return echo.ErrBadRequest
 	}
-	datastore.AddEventLog(&datastore.EventLogEnt{
-		Type:   "user",
-		Level:  "info",
-		NodeID: l.NodeID1,
-		Event:  fmt.Sprintf("ラインを削除しました(%s)", l.ID),
-	})
+	outLineLog(l, "削除")
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -52,6 +47,7 @@ func postLine(c echo.Context) error {
 			log.Printf("post line err=%v", err)
 			return echo.ErrBadRequest
 		}
+		outLineLog(lu, "接続")
 	} else {
 		l.NodeID1 = lu.NodeID1
 		l.NodeID2 = lu.NodeID2
@@ -67,12 +63,52 @@ func postLine(c echo.Context) error {
 			log.Printf("post line err=%v", err)
 			return echo.ErrBadRequest
 		}
+		outLineLog(lu, "更新")
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func outLineLog(l *datastore.LineEnt, op string) {
+	id := ""
+	dst := ""
+	nodeName := ""
+	n1 := datastore.GetNode(l.NodeID1)
+	n2 := datastore.GetNode(l.NodeID2)
+	if n1 != nil {
+		id = n1.ID
+		nodeName = n1.Name
+		if n2 != nil {
+			dst = n2.Name
+		} else {
+			n := datastore.GetNetwork(l.NodeID2)
+			if n != nil {
+				dst = n.Name
+			}
+		}
+	} else {
+		net1 := datastore.GetNetwork(l.NodeID1)
+		if n2 != nil {
+			id = n2.ID
+			nodeName = n2.Name
+			if net1 != nil {
+				dst = net1.Name
+			}
+		} else {
+			id = ""
+			if net1 != nil {
+				nodeName = net1.Name
+			}
+			net2 := datastore.GetNetwork(l.NodeID2)
+			if net2 != nil {
+				dst = net2.Name
+			}
+		}
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
-		Type:   "user",
-		Level:  "info",
-		NodeID: lu.NodeID1,
-		Event:  fmt.Sprintf("ラインを更新しました(%s)", lu.ID),
+		Type:     "user",
+		Level:    "info",
+		NodeID:   id,
+		NodeName: nodeName,
+		Event:    fmt.Sprintf("%sへのラインを%sしました", dst, op),
 	})
-	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

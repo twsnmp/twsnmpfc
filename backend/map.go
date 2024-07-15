@@ -157,8 +157,7 @@ func updateLineState() {
 	datastore.ForEachLines(func(l *datastore.LineEnt) bool {
 		l.State1 = "unknown"
 		if strings.HasPrefix(l.NodeID1, "NET:") {
-			a := strings.Split(l.NodeID1, ":")
-			n := datastore.GetNetwork(a[1])
+			n := datastore.GetNetwork(l.NodeID1)
 			hit := false
 			if n != nil {
 				for _, p := range n.Ports {
@@ -179,8 +178,7 @@ func updateLineState() {
 		}
 		l.State2 = l.State1
 		if strings.HasPrefix(l.NodeID2, "NET:") {
-			a := strings.Split(l.NodeID2, ":")
-			n := datastore.GetNetwork(a[1])
+			n := datastore.GetNetwork(l.NodeID2)
 			hit := false
 			if n != nil {
 				for _, p := range n.Ports {

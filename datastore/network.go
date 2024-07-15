@@ -3,6 +3,7 @@ package datastore
 import (
 	"encoding/json"
 	"log"
+	"strings"
 	"time"
 
 	"go.etcd.io/bbolt"
@@ -115,6 +116,10 @@ func DeleteNetwok(id string) error {
 func GetNetwork(id string) *NetworkEnt {
 	if db == nil {
 		return nil
+	}
+	if strings.HasPrefix(id, "NET:") {
+		a := strings.SplitN(id, ":", 2)
+		id = a[1]
 	}
 	if v, ok := networks.Load(id); ok {
 		if n, ok := v.(*NetworkEnt); ok {
