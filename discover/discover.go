@@ -52,7 +52,7 @@ type discoverInfoEnt struct {
 	HostName    string
 	SysName     string
 	SysObjectID string
-	IfIndexList []string
+	IfMap       map[string]string
 	ServerList  map[string]bool
 	X           int
 	Y           int
@@ -126,9 +126,9 @@ func ActiveDiscover() error {
 				r := ping.DoPing(ipstr, datastore.DiscoverConf.Timeout, datastore.DiscoverConf.Retry, 64, 0)
 				if r.Stat == ping.PingOK {
 					dent := discoverInfoEnt{
-						IP:          ipstr,
-						IfIndexList: []string{},
-						ServerList:  make(map[string]bool),
+						IP:         ipstr,
+						IfMap:      make(map[string]string),
+						ServerList: make(map[string]bool),
 					}
 					r := &net.Resolver{}
 					ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
@@ -266,12 +266,21 @@ func getSnmpInfo(t string, dent *discoverInfoEnt) {
 			dent.SysObjectID = getMIBStringVal(variable.Value)
 		}
 	}
-	_ = agent.Walk(datastore.MIBDB.NameToOID("ifType"), func(variable gosnmp.SnmpPDU) error {
+	agent.Walk(datastore.MIBDB.NameToOID("ifType"), func(variable gosnmp.SnmpPDU) error {
 		a := strings.Split(datastore.MIBDB.OIDToName(variable.Name), ".")
 		if len(a) == 2 &&
 			a[0] == "ifType" &&
 			gosnmp.ToBigInt(variable.Value).Int64() == 6 {
-			dent.IfIndexList = append(dent.IfIndexList, a[1])
+			dent.IfMap[a[1]] = fmt.Sprintf("#%s", a[1])
+		}
+		return nil
+	})
+	agent.Walk(datastore.MIBDB.NameToOID("ifName"), func(variable gosnmp.SnmpPDU) error {
+		a := strings.Split(datastore.MIBDB.OIDToName(variable.Name), ".")
+		if len(a) == 2 {
+			if _, ok := dent.IfMap[a[1]]; ok {
+				dent.IfMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, false)
+			}
 		}
 		return nil
 	})
@@ -491,13 +500,13 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 		log.Printf("discover err=%v", err)
 		return
 	}
-	for _, i := range dent.IfIndexList {
+	for index, name := range dent.IfMap {
 		p = &datastore.PollingEnt{
 			NodeID:  n.ID,
 			Type:    "snmp",
-			Name:    "IF " + i + "監視",
+			Name:    fmt.Sprintf("IF %s(%s) 監視", name, index),
 			Mode:    "ifOperStatus",
-			Params:  i,
+			Params:  index,
 			Level:   "off",
 			State:   "unknown",
 			PollInt: datastore.MapConf.PollInt,
@@ -614,15 +623,15 @@ func PassiveDiscover() error {
 				if d.LastTime < ct {
 					return true
 				}
-				if datastore.FindNodeFromIP(d.IP) != nil {
-					return true
-				}
 				if ip, err := ipv4.FromDots(d.IP); err == nil && ip >= sip && ip <= eip {
+					if datastore.FindNodeFromIP(d.IP) != nil {
+						return true
+					}
 					foundNodeMap[d.IP] = &discoverInfoEnt{
-						IP:          d.IP,
-						HostName:    d.Name,
-						IfIndexList: []string{},
-						ServerList:  make(map[string]bool),
+						IP:         d.IP,
+						HostName:   d.Name,
+						IfMap:      make(map[string]string),
+						ServerList: make(map[string]bool),
 					}
 				}
 				return true
@@ -631,18 +640,18 @@ func PassiveDiscover() error {
 				if i.LastTime < ct {
 					return true
 				}
-				if datastore.FindNodeFromIP(i.IP) != nil {
-					return true
-				}
 				if _, ok := foundNodeMap[i.IP]; ok {
 					return true
 				}
 				if ip, err := ipv4.FromDots(i.IP); err == nil && ip >= sip && ip <= eip {
+					if datastore.FindNodeFromIP(i.IP) != nil {
+						return true
+					}
 					foundNodeMap[i.IP] = &discoverInfoEnt{
-						IP:          i.IP,
-						HostName:    i.Name,
-						IfIndexList: []string{},
-						ServerList:  make(map[string]bool),
+						IP:         i.IP,
+						HostName:   i.Name,
+						IfMap:      make(map[string]string),
+						ServerList: make(map[string]bool),
 					}
 				}
 				return true
@@ -654,15 +663,15 @@ func PassiveDiscover() error {
 				var ok bool
 				var dent *discoverInfoEnt
 				if dent, ok = foundNodeMap[s.Server]; !ok {
-					if datastore.FindNodeFromIP(s.Server) != nil {
-						return true
-					}
 					if ip, err := ipv4.FromDots(s.Server); err == nil && ip >= sip && ip <= eip {
+						if datastore.FindNodeFromIP(s.Server) != nil {
+							return true
+						}
 						dent = &discoverInfoEnt{
-							IP:          s.Server,
-							HostName:    s.ServerName,
-							IfIndexList: []string{},
-							ServerList:  make(map[string]bool),
+							IP:         s.Server,
+							HostName:   s.ServerName,
+							IfMap:      make(map[string]string),
+							ServerList: make(map[string]bool),
 						}
 						foundNodeMap[s.Server] = dent
 					}

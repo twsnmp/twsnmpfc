@@ -461,9 +461,9 @@ func autoAddSnmpPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) 
 		return
 	}
 	indexes := getSnmpIndex(n, indexMIB)
-	for _, index := range indexes {
+	for index, name := range indexes {
 		p := new(datastore.PollingEnt)
-		p.Name = pt.Name + " : " + index
+		p.Name = fmt.Sprintf("%s : %s(%s)", pt.Name, name, index)
 		if hasSameNamePolling(n.ID, p.Name) {
 			continue
 		}
@@ -487,8 +487,8 @@ func autoAddSnmpPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) 
 	}
 }
 
-func getSnmpIndex(n *datastore.NodeEnt, name string) []string {
-	ret := []string{}
+func getSnmpIndex(n *datastore.NodeEnt, name string) map[string]string {
+	ret := make(map[string]string)
 	agent := &gosnmp.GoSNMP{
 		Target:    n.IP,
 		Port:      161,
@@ -543,7 +543,7 @@ func getSnmpIndex(n *datastore.NodeEnt, name string) []string {
 		n := datastore.MIBDB.OIDToName(variable.Name)
 		a := strings.SplitN(n, ".", 2)
 		if len(a) == 2 {
-			ret = append(ret, a[1])
+			ret[a[1]] = datastore.GetMIBValueString(a[0], &variable, false)
 		}
 		return nil
 	}); err != nil {

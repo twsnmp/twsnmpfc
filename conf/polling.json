@@ -41,6 +41,15 @@
     "AutoMode": "index:ifIndex"
   },
   {
+    "Name": "インターフェイス監視",
+    "Type": "snmp",
+    "Mode": "ifOperStatus",
+    "Params": "$i",
+    "Level": "low",
+    "Descr": "インターフェイスの状態を監視(ifName板)",
+    "AutoMode": "index:ifName"
+  },
+  {
     "Name": "SNMP通信量測定",
     "Type": "snmp",
     "Mode": "traffic",
@@ -48,6 +57,15 @@
     "Level": "off",
     "Descr": "インターフェイスの通信量を測定",
     "AutoMode": "index:ifIndex"
+  },
+  {
+    "Name": "SNMP通信量測定",
+    "Type": "snmp",
+    "Mode": "traffic",
+    "Params": "$i",
+    "Level": "off",
+    "Descr": "インターフェイスの通信量を測定(ifName板)",
+    "AutoMode": "index:ifName"
   },
   {
     "Name": "プロセス起動数監視",
@@ -111,7 +129,7 @@
     "Script": "Mbps=8*(ifInOctets_PS+ifOutOctets_PS)/1000000;Mbps < 1000",
     "Level": "low",
     "Descr": "LANポートの送受信の合計量をMbps単位で測定",
-    "AutoMode": "index:ifIndex"
+    "AutoMode": "index:ifName"
   },
   {
     "Name": "LANポート送受信(HC)",
@@ -121,7 +139,7 @@
     "Script": "Mbps=8*(ifHCInOctets_PS+ifHCOutOctets_PS)/1000000;Mbps < 1000",
     "Level": "low",
     "Descr": "LANポートの送受信の合計量をMbps単位で測定 64ビットカウンターを使用",
-    "AutoMode": "index:ifIndex"
+    "AutoMode": "index:ifName"
   },
   {
     "Name": "LANポート受信",
@@ -131,7 +149,7 @@
     "Script": "rxbytesps=ifInOctets_PS;rxbytesps > 0",
     "Level": "low",
     "Descr": "LANポート受信データ量",
-    "AutoMode": "index:ifIndex"
+    "AutoMode": "index:ifName"
   },
   {
     "Name": "LANポート受信(HC)",
@@ -141,7 +159,7 @@
     "Script": "rxbytesps=ifHCInOctets_PS;rxbytesps > 0",
     "Level": "low",
     "Descr": "LANポート受信データ量 64ビットカウンターを使用",
-    "AutoMode": "index:ifIndex"
+    "AutoMode": "index:ifName"
   },
   {
     "Name": "LANポート送信",
@@ -151,7 +169,7 @@
     "Script": "txbytesps=ifOutOctets_PS;txbytesps > 0",
     "Level": "low",
     "Descr": "LANポート送信データ量",
-    "AutoMode": "index:ifIndex"
+    "AutoMode": "index:ifName"
   },
   {
     "Name": "LANポート送信(HC)",
@@ -161,7 +179,7 @@
     "Script": "txbytesps=ifHCOutOctets_PS;txbytesps > 0",
     "Level": "low",
     "Descr": "LANポート送信データ量 64ビットカウンターを使用",
-    "AutoMode": "index:ifIndex"
+    "AutoMode": "index:ifName"
   },
   {
     "Name": "CPUコア単位使用率",

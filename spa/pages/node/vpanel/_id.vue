@@ -317,7 +317,7 @@ export default {
     editIFStatePolling(i) {
       this.polling = {
         ID: '',
-        Name: 'インターフェイス監視 ' + i.Index,
+        Name: 'インターフェイス監視 ' + i.Name + '(' + i.Index + ')',
         NodeID: this.node.ID,
         Type: 'snmp',
         Mode: 'ifOperStatus',
@@ -336,7 +336,7 @@ export default {
     editTrafPolling(i) {
       this.polling = {
         ID: '',
-        Name: 'SNMP通信量測定 ' + i.Index,
+        Name: 'SNMP通信量測定 ' + i.Name + '(' + i.Index + ')',
         NodeID: this.node.ID,
         Type: 'snmp',
         Mode: 'traffic',

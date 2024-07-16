@@ -77,7 +77,7 @@ func GetHostResource(n *datastore.NodeEnt) *HostResourceEnt {
 	}
 	err := agent.Connect()
 	if err != nil {
-		log.Printf("getPortsBySNMP err=%v", err)
+		log.Printf("GetHostResource err=%v", err)
 		return hr
 	}
 	defer agent.Conn.Close()
