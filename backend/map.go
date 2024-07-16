@@ -168,6 +168,7 @@ func updateLineState() {
 				}
 			}
 			if !hit {
+				log.Printf("delete not used line=%+v", l)
 				datastore.DeleteLine(l.ID)
 				return true
 			}
@@ -189,6 +190,7 @@ func updateLineState() {
 				}
 			}
 			if !hit {
+				log.Printf("delete not used line=%+v", l)
 				datastore.DeleteLine(l.ID)
 				return true
 			}
