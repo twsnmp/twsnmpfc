@@ -25,6 +25,7 @@ test:
 clean: clean_spa clean_fluentbit_plugin
 	rm -rf $(TARGETS) $(DIST)/*.zip
 mac: $(DIST)/twsnmpfc.app
+linux: $(DIST)/twsnmpfc
 zip: $(TARGETS)
 	cd dist && $(ZIP) twsnmpfc_win.zip twsnmpfc.exe
 	cd dist && $(ZIP) twsnmpfc_mac.zip twsnmpfc.app
