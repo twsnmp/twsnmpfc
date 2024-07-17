@@ -305,17 +305,21 @@ func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworks
 		} else {
 			// 登録済みならラインの候補に
 			for _, rp := range rnr.Ports {
-				for _, lp := range n.Ports {
-					if lp.Index == rp.Index {
-						l := &datastore.LineEnt{
-							NodeID1:    fmt.Sprintf("NET:%s", n.ID),
-							PollingID1: lp.ID,
-							NodeID2:    fmt.Sprintf("NET:%s", rnr.ID),
-							PollingID2: rp.ID,
-							Width:      2,
-						}
-						if !datastore.HasLine(l, true) {
-							ret.Lines = append(ret.Lines, l)
+				for _, frp := range rn.Ports {
+					if frp.ID == rp.ID {
+						for _, lp := range n.Ports {
+							if lp.Index == frp.Index {
+								l := &datastore.LineEnt{
+									NodeID1:    fmt.Sprintf("NET:%s", n.ID),
+									PollingID1: lp.ID,
+									NodeID2:    fmt.Sprintf("NET:%s", rnr.ID),
+									PollingID2: rp.ID,
+									Width:      2,
+								}
+								if !datastore.HasLine(l, true) {
+									ret.Lines = append(ret.Lines, l)
+								}
+							}
 						}
 					}
 				}

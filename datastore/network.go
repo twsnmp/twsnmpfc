@@ -62,7 +62,7 @@ func AddNetwork(n *NetworkEnt) error {
 		return b.Put([]byte(n.ID), s)
 	})
 	networks.Store(n.ID, n)
-	log.Printf("AddNetwork dur=%v", time.Since(st))
+	log.Printf("add network dur=%v", time.Since(st))
 	return nil
 }
 
@@ -84,7 +84,7 @@ func UpdateNetwork(n *NetworkEnt) error {
 		b := tx.Bucket([]byte("networks"))
 		return b.Put([]byte(n.ID), s)
 	})
-	log.Printf("UpdateNetwork dur=%v", time.Since(st))
+	log.Printf("update network dur=%v", time.Since(st))
 	return nil
 }
 
@@ -93,24 +93,15 @@ func DeleteNetwok(id string) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	if n, ok := networks.Load(id); !ok {
+	if _, ok := networks.Load(id); !ok {
 		return ErrInvalidID
-	} else {
-		if nn, ok := n.(*NetworkEnt); ok {
-			AddEventLog(&EventLogEnt{
-				Type:     "user",
-				Level:    "info",
-				NodeName: nn.Name,
-				Event:    "ネットワークを削除しました",
-			})
-		}
 	}
 	db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("networks"))
 		return b.Delete([]byte(id))
 	})
 	networks.Delete(id)
-	log.Printf("DeleteNetwork dur=%v", time.Since(st))
+	log.Printf("delete network dur=%v", time.Since(st))
 	return nil
 }
 
