@@ -306,7 +306,7 @@ func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworks
 			// 登録済みならラインの候補に
 			for _, rp := range rnr.Ports {
 				for _, frp := range rn.Ports {
-					if frp.ID == rp.ID {
+					if frp.ID == rp.ID || frp.Index == rp.Index {
 						for _, lp := range n.Ports {
 							if lp.Index == frp.Index {
 								l := &datastore.LineEnt{
