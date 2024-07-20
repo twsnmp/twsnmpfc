@@ -133,7 +133,7 @@ func logIPFIX(p *ipfix.Message) int {
 				Type: "ipfix",
 				Log:  string(s),
 			}
-			if ip, ok := record["sourceIPv4Address"]; ok {
+			if _, ok := record["sourceIPv4Address"]; ok {
 				defer func() {
 					if r := recover(); r != nil {
 						log.Printf("recover ipfix err=%v", r)
@@ -142,11 +142,6 @@ func logIPFIX(p *ipfix.Message) int {
 						}
 					}
 				}()
-				if mac, ok := record["sourceMacAddress"]; ok {
-					if ip.(net.IP).IsPrivate() {
-						report.ReportDevice(mac.(string), ip.(net.IP).String(), time.Now().UnixNano())
-					}
-				}
 				if _, ok := record["sourceTransportPort"]; ok {
 					report.ReportFlow(
 						record["sourceIPv4Address"].(net.IP).String(),
@@ -310,7 +305,7 @@ func logNetflow9(p *netflow9.Packet) int {
 				Type: "ipfix",
 				Log:  string(s),
 			}
-			if ip, ok := record["sourceIPv4Address"]; ok {
+			if _, ok := record["sourceIPv4Address"]; ok {
 				defer func() {
 					if r := recover(); r != nil {
 						log.Printf("recover netflow9 err=%v", r)
@@ -319,11 +314,6 @@ func logNetflow9(p *netflow9.Packet) int {
 						}
 					}
 				}()
-				if mac, ok := record["sourceMacAddress"]; ok {
-					if ip.(net.IP).IsPrivate() {
-						report.ReportDevice(mac.(string), ip.(net.IP).String(), time.Now().UnixNano())
-					}
-				}
 				if _, ok := record["sourceTransportPort"]; ok {
 					report.ReportFlow(
 						record["sourceIPv4Address"].(net.IP).String(),

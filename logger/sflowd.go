@@ -258,14 +258,6 @@ func rawPacketFlow(r *sflow.RawPacketFlow, reason int) {
 		int64(bytes),
 		time.Now().UnixNano(),
 	)
-	if v, ok := record["sourceMacAddress"]; ok && src != "" {
-		if mac, ok := v.(string); ok {
-			ip := net.ParseIP(src)
-			if ip.IsPrivate() {
-				report.ReportDevice(mac, src, time.Now().UnixNano())
-			}
-		}
-	}
 }
 
 func sFlowCounter(t, r, d string) {
