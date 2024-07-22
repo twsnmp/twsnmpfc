@@ -293,11 +293,14 @@ const mapMain = (p5) => {
       p5.translate(networks[k].X,networks[k].Y)
       if (selectedNetwork === networks[k].ID) {
         p5.stroke('#02c')
+      } else if (networks[k].Error !== "") {
+        p5.stroke('#cc3300')
       } else {
         p5.stroke('#999')
       }
       p5.fill('rgba(23,23,23,0.9)')
       p5.rect(0,0,networks[k].W,networks[k].H)
+      p5.stroke('#999')
       p5.textFont('Roboto')
       p5.textSize(fontSize)
       p5.fill('#eee')

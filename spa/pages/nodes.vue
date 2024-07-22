@@ -206,11 +206,7 @@
             </v-col>
             <v-col></v-col>
             <v-col>
-              <v-img
-                v-if="editNode.Image"
-                :max-width="48"
-                :src="imageIcon"
-              ></v-img>
+              <v-img v-if="editNode.Image" :width="48" :src="imageIcon"></v-img>
             </v-col>
           </v-row>
           <v-row dense>
