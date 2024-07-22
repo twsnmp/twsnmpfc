@@ -72,7 +72,14 @@ const showMAP = (div, m, url, ro) => {
       mapRedraw = true
     })
   }
-
+  for (const k in nodes) {
+    if(nodes[k].Image && !imageMap[nodes[k].Image] && mapP5) {
+      mapP5.loadImage(url + '/imageIcon/' + nodes[k].Image, (img) => {
+        imageMap[nodes[k].Image] = img
+        mapRedraw = true
+      })
+    }
+  }
   for (const k in items) {
     if (items[k].H < 10) {
       items[k].H = 100
@@ -446,26 +453,49 @@ const mapMain = (p5) => {
       const icon = getIconCode(nodes[k].Icon)
       p5.push()
       p5.translate(nodes[k].X, nodes[k].Y)
-      if (selectedNodes.includes(nodes[k].ID)) {
-        const w = iconSize + 16
-        p5.fill('rgba(23,23,23,0.9)')
-        p5.stroke(getStateColor(nodes[k].State))
-        p5.rect(-w / 2, -w / 2, w, w)
+      if(nodes[k].Image && imageMap[nodes[k].Image]) {
+        const w = 48 + 16
+        const h = imageMap[nodes[k].Image].height + 16 + fontSize
+        if (selectedNodes.includes(nodes[k].ID)) {
+          p5.fill('rgba(23,23,23,0.9)')
+          p5.stroke(getStateColor(nodes[k].State))
+          p5.rect(-w / 2, -h / 2, w, h)
+        } else {
+          const w = 40
+          p5.fill('rgba(23,23,23,0.9)')
+          p5.stroke('rgba(23,23,23,0.9)')
+          p5.rect(-w / 2 , -h / 2, w, h)
+        }
+        p5.tint(getStateColor(nodes[k].State))
+        p5.image(imageMap[nodes[k].Image],-24,-h/2 + 10,48)
+        p5.noTint()
+        p5.textAlign(p5.CENTER, p5.CENTER);
+        p5.textFont("Roboto")
+        p5.textSize(fontSize)
+        p5.fill(250)
+        p5.text(nodes[k].Name, 0, imageMap[nodes[k].Image].height - 4)
       } else {
-        const w = iconSize - 8
-        p5.fill('rgba(23,23,23,0.9)')
-        p5.stroke('rgba(23,23,23,0.9)')
-        p5.rect(-w / 2, -w / 2, w, w)
+        if (selectedNodes.includes(nodes[k].ID)) {
+          const w = iconSize + 16
+          p5.fill('rgba(23,23,23,0.9)')
+          p5.stroke(getStateColor(nodes[k].State))
+          p5.rect(-w / 2, -w / 2, w, w)
+        } else {
+          const w = iconSize - 8
+          p5.fill('rgba(23,23,23,0.9)')
+          p5.stroke('rgba(23,23,23,0.9)')
+          p5.rect(-w / 2, -w / 2, w, w)
+        }
+        p5.textFont('Material Design Icons')
+        p5.textSize(iconSize)
+        p5.textAlign(p5.CENTER, p5.CENTER)
+        p5.fill(getStateColor(nodes[k].State))
+        p5.text(icon, 0, 0)
+        p5.textFont('Roboto')
+        p5.textSize(fontSize)
+        p5.fill(250)
+        p5.text(nodes[k].Name, 0, iconSize)
       }
-      p5.textFont('Material Design Icons')
-      p5.textSize(iconSize)
-      p5.textAlign(p5.CENTER, p5.CENTER)
-      p5.fill(getStateColor(nodes[k].State))
-      p5.text(icon, 0, 0)
-      p5.textFont('Roboto')
-      p5.textSize(fontSize)
-      p5.fill(250)
-      p5.text(nodes[k].Name, 0, iconSize)
       p5.pop()
     }
     if (dragMode === 1) {

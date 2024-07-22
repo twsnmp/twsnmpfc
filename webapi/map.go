@@ -181,3 +181,17 @@ func postImage(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
+
+func getImageIconList(c echo.Context) error {
+	return c.JSON(http.StatusOK, datastore.ImageIcons)
+}
+
+func getImageIcon(c echo.Context) error {
+	id := c.Param("id")
+	img, err := datastore.GetImageIcon(id)
+	if err != nil {
+		return echo.ErrNotFound
+	}
+	ct := http.DetectContentType(img)
+	return c.Blob(http.StatusOK, ct, img)
+}

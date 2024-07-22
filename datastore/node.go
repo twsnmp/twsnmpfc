@@ -15,6 +15,7 @@ type NodeEnt struct {
 	Name      string
 	Descr     string
 	Icon      string
+	Image     string
 	State     string
 	X         int
 	Y         int

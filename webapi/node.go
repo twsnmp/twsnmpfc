@@ -86,6 +86,7 @@ func postNodeUpdate(c echo.Context) error {
 	n.Descr = nu.Descr
 	n.IP = nu.IP
 	n.Icon = nu.Icon
+	n.Image = nu.Image
 	n.SnmpMode = nu.SnmpMode
 	n.Community = nu.Community
 	n.User = nu.User

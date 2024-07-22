@@ -194,6 +194,26 @@
             </v-col>
           </v-row>
           <v-row dense>
+            <v-col cols="8">
+              <v-autocomplete
+                v-model="editNode.Image"
+                :items="imageIconList"
+                label="イメージ"
+                dense
+                @change="selectImageIcon"
+              >
+              </v-autocomplete>
+            </v-col>
+            <v-col></v-col>
+            <v-col>
+              <v-img
+                v-if="editNode.Image"
+                :max-width="48"
+                :src="imageIcon"
+              ></v-img>
+            </v-col>
+          </v-row>
+          <v-row dense>
             <v-col>
               <v-select
                 v-model="editNode.SnmpMode"
@@ -363,6 +383,8 @@ export default {
       ],
       wolError: false,
       wolDone: false,
+      imageIconList: [],
+      imageIcon: '',
     }
   },
   async fetch() {
@@ -371,6 +393,7 @@ export default {
       this.options.page = this.conf.page
       this.conf.page = 1
     }
+    this.getImageIconList()
   },
   created() {
     const c = this.$store.state.nodes.conf
@@ -389,6 +412,7 @@ export default {
     editNodeFunc(item) {
       this.editIndex = this.nodes.indexOf(item)
       this.editNode = Object.assign({}, item)
+      this.selectImageIcon()
       this.editDialog = true
     },
     deleteNodeFunc(item) {
@@ -478,6 +502,27 @@ export default {
         .catch((e) => {
           this.wolError = true
         })
+    },
+    async getImageIconList() {
+      if (this.imageIconList.length > 0) {
+        return
+      }
+      const l = await this.$axios.$get('/api/imageIconList')
+      this.imageIconList = [{ text: 'なし', value: '' }]
+      for (const i of l) {
+        this.imageIconList.push({
+          text: i,
+          value: i,
+        })
+      }
+    },
+    selectImageIcon() {
+      this.imageIcon = ''
+      if (!this.editNode.Image) {
+        return
+      }
+      this.imageIcon =
+        this.$axios.defaults.baseURL + '/imageIcon/' + this.editNode.Image
     },
   },
 }

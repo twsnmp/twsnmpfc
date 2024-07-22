@@ -102,6 +102,8 @@ var (
 	CopyBackup bool
 	//  通知除外スケジュール設定
 	NotifySchedule map[string]string
+	// 画像アイコン
+	ImageIcons []string
 )
 
 // Define errors
@@ -225,6 +227,7 @@ func loadDataFromFS(fs http.FileSystem) error {
 	loadMailTemplateToMap("test", fs)
 	loadMailTemplateToMap("notify", fs)
 	loadMailTemplateToMap("report", fs)
+	checkImageIcons()
 	return nil
 }
 
@@ -344,4 +347,21 @@ func makeKey() string {
 // Data Storeのパスを返す、何かと必要なので
 func GetDataStorePath() string {
 	return dspath
+}
+
+func checkImageIcons() {
+	ImageIcons = []string{}
+	if dspath == "" {
+		return
+	}
+	if files, err := filepath.Glob(filepath.Join(dspath, "icons", "*.png")); err == nil {
+		for _, p := range files {
+			ImageIcons = append(ImageIcons, filepath.Base(p))
+		}
+	}
+	if files, err := filepath.Glob(filepath.Join(dspath, "icons", "*.jpg")); err == nil {
+		for _, p := range files {
+			ImageIcons = append(ImageIcons, filepath.Base(p))
+		}
+	}
 }

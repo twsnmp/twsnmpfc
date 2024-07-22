@@ -77,6 +77,7 @@ func setup(p *WebAPI) {
 	e.GET("/backimage", getBackImage)
 	e.GET("/image/:path", getImage)
 	e.GET("/version", getVersion)
+	e.GET("/imageIcon/:id", getImageIcon)
 	// JWT保護されたRoute
 	r := e.Group("/api")
 	r.Use(echojwt.JWT([]byte(p.Password)))
@@ -254,6 +255,8 @@ func setup(p *WebAPI) {
 	r.GET("/monitor", getMonitor)
 	r.GET("/mibmods", getMibMods)
 	r.GET("/mibtree", getMibTree)
+	r.GET("/imageIconList", getImageIconList)
+
 	// Mobile API
 	m := e.Group("/mobile")
 	m.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
