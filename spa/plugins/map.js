@@ -679,9 +679,10 @@ const mapMain = (p5) => {
       if (selectedNodes.length > 0) {
         deleteNodes()
       }
-    }
-    if (p5.keyCode === p5.ENTER) {
+    } else if (p5.keyCode === p5.ENTER) {
       p5.doubleClicked()
+    } else if (p5.key === 's' && p5.keyIsDown(p5.CONTROL)) {
+      p5.saveCanvas('TWSNMPFC-MAP.png')
     }
     return true
   }
