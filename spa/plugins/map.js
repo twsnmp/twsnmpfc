@@ -175,6 +175,14 @@ const initMap = (div, ms) => {
       mapSizeX = 10000
       mapSizeY = 10000
       break
+    case 4:
+      mapSizeX = 2894
+      mapSizeY = 4093
+      break
+    case 5:
+      mapSizeX = 4093
+      mapSizeY = 2894
+      break
     default:
       mapSizeX = 2500
       mapSizeY = 5000
