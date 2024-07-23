@@ -309,6 +309,10 @@ func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworks
 					if frp.ID == rp.ID || frp.Index == rp.Index {
 						for _, lp := range n.Ports {
 							if lp.Index == frp.Index {
+								if n.ID == rnr.ID && lp.ID == rp.ID {
+									// Skip same port
+									continue
+								}
 								l := &datastore.LineEnt{
 									NodeID1:    fmt.Sprintf("NET:%s", n.ID),
 									PollingID1: lp.ID,
