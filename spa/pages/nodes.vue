@@ -517,9 +517,10 @@ export default {
       if (!this.editNode.Image) {
         return
       }
-      const url = this.$axios.defaults.baseURL
-        ? this.$axios.defaults.baseURL
-        : window.location.origin
+      const url =
+        this.$axios.defaults.baseURL && this.$axios.defaults.baseURL !== '/'
+          ? this.$axios.defaults.baseURL
+          : window.location.origin
       this.imageIcon = url + '/imageIcon/' + this.editNode.Image
     },
   },
