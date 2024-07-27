@@ -517,8 +517,10 @@ export default {
       if (!this.editNode.Image) {
         return
       }
-      this.imageIcon =
-        this.$axios.defaults.baseURL + '/imageIcon/' + this.editNode.Image
+      const url = this.$axios.defaults.baseURL
+        ? this.$axios.defaults.baseURL
+        : window.location.origin
+      this.imageIcon = url + '/imageIcon/' + this.editNode.Image
     },
   },
 }
