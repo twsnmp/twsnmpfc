@@ -3,6 +3,8 @@ package backend
 import (
 	"context"
 	"log"
+	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -38,13 +40,21 @@ func updateMonData() {
 	if err == nil {
 		m.Disk = d.UsedPercent
 	}
-	n, err := gopsnet.IOCounters(false)
+	n, err := gopsnet.IOCounters(true)
 	if err == nil {
-		m.Bytes = float64(n[0].BytesRecv)
-		m.Bytes += float64(n[0].BytesSent)
-		if len(datastore.MonitorDataes) > 1 {
+		for _, nif := range n {
+			if isMonitorIF(nif.Name) {
+				m.Bytes += float64(nif.BytesRecv)
+				m.Bytes += float64(nif.BytesSent)
+			}
+		}
+		if len(datastore.MonitorDataes) >= 1 {
 			o := datastore.MonitorDataes[len(datastore.MonitorDataes)-1]
-			m.Net = float64(8.0 * (m.Bytes - o.Bytes) / float64(m.At-o.At))
+			if m.Bytes >= o.Bytes && m.At > o.At {
+				m.Net = float64(8.0 * (m.Bytes - o.Bytes) / float64(m.At-o.At))
+			} else {
+				log.Println("skip network monitor")
+			}
 		}
 	}
 	conn, err := gopsnet.Connections("tcp")
@@ -59,6 +69,24 @@ func updateMonData() {
 		datastore.MonitorDataes = append(datastore.MonitorDataes[:0], datastore.MonitorDataes[1:]...)
 	}
 	datastore.MonitorDataes = append(datastore.MonitorDataes, m)
+}
+
+// isMonitorIF はモニターするLANポートを判断する
+func isMonitorIF(n string) bool {
+	switch runtime.GOOS {
+	case "darwin":
+		if strings.HasPrefix(n, "utun") {
+			return false
+		}
+		if strings.HasPrefix(n, "lo") {
+			return false
+		}
+	case "linux":
+		if strings.HasPrefix(n, "lo") {
+			return false
+		}
+	}
+	return true
 }
 
 // monitor :
