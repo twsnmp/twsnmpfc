@@ -551,26 +551,47 @@ const mapMain = (p5) => {
     return true
   }
 
+  let selectedNetwork2 = "";
+  const checkLine = () => {
+    if (!p5.keyIsDown(p5.SHIFT)) {
+      return false
+    }
+    if (selectedNetwork !== "") {
+      if( setSelectNode(true)) {
+        return true
+      }
+      if (setSelectNetwork(true)) {
+        return true
+      }
+    } else if (selectedNodes.length === 1) {
+      if( setSelectNode(true)) {
+        return true
+      }
+      if (setSelectNetwork(false)) {
+        return true
+      }  
+    }
+    return false
+  }
+
   const canvasMousePressed = () => {
     if (readOnly) {
       return true
     }
     clickInCanvas = true
     mapRedraw = true
-    if (
-      p5.keyIsDown(p5.SHIFT) &&
-      selectedNodes.length === 1 &&
-      setSelectNode(true)
-    ) {
+    if (checkLine()) {
       editLine()
       selectedNodes.length = 0
+      selectedNetwork = ''
+      selectedNetwork2 = ''
       return false
     } else if (p5.keyIsDown(p5.ALT)) {
       setSelectNode(true)
     } else if (dragMode !== 3) {
       setSelectNode(false)
       setSelectItem()
-      setSelectNetwork()
+      setSelectNetwork(false)
     }
     lastMouseX = p5.mouseX / scale
     lastMouseY = p5.mouseY / scale
@@ -918,7 +939,7 @@ const mapMain = (p5) => {
   }
 
   // Networkを選択する
-  const setSelectNetwork = () => {
+  const setSelectNetwork = (second) => {
     const x = p5.mouseX / scale
     const y = p5.mouseY / scale
     for (const k in networks) {
@@ -930,11 +951,16 @@ const mapMain = (p5) => {
         networks[k].Y + h > y &&
         networks[k].Y - 10 < y
       ) {
-        selectedNetwork = networks[k].ID
-        return
+        if (second) {
+          selectedNetwork2 = networks[k].ID;
+        } else {
+          selectedNetwork = networks[k].ID;
+        }
+        return true
       }
     }
     selectedNetwork = ''
+    return false
   }
 
   // ノードを削除する
@@ -1009,6 +1035,12 @@ const mapMain = (p5) => {
   }
   // lineの編集
   const editLine = () => {
+    if (selectedNetwork !== ""){
+      selectedNodes.push("NET:" + selectedNetwork);
+    }
+    if (selectedNetwork2 !== ""){
+      selectedNodes.push("NET:" + selectedNetwork2);
+    }
     if (selectedNodes.length !== 2) {
       return
     }

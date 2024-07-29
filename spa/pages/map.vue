@@ -750,7 +750,7 @@
                   v-model="selectedLinePolling1"
                   color="primary"
                 >
-                  <v-list-item v-for="(item, i) in pollingList1" :key="i">
+                  <v-list-item v-for="(item, i) in pollingList1()" :key="i">
                     <v-list-item-icon>
                       <v-icon :color="$getStateColor(item.state)">
                         {{ $getStateIconName(item.state) }}
@@ -769,7 +769,7 @@
                   v-model="selectedLinePolling2"
                   color="primary"
                 >
-                  <v-list-item v-for="(item, i) in pollingList2" :key="i">
+                  <v-list-item v-for="(item, i) in pollingList2()" :key="i">
                     <v-list-item-icon>
                       <v-icon :color="$getStateColor(item.state)">
                         {{ $getStateIconName(item.state) }}
@@ -783,11 +783,17 @@
               </v-list>
             </v-col>
           </v-row>
-          <v-row dense>
+          <v-row
+            v-if="
+              !editLine.NodeID1.startsWith('NET') ||
+              !editLine.NodeID2.startsWith('NET')
+            "
+            dense
+          >
             <v-col>
               <v-select
                 v-model="editLine.PollingID"
-                :items="linePollingList"
+                :items="linePollingList()"
                 label="情報のためのポーリング"
               >
               </v-select>
@@ -805,7 +811,12 @@
               >
               </v-select>
             </v-col>
-            <v-col>
+            <v-col
+              v-if="
+                !editLine.NodeID1.startsWith('NET') ||
+                !editLine.NodeID2.startsWith('NET')
+              "
+            >
               <v-text-field
                 v-model="editLine.Port"
                 label="ポート"
@@ -815,13 +826,17 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="red" dark @click="deleteLine">
+          <v-btn v-if="editLine.ID" color="red" dark @click="deleteLine">
             <v-icon>mdi-lan-disconnect</v-icon>
             切断
           </v-btn>
-          <v-btn color="primary" dark @click="addLine">
+          <v-btn v-if="!editLine.ID" color="primary" dark @click="addLine">
             <v-icon>mdi-lan-connect</v-icon>
             接続
+          </v-btn>
+          <v-btn v-if="editLine.ID" color="primary" dark @click="addLine">
+            <v-icon>mdi-lan-connect</v-icon>
+            変更
           </v-btn>
           <v-btn color="normal" dark @click="lineDialog = false">
             <v-icon>mdi-cancel</v-icon>
@@ -1586,7 +1601,16 @@ export default {
     }
     this.getImageIconList()
   },
-  computed: {
+  mounted() {
+    this.$setIconCodeMap(this.$iconList)
+    this.$setStateColorMap(this.$stateList)
+    this.$setCallback(this.callback)
+    this.$setMapContextMenu(false)
+  },
+  beforeDestroy() {
+    this.$setMapContextMenu(true)
+  },
+  methods: {
     pollingList1() {
       return this.pollingList(this.editLine.NodeID1, false)
     },
@@ -1602,32 +1626,22 @@ export default {
     discoverURL() {
       return `/discover?x=${this.x}&y=${this.y}`
     },
-  },
-  mounted() {
-    this.$setIconCodeMap(this.$iconList)
-    this.$setStateColorMap(this.$stateList)
-    this.$setCallback(this.callback)
-    this.$setMapContextMenu(false)
-  },
-  beforeDestroy() {
-    this.$setMapContextMenu(true)
-  },
-  methods: {
     pollingList(id, lineMode) {
       const l = []
       if (id.startsWith('NET:')) {
         const a = id.split(':')
         const net = this.map.Networks[a[1]]
-        if (!net) {
+        if (!net || lineMode) {
           return l
         }
         for (const p of net.Ports) {
           l.push({
-            text: net.Name + ':' + p.Name,
+            text: p.Name,
             state: p.State,
             value: p.ID,
           })
         }
+        return l
       }
       if (!this.map.Nodes[id] || !this.map.Pollings[id]) {
         return l
@@ -1795,21 +1809,27 @@ export default {
       }
     },
     showEditLineDiaglog(p) {
-      if (p.length !== 2 || !this.map.Nodes[p[0]] || !this.map.Nodes[p[1]]) {
+      if (p.length !== 2) {
         return
       }
-      const l = this.map.Lines.find(
-        (e) =>
-          (e.NodeID1 === p[0] && e.NodeID2 === p[1]) ||
-          (e.NodeID1 === p[1] && e.NodeID2 === p[0])
-      )
-      this.editLine = l || {
+      this.editLine = {
+        ID: '',
         NodeID1: p[0],
         PollingID2: '',
         NodeID2: p[1],
         PollingID1: '',
         PollingID: '',
         Info: '',
+      }
+      if (!p[0].startsWith('NET') && !p[1].startsWith('NET')) {
+        const l = this.map.Lines.find(
+          (e) =>
+            (e.NodeID1 === p[0] && e.NodeID2 === p[1]) ||
+            (e.NodeID1 === p[1] && e.NodeID2 === p[0])
+        )
+        if (l) {
+          this.editLine = l
+        }
       }
       this.selectedLinePolling1 = this.getPollingIndex(
         this.editLine.NodeID1,
