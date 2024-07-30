@@ -9,6 +9,7 @@ require (
 	github.com/beevik/ntp v0.3.0
 	github.com/chewxy/stl v1.3.1
 	github.com/codegaudi/go-iforest v0.0.1
+	github.com/containers/winquit v1.1.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/gliderlabs/ssh v0.3.6
 	github.com/go-playground/validator v9.31.0+incompatible
@@ -71,6 +72,7 @@ require (
 	github.com/oschwald/maxminddb-golang v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
 	github.com/tklauser/numcpus v0.4.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

@@ -207,6 +207,7 @@ func main() {
 		Timeout:       timeout,
 	}
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	setWindowsQuit(quit)
 	go webapi.Start(w)
 	if local {
 		time.Sleep(3 * time.Second)

@@ -13,7 +13,7 @@ ZIP          = zip
 
 ### ターゲットパラメータ
 DIST = dist
-SRC = ./main.go backend/*.go datastore/*.go discover/*.go logger/*.go notify/*.go \
+SRC = ./main.go ./winquit*.go backend/*.go datastore/*.go discover/*.go logger/*.go notify/*.go \
       ping/*.go report/*.go security/*.go webapi/*.go polling/*.go
 TARGETS     = $(DIST)/twsnmpfc.exe $(DIST)/twsnmpfc.app $(DIST)/twsnmpfc $(DIST)/twsnmpfc.arm $(DIST)/twsnmpfc.arm64
 GO_PKGROOT  = ./...
@@ -26,6 +26,7 @@ clean: clean_spa clean_fluentbit_plugin
 	rm -rf $(TARGETS) $(DIST)/*.zip
 mac: $(DIST)/twsnmpfc.app
 linux: $(DIST)/twsnmpfc
+windows: $(DIST)/twsnmpfc.exe
 zip: $(TARGETS)
 	cd dist && $(ZIP) twsnmpfc_win.zip twsnmpfc.exe
 	cd dist && $(ZIP) twsnmpfc_mac.zip twsnmpfc.app
