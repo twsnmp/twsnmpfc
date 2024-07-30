@@ -215,6 +215,50 @@
         </v-data-table>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <download-excel
+            :fetch="makeExports"
+            type="csv"
+            name="TWSNMP_FC_Polling_Log.csv"
+            :header="
+              'TWSNMP FCのポーリングログ - ' + node.Name + ' - ' + polling.Name
+            "
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :fetch="makeExports"
+            type="csv"
+            :escape-csv="false"
+            name="TWSNMP_FC_Polling_Log.csv"
+            :header="
+              'TWSNMP FCのポーリングログ - ' + node.Name + ' - ' + polling.Name
+            "
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV(NO ESC)
+            </v-btn>
+          </download-excel>
+          <download-excel
+            :fetch="makeExports"
+            type="xls"
+            name="TWSNMP_FC_Polling_Log.xls"
+            :header="
+              'TWSNMP FCのポーリングログ - ' + node.Name + ' - ' + polling.Name
+            "
+            worksheet="ポーリングログ"
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-microsoft-excel</v-icon>
+              Excel
+            </v-btn>
+          </download-excel>
           <v-btn color="primary" dark @click="filterDialog = true">
             <v-icon>mdi-calendar-clock</v-icon>
             時間範囲
@@ -854,6 +898,17 @@ export default {
         .catch(() => {
           this.clearPollingLogError = true
         })
+    },
+    makeExports() {
+      const exports = []
+      this.logs.forEach((e) => {
+        exports.push({
+          状態: this.$getStateName(e.State),
+          記録日時: e.TimeStr,
+          結果: e.ResultStr,
+        })
+      })
+      return exports
     },
   },
 }
