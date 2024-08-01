@@ -1088,7 +1088,7 @@
             <v-list-item-title>全て再確認</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item :to="discoverURL">
+        <v-list-item :to="discoverURL()">
           <v-list-item-icon><v-icon>mdi-file-find</v-icon></v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>自動発見</v-list-item-title>

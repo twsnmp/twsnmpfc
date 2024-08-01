@@ -216,6 +216,10 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-btn color="error" dark @click="setIPRange">
+          <v-icon> mdi-auto-fix</v-icon>
+          自動IP範囲
+        </v-btn>
         <v-btn color="primary" dark @click="start">
           <v-icon>mdi-magnify</v-icon>
           開始
@@ -301,6 +305,8 @@ export default {
           return this.cmpIP(v) || '開始IP以降のアドレスを指定してください。'
         },
       ],
+      ipRanges: [],
+      selectedIPRange: -1,
     }
   },
   async fetch() {
@@ -455,6 +461,20 @@ export default {
         }
       }
       return true
+    },
+    async setIPRange() {
+      if (this.ipRanges.length < 1) {
+        this.ipRanges = await this.$axios.$get('/api/discover/range')
+      }
+      if (this.ipRanges.length < 1) {
+        return
+      }
+      this.selectedIPRange++
+      if (this.selectedIPRange >= this.ipRanges.length) {
+        this.selectedIPRange = 0
+      }
+      this.discover.Conf.StartIP = this.ipRanges[this.selectedIPRange].Start
+      this.discover.Conf.EndIP = this.ipRanges[this.selectedIPRange].End
     },
   },
 }

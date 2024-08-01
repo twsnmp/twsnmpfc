@@ -203,6 +203,56 @@ func ClearStat() {
 	Stat.Now = 0
 }
 
+type DiscoverIPRangeEnt struct {
+	Start string
+	End   string
+}
+
+func GetDiscoverIPRange() []DiscoverIPRangeEnt {
+	ret := []DiscoverIPRangeEnt{}
+	ifs, err := net.Interfaces()
+	if err != nil {
+		log.Printf("GetDiscoverIPRange err=%v", err)
+		return ret
+	}
+	for _, i := range ifs {
+		if (i.Flags&net.FlagLoopback) == net.FlagLoopback ||
+			(i.Flags&net.FlagUp) != net.FlagUp ||
+			(i.Flags&net.FlagPointToPoint) == net.FlagPointToPoint ||
+			len(i.HardwareAddr) != 6 ||
+			i.HardwareAddr[0]&0x02 == 0x02 {
+			continue
+		}
+		addrs, err := i.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, a := range addrs {
+			cidr := a.String()
+			ipTmp, ipnet, err := net.ParseCIDR(cidr)
+			if err != nil {
+				continue
+			}
+			ip := ipTmp.To4()
+			if ip == nil {
+				continue
+			}
+			start := ip.Mask(ipnet.Mask)
+			mask := ipnet.Mask
+			end := net.IP(make([]byte, 4))
+			for i := range ip {
+				end[i] = ip[i] | ^mask[i]
+			}
+			end[3] -= 1
+			ret = append(ret, DiscoverIPRangeEnt{
+				Start: start.String(),
+				End:   end.String(),
+			})
+		}
+	}
+	return ret
+}
+
 func getSnmpInfo(t string, dent *discoverInfoEnt) {
 	agent := &gosnmp.GoSNMP{
 		Target:    t,

@@ -21,6 +21,10 @@ func getDiscover(c echo.Context) error {
 	return c.JSON(http.StatusOK, r)
 }
 
+func getDiscoverIPRange(c echo.Context) error {
+	return c.JSON(http.StatusOK, discover.GetDiscoverIPRange())
+}
+
 func postDiscoverStart(c echo.Context) error {
 	dc := new(datastore.DiscoverConfEnt)
 	if err := c.Bind(dc); err != nil {
