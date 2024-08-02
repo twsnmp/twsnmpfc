@@ -453,7 +453,6 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 		ptype := ""
 		params := ""
 		mode := ""
-		level := "off"
 		switch s {
 		case "http":
 			name = "HTTPサーバー監視"
@@ -464,12 +463,10 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			ptype = "http"
 			mode = "https"
 			params = "https://" + n.IP
-			level = "low"
 		case "smtp":
 			name = "SMTPサーバー監視"
 			ptype = "tcp"
 			params = "25"
-			level = "low"
 		case "pop3":
 			name = "POP3サーバー監視"
 			ptype = "tcp"
@@ -478,7 +475,6 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			name = "IMAPサーバー監視"
 			ptype = "tcp"
 			params = "143"
-			level = "low"
 		case "ssh":
 			name = "SSHサーバー監視"
 			ptype = "tcp"
@@ -520,7 +516,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			Type:    ptype,
 			Mode:    mode,
 			Params:  params,
-			Level:   level,
+			Level:   "off",
 			State:   "unknown",
 			PollInt: datastore.MapConf.PollInt,
 			Timeout: datastore.MapConf.Timeout,
