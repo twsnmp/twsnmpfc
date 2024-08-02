@@ -444,10 +444,10 @@
         <v-alert v-model="stopDone" color="error" dense dismissible>
           TWSNMP FCは5秒後に停止します。
         </v-alert>
-        <v-card-text>
+        <v-card-text v-if="!stopDone">
           <p>TWSNMP FCを停止しますか？</p>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions v-if="!stopDone">
           <v-spacer></v-spacer>
           <v-btn color="error" @click="stop">
             <v-icon>mdi-stop</v-icon>
@@ -456,6 +456,13 @@
           <v-btn color="normal" @click="stopDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
+          </v-btn>
+        </v-card-actions>
+        <v-card-actions v-if="stopDone">
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="stopDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
           </v-btn>
         </v-card-actions>
       </v-card>
