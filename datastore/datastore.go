@@ -326,7 +326,7 @@ func CloseDB() {
 	db = nil
 }
 
-// SaveMapData:  24時間毎にマップのデータをDBへ保存する
+// SaveMapData:  指定時間毎にマップのデータをDBへ保存する
 func SaveMapData() {
 	if db == nil {
 		return

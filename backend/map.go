@@ -15,6 +15,8 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
+var SaveMapInterval = 60
+
 func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Println("start map backend")
@@ -28,6 +30,7 @@ func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 	timer := time.NewTicker(time.Second * 10)
 	newVersionTimer := time.NewTicker(time.Hour * 24)
 	i := 6
+	save := 0
 	checkOR := false
 	for {
 		select {
@@ -37,7 +40,6 @@ func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 			log.Println("stop map backend")
 			return
 		case <-newVersionTimer.C:
-			datastore.SaveMapData()
 			go checkNewVersion()
 		case <-timer.C:
 			change := 0
@@ -65,6 +67,11 @@ func mapBackend(ctx context.Context, wg *sync.WaitGroup) {
 					checkOR = false
 				}
 				i = 0
+				save++
+				if save > SaveMapInterval {
+					datastore.SaveMapData()
+					save = 0
+				}
 			}
 		}
 	}

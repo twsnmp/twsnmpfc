@@ -56,6 +56,8 @@ var sflowPort = 6343
 
 var resetPassword bool
 
+var saveMapInterval = 5
+
 func init() {
 	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
 	flag.StringVar(&password, "password", "twsnmpfc!", "Master Password")
@@ -76,6 +78,7 @@ func init() {
 	flag.IntVar(&netflowPort, "netflowPort", 2055, "netflow port")
 	flag.IntVar(&syslogPort, "syslogPort", 514, "syslog port")
 	flag.IntVar(&sflowPort, "sflowPort", 6343, "sflow port")
+	flag.IntVar(&saveMapInterval, "saveMap", 5, "Save Map Interval minute")
 	flag.BoolVar(&resetPassword, "resetPassword", false, "Reset user:password to twsnmp:twsnmp")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
@@ -184,6 +187,10 @@ func main() {
 		log.Fatalf("start polling err=%v", err)
 	}
 	log.Println("call backend.Start")
+	if saveMapInterval > 0 {
+		backend.SaveMapInterval = saveMapInterval
+		log.Printf("set SaveMapInterval=%d", saveMapInterval)
+	}
 	if err = backend.Start(ctx, dataStorePath, version, wg); err != nil {
 		log.Fatalf("start backend err=%v", err)
 	}
@@ -207,7 +214,6 @@ func main() {
 		Timeout:       timeout,
 	}
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-	setWindowsQuit(quit)
 	go webapi.Start(w)
 	if local {
 		time.Sleep(3 * time.Second)
