@@ -79,3 +79,9 @@ func getFindNeighborNetworksAndLines(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, backend.FindNeighborNetworksAndLines(n))
 }
+
+func getCheckNetwork(c echo.Context) error {
+	id := c.Param("id")
+	backend.CheckNetwork(id)
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}

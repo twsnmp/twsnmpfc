@@ -1380,6 +1380,12 @@
       absolute
     >
       <v-list dense>
+        <v-list-item @click="checkNetwork()">
+          <v-list-item-icon><v-icon>mdi-cached</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>再確認</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item @click="editNetworkDialog = true">
           <v-list-item-icon><v-icon>mdi-pencil</v-icon></v-list-item-icon>
           <v-list-item-content>
@@ -2309,6 +2315,12 @@ export default {
       }
       this.$axios.get('/api/polling/check/' + id).then(() => {
         this.showNodeDialog = false
+        this.$fetch()
+      })
+    },
+    checkNetwork() {
+      this.$axios.get('/api/checkNetwork/' + this.editNetwork.ID).then(() => {
+        this.showNetworkContextMenu = false
         this.$fetch()
       })
     },

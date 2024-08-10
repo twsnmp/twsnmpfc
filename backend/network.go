@@ -13,6 +13,8 @@ import (
 	"github.com/twsnmp/twsnmpfc/report"
 )
 
+var checkNetworkCh = make(chan string)
+
 func networkBackend(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Println("start network backend")
@@ -36,6 +38,8 @@ func networkBackend(ctx context.Context, wg *sync.WaitGroup) {
 			timer.Stop()
 			log.Println("stop network backend")
 			return
+		case id := <-checkNetworkCh:
+			delete(checkNetworkMap, id)
 		case <-timer.C:
 			now = time.Now().Unix()
 			j = 0
@@ -525,4 +529,14 @@ func getSNMPAgentForNetwork(n *datastore.NetworkEnt) *gosnmp.GoSNMP {
 		}
 	}
 	return agent
+}
+
+func CheckNetwork(id string) {
+	n := datastore.GetNetwork(id)
+	if n == nil {
+		return
+	}
+	// Clear Error
+	n.Error = ""
+	checkNetworkCh <- id
 }

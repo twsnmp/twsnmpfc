@@ -150,6 +150,7 @@ func setup(p *WebAPI) {
 	r.POST("/line/add", postLine)
 	r.DELETE("/network/:id", deleteNetwork)
 	r.GET("/findNeighborNetworksAndLines/:id", getFindNeighborNetworksAndLines)
+	r.GET("/checkNetwork/:id", getCheckNetwork)
 	r.POST("/network/update", postNetwork)
 	r.POST("/map/update_network", postNetworkPos)
 	r.POST("/wol/:id", postWOL)
