@@ -392,8 +392,34 @@
                 label="IPアドレス"
               ></v-text-field>
             </v-col>
+            <v-col v-if="newNetwork">
+              <v-switch
+                v-model="editNetwork.Unmanaged"
+                label="SNMPに対応してないHUB"
+              ></v-switch>
+            </v-col>
           </v-row>
-          <v-row dense>
+          <v-row v-if="editNetwork.Unmanaged" dense>
+            <v-col>
+              <v-text-field
+                v-model="totalPorts"
+                type="number"
+                min="5"
+                max="100"
+                label="全ポート数"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNetwork.HPorts"
+                type="number"
+                min="5"
+                max="100"
+                label="横の最大ポート数"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row v-if="!editNetwork.Unmanaged" dense>
             <v-col>
               <v-text-field
                 v-model="editNetwork.HPorts"
@@ -418,7 +444,7 @@
               ></v-switch>
             </v-col>
           </v-row>
-          <v-row dense>
+          <v-row v-if="!editNetwork.Unmanaged" dense>
             <v-col>
               <v-select
                 v-model="editNetwork.SnmpMode"
@@ -499,7 +525,11 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn v-if="editNetwork.ID" color="error" @click="researchNetwork">
+          <v-btn
+            v-if="editNetwork.ID && !editNetwork.Unmanaged"
+            color="error"
+            @click="researchNetwork"
+          >
             <v-icon>mdi-refresh</v-icon>
             再検索
           </v-btn>
@@ -1392,7 +1422,10 @@
             <v-list-item-title>編集</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item @click="findNeighborNetworksAndLines">
+        <v-list-item
+          v-if="!editNetwork.Unmanaged"
+          @click="findNeighborNetworksAndLines"
+        >
           <v-list-item-icon><v-icon>mdi-lan-connect</v-icon></v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>接続先を探す</v-list-item-title>
@@ -1454,6 +1487,8 @@ export default {
       editNode: {},
       editItem: {},
       editNetwork: {},
+      newNetwork: false,
+      totalPorts: 8,
       editNetworkPortIndex: 0,
       editNetworkPort: {},
       deleteNodes: [],
@@ -1767,6 +1802,7 @@ export default {
             }
             this.urls = []
             this.editNetwork = n
+            this.newNetwork = false
             this.editNetworkDialog = true
           }
           break
@@ -1977,13 +2013,37 @@ export default {
           this.editItemError = true
         })
     },
+    updateUnmanaedPort() {
+      if (this.editNetwork.Ports.length !== this.totalPorts) {
+        this.editNetwork.Ports.length = 0
+        let x = 0
+        let y = 0
+        for (let i = 0; i < this.totalPorts; i++) {
+          this.editNetwork.Ports.push({
+            ID: '#' + i,
+            Name: '#' + i,
+            X: x,
+            Y: y,
+          })
+          x++
+          if (x >= this.editNetwork.HPorts) {
+            y++
+            x = 0
+          }
+        }
+      }
+    },
     doUpdateNetwork() {
+      if (this.editNetwork.Unmanaged) {
+        this.updateUnmanaedPort()
+      }
       this.editNetworkError = false
       this.editNetwork.X *= 1
       this.editNetwork.Y *= 1
       this.editNetwork.H *= 1
       this.editNetwork.W *= 1
       this.editNetwork.HPorts *= 1
+      this.newNetwork = false
       this.$axios
         .post('/api/network/update', this.editNetwork)
         .then(() => {
@@ -2101,7 +2161,9 @@ export default {
         Ports: [],
         Error: '',
         LLDP: false,
+        Unmanaged: false,
       }
+      this.newNetwork = true
       this.editNetworkDialog = true
     },
     findNeighborNetworksAndLines() {
@@ -2139,6 +2201,7 @@ export default {
       if (i >= 0) {
         this.showNeighborNetworksAndLinesDialog = false
         this.editNetworkDialog = true
+        this.newNetwork = false
         this.editNetwork = n
       }
     },

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gosnmp/gosnmp"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/ping"
 	"github.com/twsnmp/twsnmpfc/report"
 )
 
@@ -63,7 +64,11 @@ func networkBackend(ctx context.Context, wg *sync.WaitGroup) {
 					continue
 				}
 				if t < now {
-					go checkNetworkPortState(n)
+					if n.Unmanaged {
+						go checkUnmanagedNetworkPortState(n)
+					} else {
+						go checkNetworkPortState(n)
+					}
 					checkNetworkMap[id] = now + 60
 				}
 			}
@@ -539,4 +544,64 @@ func CheckNetwork(id string) {
 	// Clear Error
 	n.Error = ""
 	checkNetworkCh <- id
+}
+
+func checkUnmanagedNetworkPortState(n *datastore.NetworkEnt) {
+	if n.IP != "" {
+		r := ping.DoPing(n.IP, datastore.MapConf.Timeout, datastore.MapConf.Retry, 64, 64)
+		if r.Stat != ping.PingOK {
+			n.Error = "Ping No Responce"
+			for i := range n.Ports {
+				n.Ports[i].State = "down"
+			}
+			return
+		}
+	}
+	for i := range n.Ports {
+		n.Ports[i].State = "unknown"
+	}
+	id := "NET:" + n.ID
+	datastore.ForEachLines(func(l *datastore.LineEnt) bool {
+		if l.NodeID1 == id {
+			for i := range n.Ports {
+				if n.Ports[i].ID == l.PollingID1 {
+					n.Ports[i].State = getPortState(l.NodeID2, l.PollingID2)
+				}
+			}
+		} else if l.NodeID2 == id {
+			for i := range n.Ports {
+				if n.Ports[i].ID == l.PollingID2 {
+					n.Ports[i].State = getPortState(l.NodeID1, l.PollingID1)
+				}
+			}
+		}
+		return true
+	})
+}
+
+func getPortState(nodeID, pollingID string) string {
+	st := "unknown"
+	if strings.HasPrefix(nodeID, "NET:") {
+		n := datastore.GetNetwork(nodeID)
+		if n != nil {
+			if n.Unmanaged {
+				// UnmanagedのHUB同士は接続するだけでUP
+				st = "up"
+			} else {
+				// 相手の状態を取得
+				for _, p := range n.Ports {
+					if p.ID == pollingID {
+						st = p.State
+						break
+					}
+				}
+			}
+		}
+	} else {
+		poll := datastore.GetPolling(pollingID)
+		if poll != nil {
+			st = poll.State
+		}
+	}
+	return st
 }
