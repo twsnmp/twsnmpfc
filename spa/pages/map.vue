@@ -392,7 +392,7 @@
                 label="IPアドレス"
               ></v-text-field>
             </v-col>
-            <v-col v-if="newNetwork">
+            <v-col v-if="!editNetwork.ID">
               <v-switch
                 v-model="editNetwork.Unmanaged"
                 label="SNMPに対応してないHUB"
@@ -1487,7 +1487,6 @@ export default {
       editNode: {},
       editItem: {},
       editNetwork: {},
-      newNetwork: false,
       totalPorts: 8,
       editNetworkPortIndex: 0,
       editNetworkPort: {},
@@ -1802,7 +1801,7 @@ export default {
             }
             this.urls = []
             this.editNetwork = n
-            this.newNetwork = false
+            this.totalPorts = this.editNetwork.Ports.length
             this.editNetworkDialog = true
           }
           break
@@ -1836,6 +1835,7 @@ export default {
               return
             }
             this.editNetwork = this.map.Networks[r.Network]
+            this.totalPorts = this.editNetwork.Ports.length
             this.showNetworkContextMenu = true
           } else {
             this.showMapContextMenu = true
@@ -2043,7 +2043,6 @@ export default {
       this.editNetwork.H *= 1
       this.editNetwork.W *= 1
       this.editNetwork.HPorts *= 1
-      this.newNetwork = false
       this.$axios
         .post('/api/network/update', this.editNetwork)
         .then(() => {
@@ -2163,7 +2162,7 @@ export default {
         LLDP: false,
         Unmanaged: false,
       }
-      this.newNetwork = true
+      this.totalPorts = 8
       this.editNetworkDialog = true
     },
     findNeighborNetworksAndLines() {
@@ -2201,7 +2200,6 @@ export default {
       if (i >= 0) {
         this.showNeighborNetworksAndLinesDialog = false
         this.editNetworkDialog = true
-        this.newNetwork = false
         this.editNetwork = n
       }
     },
