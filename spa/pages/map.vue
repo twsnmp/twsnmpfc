@@ -541,6 +541,10 @@
             <v-icon>mdi-order-numeric-ascending</v-icon>
             ポート再配置
           </v-btn>
+          <v-btn color="info" dark @click="showPortDefDialog = true">
+            <v-icon>mdi-swap-vertical</v-icon>
+            ポート定義
+          </v-btn>
           <v-btn color="primary" dark @click="doUpdateNetwork">
             <v-icon>mdi-content-save</v-icon>
             保存
@@ -742,6 +746,39 @@
             保存
           </v-btn>
           <v-btn color="normal" dark @click="editNetworkPortDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="showPortDefDialog" persistent max-width="50vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ポート定義</span>
+        </v-card-title>
+        <v-alert v-model="portDefImportError" color="error" dense dismissible>
+          ポート定義を読み込みに失敗しました
+        </v-alert>
+        <v-card-text>
+          <v-file-input
+            label="ポート定義ファイル"
+            accept="application/json"
+            @change="selectPortDefFile"
+          >
+          </v-file-input>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="doImportPortDef">
+            <v-icon>mdi-upload</v-icon>
+            インポート
+          </v-btn>
+          <v-btn color="primary" @click="doExportPortDef">
+            <v-icon>mdi-download</v-icon>
+            エクスポート
+          </v-btn>
+          <v-btn color="normal" @click="showPortDefDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>
@@ -1453,6 +1490,8 @@
 </template>
 
 <script>
+import { saveAs } from 'file-saver'
+
 export default {
   data() {
     return {
@@ -1490,6 +1529,9 @@ export default {
       totalPorts: 8,
       editNetworkPortIndex: 0,
       editNetworkPort: {},
+      showPortDefDialog: false,
+      portDefImportError: false,
+      portdefFile: null,
       deleteNodes: [],
       map: {
         Nodes: {},
@@ -2597,6 +2639,84 @@ export default {
           ? this.$axios.defaults.baseURL
           : window.location.origin
       this.imageIcon = url + '/imageIcon/' + this.editNode.Image
+    },
+    selectPortDefFile(f) {
+      this.portDefFile = f
+    },
+    async doImportPortDef() {
+      this.portDefImportError = false
+      if (!this.portDefFile) {
+        this.portDefImportError = true
+        return
+      }
+      const d = await this.getPortDefFileData()
+      if (!d) {
+        this.portDefImportError = true
+        return
+      }
+      const ports = JSON.parse(d)
+      if (!ports) {
+        this.portDefImportError = true
+        return
+      }
+      for (let i = 0; i < ports.length; i++) {
+        if (i < this.editNetwork.Ports.length) {
+          this.editNetwork.Ports[i].Name = ports[i].Name
+          this.editNetwork.Ports[i].X = ports[i].X
+          this.editNetwork.Ports[i].Y = ports[i].Y
+          if (ports.Polling) {
+            this.editNetwork.Ports[i].Polling = ports[i].Polling
+          }
+        } else {
+          this.editNetwork.Ports.push({
+            ID: '#' + i,
+            Name: ports[i].Name,
+            X: ports[i].X,
+            Y: ports[i].Y,
+            Polling: ports[i].Polling,
+            Index: '' + i,
+          })
+        }
+      }
+      this.showPortDefDialog = false
+      this.portDefFile = null
+    },
+    getPortDefFileData() {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsText(this.portDefFile)
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = (error) => reject(error)
+      })
+    },
+    checkPortDefFile() {
+      if (!this.portDefFile) {
+        return false
+      }
+      if (this.portDefFile.type !== 'application/json') {
+        return false
+      }
+      const SIZE_LIMIT = 1000000 // 1MB
+      if (this.portDefFile.size > SIZE_LIMIT) {
+        return false
+      }
+      return true
+    },
+    doExportPortDef() {
+      const ports = []
+      for (const p of this.editNetwork.Ports) {
+        ports.push({
+          Name: p.Name,
+          X: p.X,
+          Y: p.Y,
+          Polling: p.Polling,
+        })
+      }
+      const blob = new Blob([JSON.stringify(ports, null, '  ')], {
+        type: 'application/json',
+      })
+      saveAs(blob, 'twsnmp_port_def_' + this.editNetwork.ID + '.json')
+      this.showPortDefDialog = false
     },
   },
 }

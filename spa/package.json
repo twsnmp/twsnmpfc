@@ -21,6 +21,7 @@
     "echarts-gl": "^2.0.9",
     "echarts-stat": "^1.2.0",
     "fft-js": "^0.0.12",
+    "file-saver": "^2.0.5",
     "numeral": "^2.0.6",
     "nuxt": "^2.15.8",
     "p5": "^1.4.2",
