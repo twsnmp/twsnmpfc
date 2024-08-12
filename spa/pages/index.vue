@@ -29,6 +29,14 @@
               >ZennのBook
             </a>
             に書いています。<br />
+            マニュアルの検索は
+            <a
+              href="https://lhx98.linkclub.jp/twise.co.jp/#sec06"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              TWSNMPシリーズのヘルプ </a
+            >にあります。<br />
             ソースコードは
             <a
               href="https://github.com/twsnmp/twsnmpfc"
@@ -53,13 +61,6 @@
               target="_blank"
               rel="noopener noreferrer"
               >Apple App Store
-            </a>
-            または
-            <a
-              href="https://play.google.com/store/apps/details?id=jp.co.twsie.twsnmpfm"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Google Play Store
             </a>
             からインストールできます。<br />
           </p>
