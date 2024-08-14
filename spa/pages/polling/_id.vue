@@ -902,11 +902,13 @@ export default {
     makeExports() {
       const exports = []
       this.logs.forEach((e) => {
-        exports.push({
+        const r = {
           状態: this.$getStateName(e.State),
           記録日時: e.TimeStr,
           結果: e.ResultStr,
-        })
+          error: '',
+        }
+        exports.push(Object.assign(r, e.Result))
       })
       return exports
     },
