@@ -270,6 +270,15 @@
             <v-icon>mdi-file-find</v-icon>
             取得
           </v-btn>
+          <v-btn
+            v-if="missingList"
+            color="error"
+            dark
+            @click="missingDialog = true"
+          >
+            <v-icon>mdi-playlist-check</v-icon>
+            不足している拡張MIB
+          </v-btn>
           <v-btn color="normal" dark @click="resultMibTreeDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
@@ -280,6 +289,31 @@
           <v-btn color="error" dark @click="stopResultMibTree = true">
             <v-icon>mdi-cancel</v-icon>
             中止
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="missingDialog" persistent max-width="90%">
+      <v-card>
+        <v-card-title>
+          <span class="headline">不足している拡張MIB</span>
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <v-data-table
+          :headers="missingHeader"
+          :items="missingList"
+          :items-per-page="10"
+          dense
+        >
+          <template #[`item.actions`]="{ item }">
+            <v-icon small @click="searchExtMIB(item)"> mdi-search-web </v-icon>
+          </template>
+        </v-data-table>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="missingDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -479,6 +513,14 @@ export default {
       resultMibTreeWait: false,
       resultMibTreeProgress: 0.0,
       stopResultMibTree: false,
+      missingDialog: false,
+      missingList: [],
+      missingHeader: [
+        { text: '名前', value: 'name', width: '30%' },
+        { text: 'OID', value: 'oid', width: '50%' },
+        { text: '件数', value: 'count', width: '10%' },
+        { text: '操作', value: 'actions', width: '10%' },
+      ],
       error: false,
       wait: false,
       conf: {
@@ -942,6 +984,7 @@ export default {
       this.resultMibTreeProgress = 0.0
       let i = 0
       const nameMap = new Map()
+      const missingMap = new Map()
       for (const e of this.mibs) {
         if (this.stopResultMibTree) {
           break
@@ -953,9 +996,20 @@ export default {
           this.resultMibTreeProgress = (100.0 * i) / this.mibs.length
         }
         i++
-        const a = e.Name.split('.', 2)
+        const a = e.Name.split('.')
+        if (a.length < 2) {
+          continue
+        }
         const t = this.getTreePath(a[0], this.mibtree)
         if (t) {
+          if (this.hasChildren(t[0], this.mibtree)) {
+            const mn = t[0] + '.' + a[1]
+            if (missingMap.has(mn)) {
+              missingMap.set(mn, missingMap.get(mn) + 1)
+            } else {
+              missingMap.set(mn, 1)
+            }
+          }
           for (const n of t) {
             if (nameMap.has(n)) {
               nameMap.set(n, nameMap.get(n) + 1)
@@ -967,6 +1021,57 @@ export default {
       }
       this.resultMibTreeWait = false
       this.resultMibtree = this.makeTreeData(nameMap, this.mibtree)
+      this.missingList.length = 0
+      missingMap.forEach((v, k) => {
+        this.missingList.push({
+          name: k,
+          oid: this.getOID(k, this.mibtree),
+          count: v,
+        })
+      })
+    },
+    hasChildren(name, list) {
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].name === name) {
+          return list[i].children.length > 0
+        }
+        if (list[i].children) {
+          if (this.hasChildren(name, list[i].children)) {
+            return true
+          }
+        }
+      }
+      return false
+    },
+    getOID(name, list) {
+      const a = name.split('.')
+      let idx = ''
+      if (a.length > 1) {
+        name = a[0]
+        idx = '.' + a[1]
+      }
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].name === name) {
+          return list[i].oid + idx
+        }
+        if (list[i].children) {
+          const oid = this.getOID(name, list[i].children)
+          if (oid) {
+            return oid + idx
+          }
+        }
+      }
+      return ''
+    },
+    searchExtMIB(item) {
+      const oid = item.oid.startsWith('.')
+        ? item.oid.replace('.', '')
+        : item.oid
+      const url =
+        'https://mibbrowser.online/mibdb_search.php?search=' +
+        oid +
+        '&userdropdown=anymatch'
+      window.open(url, '_blank')
     },
     getTreePath(name, list) {
       for (let i = 0; i < list.length; i++) {
