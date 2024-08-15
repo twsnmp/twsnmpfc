@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gosnmp/gosnmp"
@@ -20,7 +21,18 @@ type mibbrWebAPI struct {
 func getMIBBr(c echo.Context) error {
 	id := c.Param("id")
 	r := mibbrWebAPI{}
-	r.Node = datastore.GetNode(id)
+	if strings.HasPrefix(id, "NET:") {
+		nt := datastore.GetNetwork(id)
+		if nt != nil {
+			r.Node = &datastore.NodeEnt{
+				ID:   id,
+				Name: nt.Name,
+				IP:   nt.IP,
+			}
+		}
+	} else {
+		r.Node = datastore.GetNode(id)
+	}
 	r.MIBTree = &datastore.MIBTree
 	if r.Node == nil {
 		return echo.ErrBadRequest
@@ -78,7 +90,20 @@ func snmpWalk(p *mibGetReqWebAPI) ([]*mibEnt, error) {
 	ret := []*mibEnt{}
 	n := datastore.GetNode(p.NodeID)
 	if n == nil {
-		return ret, fmt.Errorf("node not found")
+		if !strings.HasPrefix(p.NodeID, "NET:") {
+			return ret, fmt.Errorf("node not found")
+		}
+		nt := datastore.GetNetwork(p.NodeID)
+		if nt == nil {
+			return ret, fmt.Errorf("network not found")
+		}
+		n = &datastore.NodeEnt{
+			IP:        nt.IP,
+			SnmpMode:  nt.SnmpMode,
+			Community: nt.Community,
+			User:      nt.User,
+			Password:  nt.Password,
+		}
 	}
 	agent := &gosnmp.GoSNMP{
 		Target:    n.IP,

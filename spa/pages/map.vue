@@ -1296,13 +1296,13 @@
             <v-list-item-title>コピー</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item @click="showMIBBr()">
+        <v-list-item @click="showMIBBr(editNode.ID)">
           <v-list-item-icon><v-icon>mdi-eye</v-icon></v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>MIBブラウザー</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item @click="showPing()">
+        <v-list-item @click="showPing(editNode.IP)">
           <v-list-item-icon>
             <v-icon>mdi-check-network</v-icon>
           </v-list-item-icon>
@@ -1466,6 +1466,23 @@
           <v-list-item-icon><v-icon>mdi-lan-connect</v-icon></v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>接続先を探す</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item
+          v-if="!editNetwork.Unmanaged"
+          @click="showMIBBr('NET:' + editNetwork.ID)"
+        >
+          <v-list-item-icon><v-icon>mdi-eye</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>MIBブラウザー</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item v-if="editNetwork.IP" @click="showPing(editNetwork.IP)">
+          <v-list-item-icon>
+            <v-icon>mdi-check-network</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>PING</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
         <v-list-item @click="showEditNetworkLines">
@@ -2328,11 +2345,11 @@ export default {
     showTcpUdpPortPage() {
       this.$router.push({ path: '/node/port/' + this.editNode.ID })
     },
-    showMIBBr() {
-      this.$router.push({ path: '/mibbr/' + this.editNode.ID })
+    showMIBBr(id) {
+      this.$router.push({ path: '/mibbr/' + id })
     },
-    showPing() {
-      this.$router.push({ path: '/ping/' + this.editNode.IP })
+    showPing(ip) {
+      this.$router.push({ path: '/ping/' + ip })
     },
     openURL(url) {
       this.openURLDialog = false

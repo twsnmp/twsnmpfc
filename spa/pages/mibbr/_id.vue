@@ -55,7 +55,13 @@
           </tr>
         </template>
         <template v-if="!tableMode" #[`item.actions`]="{ item }">
-          <v-icon small @click="addPolling(item)"> mdi-card-plus </v-icon>
+          <v-icon
+            v-if="!node.ID.startsWith('NET:')"
+            small
+            @click="addPolling(item)"
+          >
+            mdi-card-plus
+          </v-icon>
           <v-icon small @click="copyOneMIB(item)"> mdi-content-copy </v-icon>
         </template>
       </v-data-table>
