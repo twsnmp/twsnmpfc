@@ -79,10 +79,15 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn v-if="!isAuthenticated" color="primary" to="/login">
+          <v-btn
+            v-if="!isAuthenticated"
+            tabindex="1"
+            color="primary"
+            to="/login"
+          >
             ログイン
           </v-btn>
-          <v-btn v-if="isAuthenticated" color="primary" to="/map">
+          <v-btn v-if="isAuthenticated" tabindex="1" color="primary" to="/map">
             マップ
           </v-btn>
           <v-btn v-if="isAuthenticated" color="info" @click="checkUpdate">

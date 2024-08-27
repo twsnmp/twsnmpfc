@@ -8,19 +8,26 @@
     </v-card-title>
     <v-card-text>
       <v-form>
-        <v-text-field v-model="login.UserID" label="ユーザID" required />
+        <v-text-field
+          v-model="login.UserID"
+          tabindex="1"
+          label="ユーザID"
+          required
+        />
         <v-text-field
           v-model="login.Password"
+          tabindex="2"
           type="password"
           label="パスワード"
           required
         />
         <v-switch
           v-model="readOnly"
+          tabindex="4"
           label="閲覧モードでログイン"
           dense
         ></v-switch>
-        <v-btn block color="primary" dark @click="submit">
+        <v-btn tabindex="3" block color="primary" dark @click="submit">
           ログイン
           <v-icon>mdi-login</v-icon>
         </v-btn>
