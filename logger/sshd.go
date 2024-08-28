@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -66,6 +67,9 @@ func sshdHandler(s ssh.Session) {
 			return
 		case "polling":
 			sshdGetPollings(s)
+			return
+		case "pollinglog", "plog":
+			sshdGetPollingLogs(s)
 			return
 		}
 	case "put":
@@ -215,7 +219,7 @@ func sshdGetPollings(s ssh.Session) {
 	cmds := s.Command()
 	csv := len(cmds) > 2 && cmds[2] == "csv"
 	if csv {
-		io.WriteString(s, "Node,Name,State\r\n")
+		io.WriteString(s, "Node,Name,State,ID,LogMode\r\n")
 	}
 	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
 		if csv {
@@ -223,7 +227,7 @@ func sshdGetPollings(s ssh.Session) {
 			if n == nil {
 				return true
 			}
-			io.WriteString(s, fmt.Sprintf("%s,%s,%s\r\n", n.Name, p.Name, p.State))
+			io.WriteString(s, fmt.Sprintf("%s,%s,%s,%s,%d\r\n", n.Name, p.Name, p.State, p.ID, p.LogMode))
 		} else {
 			if j, err := json.Marshal(p); err == nil {
 				io.WriteString(s, string(j)+"\r\n")
@@ -231,4 +235,61 @@ func sshdGetPollings(s ssh.Session) {
 		}
 		return true
 	})
+}
+
+// Polling Logs
+func sshdGetPollingLogs(s ssh.Session) {
+	cmds := s.Command()
+	if len(cmds) < 3 {
+		log.Println("sshdGetPollingLogs no pollingid")
+		return
+	}
+	csv := len(cmds) > 3 && cmds[3] == "csv"
+	pid := cmds[2]
+	logs := datastore.GetAllPollingLog(pid)
+	if len(logs) < 1 {
+		log.Println("sshdGetPollingLogs no polling log")
+		return
+	}
+	header := []string{"Time", "State"}
+	rks := []string{}
+	for k := range logs[0].Result {
+		switch k {
+		case "error":
+		case "lastTime":
+		case "exitCode":
+		default:
+			rks = append(rks, k)
+		}
+	}
+	sort.Strings(rks)
+	header = append(header, rks...)
+	header = append(header, "error")
+	if csv {
+		io.WriteString(s, strings.Join(header, ",")+"\r\n")
+	}
+	for _, l := range logs {
+		if csv {
+			d := []string{}
+			for _, k := range header {
+				switch k {
+				case "Time":
+					d = append(d, time.Unix(0, l.Time).Format(time.RFC3339))
+				case "State":
+					d = append(d, l.State)
+				default:
+					v := ""
+					if iv, ok := l.Result[k]; ok {
+						v = fmt.Sprintf("%v", iv)
+					}
+					d = append(d, v)
+				}
+			}
+			io.WriteString(s, strings.Join(d, ",")+"\r\n")
+		} else {
+			if j, err := json.Marshal(l); err == nil {
+				io.WriteString(s, string(j)+"\r\n")
+			}
+		}
+	}
 }
