@@ -13,7 +13,7 @@ bin = "/tmp/main -datastore /Volumes/USBSSD1T/testdata/tmp -timeout 0 -saveMap 1
 # Watch these filename extensions.
 include_ext = ["go"]
 # Ignore these filename extensions or directories.
-exclude_dir = ["spa", "conf","Docker","pwa", "dist","statik","fluentbit"]
+exclude_dir = ["spa", "conf","Docker","pwa", "dist","statik","fluentbit","client"]
 # Watch these directories if you specified.
 include_dir = []
 # Exclude files.

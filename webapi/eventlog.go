@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"log"
 	"net/http"
 	"sort"
 	"strconv"
@@ -33,6 +34,7 @@ func postEventLogs(c echo.Context) error {
 	}
 	filter := new(eventLogFilter)
 	if err := c.Bind(filter); err != nil {
+		log.Println(err)
 		return echo.ErrBadRequest
 	}
 	eventFilter := makeStringFilter(filter.Event)
