@@ -1,6 +1,8 @@
 package client
 
 import (
+	"fmt"
+	"log"
 	"testing"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -317,4 +319,76 @@ func TestClientDeleteLog(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("Done")
+}
+
+func ExampleTWSNMPApi_Login() {
+	c := NewClient("http://127.0.0.1:8080")
+	err := c.Login("twsnmp", "twsnmp")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+func ExampleTWSNMPApi_GetNodes() {
+	c := NewClient("http://127.0.0.1:8080")
+	err := c.Login("twsnmp", "twsnmp")
+	if err != nil {
+		log.Fatal(err)
+	}
+	nodes, err := c.GetNodes()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, n := range nodes {
+		fmt.Printf("%+v\n", n)
+	}
+}
+func ExampleTWSNMPApi_UpdateNodes() {
+	c := NewClient("http://127.0.0.1:8080")
+	err := c.Login("twsnmp", "twsnmp")
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = c.UpdateNode(&datastore.NodeEnt{
+		Name: "test",
+		X:    100,
+		Y:    100,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func ExampleTWSNMPApi_DeleteNodes() {
+	c := NewClient("http://127.0.0.1:8080")
+	err := c.Login("twsnmp", "twsnmp")
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = c.DeleteNodes([]string{"node id"})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func ExampleTWSNMPApi_GetPollingLogs() {
+	c := NewClient("http://127.0.0.1:8080")
+	err := c.Login("twsnmp", "twsnmp")
+	if err != nil {
+		log.Fatal(err)
+	}
+	r, err := c.GetPollings()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, p := range r.Pollings {
+		if p.LogMode > 0 {
+			logs, err := c.GetPollingLogs(p.ID, &TimeFilter{})
+			if err != nil {
+				log.Fatal(err)
+			}
+			for _, l := range logs {
+				fmt.Printf("%+v\n", l)
+			}
+		}
+	}
 }
