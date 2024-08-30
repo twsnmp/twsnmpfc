@@ -107,13 +107,13 @@ func (a *TWSNMPApi) GetMonitor() ([]*datastore.MonitorDataEnt, error) {
 
 // AiListEntWebAPIは、AI分析リストのデータ構造です。
 type AiListEntWebAPI struct {
-	ID          string
-	NodeID      string
-	NodeName    string
-	PollingName string
-	Score       float64
-	Count       int
-	LastTime    int64
+	ID          string  // 内部ID
+	NodeID      string  // ノードの内部ID
+	NodeName    string  // ノード名
+	PollingName string  // ポーリング名
+	Score       float64 // スコア
+	Count       int     // 件数
+	LastTime    int64   // 最終分析日時
 }
 
 // GetAIListはTWSNMP FCからAI分析リストを取得します。

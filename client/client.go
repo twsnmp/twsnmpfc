@@ -1,4 +1,4 @@
-// パッケージclientは、TWSNMP FCにアクセスするためにWeb APIを利用するライブラリです。
+// Package clinet : Web APIを利用したクライントライブラリです。
 package client
 
 import (
@@ -13,10 +13,10 @@ import (
 
 // TWSNMPApiは、TWSNMP FCと通信するためのデータ構造です。
 type TWSNMPApi struct {
-	URL                string
-	Token              string
-	InsecureSkipVerify bool
-	Timeout            int
+	URL                string // TWSNMP FCのURL
+	Token              string // JWTアクセストークン
+	InsecureSkipVerify bool   // HTTPSで通信する時にサーバー証明書の検証を行わない
+	Timeout            int    // タイムアウト
 }
 
 type selectEntWebAPI struct {
