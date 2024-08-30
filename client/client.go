@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// TWSNMPApiは、TWSNMP FCと通信するためのデータ構造です。
 type TWSNMPApi struct {
 	URL                string
 	Token              string

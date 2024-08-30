@@ -8,11 +8,7 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-type EventLogsWebAPI struct {
-	EventLogs []*datastore.EventLogEnt
-	NodeList  []selectEntWebAPI
-}
-
+// EventLogFilterは、イベントログの検索条件です。
 type EventLogFilter struct {
 	Level     string
 	StartDate string
@@ -22,6 +18,12 @@ type EventLogFilter struct {
 	Type      string
 	NodeID    string
 	Event     string
+}
+
+// EventLogsWebAPIは、イベントログの検索結果です。
+type EventLogsWebAPI struct {
+	EventLogs []*datastore.EventLogEnt
+	NodeList  []selectEntWebAPI
 }
 
 // GetEventLogsはTWSNMP FCからイベントログを取得します。
@@ -42,6 +44,7 @@ func (a *TWSNMPApi) GetEventLogs(filter *EventLogFilter) (*EventLogsWebAPI, erro
 	return &logs, err
 }
 
+// SyslogFilterは、syslogの検索条件です。
 type SyslogFilter struct {
 	StartDate string
 	StartTime string
@@ -57,6 +60,7 @@ type SyslogFilter struct {
 	Filter    int
 }
 
+// SyslogWebAPIは、syslogの検索結果です。
 type SyslogWebAPI struct {
 	Logs          []*SyslogWebAPILogEnt
 	ExtractHeader []string
@@ -67,6 +71,7 @@ type SyslogWebAPI struct {
 	Limit         int
 }
 
+// SyslogWebAPILogEntは、syslogのデータ構造です。
 type SyslogWebAPILogEnt struct {
 	Time     int64
 	Level    string
@@ -96,6 +101,7 @@ func (a *TWSNMPApi) GetSyslogs(filter *SyslogFilter) (*SyslogWebAPI, error) {
 	return &logs, err
 }
 
+// SnmpTrapFilterは、SNMP TRAPログの検索条件です。
 type SnmpTrapFilter struct {
 	StartDate   string
 	StartTime   string
@@ -106,6 +112,7 @@ type SnmpTrapFilter struct {
 	Variables   string
 }
 
+// SnmpTrapWebAPIは、SNMP TRAPログです。
 type SnmpTrapWebAPI struct {
 	Time        int64
 	FromAddress string
@@ -131,6 +138,7 @@ func (a *TWSNMPApi) GetSnmpTraps(filter *SnmpTrapFilter) ([]*SnmpTrapWebAPI, err
 	return logs, err
 }
 
+// NetflowFilterは、NetFlow/IPFIXの検索条件です。
 type NetflowFilter struct {
 	StartDate string
 	StartTime string
@@ -149,6 +157,7 @@ type NetflowFilter struct {
 	Filter    int
 }
 
+// NetflowWebAPIは、NetFlow/IPFIXログの検索結果です。
 type NetflowWebAPI struct {
 	Logs     []*NetflowWebAPILogEnt
 	NextTime int64
@@ -157,6 +166,7 @@ type NetflowWebAPI struct {
 	Limit    int
 }
 
+// NetflowWebAPILogEntは、NetFlow/IPFIXログのデータ構造です。
 type NetflowWebAPILogEnt struct {
 	Time     int64
 	Src      string
@@ -230,6 +240,7 @@ type SFlowFilter struct {
 	Filter    int
 }
 
+// SFlowWebAPIは、SFlowログの検索結果です。
 type SFlowWebAPI struct {
 	Logs     []*SFlowWebAPILogEnt
 	NextTime int64
@@ -238,6 +249,7 @@ type SFlowWebAPI struct {
 	Limit    int
 }
 
+// SFlowWebAPILogEntは、SFlowログです。
 type SFlowWebAPILogEnt struct {
 	Time     int64
 	Src      string
@@ -293,6 +305,7 @@ type SFlowCounterWebAPI struct {
 	Limit    int
 }
 
+// SFlowCounterWebAPILogEntは、SFlowCounterログです。
 type SFlowCounterWebAPILogEnt struct {
 	Time int64
 	datastore.SFlowCounterEnt
@@ -316,6 +329,7 @@ func (a *TWSNMPApi) GetSFlowCounter(filter *SFlowCounterFilter) (*SFlowCounterWe
 	return &logs, err
 }
 
+// ArpFilterは、ARPログの検索条件を指定します。
 type ArpFilter struct {
 	StartDate string
 	StartTime string
@@ -325,6 +339,7 @@ type ArpFilter struct {
 	MAC       string
 }
 
+// ArpWebAPIは、ARPログです。
 type ArpWebAPI struct {
 	Time      int64
 	State     string
@@ -353,6 +368,7 @@ func (a *TWSNMPApi) GetArpLogs(filter *ArpFilter) ([]*ArpWebAPI, error) {
 	return logs, err
 }
 
+// TimeFilterは、ポーリングログの時間範囲の条件を指定します。
 type TimeFilter struct {
 	StartDate string
 	StartTime string

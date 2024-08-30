@@ -1,4 +1,3 @@
-// パッケージclientは、TWSNMP FCにアクセスするためにWeb APIを利用するライブラリです。
 package client
 
 import (
@@ -48,6 +47,7 @@ func (a *TWSNMPApi) DeleteNodes(ids []string) error {
 	return err
 }
 
+// PollingsWebAPIは、ポーリングの応答データの構造です。
 type PollingsWebAPI struct {
 	Pollings []*datastore.PollingEnt
 	NodeList []selectEntWebAPI
