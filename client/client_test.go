@@ -302,3 +302,19 @@ func TestClientResetReport(t *testing.T) {
 	}
 	t.Log("Done")
 }
+
+func TestClientDeleteLog(t *testing.T) {
+	t.Log("Start")
+	c := NewClient("http://127.0.0.1:8080")
+	t.Log("Login")
+	err := c.Login("twsnmp", "twsnmp")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("Delete SNMP Trap")
+	err = c.DeleteLog("trap")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("Done")
+}

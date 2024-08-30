@@ -3,15 +3,19 @@ package client
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 type TWSNMPApi struct {
-	URL   string
-	Token string
+	URL                string
+	Token              string
+	InsecureSkipVerify bool
+	Timeout            int
 }
 
 type selectEntWebAPI struct {
@@ -23,6 +27,20 @@ type selectEntWebAPI struct {
 func NewClient(url string) *TWSNMPApi {
 	return &TWSNMPApi{
 		URL: url,
+	}
+}
+
+func (a *TWSNMPApi) twsnmpHTTPClient() *http.Client {
+	if a.Timeout < 1 {
+		a.Timeout = 30
+	}
+	return &http.Client{
+		Timeout: time.Duration(a.Timeout) * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: a.InsecureSkipVerify,
+			},
+		},
 	}
 }
 
@@ -50,7 +68,7 @@ func (a *TWSNMPApi) Login(user, password string) error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
+	client := a.twsnmpHTTPClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
@@ -80,7 +98,7 @@ func (a *TWSNMPApi) Get(path string) ([]byte, error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+a.Token)
-	client := &http.Client{}
+	client := a.twsnmpHTTPClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -108,7 +126,7 @@ func (a *TWSNMPApi) Post(path string, data []byte) ([]byte, error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+a.Token)
-	client := &http.Client{}
+	client := a.twsnmpHTTPClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -136,14 +154,13 @@ func (a *TWSNMPApi) Delete(path string) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+a.Token)
-	client := &http.Client{}
+	client := a.twsnmpHTTPClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	fmt.Printf("%+v", resp.StatusCode)
-	if resp.StatusCode != 204 {
+	if resp.StatusCode > 204 {
 		return fmt.Errorf("twsnmp api delete code=%d", resp.StatusCode)
 	}
 	return nil
