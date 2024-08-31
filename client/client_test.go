@@ -342,7 +342,7 @@ func ExampleTWSNMPApi_GetNodes() {
 		fmt.Printf("%+v\n", n)
 	}
 }
-func ExampleTWSNMPApi_UpdateNodes() {
+func ExampleTWSNMPApi_UpdateNode() {
 	c := NewClient("http://127.0.0.1:8080")
 	err := c.Login("twsnmp", "twsnmp")
 	if err != nil {
