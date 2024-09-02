@@ -266,7 +266,7 @@ type SFlowWebAPILogEnt struct {
 }
 
 // GetSFlowはTWSNMP FCからSFlowログを取得します。
-func (a *TWSNMPApi) GetSFlow(filter *SFlowFilter) ([]*SFlowWebAPI, error) {
+func (a *TWSNMPApi) GetSFlow(filter *SFlowFilter) (*SFlowWebAPI, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
 	}
@@ -278,9 +278,9 @@ func (a *TWSNMPApi) GetSFlow(filter *SFlowFilter) ([]*SFlowWebAPI, error) {
 	if err != nil {
 		return nil, err
 	}
-	logs := []*SFlowWebAPI{}
+	logs := SFlowWebAPI{}
 	err = json.Unmarshal(data, &logs)
-	return logs, err
+	return &logs, err
 }
 
 // SFlowCounterFilterは、SFlow Counterログの検索条件です。
@@ -388,7 +388,6 @@ func (a *TWSNMPApi) GetPollingLogs(id string, filter *TimeFilter) ([]*datastore.
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%s", string(data))
 	logs := []*datastore.PollingLogEnt{}
 	err = json.Unmarshal(data, &logs)
 	return logs, err
