@@ -139,7 +139,6 @@ func postSyslog(c echo.Context) error {
 	grokCap := ""
 	var grokExtractor *grok.Grok
 	regExtractor := getExtractType(filter.Extractor)
-	log.Printf("regExtractor=%d", regExtractor)
 	if regExtractor == none && filter.Extractor != "" {
 		grokEnt := datastore.GetGrokEnt(filter.Extractor)
 		if grokEnt != nil {
