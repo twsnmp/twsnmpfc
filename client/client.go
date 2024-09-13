@@ -166,3 +166,227 @@ func (a *TWSNMPApi) Delete(path string) error {
 	}
 	return nil
 }
+
+// From datastore
+
+type NodeEnt struct {
+	ID        string
+	Name      string
+	Descr     string
+	Icon      string
+	Image     string
+	State     string
+	X         int
+	Y         int
+	IP        string
+	IPv6      string
+	MAC       string
+	SnmpMode  string
+	Community string
+	User      string
+	Password  string
+	PublicKey string
+	URL       string
+	AddrMode  string
+	AutoAck   bool
+}
+
+type EventLogEnt struct {
+	Time     int64 // UnixNano()
+	Type     string
+	Level    string
+	NodeName string
+	NodeID   string
+	Event    string
+}
+
+type LogEnt struct {
+	Time int64 // UnixNano()
+	Type string
+	Log  string
+}
+
+type LogFilterEnt struct {
+	StartTime string
+	EndTime   string
+	Filter    string
+	LogType   string
+}
+
+type SFlowCounterEnt struct {
+	Remote string
+	Type   string
+	Data   string
+}
+
+type PollingEnt struct {
+	ID           string
+	Name         string
+	NodeID       string
+	Type         string
+	Mode         string
+	Params       string
+	Filter       string
+	Extractor    string
+	Script       string
+	Level        string
+	PollInt      int
+	Timeout      int
+	Retry        int
+	LogMode      int
+	NextTime     int64
+	LastTime     int64
+	Result       map[string]interface{}
+	State        string
+	FailAction   string
+	RepairAction string
+}
+
+type PollingLogEnt struct {
+	Time      int64 // UnixNano()
+	PollingID string
+	State     string
+	Result    map[string]interface{}
+}
+
+type DeviceEnt struct {
+	ID         string // MAC Addr
+	Name       string
+	IP         string
+	NodeID     string
+	Vendor     string
+	Score      float64
+	ValidScore bool
+	Penalty    int64
+	FirstTime  int64
+	LastTime   int64
+	UpdateTime int64
+}
+
+type UserClientEnt struct {
+	Total int32
+	Ok    int32
+}
+
+type UserEnt struct {
+	ID           string // User ID + Server
+	UserID       string
+	Server       string
+	ServerName   string
+	ServerNodeID string
+	ClientMap    map[string]UserClientEnt
+	Total        int
+	Ok           int
+	Score        float64
+	ValidScore   bool
+	Penalty      int64
+	FirstTime    int64
+	LastTime     int64
+	UpdateTime   int64
+}
+
+type ServerEnt struct {
+	ID           string //  ID Server
+	Server       string
+	Services     map[string]int64
+	Count        int64
+	Bytes        int64
+	ServerName   string
+	ServerNodeID string
+	Loc          string
+	Score        float64
+	ValidScore   bool
+	Penalty      int64
+	TLSInfo      string
+	NTPInfo      string
+	DHCPInfo     string
+	FirstTime    int64
+	LastTime     int64
+	UpdateTime   int64
+}
+
+type FlowEnt struct {
+	ID           string // ID Client:Server
+	Client       string
+	Server       string
+	Services     map[string]int64
+	Count        int64
+	Bytes        int64
+	ClientName   string
+	ClientNodeID string
+	ClientLoc    string
+	ServerName   string
+	ServerNodeID string
+	ServerLoc    string
+	Score        float64
+	ValidScore   bool
+	Penalty      int64
+	FirstTime    int64
+	LastTime     int64
+	UpdateTime   int64
+}
+
+type IPReportEnt struct {
+	IP         string
+	MAC        string
+	Name       string
+	NodeID     string
+	Loc        string
+	Vendor     string
+	Count      int64
+	Change     int64
+	Score      float64
+	ValidScore bool
+	Penalty    int64
+	FirstTime  int64
+	LastTime   int64
+	UpdateTime int64
+}
+
+type SensorEnt struct {
+	ID        string // Host + Type + Param
+	Host      string
+	Type      string // twpcap,twwinlog....
+	Param     string
+	Total     int64
+	Send      int64
+	State     string
+	Ignore    bool
+	Stats     []SensorStatsEnt
+	Monitors  []SensorMonitorEnt
+	FirstTime int64
+	LastTime  int64
+}
+
+type SensorStatsEnt struct {
+	Time     int64
+	Total    int64
+	Count    int64
+	PS       float64
+	Send     int64
+	LastSend int64
+}
+
+type SensorMonitorEnt struct {
+	Time    int64
+	CPU     float64
+	Mem     float64
+	Load    float64
+	Process int64
+	Recv    int64
+	Sent    int64
+	TxSpeed float64
+	RxSpeed float64
+}
+
+type MonitorDataEnt struct {
+	CPU   float64
+	Mem   float64
+	Disk  float64
+	Load  float64
+	Bytes float64
+	Net   float64
+	Proc  int
+	Conn  int
+	At    int64
+}

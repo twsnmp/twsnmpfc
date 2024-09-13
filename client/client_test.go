@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"testing"
-
-	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
 func TestClientNodes(t *testing.T) {
@@ -253,7 +251,7 @@ func TestClientNodeEdit(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("Add Node")
-	err = c.UpdateNode(&datastore.NodeEnt{
+	err = c.UpdateNode(&NodeEnt{
 		Name: "test-api-123",
 		X:    100,
 		Y:    100,
@@ -262,7 +260,7 @@ func TestClientNodeEdit(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("Update Invalid Node")
-	err = c.UpdateNode(&datastore.NodeEnt{
+	err = c.UpdateNode(&NodeEnt{
 		ID:   "invalid id",
 		Name: "invalid id node",
 		X:    200,
@@ -348,7 +346,7 @@ func ExampleTWSNMPApi_UpdateNode() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = c.UpdateNode(&datastore.NodeEnt{
+	err = c.UpdateNode(&NodeEnt{
 		Name: "test",
 		X:    100,
 		Y:    100,

@@ -3,12 +3,10 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
 // GetDevicesはTWSNMP FCからLANデバイスレポートを取得します。
-func (a *TWSNMPApi) GetDevices() ([]*datastore.DeviceEnt, error) {
+func (a *TWSNMPApi) GetDevices() ([]*DeviceEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
 	}
@@ -16,13 +14,13 @@ func (a *TWSNMPApi) GetDevices() ([]*datastore.DeviceEnt, error) {
 	if err != nil {
 		return nil, err
 	}
-	devices := []*datastore.DeviceEnt{}
+	devices := []*DeviceEnt{}
 	err = json.Unmarshal(data, &devices)
 	return devices, err
 }
 
 // GetUsersはTWSNMP FCからユーザーレポートを取得します。
-func (a *TWSNMPApi) GetUsers() ([]*datastore.UserEnt, error) {
+func (a *TWSNMPApi) GetUsers() ([]*UserEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
 	}
@@ -30,13 +28,13 @@ func (a *TWSNMPApi) GetUsers() ([]*datastore.UserEnt, error) {
 	if err != nil {
 		return nil, err
 	}
-	users := []*datastore.UserEnt{}
+	users := []*UserEnt{}
 	err = json.Unmarshal(data, &users)
 	return users, err
 }
 
 // GetServersはTWSNMP FCからサーバーレポートを取得します。
-func (a *TWSNMPApi) GetServers() ([]*datastore.ServerEnt, error) {
+func (a *TWSNMPApi) GetServers() ([]*ServerEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
 	}
@@ -44,13 +42,13 @@ func (a *TWSNMPApi) GetServers() ([]*datastore.ServerEnt, error) {
 	if err != nil {
 		return nil, err
 	}
-	servers := []*datastore.ServerEnt{}
+	servers := []*ServerEnt{}
 	err = json.Unmarshal(data, &servers)
 	return servers, err
 }
 
 // GetFlowsはTWSNMP FCからフローレポートを取得します。
-func (a *TWSNMPApi) GetFlows() ([]*datastore.FlowEnt, error) {
+func (a *TWSNMPApi) GetFlows() ([]*FlowEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
 	}
@@ -58,13 +56,13 @@ func (a *TWSNMPApi) GetFlows() ([]*datastore.FlowEnt, error) {
 	if err != nil {
 		return nil, err
 	}
-	flows := []*datastore.FlowEnt{}
+	flows := []*FlowEnt{}
 	err = json.Unmarshal(data, &flows)
 	return flows, err
 }
 
 // GetIPsはTWSNMP FCからIPレポートを取得します。
-func (a *TWSNMPApi) GetIPs() ([]*datastore.IPReportEnt, error) {
+func (a *TWSNMPApi) GetIPs() ([]*IPReportEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
 	}
@@ -72,13 +70,13 @@ func (a *TWSNMPApi) GetIPs() ([]*datastore.IPReportEnt, error) {
 	if err != nil {
 		return nil, err
 	}
-	ips := []*datastore.IPReportEnt{}
+	ips := []*IPReportEnt{}
 	err = json.Unmarshal(data, &ips)
 	return ips, err
 }
 
 // GetSensorsはTWSNMP FCからセンサーレポートを取得します。
-func (a *TWSNMPApi) GetSensors() ([]*datastore.SensorEnt, error) {
+func (a *TWSNMPApi) GetSensors() ([]*SensorEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
 	}
@@ -86,13 +84,13 @@ func (a *TWSNMPApi) GetSensors() ([]*datastore.SensorEnt, error) {
 	if err != nil {
 		return nil, err
 	}
-	sensors := []*datastore.SensorEnt{}
+	sensors := []*SensorEnt{}
 	err = json.Unmarshal(data, &sensors)
 	return sensors, err
 }
 
 // GetMonitorはTWSNMP FCからモニターレポートを取得します。
-func (a *TWSNMPApi) GetMonitor() ([]*datastore.MonitorDataEnt, error) {
+func (a *TWSNMPApi) GetMonitor() ([]*MonitorDataEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
 	}
@@ -100,7 +98,7 @@ func (a *TWSNMPApi) GetMonitor() ([]*datastore.MonitorDataEnt, error) {
 	if err != nil {
 		return nil, err
 	}
-	monitor := []*datastore.MonitorDataEnt{}
+	monitor := []*MonitorDataEnt{}
 	err = json.Unmarshal(data, &monitor)
 	return monitor, err
 }

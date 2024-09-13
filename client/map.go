@@ -3,12 +3,10 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
 // GetNodesはTWSNMP FCからノードリストを取得します。
-func (a *TWSNMPApi) GetNodes() ([]*datastore.NodeEnt, error) {
+func (a *TWSNMPApi) GetNodes() ([]*NodeEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
 	}
@@ -16,13 +14,13 @@ func (a *TWSNMPApi) GetNodes() ([]*datastore.NodeEnt, error) {
 	if err != nil {
 		return nil, err
 	}
-	nodes := []*datastore.NodeEnt{}
+	nodes := []*NodeEnt{}
 	err = json.Unmarshal(data, &nodes)
 	return nodes, err
 }
 
 // UpdateNodeは、ノードを追加または削除します。
-func (a *TWSNMPApi) UpdateNode(node *datastore.NodeEnt) error {
+func (a *TWSNMPApi) UpdateNode(node *NodeEnt) error {
 	if a.Token == "" {
 		return fmt.Errorf("not login")
 	}
@@ -49,7 +47,7 @@ func (a *TWSNMPApi) DeleteNodes(ids []string) error {
 
 // PollingsWebAPIは、ポーリングの応答データの構造です。
 type PollingsWebAPI struct {
-	Pollings []*datastore.PollingEnt
+	Pollings []*PollingEnt
 	NodeList []selectEntWebAPI
 }
 
@@ -68,7 +66,7 @@ func (a *TWSNMPApi) GetPollings() (*PollingsWebAPI, error) {
 }
 
 // UpdatePollingは、ポーリングの追加または更新します。
-func (a *TWSNMPApi) UpdatePolling(polling *datastore.PollingEnt) error {
+func (a *TWSNMPApi) UpdatePolling(polling *PollingEnt) error {
 	if a.Token == "" {
 		return fmt.Errorf("not login")
 	}

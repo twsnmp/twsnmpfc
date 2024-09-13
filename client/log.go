@@ -3,8 +3,6 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
 // EventLogFilterは、イベントログの検索条件です。
@@ -21,8 +19,8 @@ type EventLogFilter struct {
 
 // EventLogsWebAPIは、イベントログの検索結果です。
 type EventLogsWebAPI struct {
-	EventLogs []*datastore.EventLogEnt // イベントログの検索結果
-	NodeList  []selectEntWebAPI        // ノード名選択肢
+	EventLogs []*EventLogEnt    // イベントログの検索結果
+	NodeList  []selectEntWebAPI // ノード名選択肢
 }
 
 // GetEventLogsはTWSNMP FCからイベントログを取得します。
@@ -306,8 +304,8 @@ type SFlowCounterWebAPI struct {
 
 // SFlowCounterWebAPILogEntは、SFlowCounterログです。
 type SFlowCounterWebAPILogEnt struct {
-	Time                      int64 // 受信時刻
-	datastore.SFlowCounterEnt       // カウンターサンプルのデータ
+	Time            int64 // 受信時刻
+	SFlowCounterEnt       // カウンターサンプルのデータ
 }
 
 // GetSFlowCounterはTWSNMP FCからSFlow Counterログを取得します。
@@ -376,7 +374,7 @@ type TimeFilter struct {
 }
 
 // GetPollingLogsはTWSNMP FCからポーリングログを取得します。
-func (a *TWSNMPApi) GetPollingLogs(id string, filter *TimeFilter) ([]*datastore.PollingLogEnt, error) {
+func (a *TWSNMPApi) GetPollingLogs(id string, filter *TimeFilter) ([]*PollingLogEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
 	}
@@ -388,7 +386,7 @@ func (a *TWSNMPApi) GetPollingLogs(id string, filter *TimeFilter) ([]*datastore.
 	if err != nil {
 		return nil, err
 	}
-	logs := []*datastore.PollingLogEnt{}
+	logs := []*PollingLogEnt{}
 	err = json.Unmarshal(data, &logs)
 	return logs, err
 }
