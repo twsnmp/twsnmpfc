@@ -7,6 +7,7 @@ package logger
 import (
 	"encoding/json"
 	"log"
+	"strings"
 
 	"fmt"
 	"net"
@@ -71,6 +72,12 @@ func snmptrapd(stopCh chan bool) {
 			key := datastore.MIBDB.OIDToName(vb.Name)
 			val := datastore.GetMIBValueString(key, &vb, false)
 			vbs += fmt.Sprintf("%s=%s\n", key, val)
+			if strings.HasPrefix(key, "sysName") {
+				n := datastore.FindNodeFromName(val)
+				if n != nil {
+					record["FromAddress"] = fmt.Sprintf("%s(%s) via %s", n.IP, n.Name, u.IP.String())
+				}
+			}
 		}
 		record["Variables"] = vbs
 		js, err := json.Marshal(record)

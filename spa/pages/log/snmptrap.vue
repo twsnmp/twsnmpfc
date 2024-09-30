@@ -397,7 +397,7 @@ export default {
         {
           text: '受信日時',
           value: 'TimeStr',
-          width: '20%',
+          width: '18%',
           filter: (t, s, i) => {
             if (!this.zoom.st || !this.zoom.et) return true
             return i.Time >= this.zoom.st && i.Time <= this.zoom.et
@@ -406,7 +406,7 @@ export default {
         {
           text: '送信元',
           value: 'FromAddress',
-          width: '15%',
+          width: '20%',
           filter: (value) => {
             if (!this.conf.src) return true
             return value.includes(this.conf.src)
@@ -415,7 +415,7 @@ export default {
         {
           text: 'TRAP種別',
           value: 'TrapType',
-          width: '20%',
+          width: '17%',
           filter: (value) => {
             if (!this.conf.traptype) return true
             return value.includes(this.conf.traptype)
