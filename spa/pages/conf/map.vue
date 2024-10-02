@@ -186,6 +186,10 @@
             ></v-switch>
             <v-switch v-model="mapconf.EnableSflowd" label="sFlow"></v-switch>
             <v-switch
+              v-model="mapconf.EnableTcpd"
+              label="TCP Server"
+            ></v-switch>
+            <v-switch
               v-model="mapconf.DisableOperLog"
               label="稼働率ログを停止"
             ></v-switch>

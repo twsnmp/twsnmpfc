@@ -1,9 +1,5 @@
 package logger
 
-/*
-  syslogをログに記録する
-*/
-
 import (
 	"bytes"
 	"encoding/json"

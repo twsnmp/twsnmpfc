@@ -53,6 +53,7 @@ var trapPort = 162
 var netflowPort = 2055
 var syslogPort = 514
 var sflowPort = 6343
+var tcpPort = 8086
 
 var resetPassword bool
 
@@ -78,6 +79,7 @@ func init() {
 	flag.IntVar(&netflowPort, "netflowPort", 2055, "netflow port")
 	flag.IntVar(&syslogPort, "syslogPort", 514, "syslog port")
 	flag.IntVar(&sflowPort, "sflowPort", 6343, "sflow port")
+	flag.IntVar(&tcpPort, "tcpPort", 8086, "tcp server port")
 	flag.IntVar(&saveMapInterval, "saveMap", -1, "Save Map Interval default: windows=5min,other=60min")
 	flag.BoolVar(&resetPassword, "resetPassword", false, "Reset user:password to twsnmp:twsnmp")
 	flag.VisitAll(func(f *flag.Flag) {
@@ -179,7 +181,7 @@ func main() {
 		log.Fatalf("start report err=%v", err)
 	}
 	log.Println("call logger.Start")
-	if err = logger.Start(ctx, wg, trapPort, netflowPort, syslogPort, sflowPort); err != nil {
+	if err = logger.Start(ctx, wg, trapPort, netflowPort, syslogPort, sflowPort, tcpPort); err != nil {
 		log.Fatalf("start logger err=%v", err)
 	}
 	log.Println("call polling.Start")
