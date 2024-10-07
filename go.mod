@@ -22,6 +22,8 @@ require (
 	github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12
 	github.com/montanaflynn/stats v0.6.3
 	github.com/mrichman/godnsbl v1.0.0
+	github.com/openconfig/gnmi v0.11.0
+	github.com/openconfig/gnmic/pkg/api v0.1.8
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/rakyll/statik v0.1.7
 	github.com/robertkrimen/otto v0.0.0-20200922221731-ef014fd054ac
@@ -44,6 +46,8 @@ require (
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.5.2 // indirect
+	github.com/AlekSi/pointer v1.2.0 // indirect
 	github.com/Songmu/wrapcommander v0.1.0 // indirect
 	github.com/alecthomas/participle v0.4.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
@@ -51,6 +55,7 @@ require (
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20201229220542-30ce2eb5d4dc // indirect
+	github.com/bufbuild/protocompile v0.13.0 // indirect
 	github.com/chewxy/hm v1.0.0 // indirect
 	github.com/chewxy/math32 v1.0.6 // indirect
 	github.com/chewxy/tightywhities v1.0.0 // indirect
@@ -59,16 +64,17 @@ require (
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/golang/protobuf v1.5.0 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/flatbuffers v1.12.0 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/jarcoal/httpmock v1.0.8 // indirect
+	github.com/jhump/protoreflect v1.16.0 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/openconfig/grpctunnel v0.1.0 // indirect
 	github.com/oschwald/maxminddb-golang v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
@@ -79,10 +85,13 @@ require (
 	github.com/xtgo/set v1.0.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20230525183740-e7c30c78aeb2 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/oauth2 v0.19.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gonum.org/v1/gonum v0.8.2 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240415180920-8c6c420018be // indirect
+	google.golang.org/grpc v1.63.2 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect

@@ -143,6 +143,8 @@ func setup(p *WebAPI) {
 	r.GET("/node/port/:id", getPortList)
 	r.POST("/mibbr", postMIBBr)
 	r.GET("/mibbr/:id", getMIBBr)
+	r.POST("/gnmi", postGNMI)
+	r.GET("/gnmi/:id", getGNMI)
 	r.GET("/map", getMap)
 	r.POST("/map/update", postNodePos)
 	r.POST("/map/update_item", postItemPos)

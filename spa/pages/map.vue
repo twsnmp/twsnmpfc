@@ -1302,6 +1302,12 @@
             <v-list-item-title>MIBブラウザー</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item @click="showGNMI(editNode.ID)">
+          <v-list-item-icon><v-icon>mdi-eye</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>gNMIツール</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
         <v-list-item @click="showPing(editNode.IP)">
           <v-list-item-icon>
             <v-icon>mdi-check-network</v-icon>
@@ -2347,6 +2353,9 @@ export default {
     },
     showMIBBr(id) {
       this.$router.push({ path: '/mibbr/' + id })
+    },
+    showGNMI(id) {
+      this.$router.push({ path: '/gnmi/' + id })
     },
     showPing(ip) {
       this.$router.push({ path: '/ping/' + ip })
