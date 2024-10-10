@@ -559,7 +559,9 @@ export default {
         Params: this.gnmi.Target,
         Filter: e.Path,
         Extractor: '',
-        Script: 'value == "' + e.Value + '"',
+        Script: `
+var value = JSON.parse(data);
+value == "${e.Value}";`,
         Level: 'off',
         PollInt: 60,
         Timeout: 1,

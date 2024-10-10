@@ -3,6 +3,7 @@ package webapi
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/backend"
@@ -47,6 +48,12 @@ func deletePollings(c echo.Context) error {
 	ids := []string{}
 	if err := c.Bind(&ids); err != nil {
 		return echo.ErrBadRequest
+	}
+	for _, id := range ids {
+		pe := datastore.GetPolling(id)
+		if pe != nil && pe.Type == "gnmi" && pe.Mode == "subscribe" {
+			polling.GNMIStopSubscription(pe.ID)
+		}
 	}
 	if err := datastore.DeletePollings(ids); err != nil {
 		datastore.AddEventLog(&datastore.EventLogEnt{
@@ -173,6 +180,10 @@ func postPollingUpdate(c echo.Context) error {
 	p := datastore.GetPolling(pu.ID)
 	if p == nil {
 		return echo.ErrBadRequest
+	}
+	if p.Type == "gnmi" && p.Mode == "subscribe" {
+		polling.GNMIStopSubscription(p.ID)
+		time.Sleep(time.Millisecond * 20)
 	}
 	p.Name = pu.Name
 	p.NodeID = pu.NodeID

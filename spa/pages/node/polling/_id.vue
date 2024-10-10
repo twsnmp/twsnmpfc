@@ -583,6 +583,7 @@ export default {
         { text: '', value: '' },
         { text: 'PING', value: 'ping' },
         { text: 'SNMP', value: 'snmp' },
+        { text: 'gNMI', value: 'gnmi' },
         { text: 'TCP', value: 'tcp' },
         { text: 'HTTP', value: 'http' },
         { text: 'TLS', value: 'tls' },
