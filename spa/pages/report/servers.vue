@@ -451,6 +451,35 @@
             </v-col>
           </v-row>
           <v-text-field v-model="node.PublicKey" label="公開鍵"></v-text-field>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="editNode.GNMIPort"
+                label="gNMI Port"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNode.GNMIEncoding"
+                label="gNMI Encoding"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNode.GNMIUser"
+                autocomplete="username"
+                label="gNMI ユーザー"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNode.GNMIPassword"
+                autocomplete="new-password"
+                type="password"
+                label="gNMI パスワード"
+              ></v-text-field>
+            </v-col>
+          </v-row>
           <v-text-field v-model="node.URL" label="URL"></v-text-field>
           <v-text-field v-model="node.Descr" label="説明"></v-text-field>
         </v-card-text>

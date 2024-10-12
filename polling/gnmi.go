@@ -26,7 +26,11 @@ func doPollingGNMI(pe *datastore.PollingEnt) {
 	}
 	target := pe.Params
 	if target == "" {
-		target = fmt.Sprintf("%s:57400", n.IP)
+		if n.GNMIPort == "" {
+			target = fmt.Sprintf("%s:57400", n.IP)
+		} else {
+			target = fmt.Sprintf("%s:%s", n.IP, n.GNMIPort)
+		}
 	} else if p, err := strconv.Atoi(target); err == nil && p > 0 && p < 65535 {
 		target = fmt.Sprintf("%s:%d", n.IP, p)
 	}
@@ -41,8 +45,8 @@ func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target str
 	tg, err := api.NewTarget(
 		api.Name(n.Name),
 		api.Address(target),
-		api.Username(n.User),
-		api.Password(n.Password),
+		api.Username(n.GNMIUser),
+		api.Password(n.GNMIPassword),
 		api.SkipVerify(true),
 	)
 	if err != nil {
@@ -51,16 +55,19 @@ func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target str
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
 	err = tg.CreateGNMIClient(ctx)
 	if err != nil {
 		setPollingError("gnmi", pe, err)
 		return
 	}
 	defer tg.Close()
+	enc := n.GNMIEncoding
+	if enc == "" {
+		enc = "json_ietf"
+	}
 	getReq, err := api.NewGetRequest(
 		api.Path(pe.Filter),
-		api.Encoding("json_ietf"))
+		api.Encoding(enc))
 	if err != nil {
 		setPollingError("gnmi", pe, err)
 		return
@@ -74,6 +81,10 @@ func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target str
 	for _, not := range getResp.GetNotification() {
 		for _, u := range not.GetUpdate() {
 			data = u.Val.GetJsonIetfVal()
+			if len(data) > 0 {
+				break
+			}
+			data = u.GetVal().GetJsonVal()
 			if len(data) > 0 {
 				break
 			}
@@ -122,8 +133,8 @@ func doPollingGNMISubscribe(pe *datastore.PollingEnt, n *datastore.NodeEnt, targ
 	tg, err := api.NewTarget(
 		api.Name(n.Name),
 		api.Address(target),
-		api.Username(n.User),
-		api.Password(n.Password),
+		api.Username(n.GNMIUser),
+		api.Password(n.GNMIPassword),
 		api.SkipVerify(true),
 	)
 	if err != nil {
@@ -132,15 +143,18 @@ func doPollingGNMISubscribe(pe *datastore.PollingEnt, n *datastore.NodeEnt, targ
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
 	err = tg.CreateGNMIClient(ctx)
 	if err != nil {
 		setPollingError("gnmi", pe, err)
 		return
 	}
 	defer tg.Close()
+	enc := n.GNMIEncoding
+	if enc == "" {
+		enc = "json_ietf"
+	}
 	subReq, err := api.NewSubscribeRequest(
-		api.Encoding("json_ietf"),
+		api.Encoding(enc),
 		api.SubscriptionListMode("stream"),
 		api.Subscription(
 			api.Path(pe.Filter),
@@ -184,6 +198,10 @@ func gNMISetSubscribeResp(pe *datastore.PollingEnt, rsp *target.SubscribeRespons
 	not := rsp.Response.GetUpdate()
 	for _, u := range not.GetUpdate() {
 		data = u.GetVal().GetJsonIetfVal()
+		if len(data) > 0 {
+			break
+		}
+		data = u.GetVal().GetJsonVal()
 		if len(data) > 0 {
 			break
 		}

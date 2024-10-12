@@ -42,10 +42,11 @@ func getGNMI(c echo.Context) error {
 }
 
 type gnmiGetReqWebAPI struct {
-	NodeID string
-	Target string
-	Path   string
-	Mode   string
+	NodeID   string
+	Target   string
+	Path     string
+	Encoding string
+	Mode     string
 }
 
 type gnmiGetEnt struct {
@@ -94,24 +95,13 @@ func gnmiGet(p *gnmiGetReqWebAPI) ([]*gnmiGetEnt, error) {
 	ret := []*gnmiGetEnt{}
 	n := datastore.GetNode(p.NodeID)
 	if n == nil {
-		if !strings.HasPrefix(p.NodeID, "NET:") {
-			return ret, fmt.Errorf("node not found")
-		}
-		nt := datastore.GetNetwork(p.NodeID)
-		if nt == nil {
-			return ret, fmt.Errorf("network not found")
-		}
-		n = &datastore.NodeEnt{
-			IP:       nt.IP,
-			User:     nt.User,
-			Password: nt.Password,
-		}
+		return ret, fmt.Errorf("node not found")
 	}
 	tg, err := api.NewTarget(
 		api.Name(n.Name),
 		api.Address(p.Target),
-		api.Username(n.User),
-		api.Password(n.Password),
+		api.Username(n.GNMIUser),
+		api.Password(n.GNMIPassword),
 		api.SkipVerify(true),
 	)
 	if err != nil {
@@ -124,10 +114,14 @@ func gnmiGet(p *gnmiGetReqWebAPI) ([]*gnmiGetEnt, error) {
 	if err != nil {
 		return ret, err
 	}
+	enc := p.Encoding
+	if enc == "" {
+		enc = "json_ietf"
+	}
 	defer tg.Close()
 	getReq, err := api.NewGetRequest(
 		api.Path(p.Path),
-		api.Encoding("json_ietf"))
+		api.Encoding(enc))
 	if err != nil {
 		return ret, err
 	}
@@ -142,6 +136,9 @@ func gnmiGet(p *gnmiGetReqWebAPI) ([]*gnmiGetEnt, error) {
 				pa = append(pa, p.GetName())
 			}
 			j := u.Val.GetJsonIetfVal()
+			if len(j) < 1 {
+				j = u.Val.GetJsonVal()
+			}
 			var d interface{}
 			if err := json.Unmarshal(j, &d); err != nil {
 				log.Println(err)
@@ -207,24 +204,13 @@ func gnmiCap(p *gnmiGetReqWebAPI) (*gnmiCapEnt, error) {
 	ret := &gnmiCapEnt{}
 	n := datastore.GetNode(p.NodeID)
 	if n == nil {
-		if !strings.HasPrefix(p.NodeID, "NET:") {
-			return ret, fmt.Errorf("node not found")
-		}
-		nt := datastore.GetNetwork(p.NodeID)
-		if nt == nil {
-			return ret, fmt.Errorf("network not found")
-		}
-		n = &datastore.NodeEnt{
-			IP:       nt.IP,
-			User:     nt.User,
-			Password: nt.Password,
-		}
+		return ret, fmt.Errorf("node not found")
 	}
 	tg, err := api.NewTarget(
 		api.Name(n.Name),
 		api.Address(p.Target),
-		api.Username(n.User),
-		api.Password(n.Password),
+		api.Username(n.GNMIUser),
+		api.Password(n.GNMIPassword),
 		api.SkipVerify(true),
 	)
 	if err != nil {

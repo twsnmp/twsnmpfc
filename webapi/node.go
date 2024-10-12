@@ -91,6 +91,10 @@ func postNodeUpdate(c echo.Context) error {
 	n.Community = nu.Community
 	n.User = nu.User
 	n.Password = nu.Password
+	n.GNMIUser = nu.GNMIUser
+	n.GNMIPassword = nu.GNMIPassword
+	n.GNMIEncoding = nu.GNMIEncoding
+	n.GNMIPort = nu.GNMIPort
 	n.PublicKey = nu.PublicKey
 	n.URL = nu.URL
 	n.AddrMode = nu.AddrMode

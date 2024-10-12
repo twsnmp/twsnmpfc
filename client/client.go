@@ -170,25 +170,29 @@ func (a *TWSNMPApi) Delete(path string) error {
 // From datastore
 
 type NodeEnt struct {
-	ID        string
-	Name      string
-	Descr     string
-	Icon      string
-	Image     string
-	State     string
-	X         int
-	Y         int
-	IP        string
-	IPv6      string
-	MAC       string
-	SnmpMode  string
-	Community string
-	User      string
-	Password  string
-	PublicKey string
-	URL       string
-	AddrMode  string
-	AutoAck   bool
+	ID           string
+	Name         string
+	Descr        string
+	Icon         string
+	Image        string
+	State        string
+	X            int
+	Y            int
+	IP           string
+	IPv6         string
+	MAC          string
+	SnmpMode     string
+	Community    string
+	User         string
+	Password     string
+	GNMIUser     string
+	GNMIPassword string
+	GNMIEncoding string
+	GNMIPort     string
+	PublicKey    string
+	URL          string
+	AddrMode     string
+	AutoAck      bool
 }
 
 type EventLogEnt struct {

@@ -5,6 +5,7 @@
         gNMIツール - {{ node.Name }}
         <v-spacer></v-spacer>
         <v-text-field v-model="gnmi.Target" label="ターゲット(IP:Port)" />
+        <v-text-field v-model="gnmi.Encoding" label="エンコード" />
         <v-combobox
           v-model="gnmi.Path"
           :items="history"
@@ -342,6 +343,7 @@ export default {
         Target: '',
         Path: '',
         Mode: 'get',
+        Encoding: 'json_ietf',
       },
       search: '',
       headers: [
@@ -404,9 +406,14 @@ export default {
     if (!r) {
       return
     }
+    this.gnmi.Encoding = r.Node.GNMIEncoding ? r.Node.GNMIEncoding : 'json_ietf'
     this.node = r.Node
     this.gnmi.NodeID = r.Node.ID
-    this.gnmi.Target = r.Node.IP + ':57400'
+    if (this.node.GNMIPort) {
+      this.gnmi.Target = r.Node.IP + ':' + this.node.GNMIPort
+    } else {
+      this.gnmi.Target = r.Node.IP + ':57400'
+    }
   },
   created() {
     const c = this.$store.state.gnmi.conf
