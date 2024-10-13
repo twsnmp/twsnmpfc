@@ -40,8 +40,19 @@
           <v-icon small @click="$router.push({ path: '/ping/' + item.IP })">
             mdi-check-network
           </v-icon>
-          <v-icon small @click="$router.push({ path: '/mibbr/' + item.ID })">
+          <v-icon
+            v-if="item.Community || item.User"
+            small
+            @click="$router.push({ path: '/mibbr/' + item.ID })"
+          >
             mdi-eye
+          </v-icon>
+          <v-icon
+            v-if="item.GNMIUser"
+            small
+            @click="$router.push({ path: '/gnmi/' + item.ID })"
+          >
+            mdi-eye-check
           </v-icon>
           <v-icon
             small
