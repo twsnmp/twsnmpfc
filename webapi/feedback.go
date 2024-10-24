@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/montanaflynn/stats"
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
@@ -43,17 +45,46 @@ func postFeedback(c echo.Context) error {
 func sendFeedback(fb *feedbackWebAPI) error {
 	msg := fb.Msg
 	if fb.IncludeSysInfo {
-		msg += fmt.Sprintf("\n-----\nGOOS=%s,GOARCH=%s\n", runtime.GOOS, runtime.GOARCH)
+		msg += fmt.Sprintf("\n-----\nGOOS=%s,GOARCH=%s,NumCPU=%d,NumGoroutine=%d\n",
+			runtime.GOOS, runtime.GOARCH, runtime.NumCPU(), runtime.NumGoroutine())
 		msg += fmt.Sprintf("DBSize=%d\n", datastore.DBStats.Size)
-		if len(datastore.MonitorDataes) > 0 {
-			i := len(datastore.MonitorDataes) - 1
-			msg += fmt.Sprintf("CPU=%f,Mem=%f,Load=%f,Disk=%f\n",
-				datastore.MonitorDataes[i].CPU,
-				datastore.MonitorDataes[i].Mem,
-				datastore.MonitorDataes[i].Load,
-				datastore.MonitorDataes[i].Disk,
-			)
+		v, err := mem.VirtualMemory()
+		if err == nil {
+			msg += fmt.Sprintf("VirtualMemory=%v\n", v)
 		}
+		s, err := mem.SwapMemory()
+		if err == nil {
+			msg += fmt.Sprintf("SwapMemory=%v\n", s)
+		}
+		myCpu := []float64{}
+		myMem := []float64{}
+		load := []float64{}
+		gr := []float64{}
+		for i, m := range datastore.MonitorDataes {
+			if i == 0 || i == len(datastore.MonitorDataes)-1 {
+				msg += fmt.Sprintf("monitor[%d]-%+v\n", i, m)
+			}
+			myCpu = append(myCpu, m.MyCPU)
+			myMem = append(myMem, m.MyMem)
+			load = append(load, m.Load)
+			gr = append(gr, float64(m.NumGoroutine))
+		}
+		min, _ := stats.Min(myCpu)
+		mean, _ := stats.Mean(myCpu)
+		max, _ := stats.Max(myCpu)
+		msg += fmt.Sprintf("MyCPU=%.2f/%.2f/%.2f\n", min, mean, max)
+		min, _ = stats.Min(myMem)
+		mean, _ = stats.Mean(myMem)
+		max, _ = stats.Max(myMem)
+		msg += fmt.Sprintf("MyMem=%.2f/%.2f/%.2f\n", min, mean, max)
+		min, _ = stats.Min(load)
+		mean, _ = stats.Mean(load)
+		max, _ = stats.Max(load)
+		msg += fmt.Sprintf("load=%.2f/%.2f/%.2f\n", min, mean, max)
+		min, _ = stats.Min(gr)
+		mean, _ = stats.Mean(gr)
+		max, _ = stats.Max(gr)
+		msg += fmt.Sprintf("gr=%.2f/%.2f/%.2f\n", min, mean, max)
 	}
 	values := url.Values{}
 	values.Set("msg", msg)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -77,10 +78,14 @@ func sendReportPlain() {
 		body = append(body, "【信用スコアが下位1%のIPアドレス】")
 		body = append(body, bip...)
 	}
-
 	subject := fmt.Sprintf("%s(定期レポート) at %s", datastore.NotifyConf.Subject, time.Now().Format(time.RFC3339))
 	if err := sendMail(subject, strings.Join(body, "\r\n")); err != nil {
 		log.Printf("send report mail err=%v", err)
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "system",
+			Level: "high",
+			Event: "定期レポートメールの送信に失敗しました",
+		})
 	} else {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
@@ -337,19 +342,29 @@ func getDBInfo(htmlMode bool) []string {
 	}
 }
 
+var myMemClass = "none"
+var diskClass = "none"
+var loadClass = "none"
+
 func getResInfo(htmlMode bool) []string {
 	if len(datastore.MonitorDataes) < 1 {
 		return []string{}
 	}
 	cpu := []float64{}
 	mem := []float64{}
+	myCPU := []float64{}
+	myMem := []float64{}
+	gr := []float64{}
 	disk := []float64{}
 	load := []float64{}
 	for _, m := range datastore.MonitorDataes {
 		cpu = append(cpu, m.CPU)
 		mem = append(mem, m.Mem)
+		myCPU = append(myCPU, m.MyCPU)
+		myMem = append(myMem, m.MyMem)
 		disk = append(disk, m.Disk)
 		load = append(load, m.Load)
+		gr = append(gr, float64(m.NumGoroutine))
 	}
 	cpuMin, _ := stats.Min(cpu)
 	cpuMean, _ := stats.Mean(cpu)
@@ -357,13 +372,45 @@ func getResInfo(htmlMode bool) []string {
 	memMin, _ := stats.Min(mem)
 	memMean, _ := stats.Mean(mem)
 	memMax, _ := stats.Max(mem)
+	myCpuMin, _ := stats.Min(myCPU)
+	myCpuMean, _ := stats.Mean(myCPU)
+	myCpuMax, _ := stats.Max(myCPU)
+	myMemMin, _ := stats.Min(myMem)
+	myMemMean, _ := stats.Mean(myMem)
+	myMemMax, _ := stats.Max(myMem)
 	diskMin, _ := stats.Min(disk)
 	diskMean, _ := stats.Mean(disk)
 	diskMax, _ := stats.Max(disk)
 	loadMin, _ := stats.Min(load)
 	loadMean, _ := stats.Mean(load)
 	loadMax, _ := stats.Max(load)
+	grMin, _ := stats.Min(gr)
+	grMean, _ := stats.Mean(gr)
+	grMax, _ := stats.Max(gr)
 	if htmlMode {
+		if myMemMean > 90.0 {
+			myMemClass = "high"
+		} else if myMemMean > 80.0 {
+			myMemClass = "low"
+		} else if myMemMean > 60.0 {
+			myMemClass = "warn"
+		} else {
+			myMemClass = "none"
+		}
+		if diskMean > 95.0 {
+			diskClass = "high"
+		} else if diskMean > 90.0 {
+			diskClass = "low"
+		} else if diskMean > 80.0 {
+			diskClass = "warn"
+		} else {
+			diskClass = "none"
+		}
+		if loadMean > float64(runtime.NumCPU()) {
+			loadClass = "high"
+		} else {
+			loadClass = "none"
+		}
 		return []string{
 			fmt.Sprintf("最小:%s%% 平均:%s%% 最大:%s%%",
 				humanize.FormatFloat("###.##", cpuMin),
@@ -376,6 +423,16 @@ func getResInfo(htmlMode bool) []string {
 				humanize.FormatFloat("###.##", memMax),
 			),
 			fmt.Sprintf("最小:%s%% 平均:%s%% 最大:%s%%",
+				humanize.FormatFloat("###.##", myCpuMin),
+				humanize.FormatFloat("###.##", myCpuMean),
+				humanize.FormatFloat("###.##", myCpuMax),
+			),
+			fmt.Sprintf("最小:%s%% 平均:%s%% 最大:%s%%",
+				humanize.FormatFloat("###.##", myMemMin),
+				humanize.FormatFloat("###.##", myMemMean),
+				humanize.FormatFloat("###.##", myMemMax),
+			),
+			fmt.Sprintf("最小:%s%% 平均:%s%% 最大:%s%%",
 				humanize.FormatFloat("###.##", diskMin),
 				humanize.FormatFloat("###.##", diskMean),
 				humanize.FormatFloat("###.##", diskMax),
@@ -384,6 +441,11 @@ func getResInfo(htmlMode bool) []string {
 				humanize.FormatFloat("###.##", loadMin),
 				humanize.FormatFloat("###.##", loadMean),
 				humanize.FormatFloat("###.##", loadMax),
+			),
+			fmt.Sprintf("最小:%s 平均:%s 最大:%s",
+				humanize.FormatFloat("###.##", grMin),
+				humanize.FormatFloat("###.##", grMean),
+				humanize.FormatFloat("###.##", grMax),
 			),
 		}
 	}
@@ -398,6 +460,16 @@ func getResInfo(htmlMode bool) []string {
 			humanize.FormatFloat("###.##", memMean),
 			humanize.FormatFloat("###.##", memMax),
 		),
+		fmt.Sprintf("My CPU=%s/%s/%s %%",
+			humanize.FormatFloat("###.##", myCpuMin),
+			humanize.FormatFloat("###.##", myCpuMean),
+			humanize.FormatFloat("###.##", myCpuMax),
+		),
+		fmt.Sprintf("My Mem=%s/%s/%s %%",
+			humanize.FormatFloat("###.##", myMemMin),
+			humanize.FormatFloat("###.##", myMemMean),
+			humanize.FormatFloat("###.##", myMemMax),
+		),
 		fmt.Sprintf("Disk=%s/%s/%s %%",
 			humanize.FormatFloat("###.##", diskMin),
 			humanize.FormatFloat("###.##", diskMean),
@@ -407,6 +479,11 @@ func getResInfo(htmlMode bool) []string {
 			humanize.FormatFloat("###.##", loadMin),
 			humanize.FormatFloat("###.##", loadMean),
 			humanize.FormatFloat("###.##", loadMax),
+		),
+		fmt.Sprintf("NumGoroutine=%s/%s/%s",
+			humanize.FormatFloat("###.##", grMin),
+			humanize.FormatFloat("###.##", grMean),
+			humanize.FormatFloat("###.##", grMax),
 		),
 	}
 }
@@ -653,14 +730,24 @@ func sendReportHTML() {
 			Class: "none",
 		})
 		info = append(info, reportInfoEnt{
-			Name:  "ディスク使用率",
+			Name:  "My CPU使用率",
 			Value: a[2],
 			Class: "none",
 		})
 		info = append(info, reportInfoEnt{
-			Name:  "システム負荷",
+			Name:  "My メモリー使用率",
 			Value: a[3],
-			Class: "none",
+			Class: myMemClass,
+		})
+		info = append(info, reportInfoEnt{
+			Name:  "ディスク使用率",
+			Value: a[4],
+			Class: diskClass,
+		})
+		info = append(info, reportInfoEnt{
+			Name:  "システム負荷",
+			Value: a[5],
+			Class: loadClass,
 		})
 	}
 	logSum, _, logs := getLastEventLog()

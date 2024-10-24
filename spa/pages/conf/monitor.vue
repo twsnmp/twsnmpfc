@@ -31,6 +31,12 @@
                 <v-list-item-title>リソース</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="openSysMemChart">
+              <v-list-item-icon><v-icon>mdi-memory</v-icon></v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>メモリー使用量</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item @click="openSysNetChart">
               <v-list-item-icon><v-icon>mdi-lan</v-icon></v-list-item-icon>
               <v-list-item-content>
@@ -69,6 +75,24 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="normal" @click="sysResChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="sysMemChartDialog" persistent max-width="98vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline"> メモリー使用量 </span>
+        </v-card-title>
+        <div
+          id="sysMemChart"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="sysMemChartDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -138,17 +162,24 @@ export default {
   data() {
     return {
       headers: [
-        { text: '日時', value: 'Time', width: '23%' },
-        { text: 'CPU', value: 'CPUStr', width: '11%' },
-        { text: 'メモリ', value: 'MemStr', width: '11%' },
-        { text: 'ディスク', value: 'DiskStr', width: '11%' },
-        { text: '通信量', value: 'NetStr', width: '11%' },
-        { text: 'TCP接続', value: 'Conn', width: '11%' },
-        { text: '負荷', value: 'LoadStr', width: '11%' },
-        { text: 'プロセス', value: 'Proc', width: '11%' },
+        { text: '日時', value: 'Time', width: '14%' },
+        { text: 'CPU', value: 'CPUStr', width: '5%' },
+        { text: 'Mem', value: 'MemStr', width: '5%' },
+        { text: 'My CPU', value: 'MyCPUStr', width: '7%' },
+        { text: 'My Mem', value: 'MyMemStr', width: '7%' },
+        { text: 'Goroutine', value: 'NumGoroutine', width: '7%' },
+        { text: 'Swap', value: 'SwapStr', width: '5%' },
+        { text: 'Disk', value: 'DiskStr', width: '5%' },
+        { text: 'Net', value: 'NetStr', width: '6%' },
+        { text: 'TCP', value: 'Conn', width: '6%' },
+        { text: 'Load', value: 'LoadStr', width: '7%' },
+        { text: 'Process', value: 'Proc', width: '7%' },
+        { text: 'Heap', value: 'HeapAllocStr', width: '7%' },
+        { text: 'Sys', value: 'SysStr', width: '7%' },
       ],
       monitor: [],
       sysResChartDialog: false,
+      sysMemChartDialog: false,
       sysNetChartDialog: false,
       sysProcChartDialog: false,
       diskUsageForecastDialog: false,
@@ -164,9 +195,14 @@ export default {
       e.Time = this.strTime(e.At)
       e.CPUStr = numeral(e.CPU).format('0.00') + '%'
       e.MemStr = numeral(e.Mem).format('0.00') + '%'
+      e.MyCPUStr = numeral(e.MyCPU).format('0.00') + '%'
+      e.MyMemStr = numeral(e.MyMem).format('0.00') + '%'
+      e.SwapStr = numeral(e.Swap).format('0.00') + '%'
       e.DiskStr = numeral(e.Disk).format('0.00') + '%'
       e.LoadStr = numeral(e.Load).format('0.00')
       e.NetStr = numeral(e.Net).format('0.00a') + 'bps'
+      e.HeapAllocStr = numeral(e.HeapAlloc).format('0.000b')
+      e.SysStr = numeral(e.Sys).format('0.000b')
     })
   },
   methods: {
@@ -174,6 +210,12 @@ export default {
       this.sysResChartDialog = true
       this.$nextTick(() => {
         this.$showSysResChart('sysResChart', this.monitor)
+      })
+    },
+    openSysMemChart() {
+      this.sysMemChartDialog = true
+      this.$nextTick(() => {
+        this.$showSysMemChart('sysMemChart', this.monitor)
       })
     },
     openSysNetChart() {

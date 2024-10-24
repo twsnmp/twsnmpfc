@@ -3,11 +3,13 @@ package backend
 import (
 	"context"
 	"log"
+	"os"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/montanaflynn/stats"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/load"
@@ -31,9 +33,17 @@ func updateMonData() {
 	if err == nil {
 		m.Load = l.Load1
 	}
+	var ms runtime.MemStats
+	runtime.ReadMemStats(&ms)
+	m.HeapAlloc = int64(ms.HeapAlloc)
+	m.Sys = int64(ms.Sys)
 	v, err := mem.VirtualMemory()
 	if err == nil {
 		m.Mem = v.UsedPercent
+	}
+	s, err := mem.SwapMemory()
+	if err == nil {
+		m.Swap = s.UsedPercent
 	}
 	m.At = time.Now().Unix()
 	d, err := disk.Usage(dspath)
@@ -65,6 +75,18 @@ func updateMonData() {
 	if err == nil {
 		m.Proc = len(pids)
 	}
+	pid := os.Getpid()
+	pr, err := process.NewProcess(int32(pid))
+	if err == nil {
+		if v, err := pr.CPUPercent(); err == nil {
+			m.MyCPU = v
+		}
+		if v, err := pr.MemoryPercent(); err == nil {
+			m.MyMem = float64(v)
+		}
+	}
+	m.NumGoroutine = runtime.NumGoroutine()
+
 	for len(datastore.MonitorDataes) > maxMonitorData {
 		datastore.MonitorDataes = append(datastore.MonitorDataes[:0], datastore.MonitorDataes[1:]...)
 	}
@@ -89,6 +111,58 @@ func isMonitorIF(n string) bool {
 	return true
 }
 
+func checkResourceAlert() {
+	if len(datastore.MonitorDataes) < 1 {
+		return
+	}
+	myMem := []float64{}
+	load := []float64{}
+	var disk float64
+	for _, m := range datastore.MonitorDataes {
+		myMem = append(myMem, m.MyMem)
+		load = append(load, m.Load)
+		disk = m.Disk
+	}
+	myMemMean, _ := stats.Mean(myMem)
+	loadMean, _ := stats.Mean(load)
+	log.Printf("checkResourceAlert myMem=%.2f load=%.2f disk=%.2f", myMemMean, loadMean, disk)
+	level := ""
+	if myMemMean > 90.0 {
+		level = "high"
+	} else if myMemMean > 80.0 {
+		level = "low"
+	} else if myMemMean > 60.0 {
+		level = "warn"
+	}
+	if level != "none" {
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "system",
+			Level: level,
+			Event: "メモリー不足",
+		})
+	}
+	level = ""
+	if disk > 95.0 {
+		level = "high"
+	} else if disk > 90.0 {
+		level = "low"
+	}
+	if level != "none" {
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "system",
+			Level: level,
+			Event: "ストレージ容量不足",
+		})
+	}
+	if loadMean > float64(runtime.NumCPU()) {
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "system",
+			Level: "high",
+			Event: "高負荷状態",
+		})
+	}
+}
+
 // monitor :
 func monitor(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -96,6 +170,7 @@ func monitor(ctx context.Context, wg *sync.WaitGroup) {
 	timer := time.NewTicker(time.Second * 60)
 	updateMonData()
 	defer timer.Stop()
+	i := 0
 	for {
 		select {
 		case <-ctx.Done():
@@ -104,6 +179,11 @@ func monitor(ctx context.Context, wg *sync.WaitGroup) {
 			return
 		case <-timer.C:
 			updateMonData()
+			i++
+			if i%60 == 2 {
+				// 1時間毎にリソースチェック
+				checkResourceAlert()
+			}
 		}
 	}
 }
