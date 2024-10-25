@@ -25,6 +25,12 @@ import (
 )
 
 func netflowd(stopCh chan bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("netflowd recovered from panic: %v", r)
+			datastore.SetPanic(fmt.Sprintf("netflowd panic=%v", r))
+		}
+	}()
 	var readSize = 2 << 16
 	var addr *net.UDPAddr
 	var err error

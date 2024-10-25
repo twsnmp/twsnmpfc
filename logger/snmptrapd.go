@@ -19,6 +19,12 @@ import (
 )
 
 func snmptrapd(stopCh chan bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("snmptrapd recovered from panic: %v", r)
+			datastore.SetPanic(fmt.Sprintf("%v", r))
+		}
+	}()
 	log.Printf("start snmp trapd")
 	tl := gosnmp.NewTrapListener()
 	tl.Params = &gosnmp.GoSNMP{}

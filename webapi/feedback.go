@@ -85,6 +85,7 @@ func sendFeedback(fb *feedbackWebAPI) error {
 		mean, _ = stats.Mean(gr)
 		max, _ = stats.Max(gr)
 		msg += fmt.Sprintf("gr=%.2f/%.2f/%.2f\n", min, mean, max)
+		msg += fmt.Sprintf("panic=%d last=%s", datastore.PanicCount, datastore.LastPanic)
 	}
 	values := url.Values{}
 	values.Set("msg", msg)

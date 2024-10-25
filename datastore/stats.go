@@ -100,3 +100,13 @@ type MonitorDataEnt struct {
 
 // MonitorDataes : モニターデータ
 var MonitorDataes []*MonitorDataEnt
+
+// Panicモニター
+
+var LastPanic string
+var PanicCount int
+
+func SetPanic(s string) {
+	LastPanic = s
+	PanicCount++
+}

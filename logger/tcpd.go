@@ -2,6 +2,7 @@ package logger
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"strings"
@@ -43,7 +44,13 @@ func tcpd(stopCh chan bool) {
 }
 
 func tcpClientProcess(conn net.Conn) {
-	defer conn.Close()
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("tcpd recovered from panic: %v", r)
+			datastore.SetPanic(fmt.Sprintf("tcpd panic=%v", r))
+		}
+		conn.Close()
+	}()
 	buf := make([]byte, 1024*1024)
 	ra, ok := conn.RemoteAddr().(*net.TCPAddr)
 	if !ok {

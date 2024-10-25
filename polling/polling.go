@@ -129,6 +129,12 @@ var checkingPolling = false
 
 // pollingBackend :  ポーリングのバックグランド処理
 func pollingBackend(ctx context.Context, wg *sync.WaitGroup) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("polling recovered from panic: %v", r)
+			datastore.SetPanic(fmt.Sprintf("polling panic=%v", r))
+		}
+	}()
 	log.Println("start polling")
 	defer wg.Done()
 	time.Sleep(time.Millisecond * 100)
@@ -159,6 +165,12 @@ func pollingBackend(ctx context.Context, wg *sync.WaitGroup) {
 
 // checkPolling :実行するポーリングをチェックする
 func checkPolling() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("check polling recovered from panic: %v", r)
+			datastore.SetPanic(fmt.Sprintf("check polling panic=%v", r))
+		}
+	}()
 	now := time.Now().UnixNano()
 	list := []*datastore.PollingEnt{}
 	total := 0
@@ -190,6 +202,10 @@ func checkPolling() {
 
 func doPolling(pe *datastore.PollingEnt) {
 	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("do polling recovered from panic: %v", r)
+			datastore.SetPanic(fmt.Sprintf("do polling %s panic=%v", pe.Name, r))
+		}
 		busyPollings.Delete(pe.ID)
 		pe.NextTime = time.Now().UnixNano() + (int64(pe.PollInt) * 1000 * 1000 * 1000)
 	}()

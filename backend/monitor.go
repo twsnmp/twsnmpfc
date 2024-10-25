@@ -134,7 +134,7 @@ func checkResourceAlert() {
 	} else if myMemMean > 60.0 {
 		level = "warn"
 	}
-	if level != "none" {
+	if level != "" {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
 			Level: level,
@@ -147,7 +147,7 @@ func checkResourceAlert() {
 	} else if disk > 90.0 {
 		level = "low"
 	}
-	if level != "none" {
+	if level != "" {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
 			Level: level,

@@ -6,6 +6,7 @@ package logger
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"time"
@@ -16,6 +17,12 @@ import (
 )
 
 func syslogd(stopCh chan bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("syslogd recovered frodm panic: %v", r)
+			datastore.SetPanic(fmt.Sprintf("syslogd panic=%v", r))
+		}
+	}()
 	syslogCh := make(syslog.LogPartsChannel, 2000)
 	server := syslog.NewServer()
 	server.SetFormat(syslog.Automatic)

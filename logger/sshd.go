@@ -26,6 +26,12 @@ import (
 var SshdPort = 2222
 
 func sshd(stopCh chan bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("sshd recovered from panic: %v", r)
+			datastore.SetPanic(fmt.Sprintf("sshd panic=%v", r))
+		}
+	}()
 	log.Printf("start sshd")
 	signer, err := gossh.ParsePrivateKey([]byte(datastore.GetPrivateKey()))
 	if err != nil {

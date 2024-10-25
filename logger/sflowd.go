@@ -3,6 +3,7 @@ package logger
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -16,6 +17,12 @@ import (
 )
 
 func sflowd(stopCh chan bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("sflowd recovered from panic: %v", r)
+			datastore.SetPanic(fmt.Sprintf("sflowd panic=%v", r))
+		}
+	}()
 	log.Printf("start sflowd")
 	sv, err := net.ListenPacket("udp", sflowListen)
 	if err != nil {
