@@ -153,7 +153,7 @@ func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
 	})
 }
 
-func deleteOldLog(tx *bbolt.Tx, bucket string, days int) bool {
+func deleteOldLog(tx *bbolt.Tx, bucket string, days, limit int) bool {
 	s := time.Now()
 	done := true
 	delCount := 0
@@ -169,7 +169,7 @@ func deleteOldLog(tx *bbolt.Tx, bucket string, days int) bool {
 		if st < string(k) {
 			break
 		}
-		if delCount > 1000 {
+		if delCount > limit {
 			done = false
 			break
 		}
@@ -183,7 +183,7 @@ func deleteOldLog(tx *bbolt.Tx, bucket string, days int) bool {
 }
 
 // deleteOldPollingLogは、古いポーリングログを削除する
-func deleteOldPollingLog(tx *bbolt.Tx, bucket string, days int) bool {
+func deleteOldPollingLog(tx *bbolt.Tx, bucket string, days, limit int) bool {
 	s := time.Now()
 	done := true
 	delCount := 0
@@ -204,7 +204,7 @@ func deleteOldPollingLog(tx *bbolt.Tx, bucket string, days int) bool {
 			if st < string(k) {
 				break
 			}
-			if delCount > 1000 {
+			if delCount > limit {
 				done = false
 				break
 			}
@@ -233,17 +233,18 @@ func deleteOldLogs() {
 	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix", "arplog", "sflow", "sflowCounter"}
 	doneMap := make(map[string]bool)
 	doneCount := 0
+	limit := 1000
 	lt := time.Now().Unix() + 50
 	for doneCount < len(buckets) && lt > time.Now().Unix() {
 		for _, b := range buckets {
 			if _, ok := doneMap[b]; !ok {
 				if b == "pollingLogs" {
-					if done := deleteOldPollingLog(tx, b, MapConf.LogDays); done {
+					if done := deleteOldPollingLog(tx, b, MapConf.LogDays, limit); done {
 						doneMap[b] = true
 						doneCount++
 					}
 				} else {
-					if done := deleteOldLog(tx, b, MapConf.LogDays); done {
+					if done := deleteOldLog(tx, b, MapConf.LogDays, limit); done {
 						doneMap[b] = true
 						doneCount++
 					}
@@ -256,6 +257,7 @@ func deleteOldLogs() {
 				return
 			}
 		}
+		limit += 1000
 	}
 	tx.Commit()
 	log.Printf("deleteOldLogs dur=%s", time.Since(s))
