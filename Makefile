@@ -1,7 +1,7 @@
 .PHONY: all test clean zip mac clean_spa docker trivy fluentbit_plugin
 
 ### バージョンの定義
-VERSION     := "v1.44.0"
+VERSION     := "v1.45.0"
 COMMIT      := $(shell git rev-parse --short HEAD)
 
 ### コマンドの定義
