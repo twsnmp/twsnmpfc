@@ -115,23 +115,26 @@ func checkResourceAlert() {
 	if len(datastore.MonitorDataes) < 1 {
 		return
 	}
+	mem := []float64{}
 	myMem := []float64{}
 	load := []float64{}
 	var disk float64
 	for _, m := range datastore.MonitorDataes {
+		mem = append(mem, m.Mem)
 		myMem = append(myMem, m.MyMem)
 		load = append(load, m.Load)
 		disk = m.Disk
 	}
 	myMemMean, _ := stats.Mean(myMem)
+	memMean, _ := stats.Mean(mem)
 	loadMean, _ := stats.Mean(load)
-	log.Printf("checkResourceAlert myMem=%.2f load=%.2f disk=%.2f", myMemMean, loadMean, disk)
+	log.Printf("checkResourceAlert mem=%.2f myMem=%.2f load=%.2f disk=%.2f", memMean, myMemMean, loadMean, disk)
 	level := ""
-	if myMemMean > 90.0 {
+	if myMemMean > 90.0 && memMean > 90.0 {
 		level = "high"
-	} else if myMemMean > 80.0 {
+	} else if myMemMean > 80.0 && memMean > 80.0 {
 		level = "low"
-	} else if myMemMean > 60.0 {
+	} else if myMemMean > 60.0 && memMean > 60.0 {
 		level = "warn"
 	}
 	if level != "" {

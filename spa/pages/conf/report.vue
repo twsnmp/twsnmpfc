@@ -197,7 +197,7 @@
                     hide-details
                     single-line
                     type="number"
-                    style="width: 60px"
+                    style="width: 120px"
                   ></v-text-field>
                 </template>
               </v-slider>
