@@ -3,6 +3,7 @@ package report
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -400,14 +401,27 @@ func checkOldEtherType() {
 
 func checkOldDNSQ() {
 	ids := []string{}
-	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	list := []*datastore.DNSQEnt{}
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachDNSQ(func(e *datastore.DNSQEnt) bool {
-		if e.LastTime < delOld || (datastore.ReportConf.AICleanup && e.LastTime < ht && aiCleanup(e.Count, e.FirstTime, e.LastTime)) {
+		if e.LastTime < delOld {
 			ids = append(ids, e.ID)
+		} else {
+			list = append(list, e)
 		}
 		return true
 	})
+	if datastore.ReportConf.Limit < len(list) {
+		sort.Slice(list, func(i, j int) bool {
+			if list[i].LastTime == list[j].LastTime {
+				return list[i].Count < list[j].Count
+			}
+			return list[i].LastTime < list[j].LastTime
+		})
+		for i := 0; i < len(list)-datastore.ReportConf.Limit; i++ {
+			ids = append(ids, list[i].ID)
+		}
+	}
 	if len(ids) > 0 {
 		datastore.DeleteReport("dns", ids)
 	}
@@ -415,13 +429,27 @@ func checkOldDNSQ() {
 
 func checkOldRadiusFlow() {
 	ids := []string{}
+	list := []*datastore.RADIUSFlowEnt{}
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachRADIUSFlows(func(i *datastore.RADIUSFlowEnt) bool {
 		if i.LastTime < delOld {
 			ids = append(ids, i.ID)
+		} else {
+			list = append(list, i)
 		}
 		return true
 	})
+	if datastore.ReportConf.Limit < len(list) {
+		sort.Slice(list, func(i, j int) bool {
+			if list[i].LastTime == list[j].LastTime {
+				return list[i].Count < list[j].Count
+			}
+			return list[i].LastTime < list[j].LastTime
+		})
+		for i := 0; i < len(list)-datastore.ReportConf.Limit; i++ {
+			ids = append(ids, list[i].ID)
+		}
+	}
 	if len(ids) > 0 {
 		datastore.DeleteReport("radius", ids)
 	}
@@ -429,14 +457,26 @@ func checkOldRadiusFlow() {
 
 func checkOldTLSFlow() {
 	ids := []string{}
-	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	list := []*datastore.TLSFlowEnt{}
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachTLSFlows(func(t *datastore.TLSFlowEnt) bool {
-		if t.LastTime < delOld || (datastore.ReportConf.AICleanup && t.LastTime < ht && aiCleanup(t.Count, t.FirstTime, t.LastTime)) {
+		if t.LastTime < delOld {
 			ids = append(ids, t.ID)
+		} else {
+			list = append(list, t)
 		}
 		return true
 	})
+	if datastore.ReportConf.Limit < len(list) {
+		sort.Slice(list, func(i, j int) bool {
+			p1 := list[i].Score - float64(list[i].LastTime-delOld)/(3600*24*1000*1000*1000)
+			p2 := list[j].Score - float64(list[j].LastTime-delOld)/(3600*24*1000*1000*1000)
+			return p1 > p2
+		})
+		for i := 0; i < len(list)-datastore.ReportConf.Limit; i++ {
+			ids = append(ids, list[i].ID)
+		}
+	}
 	if len(ids) > 0 {
 		datastore.DeleteReport("tls", ids)
 	}

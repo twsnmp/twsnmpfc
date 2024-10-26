@@ -2,6 +2,7 @@ package report
 
 import (
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -308,14 +309,27 @@ func checkSwitchBotMotionSensorReport(h string, m map[string]string) {
 
 func checkOldBlueDevice() {
 	ids := []string{}
-	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	list := []*datastore.BlueDeviceEnt{}
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachBludeDevice(func(e *datastore.BlueDeviceEnt) bool {
-		if e.LastTime < delOld || (datastore.ReportConf.AICleanup && e.LastTime < ht && aiCleanup(e.Count, e.FirstTime, e.LastTime)) {
+		if e.LastTime < delOld {
 			ids = append(ids, e.ID)
+		} else {
+			list = append(list, e)
 		}
 		return true
 	})
+	if datastore.ReportConf.Limit < len(list) {
+		sort.Slice(list, func(i, j int) bool {
+			if list[i].LastTime == list[j].LastTime {
+				return list[i].Count < list[j].Count
+			}
+			return list[i].LastTime < list[j].LastTime
+		})
+		for i := 0; i < len(list)-datastore.ReportConf.Limit; i++ {
+			ids = append(ids, list[i].ID)
+		}
+	}
 	if len(ids) > 0 {
 		datastore.DeleteReport("blueDevice", ids)
 	}

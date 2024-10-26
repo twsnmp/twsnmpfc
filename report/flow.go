@@ -3,6 +3,7 @@ package report
 import (
 	"fmt"
 	"net"
+	"sort"
 	"strings"
 	"time"
 
@@ -373,14 +374,26 @@ func setServerPenalty(s *datastore.ServerEnt) {
 
 func checkOldServers() {
 	ids := []string{}
-	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	list := []*datastore.ServerEnt{}
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
-		if s.LastTime < delOld || (datastore.ReportConf.AICleanup && s.LastTime < ht && aiCleanup(s.Count, s.FirstTime, s.LastTime)) {
+		if s.LastTime < delOld {
 			ids = append(ids, s.ID)
+		} else {
+			list = append(list, s)
 		}
 		return true
 	})
+	if datastore.ReportConf.Limit < len(list) {
+		sort.Slice(list, func(i, j int) bool {
+			p1 := list[i].Score - float64(list[i].LastTime-delOld)/(3600*24*1000*1000*1000)
+			p2 := list[j].Score - float64(list[j].LastTime-delOld)/(3600*24*1000*1000*1000)
+			return p1 > p2
+		})
+		for i := 0; i < len(list)-datastore.ReportConf.Limit; i++ {
+			ids = append(ids, list[i].ID)
+		}
+	}
 	if len(ids) > 0 {
 		datastore.DeleteReport("servers", ids)
 	}
@@ -388,14 +401,26 @@ func checkOldServers() {
 
 func checkOldFlows() {
 	ids := []string{}
-	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	list := []*datastore.FlowEnt{}
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
-		if f.LastTime < delOld || (datastore.ReportConf.AICleanup && f.LastTime < ht && aiCleanup(f.Count, f.FirstTime, f.LastTime)) {
+		if f.LastTime < delOld {
 			ids = append(ids, f.ID)
+		} else {
+			list = append(list, f)
 		}
 		return true
 	})
+	if datastore.ReportConf.Limit < len(list) {
+		sort.Slice(list, func(i, j int) bool {
+			p1 := list[i].Score - float64(list[i].LastTime-delOld)/(3600*24*1000*1000*1000)
+			p2 := list[j].Score - float64(list[j].LastTime-delOld)/(3600*24*1000*1000*1000)
+			return p1 > p2
+		})
+		for i := 0; i < len(list)-datastore.ReportConf.Limit; i++ {
+			ids = append(ids, list[i].ID)
+		}
+	}
 	if len(ids) > 0 {
 		datastore.DeleteReport("flows", ids)
 	}

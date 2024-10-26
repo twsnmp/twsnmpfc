@@ -23,7 +23,7 @@ type ReportConfEnt struct {
 	IncludeNoMACIP      bool
 	ExcludeIPv6         bool
 	ReportDays          int
-	AICleanup           bool
+	Limit               int
 }
 
 var ReportConf ReportConfEnt
@@ -32,7 +32,6 @@ var ReportConf ReportConfEnt
 func LoadReportConf() error {
 	ReportConf.DropFlowThTCPPacket = 3
 	ReportConf.SensorTimeout = 1
-	ReportConf.AICleanup = false
 	ReportConf.ReportDays = 30
 	ReportConf.ExcludeIPv6 = false
 	return db.View(func(tx *bbolt.Tx) error {
@@ -44,6 +43,9 @@ func LoadReportConf() error {
 		if err := json.Unmarshal(v, &ReportConf); err != nil {
 			log.Printf("load report conf err=%v", err)
 			return err
+		}
+		if ReportConf.Limit < 1000 {
+			ReportConf.Limit = 100000
 		}
 		return nil
 	})

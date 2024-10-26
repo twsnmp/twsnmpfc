@@ -2,6 +2,7 @@ package report
 
 import (
 	"net"
+	"sort"
 	"strings"
 	"time"
 
@@ -98,13 +99,26 @@ func setDevicePenalty(d *datastore.DeviceEnt) {
 
 func checkOldDevices() {
 	ids := []string{}
+	list := []*datastore.DeviceEnt{}
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
 		if d.LastTime < delOld {
 			ids = append(ids, d.ID)
+		} else {
+			list = append(list, d)
 		}
 		return true
 	})
+	if datastore.ReportConf.Limit < len(list) {
+		sort.Slice(list, func(i, j int) bool {
+			p1 := list[i].Score - float64(list[i].LastTime-delOld)/(3600*24*1000*1000*1000)
+			p2 := list[j].Score - float64(list[j].LastTime-delOld)/(3600*24*1000*1000*1000)
+			return p1 > p2
+		})
+		for i := 0; i < len(list)-datastore.ReportConf.Limit; i++ {
+			ids = append(ids, list[i].ID)
+		}
+	}
 	if len(ids) > 0 {
 		datastore.DeleteReport("devices", ids)
 	}

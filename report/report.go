@@ -686,13 +686,3 @@ func findIPFromArp(mac string) string {
 	})
 	return ip
 }
-
-func aiCleanup(c, ft, lt int64) bool {
-	d := (lt - ft) / (24 * 3600 * 1000 * 1000 * 1000)
-	if d <= 1 {
-		// 期間が１日以下
-		return true
-	}
-	// 1日１件以下
-	return c/d < 1
-}

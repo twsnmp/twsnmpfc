@@ -161,12 +161,6 @@
           </v-row>
           <v-row dense>
             <v-col>
-              <v-switch
-                v-model="report.AICleanup"
-                label="AIクリーンアップ"
-              ></v-switch>
-            </v-col>
-            <v-col>
               <v-slider
                 v-model="report.ReportDays"
                 label="レポートの保持日数"
@@ -178,6 +172,27 @@
                 <template #append>
                   <v-text-field
                     v-model="report.ReportDays"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+            <v-col>
+              <v-slider
+                v-model="report.Limit"
+                label="レポートの保持件数"
+                class="align-center"
+                max="1000000"
+                min="1000"
+                hide-details
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="report.Limit"
                     class="mt-0 pt-0"
                     hide-details
                     single-line
@@ -216,7 +231,7 @@ export default {
         AllowLocalIP: '',
         DropFlowThTCPPacket: 3,
         ReportDays: 30,
-        AICleanup: false,
+        Limit: 100000,
         ExcludeIPv6: false,
         IncludeNoMACIP: false,
       },

@@ -2,6 +2,7 @@ package report
 
 import (
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -92,14 +93,27 @@ func checkAPInfoReport(h string, m map[string]string) {
 
 func checkOldWifiAP() {
 	ids := []string{}
-	ht := time.Now().AddDate(0, 0, -2).UnixNano()
+	list := []*datastore.WifiAPEnt{}
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
 	datastore.ForEachWifiAP(func(e *datastore.WifiAPEnt) bool {
-		if e.LastTime < delOld || (datastore.ReportConf.AICleanup && e.LastTime < ht && aiCleanup(int64(e.Count), e.FirstTime, e.LastTime)) {
+		if e.LastTime < delOld {
 			ids = append(ids, e.ID)
+		} else {
+			list = append(list, e)
 		}
 		return true
 	})
+	if datastore.ReportConf.Limit < len(list) {
+		sort.Slice(list, func(i, j int) bool {
+			if list[i].LastTime == list[j].LastTime {
+				return list[i].Count < list[j].Count
+			}
+			return list[i].LastTime < list[j].LastTime
+		})
+		for i := 0; i < len(list)-datastore.ReportConf.Limit; i++ {
+			ids = append(ids, list[i].ID)
+		}
+	}
 	if len(ids) > 0 {
 		datastore.DeleteReport("wifiAP", ids)
 	}
