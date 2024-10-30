@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -198,16 +200,15 @@ func deleteOldLog(tx *bbolt.Tx, bucket string, days int) (bool, int) {
 }
 
 // deleteOldPollingLogは、古いポーリングログを削除する
-func deleteOldPollingLog(tx *bbolt.Tx, days int) bool {
+func deleteOldPollingLog(tx *bbolt.Tx, days int) int {
 	s := time.Now()
-	done := true
 	delCount := 0
 	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -days).UnixNano())
 	b := tx.Bucket([]byte("pollingLogs"))
 	if b == nil {
 		log.Println("bucket pollingLogs not found")
 		// bucketがないのは、エラーにしないでスキップする
-		return done
+		return delCount
 	}
 	b.ForEachBucket(func(k []byte) error {
 		b2 := b.Bucket(k)
@@ -225,9 +226,9 @@ func deleteOldPollingLog(tx *bbolt.Tx, days int) bool {
 		return nil
 	})
 	if delCount > 0 {
-		log.Printf("delete old polling logs count=%d done=%v dur=%s", delCount, done, time.Since(s))
+		log.Printf("delete old polling logs count=%d dur=%s", delCount, time.Since(s))
 	}
-	return done
+	return delCount
 }
 
 func deleteOldLogs() {
@@ -250,10 +251,9 @@ func deleteOldLogs() {
 		for _, b := range buckets {
 			if _, ok := doneMap[b]; !ok {
 				if b == "pollingLogs" {
-					if done := deleteOldPollingLog(tx, MapConf.LogDays); done {
-						doneMap[b] = true
-						doneCount++
-					}
+					doneMap[b] = true
+					doneCount++
+					delCount += deleteOldPollingLog(tx, MapConf.LogDays)
 				} else {
 					done, c := deleteOldLog(tx, b, MapConf.LogDays)
 					delCount += c
@@ -509,4 +509,81 @@ func deCompressLog(s []byte) []byte {
 		return s
 	}
 	return d
+}
+
+// DeleteOldLogBatch : 古いログのバッチ削除
+func DeleteOldLogBatch(ds, t string) {
+	openDB(ds)
+	dbPath := filepath.Join(ds, "twsnmpfc.db")
+	_, err := os.Stat(dbPath)
+	if err != nil {
+		log.Fatalln("no db")
+	}
+	d, err := bbolt.Open(dbPath, 0444, nil)
+	if err != nil {
+		log.Fatalf("db open err=%v", err)
+	}
+	defer d.Close()
+	err = d.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("config"))
+		if b != nil {
+			v := b.Get([]byte("mapConf"))
+			if v != nil {
+				if err := json.Unmarshal(v, &MapConf); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Fatalf("read map conf err=%v", err)
+	}
+	if MapConf.LogDays < 1 {
+		log.Fatalf("log days(%d) < 1 ", MapConf.LogDays)
+	}
+	delCount := 0
+	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -MapConf.LogDays).UnixNano())
+	s := time.Now()
+	d.Batch(func(tx *bbolt.Tx) error {
+		switch t {
+		case "all":
+			delCount += deleteOldPollingLog(tx, MapConf.LogDays)
+			buckets := []string{"logs", "syslog", "trap", "netflow", "ipfix", "sflow", "sflowCounter"}
+			for _, bn := range buckets {
+				b := tx.Bucket([]byte(bn))
+				if b != nil {
+					log.Printf("start delete %s", bn)
+					del := deleteOldLogBatchSub(st, b)
+					delCount += del
+					log.Printf("end delete %s count=%d", bn, del)
+				}
+			}
+		case "polling":
+			delCount += deleteOldPollingLog(tx, MapConf.LogDays)
+		default:
+			b := tx.Bucket([]byte(t))
+			if b != nil {
+				delCount += deleteOldLogBatchSub(st, b)
+			}
+		}
+		return nil
+	})
+	log.Printf("delete old log count=%d,dur=%v", delCount, time.Since(s))
+}
+
+func deleteOldLogBatchSub(st string, b *bbolt.Bucket) int {
+	delCount := 0
+	c := b.Cursor()
+	for k, _ := c.First(); k != nil; k, _ = c.Next() {
+		if st < string(k) {
+			break
+		}
+		c.Delete()
+		delCount++
+		if delCount%10000 == 0 {
+			fmt.Printf("delete=%d\r", delCount)
+		}
+	}
+	return delCount
 }

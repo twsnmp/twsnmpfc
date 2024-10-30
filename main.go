@@ -45,6 +45,7 @@ var pingMode string
 var timeout int
 var compact string
 var backupPath string
+var deleteOldLog string
 var copyBackup bool
 var version = "vx.x.x"
 var commit = ""
@@ -71,6 +72,7 @@ func init() {
 	flag.BoolVar(&local, "local", false, "Local only")
 	flag.StringVar(&cpuprofile, "cpuprofile", "", "write cpu profile to `file`")
 	flag.StringVar(&memprofile, "memprofile", "", "write memory profile to `file`")
+	flag.StringVar(&deleteOldLog, "deleteOldLog", "", "Batch delete old log")
 	flag.IntVar(&timeout, "timeout", 24, "session timeout 0 is unlimit")
 	flag.StringVar(&backupPath, "backup", "", "Backup path")
 	flag.StringVar(&compact, "compact", "", "DB Conmact path")
@@ -153,6 +155,10 @@ func main() {
 			log.Fatalf("reset password err=%v", err)
 		}
 		log.Println("reset password")
+		os.Exit(0)
+	}
+	if deleteOldLog != "" {
+		datastore.DeleteOldLogBatch(dataStorePath, deleteOldLog)
 		os.Exit(0)
 	}
 	log.SetFlags(0)
