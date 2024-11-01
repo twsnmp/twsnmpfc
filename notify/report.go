@@ -388,11 +388,11 @@ func getResInfo(htmlMode bool) []string {
 	grMean, _ := stats.Mean(gr)
 	grMax, _ := stats.Max(gr)
 	if htmlMode {
-		if myMemMean > 90.0 {
+		if myMemMean > 90.0 && memMean > 90.0 {
 			myMemClass = "high"
-		} else if myMemMean > 80.0 {
+		} else if myMemMean > 80.0 && memMean > 80.0 {
 			myMemClass = "low"
-		} else if myMemMean > 60.0 {
+		} else if myMemMean > 60.0 && memMean > 60 {
 			myMemClass = "warn"
 		} else {
 			myMemClass = "none"
