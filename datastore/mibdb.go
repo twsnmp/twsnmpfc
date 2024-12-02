@@ -777,7 +777,7 @@ func getPrintableMIBStringVal(i interface{}) string {
 	case string:
 		r = v
 	case []uint8:
-		r = string(v)
+		r = fmt.Sprintf("%x", v)
 	case int, int64, uint, uint64:
 		return fmt.Sprintf("%d", v)
 	default:
