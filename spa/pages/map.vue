@@ -640,10 +640,10 @@
               {{ getNodeName(item.NodeID2) }}
             </template>
             <template #[`item.PollingID1`]="{ item }">
-              {{ getPollingName(item.PollingID1) }}
+              {{ getPollingName(item.NodeID1, item.PollingID1) }}
             </template>
             <template #[`item.PollingID2`]="{ item }">
-              {{ getPollingName(item.PollingID2) }}
+              {{ getPollingName(item.NodeID2, item.PollingID2) }}
             </template>
             <template #[`item.actions`]="{ item }">
               <v-icon small @click="addLineFromList(item)">
@@ -693,10 +693,10 @@
               {{ getNodeName(item.NodeID2) }}
             </template>
             <template #[`item.PollingID1`]="{ item }">
-              {{ getPollingName(item.PollingID1) }}
+              {{ getPollingName(item.NodeID1, item.PollingID1) }}
             </template>
             <template #[`item.PollingID2`]="{ item }">
-              {{ getPollingName(item.PollingID2) }}
+              {{ getPollingName(item.NodeID2, item.PollingID2) }}
             </template>
             <template #[`item.actions`]="{ item }">
               <v-icon small @click="editNetworkLine(item)"> mdi-pencil </v-icon>
@@ -2284,8 +2284,21 @@ export default {
       }
       return this.map.Nodes[id] ? this.map.Nodes[id].Name : id
     },
-    getPollingName(id) {
-      return this.pollingNameMap[id] || id
+    getPollingName(nid, pid) {
+      if (nid.startsWith('NET:')) {
+        const a = nid.split(':')
+        if (a.length > 1) {
+          const n = this.map.Networks[a[1]]
+          if (n) {
+            for (const p of n.Ports) {
+              if (p.ID === pid) {
+                return p.Name
+              }
+            }
+          }
+        }
+      }
+      return this.pollingNameMap[pid] || pid
     },
     addNetworkFromList(n) {
       const i = this.foundNeighborNetworksAndLines.Networks.indexOf(n)
