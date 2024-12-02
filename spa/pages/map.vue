@@ -1849,6 +1849,18 @@ export default {
           this.deleteNodes = Array.from(r.Param)
           this.deleteDialog = true
           break
+        case 'deleteItems':
+          if (this.map.Items[r.Param]) {
+            this.editItem = this.map.Items[r.Param]
+            this.deleteItemDialog = true
+          }
+          break
+        case 'deleteNetwork':
+          if (this.map.Networks[r.Param]) {
+            this.editNetwork = this.map.Networks[r.Param]
+            this.deleteNetworkDialog = true
+          }
+          break
         case 'editLine':
           this.showEditLineDiaglog(r.Param)
           break

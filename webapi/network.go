@@ -12,13 +12,13 @@ import (
 
 func deleteNetwork(c echo.Context) error {
 	id := c.Param("id")
+	n := datastore.GetNetwork(id)
+	if n == nil {
+		return echo.ErrNotFound
+	}
+	name := n.Name
 	if err := datastore.DeleteNetwok(id); err != nil {
 		return echo.ErrBadRequest
-	}
-	name := ""
-	n := datastore.GetNetwork(id)
-	if n != nil {
-		name = n.Name
 	}
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:     "user",

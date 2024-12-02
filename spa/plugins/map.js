@@ -711,6 +711,12 @@ const mapMain = (p5) => {
       if (selectedNodes.length > 0) {
         deleteNodes()
       }
+      if (selectedItems.length === 1) {
+        deleteItems()
+      }
+      if (selectedNetwork !== '') {
+        deleteNetwork()
+      }
     } else if (p5.keyCode === p5.ENTER) {
       p5.doubleClicked()
     } else if (p5.key === 's' && p5.keyIsDown(p5.CONTROL)) {
@@ -971,6 +977,24 @@ const mapMain = (p5) => {
         Param: selectedNodes,
       })
       selectedNodes.length = 0
+    }
+  }
+  const deleteItems = () => {
+    if (mapCallBack) {
+      mapCallBack({
+        Cmd: 'deleteItems',
+        Param: selectedItems[0],
+      })
+      selectedItems.length = 0
+    }
+  }
+  const deleteNetwork = () => {
+    if (mapCallBack) {
+      mapCallBack({
+        Cmd: 'deleteNetwork',
+        Param: selectedNetwork,
+      })
+      selectedNetwork = ''
     }
   }
   // Nodeの位置を保存する
