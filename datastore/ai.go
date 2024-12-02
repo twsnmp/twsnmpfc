@@ -68,7 +68,7 @@ func DeleteAIResult(id string) error {
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("ai"))
 		b.Delete([]byte(id))
-		log.Printf("DelteAIResult dur=%v", time.Since(st))
+		log.Printf("delete ai result dur=%v", time.Since(st))
 		return nil
 	})
 }

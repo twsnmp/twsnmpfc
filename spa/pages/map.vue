@@ -1285,7 +1285,7 @@
             <v-icon>mdi-delete</v-icon>
             削除
           </v-btn>
-          <v-btn color="normal" @click="imageDelteDialog = false">
+          <v-btn color="normal" @click="imageDeleteDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
           </v-btn>

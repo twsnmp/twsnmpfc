@@ -151,7 +151,7 @@ func getImage(c echo.Context) error {
 
 func deleteImage(c echo.Context) error {
 	path := c.Param("path")
-	err := datastore.DelteImage(path)
+	err := datastore.DeleteImage(path)
 	if err != nil {
 		return echo.ErrNotFound
 	}

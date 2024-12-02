@@ -199,7 +199,7 @@ func SaveImage(path string, img []byte) error {
 	})
 }
 
-func DelteImage(path string) error {
+func DeleteImage(path string) error {
 	st := time.Now()
 	imageListCache = []string{}
 	return db.Batch(func(tx *bbolt.Tx) error {
