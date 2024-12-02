@@ -1758,7 +1758,10 @@ export default {
       return l1.concat(l2, l3)
     },
     discoverURL() {
-      return `/discover?x=${this.x}&y=${this.y}`
+      const m = document.getElementById('map')
+      const x = Math.trunc(m && m.scrollLeft ? this.x + m.scrollLeft : this.x)
+      const y = Math.trunc(m && m.scrollTop ? this.y + m.scrollTop : this.y)
+      return `/discover?x=${x}&y=${y}`
     },
     pollingList(id, lineMode) {
       const l = []
