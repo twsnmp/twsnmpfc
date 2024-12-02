@@ -1825,9 +1825,13 @@ export default {
     callback(r) {
       if (
         this.deleteDialog ||
+        this.deleteItemDialog ||
+        this.deleteNetworkDialog ||
         this.showNodeDialog ||
         this.lineDialog ||
-        this.editNodeDialog
+        this.editNodeDialog ||
+        this.editItemDialog ||
+        this.editNetworkDialog
       ) {
         return
       }

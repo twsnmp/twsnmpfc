@@ -165,6 +165,7 @@ func getPollingCheck(c echo.Context) error {
 	all := id == "all"
 	if all {
 		polling.CheckAllPoll()
+		backend.CheckAllNetworks()
 	} else {
 		polling.PollNowNode(id)
 	}

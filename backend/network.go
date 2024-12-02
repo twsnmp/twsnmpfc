@@ -23,6 +23,7 @@ func networkBackend(ctx context.Context, wg *sync.WaitGroup) {
 	now := time.Now().Unix()
 	j := 0
 	datastore.ForEachNetworks(func(n *datastore.NetworkEnt) bool {
+		n.Error = ""
 		if len(n.Ports) > 0 {
 			checkNetworkMap[n.ID] = now + int64(j)
 			j++
@@ -544,6 +545,16 @@ func CheckNetwork(id string) {
 	// Clear Error
 	n.Error = ""
 	checkNetworkCh <- id
+}
+
+func CheckAllNetworks() {
+	datastore.ForEachNetworks(func(n *datastore.NetworkEnt) bool {
+		if n.Error != "" {
+			n.Error = ""
+			checkNetworkCh <- n.ID
+		}
+		return true
+	})
 }
 
 func checkUnmanagedNetworkPortState(n *datastore.NetworkEnt) {
