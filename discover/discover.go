@@ -109,7 +109,7 @@ func ActiveDiscover() error {
 	X = (1 + datastore.DiscoverConf.X/GRID) * GRID
 	Y = (1 + datastore.DiscoverConf.Y/GRID) * GRID
 	var mu sync.Mutex
-	sem := make(chan bool, 20)
+	sem := make(chan bool, 256)
 	go func() {
 		for ; sip <= eip && !Stop; sip++ {
 			sem <- true
@@ -131,7 +131,7 @@ func ActiveDiscover() error {
 						ServerList: make(map[string]bool),
 					}
 					r := &net.Resolver{}
-					ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
+					ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*500)
 					defer cancel()
 					if names, err := r.LookupAddr(ctx, ipstr); err == nil && len(names) > 0 {
 						dent.HostName = names[0]
@@ -175,6 +175,7 @@ func ActiveDiscover() error {
 		}
 		for len(sem) > 0 {
 			time.Sleep(time.Millisecond * 10)
+			Stat.Now = time.Now().Unix()
 		}
 		Stat.Running = false
 		datastore.AddEventLog(&datastore.EventLogEnt{
