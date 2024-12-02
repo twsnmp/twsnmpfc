@@ -18,6 +18,7 @@ type DiscoverConfEnt struct {
 	Retry           int `validate:"required,gte=0,lte=5"`
 	X               int
 	Y               int
+	AddNetwork      bool
 }
 
 func SaveDiscoverConf() error {

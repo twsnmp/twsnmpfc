@@ -183,6 +183,11 @@
           label="基本的なポーリングを自動追加"
           dense
         ></v-switch>
+        <v-switch
+          v-model="discover.Conf.AddNetwork"
+          label="LLDP対応ノードはネットワークノードも追加"
+          dense
+        ></v-switch>
       </v-card-text>
       <v-card-title v-if="!basicPolling">
         <span class="headline">自動追加するポーリング</span>

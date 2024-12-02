@@ -143,9 +143,14 @@ func ActiveDiscover() error {
 					dent.Y = Y
 					Stat.Found++
 					X += GRID
-					if X > GRID*10 {
+					if _, ok := dent.ServerList["lldp"]; ok {
 						X = GRID
 						Y += GRID
+					} else {
+						if X > GRID*10 {
+							X = GRID
+							Y += GRID
+						}
 					}
 					if dent.SysName != "" {
 						Stat.Snmp++
@@ -334,6 +339,13 @@ func getSnmpInfo(t string, dent *discoverInfoEnt) {
 		}
 		return nil
 	})
+	agent.Walk(datastore.MIBDB.NameToOID("lldpLocalSystemData"), func(variable gosnmp.SnmpPDU) error {
+		a := strings.Split(datastore.MIBDB.OIDToName(variable.Name), ".")
+		if len(a) == 2 {
+			dent.ServerList["lldp"] = true
+		}
+		return fmt.Errorf("checkend")
+	})
 }
 
 func addFoundNode(dent *discoverInfoEnt) {
@@ -386,6 +398,22 @@ func addFoundNode(dent *discoverInfoEnt) {
 		NodeName: n.Name,
 		Event:    "自動発見により追加",
 	})
+	if datastore.DiscoverConf.AddNetwork {
+		if _, ok := dent.ServerList["lldp"]; ok {
+			datastore.AddNetwork(&datastore.NetworkEnt{
+				Name:      n.Name,
+				IP:        n.IP,
+				X:         n.X + GRID,
+				Y:         n.Y,
+				SnmpMode:  n.SnmpMode,
+				Community: n.Community,
+				User:      n.User,
+				Password:  n.Password,
+				HPorts:    24,
+				Descr:     time.Now().Format("2006/01/02") + "に発見",
+			})
+		}
+	}
 	if len(datastore.DiscoverConf.AutoAddPollings) < 1 {
 		return
 	}
