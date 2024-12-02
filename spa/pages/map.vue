@@ -1957,15 +1957,13 @@ export default {
         PollingID: '',
         Info: '',
       }
-      if (!p[0].startsWith('NET') && !p[1].startsWith('NET')) {
-        const l = this.map.Lines.find(
-          (e) =>
-            (e.NodeID1 === p[0] && e.NodeID2 === p[1]) ||
-            (e.NodeID1 === p[1] && e.NodeID2 === p[0])
-        )
-        if (l) {
-          this.editLine = l
-        }
+      const l = this.map.Lines.find(
+        (e) =>
+          (e.NodeID1 === p[0] && e.NodeID2 === p[1]) ||
+          (e.NodeID1 === p[1] && e.NodeID2 === p[0])
+      )
+      if (l) {
+        this.editLine = l
       }
       this.selectedLinePolling1 = this.getPollingIndex(
         this.editLine.NodeID1,
