@@ -102,7 +102,7 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 		}
 		switch a[0] {
 		case "lldpLocChassisId":
-			n.SystemID = datastore.GetMIBValueString(a[0], &variable, false)
+			n.SystemID = datastore.GetMIBValueString(a[0], &variable, true)
 		case "lldpLocSysName":
 			if setName {
 				n.Name = datastore.GetMIBValueString(a[0], &variable, false)
@@ -116,7 +116,7 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 				n.Descr += " " + datastore.GetMIBValueString(a[0], &variable, false)
 			}
 		case "lldpLocPortId":
-			portMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, false)
+			portMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, true)
 		case "lldpLocPortDesc":
 			id, ok := portMap[a[1]]
 			if !ok {
@@ -202,7 +202,7 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 		}
 		for _, variable := range r.Variables {
 			if datastore.MIBDB.OIDToName(variable.Name) == name {
-				pn := datastore.GetMIBValueString(name, &variable, false)
+				pn := datastore.GetMIBValueString(name, &variable, true)
 				if pn == "" {
 					pn = "#" + index
 				}
@@ -260,7 +260,7 @@ func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworks
 		switch a[0] {
 		case "lldpRemChassisId":
 			remoteMap[a[1]] = &datastore.NetworkEnt{
-				SystemID: datastore.GetMIBValueString(a[0], &variable, false),
+				SystemID: datastore.GetMIBValueString(a[0], &variable, true),
 			}
 		case "lldpRemPortId":
 			if rn, ok := remoteMap[a[1]]; ok {
@@ -268,7 +268,7 @@ func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworks
 				if len(b) < 2 {
 					return nil
 				}
-				id := datastore.GetMIBValueString(a[0], &variable, false)
+				id := datastore.GetMIBValueString(a[0], &variable, true)
 				rn.Ports = append(rn.Ports, datastore.PortEnt{
 					ID:    id,
 					Index: b[1],
@@ -278,7 +278,7 @@ func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworks
 			}
 		case "lldpRemSysName":
 			if rn, ok := remoteMap[a[1]]; ok {
-				rn.Name = datastore.GetMIBValueString(a[0], &variable, false)
+				rn.Name = datastore.GetMIBValueString(a[0], &variable, true)
 			}
 		case "lldpRemSysDesc":
 			if rn, ok := remoteMap[a[1]]; ok {
@@ -345,7 +345,7 @@ func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworks
 		}
 		switch a[0] {
 		case "ipNetToMediaPhysAddress":
-			arpMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, false)
+			arpMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, true)
 		}
 		return nil
 	})
@@ -358,7 +358,7 @@ func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworks
 			}
 			switch a[0] {
 			case "atPhysAddress":
-				arpMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, false)
+				arpMap[a[1]] = datastore.GetMIBValueString(a[0], &variable, true)
 			}
 			return nil
 		})

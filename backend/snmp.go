@@ -823,7 +823,7 @@ func GetRMON(n *datastore.NodeEnt, t string) *RMONEnt {
 		}
 		name := a[0]
 		index := a[1]
-		value := datastore.GetMIBValueString(name, &variable, false)
+		value := datastore.GetMIBValueString(name, &variable, true)
 		vendor := ""
 		mi := datastore.FindMIBInfo(name)
 		if mi != nil && mi.Type == "PhysAddress" {

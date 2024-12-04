@@ -312,7 +312,7 @@ func doPollingSnmpCount(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	}
 	if err := agent.Walk(oid, func(variable gosnmp.SnmpPDU) error {
 		name := datastore.MIBDB.OIDToName(variable.Name)
-		s := datastore.GetMIBValueString(name, &variable, false)
+		s := datastore.GetMIBValueString(name, &variable, true)
 		if regexFilter != nil && !regexFilter.Match([]byte(s)) {
 			return nil
 		}
@@ -543,7 +543,7 @@ func getSnmpIndex(n *datastore.NodeEnt, name string) map[string]string {
 		n := datastore.MIBDB.OIDToName(variable.Name)
 		a := strings.SplitN(n, ".", 2)
 		if len(a) == 2 {
-			ret[a[1]] = datastore.GetMIBValueString(a[0], &variable, false)
+			ret[a[1]] = datastore.GetMIBValueString(a[0], &variable, true)
 		}
 		return nil
 	}); err != nil {
