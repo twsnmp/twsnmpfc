@@ -16,9 +16,10 @@
           全アドレス:{{ discover.Stat.Total }} / 送信済み:{{
             discover.Stat.Sent
           }}
-          / 発見:{{ discover.Stat.Found }} 経過時間:{{ time }} / 速度{{
-            speed
-          }}件/秒
+          / 待ち:{{ discover.Stat.Wait }} / 発見:{{
+            discover.Stat.Found
+          }}
+          経過時間:{{ time }} / 速度{{ speed }}件/秒
         </v-list-item-subtitle>
         <v-list-item-subtitle v-if="!discover.Conf.Active">
           全アドレス:{{ discover.Stat.Total }} / 実行回数:{{
@@ -179,13 +180,18 @@
           </template>
         </v-slider>
         <v-switch
-          v-model="basicPolling"
-          label="基本的なポーリングを自動追加"
+          v-model="discover.Conf.AddNetwork"
+          label="LLDP対応ノードはネットワークノードも追加"
           dense
         ></v-switch>
         <v-switch
-          v-model="discover.Conf.AddNetwork"
-          label="LLDP対応ノードはネットワークノードも追加"
+          v-model="discover.Conf.ReCheck"
+          label="既存のIPアドレスも再チェック"
+          dense
+        ></v-switch>
+        <v-switch
+          v-model="basicPolling"
+          label="基本的なポーリングを自動追加"
           dense
         ></v-switch>
       </v-card-text>
@@ -244,7 +250,8 @@ export default {
           StartIP: '',
           EndIP: '',
           Timeout: 1,
-          Retry: 1,
+          Retry: 0,
+          ReCheck: false,
           X: 0,
           Y: 0,
           AutoAddPollings: [],
@@ -260,6 +267,7 @@ export default {
           SSH: 0,
           StartTime: 0,
           Now: 0,
+          Wait: 0,
         },
       },
       error: false,

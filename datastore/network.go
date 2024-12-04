@@ -150,6 +150,21 @@ func FindNetwork(id, ip string) *NetworkEnt {
 	return ret
 }
 
+// FindNetworkByIP : 管理IPでNetwrorkを検索する
+func FindNetworkByIP(ip string) *NetworkEnt {
+	var ret *NetworkEnt
+	networks.Range(func(_, v interface{}) bool {
+		if n, ok := v.(*NetworkEnt); ok {
+			if n.IP == ip {
+				ret = n
+				return false
+			}
+		}
+		return true
+	})
+	return ret
+}
+
 // 保存する前にサイズを補正する
 func checkNetwork(n *NetworkEnt) {
 	xMax := 5 // 最小幅は5ポート分

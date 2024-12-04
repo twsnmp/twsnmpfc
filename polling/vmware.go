@@ -231,7 +231,7 @@ func autoAddVMwarePolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt
 		p.LogMode = 0
 		p.NextTime = 0
 		p.State = "unknown"
-		if err := datastore.AddPolling(p); err != nil {
+		if err := datastore.AddPollingWithDupCheck(p); err != nil {
 			return
 		}
 	}

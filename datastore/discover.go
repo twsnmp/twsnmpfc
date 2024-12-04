@@ -15,9 +15,10 @@ type DiscoverConfEnt struct {
 	EndIP           string `validate:"required,ipv4"`
 	AutoAddPollings []string
 	Timeout         int `validate:"required,gte=1,lte=10"`
-	Retry           int `validate:"required,gte=0,lte=5"`
+	Retry           int `validate:"gte=0,lte=5"`
 	X               int
 	Y               int
+	ReCheck         bool
 	AddNetwork      bool
 }
 

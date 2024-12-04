@@ -43,6 +43,7 @@ type DiscoverStat struct {
 	File      uint32
 	RDP       uint32
 	LDAP      uint32
+	Wait      int
 	StartTime int64
 	Now       int64
 }
@@ -103,6 +104,7 @@ func ActiveDiscover() error {
 	Stat.SSH = 0
 	Stat.File = 0
 	Stat.RDP = 0
+	Stat.Wait = 0
 	Stat.Running = true
 	Stat.StartTime = time.Now().Unix()
 	Stat.Now = Stat.StartTime
@@ -120,7 +122,9 @@ func ActiveDiscover() error {
 					<-sem
 				}()
 				ipstr := ipv4.ToDots(ip)
-				if datastore.FindNodeFromIP(ipstr) != nil {
+				node := datastore.FindNodeFromIP(ipstr)
+				if node != nil && !datastore.DiscoverConf.ReCheck {
+					log.Printf("discover skip ip=%s", ipstr)
 					return
 				}
 				r := ping.DoPing(ipstr, datastore.DiscoverConf.Timeout, datastore.DiscoverConf.Retry, 64, 0)
@@ -142,14 +146,19 @@ func ActiveDiscover() error {
 					dent.X = X
 					dent.Y = Y
 					Stat.Found++
-					X += GRID
-					if _, ok := dent.ServerList["lldp"]; ok {
-						X = GRID
-						Y += GRID
-					} else {
+					if node == nil {
+						X += GRID
 						if X > GRID*10 {
 							X = GRID
 							Y += GRID
+						}
+					}
+					if datastore.DiscoverConf.AddNetwork {
+						if _, ok := dent.ServerList["lldp"]; ok {
+							if datastore.FindNetworkByIP(ipstr) == nil {
+								X = GRID
+								Y += GRID
+							}
 						}
 					}
 					if dent.SysName != "" {
@@ -173,7 +182,11 @@ func ActiveDiscover() error {
 					if dent.ServerList["ssh"] {
 						Stat.SSH++
 					}
-					addFoundNode(&dent)
+					if node == nil {
+						addFoundNode(&dent)
+					} else {
+						updateNode(node, &dent)
+					}
 					mu.Unlock()
 				}
 			}(sip)
@@ -181,6 +194,7 @@ func ActiveDiscover() error {
 		for len(sem) > 0 {
 			time.Sleep(time.Millisecond * 10)
 			Stat.Now = time.Now().Unix()
+			Stat.Wait = len(sem)
 		}
 		Stat.Running = false
 		datastore.AddEventLog(&datastore.EventLogEnt{
@@ -376,7 +390,7 @@ func addFoundNode(dent *discoverInfoEnt) {
 		sl := []string{}
 		for _, s := range []string{
 			"http", "https", "pop3", "imap", "smtp", "ssh", "cifs", "nfs",
-			"vnc", "rdp", "ldap", "ldaps", "kerberos",
+			"vnc", "rdp", "ldap", "ldaps", "kerberos", "lldp",
 		} {
 			if dent.ServerList[s] {
 				sl = append(sl, s)
@@ -398,7 +412,7 @@ func addFoundNode(dent *discoverInfoEnt) {
 		NodeName: n.Name,
 		Event:    "自動発見により追加",
 	})
-	if datastore.DiscoverConf.AddNetwork {
+	if datastore.DiscoverConf.AddNetwork && datastore.FindNetworkByIP(n.IP) == nil {
 		if _, ok := dent.ServerList["lldp"]; ok {
 			datastore.AddNetwork(&datastore.NetworkEnt{
 				Name:      n.Name,
@@ -422,6 +436,55 @@ func addFoundNode(dent *discoverInfoEnt) {
 		return
 	}
 	autoAddPollings(&n)
+}
+
+func updateNode(n *datastore.NodeEnt, dent *discoverInfoEnt) {
+	if n.Name == n.IP {
+		if dent.SysName != "" {
+			n.Name = dent.SysName
+		}
+	}
+	if dent.SysObjectID != "" && n.User == "" && n.Community == "" {
+		n.SnmpMode = datastore.MapConf.SnmpMode
+		n.User = datastore.MapConf.SnmpUser
+		n.Password = datastore.MapConf.SnmpPassword
+		n.Community = datastore.MapConf.Community
+		if n.Icon == "desktop" {
+			n.Icon = "hdd"
+			n.Descr += " / snmp対応"
+		}
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:     "discover",
+		Level:    "info",
+		NodeID:   n.ID,
+		NodeName: n.Name,
+		Event:    "自動発見により更新",
+	})
+	if datastore.DiscoverConf.AddNetwork && datastore.FindNetworkByIP(n.IP) == nil {
+		if _, ok := dent.ServerList["lldp"]; ok {
+			datastore.AddNetwork(&datastore.NetworkEnt{
+				Name:      n.Name,
+				IP:        n.IP,
+				X:         n.X + GRID,
+				Y:         n.Y,
+				SnmpMode:  n.SnmpMode,
+				Community: n.Community,
+				User:      n.User,
+				Password:  n.Password,
+				HPorts:    24,
+				Descr:     time.Now().Format("2006/01/02") + "に発見",
+			})
+		}
+	}
+	if len(datastore.DiscoverConf.AutoAddPollings) < 1 {
+		return
+	}
+	if datastore.DiscoverConf.AutoAddPollings[0] == "basic" {
+		addBasicPolling(dent, n)
+		return
+	}
+	autoAddPollings(n)
 }
 
 func autoAddPollings(n *datastore.NodeEnt) {
@@ -455,7 +518,7 @@ func autoAddPollings(n *datastore.NodeEnt) {
 		p.LogMode = 0
 		p.NextTime = 0
 		p.State = "unknown"
-		if err := datastore.AddPolling(p); err != nil {
+		if err := datastore.AddPollingWithDupCheck(p); err != nil {
 			log.Printf("discover err=%v", err)
 			return
 		}
@@ -473,7 +536,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 		Timeout: datastore.MapConf.Timeout,
 		Retry:   datastore.MapConf.Retry,
 	}
-	if err := datastore.AddPolling(p); err != nil {
+	if err := datastore.AddPollingWithDupCheck(p); err != nil {
 		log.Printf("discover err=%v", err)
 		return
 	}
@@ -551,7 +614,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			Timeout: datastore.MapConf.Timeout,
 			Retry:   datastore.MapConf.Retry,
 		}
-		if err := datastore.AddPolling(p); err != nil {
+		if err := datastore.AddPollingWithDupCheck(p); err != nil {
 			log.Printf("discover err=%v", err)
 			return
 		}
@@ -570,7 +633,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 		Timeout: datastore.MapConf.Timeout,
 		Retry:   datastore.MapConf.Retry,
 	}
-	if err := datastore.AddPolling(p); err != nil {
+	if err := datastore.AddPollingWithDupCheck(p); err != nil {
 		log.Printf("discover err=%v", err)
 		return
 	}
@@ -587,7 +650,7 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			Timeout: datastore.MapConf.Timeout,
 			Retry:   datastore.MapConf.Retry,
 		}
-		if err := datastore.AddPolling(p); err != nil {
+		if err := datastore.AddPollingWithDupCheck(p); err != nil {
 			log.Printf("discover err=%v", err)
 			return
 		}
