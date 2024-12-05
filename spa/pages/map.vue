@@ -114,6 +114,12 @@
               ></v-text-field>
             </v-col>
             <v-col>
+              <v-text-field
+                v-model="editNode.MAC"
+                label="MACアドレス"
+              ></v-text-field>
+            </v-col>
+            <v-col>
               <v-select
                 v-model="editNode.AddrMode"
                 :items="$addrModeList"

@@ -201,7 +201,7 @@ func updateArpTable(ip, mac string) {
 	if !strings.Contains(ip, ".") || !strings.ContainsAny(mac, ":-") {
 		return
 	}
-	mac = normMACAddr(mac)
+	mac = NormMACAddr(mac)
 	if strings.HasPrefix(mac, "FF") || strings.HasPrefix(mac, "01") {
 		return
 	}
@@ -245,7 +245,7 @@ func updateArpTable(ip, mac string) {
 	}
 }
 
-func normMACAddr(m string) string {
+func NormMACAddr(m string) string {
 	m = strings.Replace(m, "-", ":", -1)
 	a := strings.Split(m, ":")
 	r := ""

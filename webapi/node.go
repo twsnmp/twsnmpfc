@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/logger"
 	"github.com/twsnmp/twsnmpfc/ping"
 	"github.com/twsnmp/twsnmpfc/wol"
 )
@@ -99,6 +100,19 @@ func postNodeUpdate(c echo.Context) error {
 	n.URL = nu.URL
 	n.AddrMode = nu.AddrMode
 	n.AutoAck = nu.AutoAck
+	if n.MAC != nu.MAC {
+		if nu.MAC != "" {
+			mac := logger.NormMACAddr(nu.MAC)
+			v := datastore.FindVendor(mac)
+			if v != "" {
+				mac += fmt.Sprintf("(%s)", v)
+			}
+			n.MAC = mac
+		} else {
+			n.MAC = ""
+		}
+	}
+	datastore.UpdateNode(n)
 	datastore.AddEventLog(&datastore.EventLogEnt{
 		Type:     "user",
 		Level:    "info",

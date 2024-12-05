@@ -582,7 +582,7 @@ export default {
         Y: 64,
         Descr: '',
         Icon: 'desktop',
-        MAC: '',
+        MAC: this.selected.ID,
         SnmpMode: '',
         Community: '',
         User: '',

@@ -130,6 +130,23 @@ func AddNode(n *NodeEnt) error {
 	return nil
 }
 
+func UpdateNode(n *NodeEnt) error {
+	st := time.Now()
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	s, err := json.Marshal(n)
+	if err != nil {
+		return err
+	}
+	db.Batch(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("nodes"))
+		return b.Put([]byte(n.ID), s)
+	})
+	log.Printf("UpdateNode name=%s dur=%v", n.Name, time.Since(st))
+	return nil
+}
+
 func setIPv6AndMAC(n *NodeEnt) {
 	if n.MAC == "" {
 		ForEachDevices(func(d *DeviceEnt) bool {
@@ -333,7 +350,7 @@ func CheckNodeAddress(ip, mac, oldmac string) {
 	// IPv4
 	ForEachNodes(func(n *NodeEnt) bool {
 		if n.IP == ip {
-			if !strings.Contains(n.MAC, mac) {
+			if n.MAC == "" {
 				v := FindVendor(mac)
 				if v != "" {
 					mac += fmt.Sprintf("(%s)", v)
