@@ -270,6 +270,13 @@
                 label="モバイルアプリからの接続を許可する"
               ></v-switch>
             </v-col>
+            <v-col>
+              <v-text-field
+                v-model="mapconf.ArpWatchRange"
+                label="ARP監視のアドレス範囲"
+                required
+              />
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col>

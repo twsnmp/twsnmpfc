@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/security"
@@ -57,6 +59,7 @@ type MapConfEnt struct {
 	DisableOperLog  bool
 	MapSize         int
 	IconSize        int
+	ArpWatchRange   string
 }
 
 func initConf() {
@@ -156,6 +159,10 @@ func loadConf() error {
 		if err := SaveInfluxdbConf(); err != nil {
 			log.Printf("load conf err=%v", err)
 		}
+	}
+	if MapConf.ArpWatchRange == "" {
+		checkArpWatchRange()
+		SaveMapConf()
 	}
 	return err
 }
@@ -269,6 +276,7 @@ func SaveMapConf() error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
+	checkArpWatchRange()
 	s, err := json.Marshal(MapConf)
 	if err != nil {
 		return err
@@ -403,4 +411,51 @@ func ResetPassword(ds string) error {
 // Image Iconを取得する
 func GetImageIcon(id string) ([]byte, error) {
 	return os.ReadFile(filepath.Join(dspath, "icons", id))
+}
+
+// ARP監視のIP範囲をネットワークインターフェースから取得する
+func checkArpWatchRange() bool {
+	if MapConf.ArpWatchRange != "" {
+		return false
+	}
+	ifs, err := net.Interfaces()
+	if err != nil {
+		log.Printf("check app watch range err=%v", err)
+		return false
+	}
+	cidrs := []string{}
+	cidrMap := make(map[string]bool)
+	for _, i := range ifs {
+		if (i.Flags&net.FlagLoopback) == net.FlagLoopback ||
+			(i.Flags&net.FlagUp) != net.FlagUp ||
+			(i.Flags&net.FlagPointToPoint) == net.FlagPointToPoint ||
+			len(i.HardwareAddr) != 6 {
+			continue
+		}
+		addrs, err := i.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, a := range addrs {
+			ip, ipnet, err := net.ParseCIDR(a.String())
+			if err != nil {
+				continue
+			}
+			if ip.To4() == nil || !ip.IsGlobalUnicast() {
+				continue
+			}
+			if !strings.Contains(a.String(), ".") {
+				continue
+			}
+			r := ipnet.String()
+			if _, ok := cidrMap[r]; ok {
+				//重複しないようにする
+				continue
+			}
+			cidrMap[r] = true
+			cidrs = append(cidrs, r)
+		}
+	}
+	MapConf.ArpWatchRange = strings.Join(cidrs, ",")
+	return MapConf.ArpWatchRange != ""
 }

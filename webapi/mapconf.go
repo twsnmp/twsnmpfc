@@ -46,6 +46,7 @@ func getMapConf(c echo.Context) error {
 	r.IconSize = datastore.MapConf.IconSize
 	r.AutoCharCode = datastore.MapConf.AutoCharCode
 	r.DisableOperLog = datastore.MapConf.DisableOperLog
+	r.ArpWatchRange = datastore.MapConf.ArpWatchRange
 	if r.IconSize == 0 {
 		r.IconSize = 32
 	}
@@ -92,7 +93,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.MapSize = mc.MapSize
 	datastore.MapConf.IconSize = mc.IconSize
 	datastore.MapConf.AutoCharCode = mc.AutoCharCode
-	datastore.MapConf.DisableOperLog = mc.DisableOperLog
+	datastore.MapConf.ArpWatchRange = mc.ArpWatchRange
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
