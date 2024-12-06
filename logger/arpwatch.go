@@ -116,6 +116,12 @@ func makeLoacalCheckAddrs() {
 				// 発見済みは登録しない
 				continue
 			}
+			if r := datastore.GetIPReport(sa); r != nil {
+				// IPレポートにあるものも登録しない
+				localHitCount++
+				ipMap[sa] = true
+				continue
+			}
 			if _, ok := ipMap[sa]; ok {
 				// 同じIPアドレスを追加しない。
 				continue
