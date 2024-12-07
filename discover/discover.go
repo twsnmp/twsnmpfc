@@ -424,6 +424,7 @@ func addFoundNode(dent *discoverInfoEnt) {
 				User:      n.User,
 				Password:  n.Password,
 				HPorts:    24,
+				Ports:     []datastore.PortEnt{},
 				Descr:     time.Now().Format("2006/01/02") + "に発見",
 			})
 		}
@@ -473,6 +474,7 @@ func updateNode(n *datastore.NodeEnt, dent *discoverInfoEnt) {
 				User:      n.User,
 				Password:  n.Password,
 				HPorts:    24,
+				Ports:     []datastore.PortEnt{},
 				Descr:     time.Now().Format("2006/01/02") + "に発見",
 			})
 		}

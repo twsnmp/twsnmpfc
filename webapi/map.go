@@ -41,6 +41,9 @@ func getMap(c echo.Context) error {
 		return true
 	})
 	datastore.ForEachNetworks(func(n *datastore.NetworkEnt) bool {
+		if n.Ports == nil {
+			n.Ports = []datastore.PortEnt{}
+		}
 		r.Networks[n.ID] = n
 		return true
 	})
