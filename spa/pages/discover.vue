@@ -180,11 +180,13 @@
           </template>
         </v-slider>
         <v-switch
+          v-if="discover.Conf.Active"
           v-model="discover.Conf.AddNetwork"
           label="LLDP対応ノードはネットワークノードも追加"
           dense
         ></v-switch>
         <v-switch
+          v-if="discover.Conf.Active"
           v-model="discover.Conf.ReCheck"
           label="既存のIPアドレスも再チェック"
           dense
