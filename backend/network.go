@@ -278,7 +278,7 @@ func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworks
 			}
 		case "lldpRemSysName":
 			if rn, ok := remoteMap[a[1]]; ok {
-				rn.Name = datastore.GetMIBValueString(a[0], &variable, true)
+				rn.Name = datastore.GetMIBValueString(a[0], &variable, false)
 			}
 		case "lldpRemSysDesc":
 			if rn, ok := remoteMap[a[1]]; ok {
@@ -316,6 +316,7 @@ func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworks
 			// 登録済みならラインの候補に
 			for _, rp := range rnr.Ports {
 				for _, frp := range rn.Ports {
+					log.Printf("rp=%+v frp=%+v", rp, frp)
 					if frp.ID == rp.ID {
 						for _, lp := range n.Ports {
 							if lp.Index == frp.Index {
