@@ -57,6 +57,7 @@ export default {
     '@/plugins/echarts/rmon.js',
     '@/plugins/echarts/ping.js',
     '@/plugins/echarts/eventlog.js',
+    '@/plugins/echarts/ipam.js',
     '@/plugins/vpanel.js',
   ],
 

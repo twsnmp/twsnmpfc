@@ -48,6 +48,25 @@
           </v-list-group>
           <v-list-group no-action sub-group>
             <template #activator>
+              <v-list-item-title>IPアドレス分析</v-list-item-title>
+            </template>
+            <v-list-item
+              v-for="(item, i) in ipamMenus"
+              :key="i"
+              :to="item.to"
+              router
+              exact
+            >
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title>{{ item.title }} </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
+          <v-list-group no-action sub-group>
+            <template #activator>
               <v-list-item-title>ユーザー分析</v-list-item-title>
             </template>
             <v-list-item
@@ -355,6 +374,18 @@ export default {
           to: '/report/wifiAP',
         },
       ],
+      ipamMenus: [
+        {
+          icon: 'mdi-gauge',
+          title: '使用状況',
+          to: '/report/ipam',
+        },
+        {
+          icon: 'mdi-format-list-bulleted-type',
+          title: 'アドレス一覧',
+          to: '/report/ipreport',
+        },
+      ],
       userMenus: [
         {
           icon: 'mdi-account-check',
@@ -384,11 +415,6 @@ export default {
           icon: 'mdi-swap-horizontal',
           title: 'フロー',
           to: '/report/flows',
-        },
-        {
-          icon: 'mdi-format-list-bulleted-type',
-          title: 'IPアドレス',
-          to: '/report/ipreport',
         },
       ],
       twpcapMenus: [

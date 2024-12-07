@@ -32,11 +32,10 @@ func arpWatch(stopCh chan bool) {
 		arpTable[a.IP] = a.MAC
 		return true
 	})
-	lastArpWatchRange := datastore.MapConf.ArpWatchRange
 	checkArpTable()
-	makeLoacalCheckAddrs()
 	timer := time.NewTicker(time.Second * 300)
 	pinger := time.NewTicker(time.Second * 5)
+	lastArpWatchRange := ""
 	for {
 		select {
 		case <-stopCh:
@@ -110,14 +109,8 @@ func makeLoacalCheckAddrs() {
 			}
 			sa := ip.String()
 			localIPCount++
-			if _, ok := arpTable[sa]; ok {
-				localHitCount++
-				ipMap[sa] = true
-				// 発見済みは登録しない
-				continue
-			}
 			if r := datastore.GetIPReport(sa); r != nil {
-				// IPレポートにあるものも登録しない
+				// IPレポートに存在するアドレス
 				localHitCount++
 				ipMap[sa] = true
 				continue

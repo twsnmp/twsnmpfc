@@ -1,8 +1,11 @@
 package webapi
 
 import (
+	"encoding/binary"
 	"fmt"
+	"net"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -43,4 +46,78 @@ func resetIPReport(c echo.Context) error {
 		Event: "IPレポートの信用スコアを再計算しました",
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+type IPAMRangeEnt struct {
+	Range  string
+	Size   int
+	Used   int
+	Usage  float64
+	UsedIP []int
+}
+
+// getIPAM : IPAMレポートを取得
+func getIPAM(c echo.Context) error {
+	ret := []*IPAMRangeEnt{}
+	for _, r := range strings.Split(datastore.MapConf.ArpWatchRange, ",") {
+		a := strings.SplitN(r, "-", 2)
+		var sIP uint32
+		var eIP uint32
+		if len(a) == 1 {
+			// CIDR
+			ip, ipnet, err := net.ParseCIDR(r)
+			if err != nil {
+				continue
+			}
+			ipv4 := ip.To4()
+			if ipv4 == nil {
+				continue
+			}
+			sIP = ip2int(ipv4)
+			for eIP = sIP; ipnet.Contains(int2ip(eIP)); eIP++ {
+			}
+			eIP--
+		} else {
+			sIP = ip2int(net.ParseIP(a[0]))
+			eIP = ip2int(net.ParseIP(a[1]))
+		}
+		if sIP >= eIP {
+			continue
+		}
+		e := &IPAMRangeEnt{
+			Range:  r,
+			UsedIP: make([]int, 100),
+		}
+		for nIP := sIP; nIP <= eIP; nIP++ {
+			ip := int2ip(nIP)
+			if !ip.IsGlobalUnicast() || ip.IsMulticast() {
+				continue
+			}
+			sa := ip.String()
+			e.Size++
+			if r := datastore.GetIPReport(sa); r != nil {
+				e.Used++
+				e.UsedIP[100*(nIP-sIP)/(eIP-sIP)]++
+				continue
+			}
+		}
+		if e.Size > 0 {
+			e.Usage = (100.0 * float64(e.Used)) / float64(e.Size)
+		}
+		ret = append(ret, e)
+	}
+	return c.JSON(http.StatusOK, ret)
+}
+
+func ip2int(ip net.IP) uint32 {
+	if len(ip) == 16 {
+		return binary.BigEndian.Uint32(ip[12:16])
+	}
+	return binary.BigEndian.Uint32(ip)
+}
+
+func int2ip(nIP uint32) net.IP {
+	ip := make(net.IP, 4)
+	binary.BigEndian.PutUint32(ip, nIP)
+	return ip
 }
