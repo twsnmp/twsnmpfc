@@ -598,7 +598,7 @@ export default {
         EnableNetflowd: false,
         AILevel: 'high',
         AIThreshold: 81,
-        AIMode: 'lof',
+        AIMode: 'iforest',
         FontSize: 12,
         AutoCharCode: false,
         DisableOperLog: false,
