@@ -94,6 +94,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.IconSize = mc.IconSize
 	datastore.MapConf.AutoCharCode = mc.AutoCharCode
 	datastore.MapConf.ArpWatchRange = mc.ArpWatchRange
+	datastore.MapConf.DisableOperLog = mc.DisableOperLog
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
