@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -128,7 +129,6 @@ func checkResourceAlert() {
 	myMemMean, _ := stats.Mean(myMem)
 	memMean, _ := stats.Mean(mem)
 	loadMean, _ := stats.Mean(load)
-	log.Printf("checkResourceAlert mem=%.2f myMem=%.2f load=%.2f disk=%.2f", memMean, myMemMean, loadMean, disk)
 	level := ""
 	if myMemMean > 90.0 && memMean > 90.0 {
 		level = "high"
@@ -141,7 +141,7 @@ func checkResourceAlert() {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
 			Level: level,
-			Event: "メモリー不足",
+			Event: fmt.Sprintf("メモリー不足 使用率:%0.2f%%", memMean),
 		})
 	}
 	level = ""
@@ -154,14 +154,22 @@ func checkResourceAlert() {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
 			Level: level,
-			Event: "ストレージ容量不足",
+			Event: fmt.Sprintf("ストレージ容量不足 使用率:%0.2f%%", disk),
 		})
 	}
-	if loadMean > float64(runtime.NumCPU()) {
+	level = ""
+	if loadMean > float64(runtime.NumCPU()*4) {
+		level = "high"
+	} else if loadMean > float64(runtime.NumCPU()*2) {
+		level = "low"
+	} else if loadMean > float64(runtime.NumCPU()) {
+		level = "warn"
+	}
+	if level != "" {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
-			Level: "high",
-			Event: "高負荷状態",
+			Level: level,
+			Event: fmt.Sprintf("高負荷状態 CPUコア: %d,負荷:%0.2f%%", runtime.NumCPU(), loadMean),
 		})
 	}
 }
