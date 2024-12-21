@@ -79,6 +79,7 @@ func init() {
 	flag.StringVar(&backupPath, "backup", "", "Backup path")
 	flag.StringVar(&compact, "compact", "", "DB Conmact path")
 	flag.BoolVar(&clearLog, "clearLog", false, "Clear all logs")
+	flag.BoolVar(&datastore.CheckPollingLog, "checkPollingLog", false, "Check and convert old polling logs")
 	flag.BoolVar(&copyBackup, "copybackup", false, "Use copy mode on backup")
 	flag.IntVar(&trapPort, "trapPort", 162, "snmp trap port")
 	flag.IntVar(&netflowPort, "netflowPort", 2055, "netflow port")

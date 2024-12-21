@@ -241,6 +241,8 @@ func loadMailTemplateToMap(t string, fs http.FileSystem) {
 	}
 }
 
+var CheckPollingLog = false
+
 func openDB(path string) error {
 	log.Println("start openDB")
 	var err error
@@ -274,7 +276,9 @@ func openDB(path string) error {
 	if err != nil {
 		log.Printf("setup influxdb err=%v", err)
 	}
-	convertPollingLog()
+	if CheckPollingLog {
+		convertPollingLog()
+	}
 	log.Println("end openDB")
 	return nil
 }

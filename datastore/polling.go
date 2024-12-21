@@ -306,6 +306,7 @@ func convertPollingLog() error {
 			if v == nil {
 				return nil
 			}
+			b.Delete(k) // 先に削除する
 			var e PollingLogEnt
 			err := json.Unmarshal(v, &e)
 			if err != nil {
@@ -316,7 +317,6 @@ func convertPollingLog() error {
 				bs.Put(k, v)
 				count++
 			}
-			b.Delete(k)
 			return nil
 		})
 		log.Printf("convertPollingLog count=%d dur=%v", count, time.Since(st))
