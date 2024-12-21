@@ -587,3 +587,29 @@ func deleteOldLogBatchSub(st string, b *bbolt.Bucket) int {
 	}
 	return delCount
 }
+
+// ClearAllLogOnDB : コマンドからDBをオープンしてログとレーポートをすべて削除します。
+func ClearAllLogOnDB(ds string) error {
+	dbPath := filepath.Join(ds, "twsnmpfc.db")
+	_, err := os.Stat(dbPath)
+	if err != nil {
+		return err
+	}
+	db, err := bbolt.Open(dbPath, 0600, nil)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix", "sflow", "sflowCounter", "report"}
+	for _, b := range buckets {
+		db.Batch(func(tx *bbolt.Tx) error {
+			if err := tx.DeleteBucket([]byte(b)); err != nil {
+				log.Printf("ClearAllLogOnDB Delete bucket err=%v", err)
+				return nil
+			}
+			tx.CreateBucketIfNotExists([]byte(b))
+			return nil
+		})
+	}
+	return nil
+}

@@ -46,6 +46,8 @@ var timeout int
 var compact string
 var backupPath string
 var deleteOldLog string
+var clearLog bool
+
 var copyBackup bool
 var version = "vx.x.x"
 var commit = ""
@@ -76,6 +78,7 @@ func init() {
 	flag.IntVar(&timeout, "timeout", 24, "session timeout 0 is unlimit")
 	flag.StringVar(&backupPath, "backup", "", "Backup path")
 	flag.StringVar(&compact, "compact", "", "DB Conmact path")
+	flag.BoolVar(&clearLog, "clearLog", false, "Clear all logs")
 	flag.BoolVar(&copyBackup, "copybackup", false, "Use copy mode on backup")
 	flag.IntVar(&trapPort, "trapPort", 162, "snmp trap port")
 	flag.IntVar(&netflowPort, "netflowPort", 2055, "netflow port")
@@ -147,6 +150,15 @@ func main() {
 			log.Fatalf("compact db err=%v", err)
 		} else {
 			log.Printf("compact db done dur=%v", time.Since(st))
+		}
+		os.Exit(0)
+	}
+	if clearLog {
+		st := time.Now()
+		if err := datastore.ClearAllLogOnDB(dataStorePath); err != nil {
+			log.Fatalf("clear logs err=%v", err)
+		} else {
+			log.Printf("clear logs done dur=%v", time.Since(st))
 		}
 		os.Exit(0)
 	}
