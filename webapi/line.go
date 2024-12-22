@@ -23,6 +23,21 @@ func deleteLine(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
+func deleteLineByID(c echo.Context) error {
+	id := c.Param("id")
+	l := datastore.GetLine(id)
+	if l == nil {
+		// 既に削除済み
+		return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+	}
+	if err := datastore.DeleteLine(id); err != nil {
+		log.Printf("delete line err=%v", err)
+		return echo.ErrBadRequest
+	}
+	outLineLog(l, "削除")
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
 func postLine(c echo.Context) error {
 	lu := new(datastore.LineEnt)
 	if err := c.Bind(lu); err != nil {
