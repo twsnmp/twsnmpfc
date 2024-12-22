@@ -225,7 +225,7 @@ const getLinePos = (id,polling) => {
       return undefined
     }
     const net = networks[a[1]]
-    if (!net) {
+    if (!net || !net.Ports) {
       return undefined
     }
     let pi =  -1
