@@ -335,7 +335,5 @@ func SendNotifyChat(l *datastore.EventLogEnt) {
 	switch datastore.NotifyConf.ChatType {
 	case "discord":
 		sendNotifyDiscord(l)
-	case "line":
-		sendNotifyLine(l)
 	}
 }

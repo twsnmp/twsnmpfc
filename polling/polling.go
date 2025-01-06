@@ -389,21 +389,6 @@ func doOneAction(alin []string) bool {
 			}
 			notify.SendChat(&datastore.NotifyConf, subject, level, message)
 		}
-	case "line":
-		{
-			message := al[1]
-			stickerPackageId := 0
-			stickerId := 0
-			if len(al) > 3 {
-				if n, err := strconv.Atoi(al[2]); err == nil {
-					stickerPackageId = n
-					if n, err := strconv.Atoi(al[3]); err == nil {
-						stickerId = n
-					}
-				}
-			}
-			notify.SendLine(&datastore.NotifyConf, message, stickerPackageId, stickerId)
-		}
 	case "wait":
 		{
 			if to, err := strconv.Atoi(al[1]); err == nil {
