@@ -314,7 +314,7 @@ func checkFixMACMode(n *datastore.NodeEnt) {
 	if len(a) < 1 {
 		return
 	}
-	key := strings.TrimSpace(a[0])
+	key := NormMACAddr(strings.TrimSpace(a[0]))
 	if ip, ok := macToIPTable[key]; ok {
 		if ip != n.IP {
 			oldIP := n.IP
@@ -325,6 +325,19 @@ func checkFixMACMode(n *datastore.NodeEnt) {
 				NodeID:   n.ID,
 				NodeName: n.Name,
 				Event:    fmt.Sprintf("MACアドレス固定ノード'%s'のIPアドレスが'%s'から'%s'に変化", n.MAC, oldIP, ip),
+			})
+		}
+	}
+	if mac, ok := arpTable[n.IP]; ok {
+		if mac != key {
+			oldIP := n.IP
+			n.IP = ""
+			datastore.AddEventLog(&datastore.EventLogEnt{
+				Type:     "system",
+				Level:    "warn",
+				NodeID:   n.ID,
+				NodeName: n.Name,
+				Event:    fmt.Sprintf("MACアドレス固定ノード'%s'のIPアドレス'%s'から不明に変化", n.MAC, oldIP),
 			})
 		}
 	}
