@@ -26,10 +26,7 @@ const KeyPass = "TWSNMPba98be2110e9653f249aa2b38706cb02YMI"
 const CertTerm = 1
 
 // GenPrivateKey : Generate RSA Key
-func GenPrivateKey(bits int, keypass string) (string, error) {
-	if keypass == "" {
-		keypass = KeyPass
-	}
+func GenPrivateKey(bits int) (string, error) {
 	// Generate the key of length bits
 	key, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
@@ -39,11 +36,6 @@ func GenPrivateKey(bits int, keypass string) (string, error) {
 	block := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
-	}
-	// Encrypt the pem
-	block, err = x509.EncryptPEMBlock(rand.Reader, block.Type, block.Bytes, []byte(keypass), x509.PEMCipherAES256)
-	if err != nil {
-		return "", err
 	}
 	return string(pem.EncodeToMemory(block)), nil
 }
@@ -160,8 +152,8 @@ func GetRawKeyPem(p, keypass string) string {
 	return string(pem.EncodeToMemory(block))
 }
 
-func MakeWebAPICert(host, keypass, ips string) ([]byte, []byte, error) {
-	k, err := GenPrivateKey(4096, keypass)
+func MakeWebAPICert(host, ips string) ([]byte, []byte, error) {
+	k, err := GenPrivateKey(4096)
 	if err != nil {
 		return []byte{}, []byte{}, err
 	}
@@ -173,7 +165,7 @@ func MakeWebAPICert(host, keypass, ips string) ([]byte, []byte, error) {
 	subject := pkix.Name{
 		CommonName: host,
 	}
-	keyBytes, err := getRSAKeyFromPEM(k, keypass)
+	keyBytes, err := getRSAKeyFromPEM(k, "")
 	if err != nil {
 		return []byte{}, []byte{}, err
 	}

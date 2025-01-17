@@ -252,7 +252,7 @@ func GetImage(path string) ([]byte, error) {
 }
 
 func InitSecurityKey() {
-	key, err := security.GenPrivateKey(4096, "")
+	key, err := security.GenPrivateKey(4096)
 	if err != nil {
 		log.Printf("init security key err=%v", err)
 		return

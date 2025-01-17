@@ -347,11 +347,11 @@ func getServerCert(p *WebAPI) (tls.Certificate, error) {
 		}
 	}
 	// 秘密鍵と証明書を自動作成する
-	certPem, keyPem, err := security.MakeWebAPICert(p.Host, p.Password, p.IP)
+	certPem, keyPem, err := security.MakeWebAPICert(p.Host, p.IP)
 	if err != nil {
 		return tls.Certificate{}, err
 	}
-	keyPemRaw := []byte(security.GetRawKeyPem(string(keyPem), p.Password))
+	keyPemRaw := []byte(security.GetRawKeyPem(string(keyPem), ""))
 	cert, err := tls.X509KeyPair(certPem, keyPemRaw)
 	if err != nil {
 		return cert, err
