@@ -104,6 +104,10 @@ var (
 	NotifySchedule map[string]string
 	// 画像アイコン
 	ImageIcons []string
+	// CA証明書
+	CACert     string
+	ClientCert string
+	ClientKey  string
 )
 
 // Define errors

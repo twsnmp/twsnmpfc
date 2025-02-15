@@ -75,6 +75,7 @@ const typeList = [
   { text: 'SSH', value: 'ssh' },
   { text: 'Report', value: 'report' },
   { text: 'TWSNMP', value: 'twsnmp' },
+  { text: 'TwLogEye', value: 'twlogeye' },
   { text: 'VMware', value: 'vmware' },
   { text: 'LXI', value: 'lxi' },
 ]

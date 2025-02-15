@@ -62,6 +62,10 @@ var resetPassword bool
 
 var saveMapInterval = -1
 
+var clientCert = ""
+var clientKey = ""
+var caCert = ""
+
 func init() {
 	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
 	flag.StringVar(&password, "password", "twsnmpfc!", "Master Password")
@@ -88,6 +92,9 @@ func init() {
 	flag.IntVar(&tcpPort, "tcpPort", 8086, "tcp server port")
 	flag.IntVar(&saveMapInterval, "saveMap", -1, "Save Map Interval default: windows=5min,other=60min")
 	flag.BoolVar(&resetPassword, "resetPassword", false, "Reset user:password to twsnmp:twsnmp")
+	flag.StringVar(&clientCert, "clientCert", "", "Client Cert")
+	flag.StringVar(&clientKey, "clientKey", "", "Client Key path")
+	flag.StringVar(&caCert, "caCert", "", "CA Cert path")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
 			f.Value.Set(s)
@@ -137,6 +144,9 @@ func main() {
 	}
 	datastore.BackupPath = backupPath
 	datastore.CopyBackup = copyBackup
+	datastore.ClientCert = clientCert
+	datastore.ClientKey = clientKey
+	datastore.CACert = caCert
 	if restore != "" {
 		if err := datastore.RestoreDB(dataStorePath, restore); err != nil {
 			log.Fatalf("restore db err=%v", err)

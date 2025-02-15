@@ -1304,7 +1304,6 @@ mteEventActions OBJECT-TYPE
 
         For 'set', an SNMP Set operation is performed according to
         control values in this entry."
-    DEFVAL { {} }  -- No bits set.
     ::= { mteEventEntry 3 }
 
 mteEventEnabled OBJECT-TYPE

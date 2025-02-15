@@ -653,7 +653,6 @@ lldpPortConfigTLVsTxEnable OBJECT-TYPE
         The value of this object must be restored from non-volatile
         storage after a re-initialization of the management system."
     REFERENCE       "IEEE 802.1AB-2005 10.2.1.1"
-    DEFVAL          { {  } } 
     ::= { lldpPortConfigEntry 4 }
  
 

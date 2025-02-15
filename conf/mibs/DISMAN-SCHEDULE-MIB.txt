@@ -257,7 +257,6 @@ schedWeekDay OBJECT-TYPE
          Note that implementations which maintain a list of pending
          activations must re-calculate them when this object is
          changed."
-    DEFVAL      { {} }
     ::= { schedEntry 5 }
 
 schedMonth OBJECT-TYPE
@@ -288,7 +287,6 @@ schedMonth OBJECT-TYPE
          Note that implementations which maintain a list of pending
          activations must re-calculate them when this object is
          changed."
-    DEFVAL      { {} }
     ::= { schedEntry 6 }
 
 schedDay OBJECT-TYPE
@@ -338,7 +336,6 @@ schedDay OBJECT-TYPE
          Note that implementations which maintain a list of pending
          activations must re-calculate them when this object is
          changed."
-    DEFVAL      { {} }
     ::= { schedEntry 7 }
 
 schedHour OBJECT-TYPE
@@ -358,7 +355,6 @@ schedHour OBJECT-TYPE
          Note that implementations which maintain a list of pending
          activations must re-calculate them when this object is
          changed."
-    DEFVAL      { {} }
     ::= { schedEntry 8 }
 
 schedMinute OBJECT-TYPE
@@ -385,7 +381,6 @@ schedMinute OBJECT-TYPE
          Note that implementations which maintain a list of pending
          activations must re-calculate them when this object is
          changed."
-    DEFVAL      { {} }
     ::= { schedEntry 9 }
 
 schedContextName OBJECT-TYPE

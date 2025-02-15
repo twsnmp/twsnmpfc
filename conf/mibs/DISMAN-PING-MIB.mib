@@ -52,7 +52,6 @@ IMPORTS
              - Replaced references to RFC 2575 by RFC 3415
              - Replaced references to RFC 2571 by RFC 3411
              - Replaced references to RFC 2851 by RFC 4001
-             - Added DEFVAL { {} } to definition of
                pingCtlTrapGeneration
              - Changed DEFVAL of object pingCtlDescr from
                DEFVAL { '00'H } to DEFVAL { ''H }
@@ -477,7 +476,6 @@ IMPORTS
 
         By default, no bits are set, indicating that
         none of the above options is selected."
-    DEFVAL { {} }  -- no bits set.
     ::= { pingCtlEntry 13 }
 
  pingCtlTrapProbeFailureFilter OBJECT-TYPE
