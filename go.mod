@@ -45,7 +45,6 @@ require (
 	golang.org/x/net v0.35.0
 	golang.org/x/text v0.22.0
 	google.golang.org/grpc v1.70.0
-	google.golang.org/protobuf v1.36.5
 	gopkg.in/mcuadros/go-syslog.v2 v2.3.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -97,6 +96,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gonum.org/v1/gonum v0.15.1 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250212204824-5a70512c5d8b // indirect
+	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
