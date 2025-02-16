@@ -37,7 +37,7 @@ require (
 	github.com/twsnmp/golof v1.0.0
 	github.com/twsnmp/lxi v0.3.2
 	github.com/twsnmp/rdap v0.9.1
-	github.com/twsnmp/twlogeye/api v0.0.0-20250216070643-76dc5d638196
+	github.com/twsnmp/twlogeye/api v0.1.1
 	github.com/vjeantet/grok v1.0.1
 	github.com/vmware/govmomi v0.48.1
 	go.etcd.io/bbolt v1.4.0
