@@ -14,11 +14,11 @@ import (
 	"time"
 
 	"github.com/robertkrimen/otto"
-	"github.com/twsnmp/twlogeye/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/twsnmp/twlogeye/api"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
