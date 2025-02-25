@@ -823,7 +823,8 @@
     <v-dialog v-model="lineDialog" persistent max-width="70vw">
       <v-card>
         <v-card-title>
-          <span class="headline">ライン編集</span>
+          <span v-if="!editLine.ID" class="headline">ライン追加</span>
+          <span v-if="editLine.ID" class="headline">ライン編集</span>
         </v-card-title>
         <v-alert v-model="lineError" color="error" dense dismissible>
           ラインの保存に失敗しました
@@ -1982,13 +1983,15 @@ export default {
         PollingID: '',
         Info: '',
       }
-      const l = this.map.Lines.find(
-        (e) =>
-          (e.NodeID1 === p[0] && e.NodeID2 === p[1]) ||
-          (e.NodeID1 === p[1] && e.NodeID2 === p[0])
-      )
-      if (l) {
-        this.editLine = l
+      if (!p[0].startsWith('NET:') && !p[1].startsWith('NET:')) {
+        const l = this.map.Lines.find(
+          (e) =>
+            (e.NodeID1 === p[0] && e.NodeID2 === p[1]) ||
+            (e.NodeID1 === p[1] && e.NodeID2 === p[0])
+        )
+        if (l) {
+          this.editLine = l
+        }
       }
       this.selectedLinePolling1 = this.getPollingIndex(
         this.editLine.NodeID1,
