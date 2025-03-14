@@ -42,18 +42,6 @@ func ForEachIPReport(f func(*IPReportEnt) bool) {
 	})
 }
 
-func findIPsFromMAC(mac string) []string {
-	var ret = []string{}
-	ips.Range(func(k, v interface{}) bool {
-		ip := v.(*IPReportEnt)
-		if ip.MAC == mac {
-			ret = append(ret, ip.IP)
-		}
-		return true
-	})
-	return ret
-}
-
 // internal use
 func loadIPs(r *bbolt.Bucket) {
 	b := r.Bucket([]byte("ips"))

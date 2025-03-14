@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -320,9 +321,7 @@ func makeServer(p *WebAPI) *http.Server {
 				tls.TLS_AES_128_GCM_SHA256,
 				tls.TLS_AES_256_GCM_SHA384,
 			},
-			MinVersion:               tls.VersionTLS13,
-			PreferServerCipherSuites: true,
-			InsecureSkipVerify:       true,
+			MinVersion: tls.VersionTLS13,
 		}
 	} else {
 		log.Printf("getServerCert err=%v", err)
@@ -338,7 +337,9 @@ func getServerCert(p *WebAPI) (tls.Certificate, error) {
 	if err == nil {
 		certPem, err := os.ReadFile(cpath)
 		if err == nil {
-			keyPem = []byte(security.GetRawKeyPem(string(keyPem), p.Password))
+			if strings.Contains(string(keyPem), "RSA PRIVATE") {
+				keyPem = []byte(security.GetRawKeyPem(string(keyPem), p.Password))
+			}
 			cert, err := tls.X509KeyPair(certPem, keyPem)
 			if err == nil {
 				log.Println("use old cert")

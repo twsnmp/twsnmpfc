@@ -20,6 +20,7 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/twsnmp/twsnmpfc/logger"
 	"github.com/twsnmp/twsnmpfc/notify"
+	"github.com/twsnmp/twsnmpfc/pki"
 	_ "github.com/twsnmp/twsnmpfc/statik"
 
 	"github.com/twsnmp/twsnmpfc/backend"
@@ -65,6 +66,10 @@ var saveMapInterval = -1
 var clientCert = ""
 var clientKey = ""
 var caCert = ""
+var autoCertURL = ""
+var autoCertEmail = ""
+var autoCertSANs = ""
+var autoCertInsecure = false
 
 func init() {
 	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
@@ -95,6 +100,11 @@ func init() {
 	flag.StringVar(&clientCert, "clientCert", "", "Client Cert")
 	flag.StringVar(&clientKey, "clientKey", "", "Client Key path")
 	flag.StringVar(&caCert, "caCert", "", "CA Cert path")
+	flag.StringVar(&autoCertURL, "autoCertURL", "", "ACME Server URL for auto update server cert")
+	flag.StringVar(&autoCertEmail, "autoCertEmail", "", "EMail address for ACME")
+	flag.StringVar(&autoCertSANs, "autoCertSANs", "", "Auto cert SANs")
+	flag.BoolVar(&autoCertInsecure, "autoCertInsecure", false, "Dont verify Server Cert for ACME")
+
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
 			f.Value.Set(s)
@@ -182,6 +192,13 @@ func main() {
 	}
 	if deleteOldLog != "" {
 		datastore.DeleteOldLogBatch(dataStorePath, deleteOldLog)
+		os.Exit(0)
+	}
+	if autoCertURL != "" {
+		if err := pki.AutoCert(autoCertURL, autoCertEmail, autoCertSANs, dataStorePath, autoCertInsecure); err != nil {
+			log.Fatalf("AutoCert err=%v", err)
+		}
+		log.Println("AutoCertset done")
 		os.Exit(0)
 	}
 	log.SetFlags(0)
