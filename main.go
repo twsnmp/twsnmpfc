@@ -251,6 +251,10 @@ func main() {
 	if err = notify.Start(ctx, wg); err != nil {
 		log.Fatalf("start notify err=%v", err)
 	}
+	log.Println("call pki.Start")
+	if err = pki.Start(ctx, wg); err != nil {
+		log.Fatalf("start pki err=%v", err)
+	}
 	quit := make(chan os.Signal, 1)
 	log.Println("call webapi.Start")
 	w := &webapi.WebAPI{

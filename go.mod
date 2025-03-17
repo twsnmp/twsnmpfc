@@ -15,6 +15,7 @@ require (
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-acme/lego v2.7.2+incompatible
 	github.com/go-acme/lego/v4 v4.22.2
+	github.com/go-jose/go-jose/v4 v4.0.4
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/gopacket v1.1.19
@@ -34,6 +35,7 @@ require (
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/signalsciences/ipv4 v1.4.0
 	github.com/sleepinggenius2/gosmi v0.4.4
+	github.com/smallstep/scep v0.0.0-20250221100424-171a5fa4fb1b
 	github.com/tehmaze/netflow v0.0.0-20170921210347-852af103667f
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
 	github.com/twsnmp/golof v1.0.0
@@ -67,7 +69,6 @@ require (
 	github.com/chewxy/hm v1.0.0 // indirect
 	github.com/chewxy/math32 v1.11.1 // indirect
 	github.com/chewxy/tightywhities v1.0.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
@@ -89,6 +90,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
+	github.com/smallstep/pkcs7 v0.2.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.14 // indirect
 	github.com/tklauser/numcpus v0.9.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

@@ -283,6 +283,11 @@ func openDB(path string) error {
 	if CheckPollingLog {
 		convertPollingLog()
 	}
+	log.Println("loadPKIConf")
+	err = loadPKIConf()
+	if err != nil {
+		log.Printf("load PKIConf err=%v", err)
+	}
 	log.Println("end openDB")
 	return nil
 }
@@ -290,7 +295,7 @@ func openDB(path string) error {
 func initDB() error {
 	buckets := []string{"config", "nodes", "items", "lines", "networks", "pollings", "logs", "pollingLogs",
 		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report", "grok", "images",
-		"sflow", "sflowCounter",
+		"sflow", "sflowCounter", "certs",
 	}
 	reports := []string{"devices", "users", "flows", "servers", "ips",
 		"ether", "dns", "radius", "tls", "cert",

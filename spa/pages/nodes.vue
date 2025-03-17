@@ -75,7 +75,9 @@
             mdi-minus-network
           </v-icon>
           <v-icon small @click="editNodeFunc(item)"> mdi-pencil </v-icon>
-          <v-icon small @click="deleteNodeFunc(item)"> mdi-delete </v-icon>
+          <v-icon small color="red" @click="deleteNodeFunc(item)">
+            mdi-delete
+          </v-icon>
           <v-icon v-if="item.MAC" small @click="doWOL(item.ID)">
             mdi-alarm
           </v-icon>

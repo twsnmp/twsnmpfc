@@ -262,6 +262,18 @@ func setup(p *WebAPI) {
 	r.GET("/mibmods", getMibMods)
 	r.GET("/mibtree", getMibTree)
 	r.GET("/imageIconList", getImageIconList)
+	// PKI
+	r.GET("/pki/hasCA", getHasCA)
+	r.GET("/pki/certs", getPKICerts)
+	r.GET("/pki/createCA", getDefaultCreateCAReq)
+	r.POST("/pki/createCA", postCreateCA)
+	r.POST("/pki/destroyCA", postDestroyCA)
+	r.POST("/pki/createCSR", postCreateCertificateRequest)
+	r.POST("/pki/createCRT", postCreateCertificate)
+	r.DELETE("/pki/revoke/:id", deleteRevokeCert)
+	r.GET("/pki/cert/:id", getExportCert)
+	r.GET("/pki/control", getPKIControl)
+	r.POST("/pki/control", postPKIControl)
 
 	// Mobile API
 	m := e.Group("/mobile")

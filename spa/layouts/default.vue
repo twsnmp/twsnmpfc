@@ -342,6 +342,12 @@ export default {
           readOnly: true,
         },
         {
+          icon: 'mdi-certificate',
+          title: 'PKI',
+          to: '/pki',
+          readOnly: true,
+        },
+        {
           icon: 'mdi-card-search',
           title: 'アドレス分析',
           to: '/report/address',

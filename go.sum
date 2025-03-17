@@ -230,6 +230,10 @@ github.com/signalsciences/ipv4 v1.4.0 h1:2K52Rqcpb4+Zeo/K9ZOYiDzUY9oWj45LJrIWeEE
 github.com/signalsciences/ipv4 v1.4.0/go.mod h1:GLCljS+eOHYQuNARmfJQRNY+ElqbRE9Ntj1yC7Wgiwg=
 github.com/sleepinggenius2/gosmi v0.4.4 h1:xgu+Mt7CptuB10IPt3SVXBAA9tARToT4B9xGzjjxQX8=
 github.com/sleepinggenius2/gosmi v0.4.4/go.mod h1:l8OniPmd3bJzw0MXP2/qh7AhP/e+bTY2CNivIhsnDT0=
+github.com/smallstep/pkcs7 v0.2.1 h1:6Kfzr/QizdIuB6LSv8y1LJdZ3aPSfTNhTLqAx9CTLfA=
+github.com/smallstep/pkcs7 v0.2.1/go.mod h1:RcXHsMfL+BzH8tRhmrF1NkkpebKpq3JEM66cOFxanf0=
+github.com/smallstep/scep v0.0.0-20250221100424-171a5fa4fb1b h1:A1pVOceKLBY+QT10XcMFMWTaxct5zFjwIFMnDk13dhA=
+github.com/smallstep/scep v0.0.0-20250221100424-171a5fa4fb1b/go.mod h1:QQhwLqCS13nhv8L5ov7NgusowENUtXdEzdytjmJHdZQ=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/objx v0.5.0/go.mod h1:Yh+to48EsGEfYuaHDzXPcE3xhTkx73EhmCGUpEOglKo=
