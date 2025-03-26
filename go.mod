@@ -6,11 +6,13 @@ toolchain go1.24.0
 
 require (
 	github.com/Cistern/sflow v0.0.0-20240622235316-ed105e3cf9fb
+	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/PuerkitoBio/goquery v1.10.2
 	github.com/Songmu/timeout v0.4.0
 	github.com/beevik/ntp v1.4.3
 	github.com/chewxy/stl v1.3.1
 	github.com/codegaudi/go-iforest v0.0.1
+	github.com/davidebianchi/go-jsonclient v1.5.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-acme/lego v2.7.2+incompatible
@@ -56,6 +58,7 @@ require (
 require (
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	github.com/AlekSi/pointer v1.2.0 // indirect
+	github.com/PaesslerAG/gval v1.0.0 // indirect
 	github.com/Songmu/wrapcommander v0.1.0 // indirect
 	github.com/alecthomas/participle v0.7.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect

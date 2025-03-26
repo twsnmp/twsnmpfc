@@ -105,13 +105,3 @@ func snmptrapd(stopCh chan bool) {
 	<-stopCh
 	log.Printf("stop snmp trapd")
 }
-
-func getTimeTickStr(t int64) string {
-	ft := float64(t) / 100
-	if ft > 3600*24 {
-		return fmt.Sprintf("%.2f日(%d)", ft/(3600*24), t)
-	} else if ft > 3600 {
-		return fmt.Sprintf("%.2f時間(%d)", ft/(3600), t)
-	}
-	return fmt.Sprintf("%.2f秒(%d)", ft, t)
-}

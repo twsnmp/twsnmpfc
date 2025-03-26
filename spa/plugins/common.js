@@ -76,6 +76,7 @@ const typeList = [
   { text: 'Report', value: 'report' },
   { text: 'TWSNMP', value: 'twsnmp' },
   { text: 'TwLogEye', value: 'twlogeye' },
+  { text: 'Pi-hole', value: 'pihole' },
   { text: 'VMware', value: 'vmware' },
   { text: 'LXI', value: 'lxi' },
 ]

@@ -254,6 +254,8 @@ func doPolling(pe *datastore.PollingEnt) {
 		}
 	case "twlogeye":
 		doPollingTwLogEye(pe)
+	case "pihole":
+		docPollingPiHole(pe)
 	}
 	datastore.UpdatePolling(pe)
 	if pe.LogMode == datastore.LogModeAlways || pe.LogMode == datastore.LogModeAI || (pe.LogMode == datastore.LogModeOnChange && oldState != pe.State) {
