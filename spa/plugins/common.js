@@ -107,6 +107,22 @@ const aiThList = [
   { text: '1%以下', value: 74 },
 ]
 
+const extractorList = [
+  {text: '',ID: ''},
+  {
+    text: 'goqueryによるデータ取得',
+    value: 'goquery',
+  },
+  {
+    text: 'getBodyによるデータ取得',
+    value: 'getBody',
+  },
+  {
+    text: 'JSON Pathによるデータ取得',
+    value: 'jsonpath',
+  },
+]
+
 /* eslint prettier/prettier: 0 */
 const iconList = [
   {
@@ -418,6 +434,7 @@ export default (context, inject) => {
   inject('getStateColor', getStateColor)
   inject('getStateIconName', getStateIconName)
   inject('logModeList', logModeList)
+  inject('extractorList', extractorList)
   inject('typeList', typeList)
   inject('levelList', levelList)
   inject('iconList', iconList)

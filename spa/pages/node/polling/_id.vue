@@ -69,7 +69,7 @@
             </td>
             <td></td>
             <td>
-              <v-select v-model="conf.polltype" :items="typeList" label="type">
+              <v-select v-model="conf.polltype" :items="$typeList" label="type">
               </v-select>
             </td>
             <td></td>
@@ -429,7 +429,7 @@
               </td>
               <td></td>
               <td>
-                <v-select v-model="tempType" :items="typeList" label="type">
+                <v-select v-model="tempType" :items="$typeList" label="type">
                 </v-select>
               </td>
               <td></td>
@@ -579,30 +579,6 @@ export default {
         { text: '正常', value: 4 },
         { text: '不明', value: 5 },
       ],
-      typeList: [
-        { text: '', value: '' },
-        { text: 'PING', value: 'ping' },
-        { text: 'SNMP', value: 'snmp' },
-        { text: 'gNMI', value: 'gnmi' },
-        { text: 'TCP', value: 'tcp' },
-        { text: 'HTTP', value: 'http' },
-        { text: 'TLS', value: 'tls' },
-        { text: 'DNS', value: 'dns' },
-        { text: 'NTP', value: 'ntp' },
-        { text: 'SYSLOG', value: 'syslog' },
-        { text: 'SNMP TRAP', value: 'trap' },
-        { text: 'NetFlow', value: 'netflow' },
-        { text: 'IPFIX', value: 'ipfix' },
-        { text: 'ARP Log', value: 'arplog' },
-        { text: 'Command', value: 'cmd' },
-        { text: 'SSH', value: 'ssh' },
-        { text: 'Report', value: 'report' },
-        { text: 'TWSNMP', value: 'twsnmp' },
-        { text: 'TwLogEye', value: 'twlogeye' },
-        { text: 'Pi-hole', value: 'pihole' },
-        { text: 'VMware', value: 'vmware' },
-        { text: 'LXI', value: 'lxi' },
-      ],
       conf: {
         state: '',
         node: '',
@@ -629,20 +605,7 @@ export default {
       })
     }
     if (this.extractorList.length < 1) {
-      this.extractorList = [
-        {
-          text: '',
-          ID: '',
-        },
-        {
-          text: 'goqueryによるデータ取得',
-          value: 'goquery',
-        },
-        {
-          text: 'getBodyによるデータ取得',
-          value: 'getBody',
-        },
-      ]
+      this.extractorList = this.$extractorList
       const groks = await this.$axios.$get('/api/conf/grok')
       if (groks) {
         groks.forEach((g) => {

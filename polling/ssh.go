@@ -3,11 +3,13 @@ package polling
 // SSH コマンド実行で監視する。
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"strings"
 	"time"
 
+	"github.com/PaesslerAG/jsonpath"
 	"github.com/robertkrimen/otto"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/vjeantet/grok"
@@ -63,6 +65,24 @@ func doPollingSSH(pe *datastore.PollingEnt) {
 			}
 			return otto.UndefinedValue()
 		})
+	} else if extractor == "jsonpath" {
+		var res map[string]interface{}
+		if err := json.Unmarshal(out, &res); err != nil {
+			setPollingError("ssh", pe, err)
+			return
+		}
+		vm.Set("jsonpath", func(call otto.FunctionCall) otto.Value {
+			if call.Argument(0).IsString() {
+				sel := call.Argument(0).String()
+				if v, err := jsonpath.Get(sel, res); err == nil {
+					if ov, err := otto.ToValue(v); err == nil {
+						return ov
+					}
+				}
+			}
+			return otto.UndefinedValue()
+		})
+
 	} else if extractor != "" {
 		grokEnt := datastore.GetGrokEnt(extractor)
 		if grokEnt == nil {

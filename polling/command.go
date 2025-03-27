@@ -3,6 +3,7 @@ package polling
 // 外部コマンド実行で監視する。
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os/exec"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PaesslerAG/jsonpath"
 	"github.com/Songmu/timeout"
 	"github.com/robertkrimen/otto"
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -64,8 +66,25 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 		return
 	} else if extractor == "getBody" {
 		vm.Set("getBody", func(call otto.FunctionCall) otto.Value {
-			if r, err := otto.ToValue(string(stdout)); err == nil {
+			if r, err := otto.ToValue(stdout); err == nil {
 				return r
+			}
+			return otto.UndefinedValue()
+		})
+	} else if extractor == "jsonpath" {
+		var res map[string]interface{}
+		if err := json.Unmarshal([]byte(stdout), &res); err != nil {
+			setPollingError("cmd", pe, err)
+			return
+		}
+		vm.Set("jsonpath", func(call otto.FunctionCall) otto.Value {
+			if call.Argument(0).IsString() {
+				sel := call.Argument(0).String()
+				if v, err := jsonpath.Get(sel, res); err == nil {
+					if ov, err := otto.ToValue(v); err == nil {
+						return ov
+					}
+				}
 			}
 			return otto.UndefinedValue()
 		})

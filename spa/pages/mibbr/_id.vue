@@ -567,20 +567,7 @@ export default {
     this.mibget.NodeID = r.Node.ID
     this.mibtree = r.MIBTree
     if (this.extractorList.length < 1) {
-      this.extractorList = [
-        {
-          text: '',
-          ID: '',
-        },
-        {
-          text: 'goqueryによるデータ取得',
-          value: 'goquery',
-        },
-        {
-          text: 'getBodyによるデータ取得',
-          value: 'getBody',
-        },
-      ]
+      this.extractorList = this.$extractorList
       const groks = await this.$axios.$get('/api/conf/grok')
       if (groks) {
         groks.forEach((g) => {
