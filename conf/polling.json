@@ -567,5 +567,20 @@
     "Level": "off",
     "Descr": "ARPログを監視して新規のMACアドレスの登録を検知する",
     "AutoMode": "disable"
+  },
+  {
+    "Name": "Pi-holeブロック率",
+    "Type": "pihole",
+    "Mode": "stats/summary",
+    "Script": "var pb = jsonpath('$.queries.percent_blocked');\nsetResult('percent_blocked',pb);\npb < 10",
+    "Level": "off",
+    "Descr": "Pi-holeのブロック率の監視"
+  },
+  {
+    "Name": "TwLogEye連携",
+    "Type": "twlogeye",
+    "Level": "low",
+    "Script": "count < 1",
+    "Descr": "TwLogEye連携"
   }
 ]
