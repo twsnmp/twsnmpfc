@@ -46,7 +46,7 @@ func doPollingDNS(pe *datastore.PollingEnt) {
 		return
 	}
 	vm := otto.New()
-	addJavaScriptFunctions(pe, vm)
+	setVMFuncAndValues(pe, vm)
 	_ = vm.Set("rtt", rTime)
 	_ = vm.Set("count", len(out))
 	pe.Result["rtt"] = float64(rTime)

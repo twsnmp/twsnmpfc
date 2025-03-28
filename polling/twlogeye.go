@@ -86,7 +86,7 @@ func doPollingTwLogEye(pe *datastore.PollingEnt) {
 		return
 	}
 	vm := otto.New()
-	addJavaScriptFunctions(pe, vm)
+	setVMFuncAndValues(pe, vm)
 	vm.Set("count", count)
 	vm.Set("interval", pe.PollInt)
 	value, err := vm.Run(pe.Script)

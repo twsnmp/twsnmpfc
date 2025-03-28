@@ -32,8 +32,8 @@ func doPollingLxi(pe *datastore.PollingEnt) {
 	}
 	defer d.Close()
 	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
 	pe.Result = make(map[string]interface{})
-	addJavaScriptFunctions(pe, vm)
 	vm.Set("lxiCommand", func(call otto.FunctionCall) otto.Value {
 		if call.Argument(0).IsString() {
 			f := call.Argument(0).String()

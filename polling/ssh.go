@@ -25,7 +25,7 @@ func doPollingSSH(pe *datastore.PollingEnt) {
 		port = pe.Mode
 	}
 	vm := otto.New()
-	addJavaScriptFunctions(pe, vm)
+	setVMFuncAndValues(pe, vm)
 	cl := strings.Split(cmd, " ")
 	if len(cl) < 1 {
 		setPollingError("ssh", pe, fmt.Errorf("no cmd"))

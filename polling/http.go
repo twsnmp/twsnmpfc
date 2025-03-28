@@ -63,7 +63,7 @@ func doPollingHTTP(pe *datastore.PollingEnt) {
 
 func checkHTTPResp(pe *datastore.PollingEnt, status, body string, code int, rTime int64) (bool, error) {
 	vm := otto.New()
-	addJavaScriptFunctions(pe, vm)
+	setVMFuncAndValues(pe, vm)
 	vm.Set("status", status)
 	vm.Set("code", code)
 	vm.Set("rtt", rTime)

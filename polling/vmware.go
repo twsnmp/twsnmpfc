@@ -67,7 +67,7 @@ func doPollingVMWare(pe *datastore.PollingEnt) {
 		return
 	}
 	vm := otto.New()
-	addJavaScriptFunctions(pe, vm)
+	setVMFuncAndValues(pe, vm)
 	for k, v := range rMap {
 		vm.Set(k, v)
 		pe.Result[k] = v

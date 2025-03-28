@@ -180,6 +180,8 @@ func doPollingNetFlowTraffic(pe *datastore.PollingEnt) {
 		}
 		return true
 	})
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
 	pe.Result["lastTime"] = et
 	pe.Result["bytes"] = totalBytes
 	pe.Result["packets"] = totalPackets
@@ -189,8 +191,6 @@ func doPollingNetFlowTraffic(pe *datastore.PollingEnt) {
 		setPollingState(pe, "normal")
 		return
 	}
-	vm := otto.New()
-	addJavaScriptFunctions(pe, vm)
 	vm.Set("bps", bps)
 	vm.Set("pps", pps)
 	vm.Set("bytes", totalBytes)

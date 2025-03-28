@@ -98,7 +98,7 @@ func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target str
 		return
 	}
 	vm := otto.New()
-	addJavaScriptFunctions(pe, vm)
+	setVMFuncAndValues(pe, vm)
 	vm.Set("data", string(data))
 	vm.Set("now", time.Now().UnixMilli())
 	if v, ok := pe.Result["data"]; ok {
@@ -211,7 +211,7 @@ func gNMISetSubscribeResp(pe *datastore.PollingEnt, rsp *target.SubscribeRespons
 		return
 	}
 	vm := otto.New()
-	addJavaScriptFunctions(pe, vm)
+	setVMFuncAndValues(pe, vm)
 	vm.Set("data", string(data))
 	vm.Set("now", time.Now().UnixMilli())
 	if v, ok := pe.Result["data"]; ok {

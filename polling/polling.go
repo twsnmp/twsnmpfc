@@ -467,7 +467,7 @@ func hasSameNamePolling(nodeID, name string) bool {
 	return r
 }
 
-func addJavaScriptFunctions(pe *datastore.PollingEnt, vm *otto.Otto) {
+func setVMFuncAndValues(pe *datastore.PollingEnt, vm *otto.Otto) {
 	vm.Set("setResult", func(call otto.FunctionCall) otto.Value {
 		if call.Argument(0).IsString() {
 			n := call.Argument(0).String()
@@ -499,4 +499,12 @@ func addJavaScriptFunctions(pe *datastore.PollingEnt, vm *otto.Otto) {
 		}
 		return otto.Value{}
 	})
+	if len(pe.Result) > 0 {
+		for k, v := range pe.Result {
+			if k != "error" {
+				vm.Set(k+"_last", v)
+			}
+		}
+	}
+	vm.Set("iterval", pe.PollInt)
 }

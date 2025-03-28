@@ -50,6 +50,8 @@ func doPollingReport(pe *datastore.PollingEnt) {
 		setPollingError("report", pe, fmt.Errorf("no report data"))
 		return
 	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
 	pe.Result = make(map[string]interface{})
 	pe.Result["count"] = float64(len(scores))
 	pe.Result["min"], _ = stats.Min(scores)
@@ -68,8 +70,6 @@ func doPollingReport(pe *datastore.PollingEnt) {
 		setPollingState(pe, "normal")
 		return
 	}
-	vm := otto.New()
-	addJavaScriptFunctions(pe, vm)
 	vm.Set("count", pe.Result["count"])
 	vm.Set("max", pe.Result["max"])
 	vm.Set("min", pe.Result["min"])

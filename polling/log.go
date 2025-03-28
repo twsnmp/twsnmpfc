@@ -76,7 +76,7 @@ func doPollingLog(pe *datastore.PollingEnt) {
 	}
 	et := time.Now().UnixNano()
 	vm := otto.New()
-	addJavaScriptFunctions(pe, vm)
+	setVMFuncAndValues(pe, vm)
 	count := 0
 	okCount := 0
 	failed := false

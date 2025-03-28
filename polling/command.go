@@ -23,8 +23,8 @@ func doPollingCmd(pe *datastore.PollingEnt) {
 	extractor := pe.Extractor
 	script := pe.Script
 	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
 	pe.Result = make(map[string]interface{})
-	addJavaScriptFunctions(pe, vm)
 	cl := strings.Split(cmd, " ")
 	if len(cl) < 1 {
 		setPollingError("cmd", pe, fmt.Errorf("no cmd"))

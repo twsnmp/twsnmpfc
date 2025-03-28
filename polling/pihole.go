@@ -25,15 +25,7 @@ func docPollingPiHole(pe *datastore.PollingEnt) {
 		url = fmt.Sprintf("http://%s", n.IP)
 	}
 	vm := otto.New()
-	addJavaScriptFunctions(pe, vm)
-	if len(pe.Result) > 0 {
-		for k, v := range pe.Result {
-			if k != "error" {
-				vm.Set(k+"_last", v)
-			}
-		}
-	}
-	vm.Set("iterval", pe.PollInt)
+	setVMFuncAndValues(pe, vm)
 	var err error
 	var sid string
 	var rTime int64
