@@ -1110,7 +1110,6 @@ export default {
         this.importPollingTemplateError = true
         return
       }
-      console.log(tmp)
       this.editPolling.Name = tmp.Name || ''
       this.editPolling.Type = tmp.Type || 'ping'
       this.editPolling.Mode = tmp.Mode || ''
