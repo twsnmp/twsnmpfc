@@ -793,7 +793,7 @@
           <span class="headline">ポート定義</span>
         </v-card-title>
         <v-alert v-model="portDefImportError" color="error" dense dismissible>
-          ポート定義を読み込みに失敗しました
+          ポート定義の読み込みに失敗しました
         </v-alert>
         <v-card-text>
           <v-file-input
@@ -2739,7 +2739,7 @@ export default {
     },
     async doImportPortDef() {
       this.portDefImportError = false
-      if (!this.portDefFile) {
+      if (!this.checkPortDefFile()) {
         this.portDefImportError = true
         return
       }

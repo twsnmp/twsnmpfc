@@ -349,6 +349,24 @@
             <v-icon>mdi-content-copy</v-icon>
             テンプレート
           </v-btn>
+          <v-btn
+            v-if="editIndex === -1"
+            color="primary"
+            dark
+            @click="showImportPollingTemplateDialog"
+          >
+            <v-icon>mdi-upload</v-icon>
+            インポート
+          </v-btn>
+          <v-btn
+            v-if="editIndex !== -1"
+            color="primary"
+            dark
+            @click="doExportPollingTemplate"
+          >
+            <v-icon>mdi-download</v-icon>
+            エクスポート
+          </v-btn>
           <v-btn color="primary" dark @click="doUpdatePolling">
             <v-icon>mdi-content-save</v-icon>
             保存
@@ -584,6 +602,40 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="importPollingTemplateDialog" persistent max-width="50vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">ポーリングテンプレート</span>
+        </v-card-title>
+        <v-alert
+          v-model="importPollingTemplateError"
+          color="error"
+          dense
+          dismissible
+        >
+          ポーリングテンプレートの読み込みに失敗しました
+        </v-alert>
+        <v-card-text>
+          <v-file-input
+            label="ポーリングテンプレートファイル"
+            accept="application/json"
+            @change="selectPollingTemplateFile"
+          >
+          </v-file-input>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="doImportPollingTemplate">
+            <v-icon>mdi-upload</v-icon>
+            インポート
+          </v-btn>
+          <v-btn color="normal" @click="importPollingTemplateDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -595,6 +647,7 @@ import 'prismjs/components/prism-clike'
 import 'prismjs/components/prism-javascript'
 import 'prismjs/components/prism-regex'
 import 'prismjs/themes/prism-tomorrow.css'
+import { saveAs } from 'file-saver'
 export default {
   components: {
     PrismEditor,
@@ -723,6 +776,9 @@ export default {
         itemsPerPage: 15,
       },
       options: {},
+      importPollingTemplateDialog: false,
+      importPollingTemplateError: false,
+      pollingTemplateFile: undefined,
     }
   },
   async fetch() {
@@ -1031,6 +1087,77 @@ export default {
         return '正常フィルター'
       }
       return 'パラメーター'
+    },
+    showImportPollingTemplateDialog() {
+      this.importPollingTemplateDialog = true
+    },
+    selectPollingTemplateFile(f) {
+      this.pollingTemplateFile = f
+    },
+    async doImportPollingTemplate() {
+      this.importPollingTemplateError = false
+      if (!this.checkPollingTemplateFile()) {
+        this.importPollingTemplateError = true
+        return
+      }
+      const d = await this.getPollingTemplateFileData()
+      if (!d) {
+        this.importPollingTemplateError = true
+        return
+      }
+      const tmp = JSON.parse(d)
+      if (!tmp) {
+        this.importPollingTemplateError = true
+        return
+      }
+      console.log(tmp)
+      this.editPolling.Name = tmp.Name || ''
+      this.editPolling.Type = tmp.Type || 'ping'
+      this.editPolling.Mode = tmp.Mode || ''
+      this.editPolling.Params = tmp.Params || ''
+      this.editPolling.Filter = tmp.Filter || ''
+      this.editPolling.Extractor = tmp.Extractor || ''
+      this.editPolling.Script = tmp.Script || ''
+      this.editPolling.Level = tmp.Level || 'off'
+      this.importPollingTemplateDialog = false
+      this.pollingTemplateFile = null
+    },
+    getPollingTemplateFileData() {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsText(this.pollingTemplateFile)
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = (error) => reject(error)
+      })
+    },
+    checkPollingTemplateFile() {
+      if (!this.pollingTemplateFile) {
+        return false
+      }
+      if (this.pollingTemplateFile.type !== 'application/json') {
+        return false
+      }
+      const SIZE_LIMIT = 1000000 // 1MB
+      if (this.pollingTemplateFile.size > SIZE_LIMIT) {
+        return false
+      }
+      return true
+    },
+    doExportPollingTemplate() {
+      const tmp = {
+        Name: this.editPolling.Name,
+        Type: this.editPolling.Type,
+        Mode: this.editPolling.Mode,
+        Params: this.editPolling.Params,
+        Filter: this.editPolling.Filter,
+        Extractor: this.editPolling.Extractor,
+        Script: this.editPolling.Script,
+        Level: this.editPolling.Level,
+      }
+      const blob = new Blob([JSON.stringify(tmp, null, '  ')], {
+        type: 'application/json',
+      })
+      saveAs(blob, 'twsnmp_polling_template_' + this.editPolling.ID + '.json')
     },
   },
 }
