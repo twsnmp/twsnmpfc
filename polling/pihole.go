@@ -34,13 +34,13 @@ func docPollingPiHole(pe *datastore.PollingEnt) {
 		sid, err = loginToPiHole(url, n.Password, pe.Timeout)
 		endTime := time.Now().UnixNano()
 		if err == nil {
+			rTime = endTime - startTime
 			break
 		}
 		if i > pe.Retry {
 			setPollingError("pihole", pe, err)
 			return
 		}
-		rTime = endTime - startTime
 	}
 	defer logoutFromPiHole(url, sid, pe.Timeout)
 	res, err := getPiHole(url, pe.Mode, sid, pe.Timeout)
