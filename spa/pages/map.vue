@@ -1803,6 +1803,15 @@ export default {
           })
         }
       })
+      l.sort((a, b) => {
+        if (a.text < b.text) {
+          return -1
+        }
+        if (a.text > b.text) {
+          return 1
+        }
+        return 0
+      })
       return l
     },
     getPollingIndex(nid, pid) {
