@@ -316,3 +316,30 @@ func getRMON(c echo.Context) error {
 	ret.RMON = backend.GetRMON(ret.Node, t)
 	return c.JSON(http.StatusOK, ret)
 }
+
+type NodeMemo struct {
+	ID   string
+	Memo string
+}
+
+func getNodeMemo(c echo.Context) error {
+	id := c.Param("id")
+	memo := datastore.GetNodeMemo(id)
+	return c.JSON(http.StatusOK, NodeMemo{
+		ID:   id,
+		Memo: memo,
+	})
+}
+
+func postNodeMemo(c echo.Context) error {
+	req := new(NodeMemo)
+	if err := c.Bind(req); err != nil {
+		log.Printf("post node memo err=%v", err)
+		return echo.ErrBadRequest
+	}
+	if err := datastore.SaveNodeMemo(req.ID, req.Memo); err != nil {
+		log.Printf("post node memo err=%v", err)
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}

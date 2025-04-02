@@ -141,6 +141,9 @@ func setup(p *WebAPI) {
 	r.GET("/node/hostResource/:id", getHostResource)
 	r.GET("/node/rmon/:id/:type", getRMON)
 	r.GET("/node/port/:id", getPortList)
+	r.GET("/node/memo/:id", getNodeMemo)
+	r.POST("/node/memo", postNodeMemo)
+
 	r.POST("/mibbr", postMIBBr)
 	r.GET("/mibbr/:id", getMIBBr)
 	r.POST("/gnmi", postGNMI)
