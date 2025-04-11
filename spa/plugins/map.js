@@ -531,7 +531,7 @@ const mapMain = (p5) => {
   }
 
   p5.mouseDragged = () => {
-    if (readOnly) {
+    if (readOnly || p5.mouseButton === p5.RIGHT ) {
       return true
     }
     if (dragMode === 0) {
