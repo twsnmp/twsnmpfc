@@ -1,6 +1,6 @@
 {
   "name": "spa",
-  "version": "1.47.0",
+  "version": "1.52.0",
   "private": true,
   "scripts": {
     "dev": "NODE_OPTIONS='--openssl-legacy-provider' nuxt",
