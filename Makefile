@@ -1,7 +1,7 @@
 .PHONY: all test clean zip mac clean_spa docker trivy fluentbit_plugin
 
 ### バージョンの定義
-VERSION     := "v1.52.0"
+VERSION     := "v1.52.1"
 COMMIT      := $(shell git rev-parse --short HEAD)
 
 ### コマンドの定義
@@ -57,7 +57,7 @@ $(DIST)/twsnmpfc: statik/statik.go $(SRC)
 	env GO111MODULE=on GOOS=linux GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
 
 ### pwaのビルド
-pwa/public/build/bundle.js: pwa/src/* pwa/public/*
+pwa/public/build/bundle.js: pwa/src/* pwa/public/* pwa/package.json
 	cd pwa && npm install
 	cd pwa && npm run build
 
