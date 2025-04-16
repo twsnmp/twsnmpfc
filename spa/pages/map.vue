@@ -2479,8 +2479,10 @@ export default {
         this.selectedLinePolling1 <
           this.map.Pollings[this.editLine.NodeID1].length
       ) {
-        this.editLine.PollingID1 =
-          this.map.Pollings[this.editLine.NodeID1][this.selectedLinePolling1].ID
+        const l = this.pollingList(this.editLine.NodeID1, false)
+        if (this.selectedLinePolling1 < l.length) {
+          this.editLine.PollingID1 = l[this.selectedLinePolling1].value
+        }
       } else {
         this.editLine.PollingID1 = ''
       }
@@ -2502,8 +2504,10 @@ export default {
         this.selectedLinePolling2 <
           this.map.Pollings[this.editLine.NodeID2].length
       ) {
-        this.editLine.PollingID2 =
-          this.map.Pollings[this.editLine.NodeID2][this.selectedLinePolling2].ID
+        const l = this.pollingList(this.editLine.NodeID2, false)
+        if (this.selectedLinePolling2 < l.length) {
+          this.editLine.PollingID2 = l[this.selectedLinePolling2].value
+        }
       } else {
         this.editLine.PollingID2 = ''
       }
