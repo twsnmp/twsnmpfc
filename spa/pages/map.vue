@@ -1852,31 +1852,13 @@ export default {
       return l
     },
     getPollingIndex(nid, pid) {
-      if (nid.startsWith('NET:')) {
-        const a = nid.split(':')
-        const net = this.map.Networks[a[1]]
-        if (!net) {
-          return -1
+      const l = this.pollingList(nid)
+      for (let i = 0; i < l.length; i++) {
+        if (l[i].value === pid) {
+          return i
         }
-        for (let i = 0; i < net.Ports.length; i++) {
-          if (net.Ports[i].ID === pid) {
-            return i
-          }
-        }
-        return -1
       }
-      if (!this.map.Pollings[nid]) {
-        return -1
-      }
-      let i = 0
-      let sel = -1
-      this.map.Pollings[nid].forEach((p) => {
-        if (p.ID === pid) {
-          sel = i
-        }
-        i++
-      })
-      return sel
+      return -1
     },
     callback(r) {
       if (
