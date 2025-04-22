@@ -771,12 +771,23 @@ func PrintMIBStringVal(i interface{}) string {
 	return r
 }
 
-func getPrintableMIBStringVal(i interface{}) string {
+func PrintLLDPID(i interface{}) string {
 	r := ""
 	switch v := i.(type) {
 	case string:
 		r = v
 	case []uint8:
+		if len(v) == 6 {
+			// MAC Address
+			return fmt.Sprintf("%02X:%02X:%02X:%02X:%02X:%02X", v[0], v[1], v[2], v[3], v[4], v[5])
+		} else if len(v) == 4 {
+			// IPv4 Address
+			return fmt.Sprintf("%d.%d.%d.%d", v[0], v[1], v[2], v[3])
+		} else if len(v) == 16 {
+			// IPv6 Address
+			return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+				v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15])
+		}
 		r = string(v)
 	case int, int64, uint, uint64:
 		return fmt.Sprintf("%d", v)
@@ -828,7 +839,7 @@ func GetMIBValueString(name string, variable *gosnmp.SnmpPDU, raw bool) string {
 				}
 				value = strings.Join(mac, ":")
 			case "PtopoChassisId", "PtopoGenAddr", "LldpChassisId", "LldpPortId":
-				value = getPrintableMIBStringVal(variable.Value)
+				value = PrintLLDPID(variable.Value)
 			case "LldpManAddress":
 				value = PrintIPAddress(variable.Value)
 			case "BITS", "LldpSystemCapabilitiesMap":
