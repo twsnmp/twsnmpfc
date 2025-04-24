@@ -125,10 +125,14 @@ func DeleteSdrPower(st int64, h string) error {
 			return fmt.Errorf("no bucket sdrPower")
 		}
 		c := b.Cursor()
+		delList := [][]byte{}
 		for k, _ := c.Seek([]byte(sk)); bytes.HasPrefix(k, []byte(sk)); k, _ = c.Next() {
-			c.Delete()
+			delList = append(delList, k)
 		}
-		log.Printf("DeleteSdrPower dur=%v", time.Since(s))
+		for _, k := range delList {
+			b.Delete(k)
+		}
+		log.Printf("DeleteSdrPower count=%d dur=%v", len(delList), time.Since(s))
 		return nil
 	})
 }
@@ -147,17 +151,19 @@ func DeleteOldSdrPower(delOld int64) error {
 			return fmt.Errorf("no bucket sdrPower")
 		}
 		c := b.Cursor()
-		count := 0
+		delList := [][]byte{}
 		for k, _ := c.First(); k != nil; k, _ = c.Next() {
 			a := strings.Split(string(k), ":")
 			if len(a) > 2 && a[0] > dk {
 				log.Printf("DeleteOldSdrPower end %v %s", a, dk)
 				break
 			}
-			c.Delete()
-			count++
+			delList = append(delList, k)
 		}
-		log.Printf("DeleteOldSdrPower count=%d dur=%v", count, time.Since(s))
+		for _, k := range delList {
+			b.Delete(k)
+		}
+		log.Printf("DeleteOldSdrPower count=%d dur=%v", len(delList), time.Since(s))
 		return nil
 	})
 }

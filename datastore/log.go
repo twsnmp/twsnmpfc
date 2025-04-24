@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"sync"
 	"time"
 
@@ -156,73 +155,67 @@ func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
 	})
 }
 
-func deleteOldLog(tx *bbolt.Tx, bucket string, days int) (bool, int) {
+func deleteOldLog(bucket string, days int) (bool, int) {
 	s := time.Now()
 	done := true
 	delCount := 0
 	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -days).UnixNano())
-	b := tx.Bucket([]byte(bucket))
-	if b == nil {
-		log.Printf("bucket %s not found", bucket)
-		// bucketがないのは、エラーにしないでスキップする
-		return done, 0
-	}
-	var lt time.Time
-	c := b.Cursor()
-	for k, _ := c.First(); k != nil; k, _ = c.Next() {
-		if st < string(k) {
-			break
+	db.Batch(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		if b == nil {
+			log.Printf("bucket %s not found", bucket)
+			// bucketがないのは、エラーにしないでスキップする
+			return nil
 		}
-		if delCount%1000 == 0 {
-			if time.Now().UnixMilli()-s.UnixMilli() > 500 {
-				if n, err := strconv.ParseInt(string(k), 16, 64); err == nil {
-					lt = time.Unix(0, n)
-				}
+		c := b.Cursor()
+		delList := [][]byte{}
+		for k, _ := c.First(); k != nil && st > string(k); k, _ = c.Next() {
+			delList = append(delList, k)
+			if len(delList) > 20000 {
 				done = false
 				break
 			}
 		}
-		c.Delete()
-		delCount++
-	}
-	if delCount > 0 {
-		td := ""
-		if !done {
-			if n, err := strconv.ParseInt(st, 16, 64); err == nil {
-				t := time.Unix(0, n)
-				td = "td=" + t.Sub(lt).String()
-			}
+		for _, k := range delList {
+			b.Delete(k)
 		}
-		log.Printf("delete old logs bucket=%s count=%d done=%v dur=%s %s",
-			bucket, delCount, done, time.Since(s), td)
+		delCount = len(delList)
+		return nil
+	})
+	if delCount > 0 {
+		log.Printf("delete old logs bucket=%s count=%d done=%v dur=%s", bucket, delCount, done, time.Since(s))
 	}
 	return done, delCount
 }
 
 // deleteOldPollingLogは、古いポーリングログを削除する
-func deleteOldPollingLog(tx *bbolt.Tx, days int) int {
+func deleteOldPollingLog(days int) int {
 	s := time.Now()
 	delCount := 0
 	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -days).UnixNano())
-	b := tx.Bucket([]byte("pollingLogs"))
-	if b == nil {
-		log.Println("bucket pollingLogs not found")
-		// bucketがないのは、エラーにしないでスキップする
-		return delCount
-	}
-	b.ForEachBucket(func(k []byte) error {
-		b2 := b.Bucket(k)
-		if b2 == nil {
+	db.Batch(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("pollingLogs"))
+		if b == nil {
+			log.Println("bucket pollingLogs not found")
+			// bucketがないのは、エラーにしないでスキップする
 			return nil
 		}
-		c := b2.Cursor()
-		for k, _ := c.First(); k != nil; k, _ = c.Next() {
-			if st < string(k) {
-				break
+		b.ForEachBucket(func(k []byte) error {
+			b2 := b.Bucket(k)
+			if b2 == nil {
+				return nil
 			}
-			_ = c.Delete()
-			delCount++
-		}
+			c := b2.Cursor()
+			delList := [][]byte{}
+			for k2, _ := c.First(); k2 != nil && st > string(k2); k2, _ = c.Next() {
+				delList = append(delList, k2)
+			}
+			for _, k2 := range delList {
+				b2.Delete(k2)
+			}
+			delCount += len(delList)
+			return nil
+		})
 		return nil
 	})
 	if delCount > 0 {
@@ -237,25 +230,20 @@ func deleteOldLogs() {
 		log.Println("mapConf.LogDays < 1 ")
 		return
 	}
-	tx, err := db.Begin(true)
-	if err != nil {
-		log.Printf("deleteOldLog err=%v", err)
-		return
-	}
 	buckets := []string{"logs", "pollingLogs", "syslog", "trap", "netflow", "ipfix", "arplog", "sflow", "sflowCounter"}
 	doneMap := make(map[string]bool)
 	doneCount := 0
 	delCount := 0
-	lt := time.Now().Unix() + 50
+	lt := time.Now().Unix() + 55
 	for doneCount < len(buckets) && lt > time.Now().Unix() {
 		for _, b := range buckets {
 			if _, ok := doneMap[b]; !ok {
 				if b == "pollingLogs" {
 					doneMap[b] = true
 					doneCount++
-					delCount += deleteOldPollingLog(tx, MapConf.LogDays)
+					delCount += deleteOldPollingLog(MapConf.LogDays)
 				} else {
-					done, c := deleteOldLog(tx, b, MapConf.LogDays)
+					done, c := deleteOldLog(b, MapConf.LogDays)
 					delCount += c
 					if done {
 						doneMap[b] = true
@@ -263,15 +251,8 @@ func deleteOldLogs() {
 					}
 				}
 			}
-			tx.Commit()
-			tx, err = db.Begin(true)
-			if err != nil {
-				log.Printf("deleteOldLog err=%v", err)
-				return
-			}
 		}
 	}
-	tx.Commit()
 	log.Printf("deleteOldLogs delLogs=%d done=%d dur=%s", delCount, doneCount, time.Since(s))
 }
 
@@ -543,49 +524,39 @@ func DeleteOldLogBatch(ds, t string) {
 		log.Fatalf("log days(%d) < 1 ", MapConf.LogDays)
 	}
 	delCount := 0
-	st := fmt.Sprintf("%016x", time.Now().AddDate(0, 0, -MapConf.LogDays).UnixNano())
 	s := time.Now()
-	d.Batch(func(tx *bbolt.Tx) error {
-		switch t {
-		case "all":
-			delCount += deleteOldPollingLog(tx, MapConf.LogDays)
-			buckets := []string{"logs", "syslog", "trap", "netflow", "ipfix", "sflow", "sflowCounter"}
-			for _, bn := range buckets {
-				b := tx.Bucket([]byte(bn))
-				if b != nil {
-					log.Printf("start delete %s", bn)
-					del := deleteOldLogBatchSub(st, b)
-					delCount += del
-					log.Printf("end delete %s count=%d", bn, del)
+	switch t {
+	case "all":
+		delCount += deleteOldPollingLog(MapConf.LogDays)
+		buckets := []string{"logs", "syslog", "trap", "netflow", "ipfix", "sflow", "sflowCounter"}
+		for _, b := range buckets {
+			log.Printf("start delete %s", b)
+			del := 0
+			for {
+				done, c := deleteOldLog(b, MapConf.LogDays)
+				del += c
+				if done {
+					break
 				}
 			}
-		case "polling":
-			delCount += deleteOldPollingLog(tx, MapConf.LogDays)
-		default:
-			b := tx.Bucket([]byte(t))
-			if b != nil {
-				delCount += deleteOldLogBatchSub(st, b)
+			delCount += del
+			log.Printf("end delete %s count=%d", b, del)
+		}
+	case "polling":
+		delCount += deleteOldPollingLog(MapConf.LogDays)
+	case "logs", "syslog", "trap", "netflow", "ipfix", "sflow", "sflowCounter":
+		log.Printf("start delete %s log", t)
+		for {
+			done, c := deleteOldLog(t, MapConf.LogDays)
+			delCount += c
+			if done {
+				break
 			}
 		}
-		return nil
-	})
-	log.Printf("delete old log count=%d,dur=%v", delCount, time.Since(s))
-}
-
-func deleteOldLogBatchSub(st string, b *bbolt.Bucket) int {
-	delCount := 0
-	c := b.Cursor()
-	for k, _ := c.First(); k != nil; k, _ = c.Next() {
-		if st < string(k) {
-			break
-		}
-		c.Delete()
-		delCount++
-		if delCount%10000 == 0 {
-			fmt.Printf("delete=%d\r", delCount)
-		}
+	default:
+		log.Fatalf("log type %s not found", t)
 	}
-	return delCount
+	log.Printf("delete old log count=%d,dur=%v", delCount, time.Since(s))
 }
 
 // ClearAllLogOnDB : コマンドからDBをオープンしてログとレーポートをすべて削除します。

@@ -185,9 +185,12 @@ var configBuckets = map[string]bool{
 	"nodes":    true,
 	"lines":    true,
 	"items":    true,
+	"networks": true,
 	"pollings": true,
 	"grok":     true,
 	"images":   true,
+	"certs":    true,
+	"memo":     true,
 }
 
 func walkBucket(b *bbolt.Bucket, keypath [][]byte, k, v []byte, seq uint64) error {
