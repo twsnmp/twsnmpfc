@@ -239,6 +239,8 @@ github.com/shoenig/test v0.6.4 h1:kVTaSd7WLz5WZ2IaoM0RSzRsUD+m8wRR+5qvntpn4LU=
 github.com/shoenig/test v0.6.4/go.mod h1:byHiCGXqrVaflBLAMq/srcZIHynQPQgeyvkvXnjqq0k=
 github.com/signalsciences/ipv4 v1.4.0 h1:2K52Rqcpb4+Zeo/K9ZOYiDzUY9oWj45LJrIWeEEIIEM=
 github.com/signalsciences/ipv4 v1.4.0/go.mod h1:GLCljS+eOHYQuNARmfJQRNY+ElqbRE9Ntj1yC7Wgiwg=
+github.com/sleepinggenius2/gosmi v0.3.2 h1:waI5h8Des7QFfbxujxLlc/iNSL/EpLk7uaLykqsf2OU=
+github.com/sleepinggenius2/gosmi v0.3.2/go.mod h1:7a14tRB2lJJyYNEnYieLr/bd7eGIivbzbM27g/8FQ1c=
 github.com/sleepinggenius2/gosmi v0.4.4 h1:xgu+Mt7CptuB10IPt3SVXBAA9tARToT4B9xGzjjxQX8=
 github.com/sleepinggenius2/gosmi v0.4.4/go.mod h1:l8OniPmd3bJzw0MXP2/qh7AhP/e+bTY2CNivIhsnDT0=
 github.com/smallstep/pkcs7 v0.2.1 h1:6Kfzr/QizdIuB6LSv8y1LJdZ3aPSfTNhTLqAx9CTLfA=
@@ -292,6 +294,8 @@ github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/yusufpapurcu/wmi v1.2.4 h1:zFUKzehAFReQwLys1b/iSMl+JQGSCSjtVqQn9bBrPo0=
 github.com/yusufpapurcu/wmi v1.2.4/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
+go.etcd.io/bbolt v1.3.7 h1:j+zJOnnEjF/kyHlDDgGnVL/AIqIJPq8UoB2GSNfkUfQ=
+go.etcd.io/bbolt v1.3.7/go.mod h1:N9Mkw9X8x5fupy0IKsmuqVtoGDyxsaDlbk4Rd05IAQw=
 go.etcd.io/bbolt v1.4.0 h1:TU77id3TnN/zKr7CO/uk+fBCwF2jGcMuw2B/FMAzYIk=
 go.etcd.io/bbolt v1.4.0/go.mod h1:AsD+OCi/qPN1giOX1aiLAha3o1U8rAz65bvN4j0sRuk=
 go.opentelemetry.io/otel v1.32.0 h1:WnBN+Xjcteh0zdk01SVqV55d/m62NJLJdIyb4y/WO5U=

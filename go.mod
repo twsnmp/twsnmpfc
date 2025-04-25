@@ -36,7 +36,7 @@ require (
 	github.com/robertkrimen/otto v0.5.1
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/signalsciences/ipv4 v1.4.0
-	github.com/sleepinggenius2/gosmi v0.4.4
+	github.com/sleepinggenius2/gosmi v0.3.2
 	github.com/smallstep/scep v0.0.0-20250221100424-171a5fa4fb1b
 	github.com/tehmaze/netflow v0.0.0-20170921210347-852af103667f
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
@@ -46,7 +46,7 @@ require (
 	github.com/twsnmp/twlogeye/api v0.1.1
 	github.com/vjeantet/grok v1.0.1
 	github.com/vmware/govmomi v0.48.1
-	go.etcd.io/bbolt v1.4.0
+	go.etcd.io/bbolt v1.3.7
 	golang.org/x/crypto v0.36.0
 	golang.org/x/net v0.38.0
 	golang.org/x/text v0.23.0
