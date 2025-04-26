@@ -89,6 +89,14 @@
                 <v-list-item-title>サーバー別</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="openDnsFlowsChart">
+              <v-list-item-icon>
+                <v-icon>mdi-lan-connect</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>グラフ分析</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
           </v-list>
         </v-menu>
         <download-excel
@@ -251,6 +259,33 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="flowsChartDialog" persistent max-width="98vw">
+      <v-card>
+        <v-card-title>
+          DNS通信グラフ分析
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="graphType"
+            :items="graphTypeList"
+            label="表示タイプ"
+            single-line
+            hide-details
+            @change="updateFlowsChart"
+          ></v-select>
+        </v-card-title>
+        <div
+          id="flowsChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="flowsChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -328,6 +363,12 @@ export default {
       serverChartDialog: false,
       selected: {},
       infoDialog: false,
+      graphType: 'force',
+      graphTypeList: [
+        { text: '力学モデル', value: 'force' },
+        { text: '円形', value: 'circular' },
+      ],
+      flowsChartDialog: false,
     }
   },
   async fetch() {
@@ -392,6 +433,29 @@ export default {
         })
         this.$showDNSChart(type + 'Chart', list)
       })
+    },
+    openDnsFlowsChart() {
+      this.flowsChartDialog = true
+      this.$nextTick(() => {
+        this.updateFlowsChart()
+      })
+    },
+    updateFlowsChart() {
+      this.$showDnsFlowsChart(
+        'flowsChart',
+        this.getFilterList(),
+        this.graphType
+      )
+    },
+    getFilterList() {
+      const r = []
+      this.dnsq.forEach((d) => {
+        if (!this.filterDNS(d)) {
+          return
+        }
+        r.push(d)
+      })
+      return r
     },
     filterDNS(d) {
       if (this.conf.host && !d.Host.includes(this.conf.host)) {

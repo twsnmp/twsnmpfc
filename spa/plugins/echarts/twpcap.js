@@ -838,6 +838,143 @@ const getDNSTypeName = (t) => {
   return n
 }
 
+const showDnsFlowsChart = (div, dns, layout) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const categories = [{ name: 'サーバー' }, { name: 'クライアント' }]
+
+  const option = {
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    grid: {
+      left: '7%',
+      right: '5%',
+      bottom: '5%',
+      containLabel: true,
+    },
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    color: ['#aa0000', '#1f78b4'],
+    tooltip: {
+      trigger: 'item',
+      textStyle: {
+        fontSize: 8,
+      },
+      position: 'bottom',
+    },
+    legend: [
+      {
+        orient: 'vertical',
+        top: 50,
+        right: 20,
+        textStyle: {
+          fontSize: 10,
+          color: '#ccc',
+        },
+        data: categories.map(function (a) {
+          return a.name
+        }),
+      },
+    ],
+    animationDurationUpdate: 1500,
+    animationEasingUpdate: 'quinticInOut',
+    series: [
+      {
+        type: 'graph',
+        layout: layout || 'force',
+        categories,
+        symbolSize: 6,
+        roam: true,
+        label: {
+          show: false,
+        },
+        data: [],
+        edges: [],
+        lineStyle: {
+          width: 1,
+          curveness: 0,
+        },
+      },
+    ],
+  }
+  if (!dns) {
+    return false
+  }
+  const nodes = {}
+  const lines = {}
+  dns.forEach((f) => {
+    if (option.series[0].edges.length > 2000) {
+      return
+    }
+    const c = f.LastClient
+    const s = f.Server
+    if (!nodes[s]) {
+      nodes[s] = {
+        name: s,
+        category: 0,
+        draggable: true,
+        symbolSize: 8,
+        value: f.Count,
+        label: {
+          show: false,
+        },
+      }
+    } else {
+      nodes[s].value += f.Count
+    }
+    if (!nodes[c]) {
+      nodes[c] = {
+        name: c,
+        category: 1,
+        draggable: true,
+        value: f.Count,
+        label: {
+          show: false,
+        },
+      }
+    } else {
+      nodes[c].value += f.Count
+    }
+    const lk = c + ':' + s
+    if (!lines[lk]) {
+      lines[lk] = {
+        source: c,
+        target: s,
+        value: f.Count,
+        lineStyle: {
+          color: '#ccc',
+        },
+      }
+    } else {
+      lines[lk].value += f.Count
+    }
+  })
+  for (const k in nodes) {
+    option.series[0].data.push(nodes[k])
+  }
+  for (const k in lines) {
+    option.series[0].edges.push(lines[k])
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 const showRADIUSFlowsChart = (div, radius, layout) => {
   if (chart) {
     chart.dispose()
@@ -1121,4 +1258,5 @@ export default (context, inject) => {
   inject('filterTLSFlow', filterTLSFlow)
   inject('dnsTypeList', dnsTypeList)
   inject('getDNSTypeName', getDNSTypeName)
+  inject('showDnsFlowsChart', showDnsFlowsChart)
 }
