@@ -112,7 +112,7 @@ var etherTypeMap = map[string]string{
 	"0x0842": "WakeOnLAN",
 	"0x8035": "RARP",
 	"0x86dd": "IPv6",
-	"0x8899": "RRCP",
+	"0x8899": "RRCP/Buffalo Loop Detect",
 	"0x88cc": "LLDP",
 	"0x8100": "VLAN",
 	"0x9100": "VLAN DT",

@@ -814,6 +814,10 @@ const dnsTypeList = [
   { text: 'エイリアス', value: 'CNAME' },
   { text: 'ゾーン', value: 'SOA' },
   { text: 'ホスト情報', value: 'HINFO' },
+  { text: 'HTTPS', value: 'HTTPS' },
+  { text: 'DNSKEY', value: 'DNSKEY' },
+  { text: 'DS', value: 'DS' },
+  { text: 'SVCB', value: 'SVCB' },
   { text: '不明', value: 'Unknown' },
 ]
 
