@@ -60,7 +60,7 @@ require (
 	github.com/AlekSi/pointer v1.2.0 // indirect
 	github.com/PaesslerAG/gval v1.0.0 // indirect
 	github.com/Songmu/wrapcommander v0.1.0 // indirect
-	github.com/alecthomas/participle v0.7.1 // indirect
+	github.com/alecthomas/participle v0.4.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
