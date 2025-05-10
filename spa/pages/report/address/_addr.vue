@@ -71,6 +71,10 @@
           <v-icon>mdi-magnify</v-icon>
           調査
         </v-btn>
+        <v-btn v-if="isIP" color="primary" dark @click="showVirusTotal">
+          <v-icon>mdi-virus</v-icon>
+          VirusTotal
+        </v-btn>
         <v-btn v-if="latLong" color="primary" dark @click="showGoogleMap">
           <v-icon>mdi-google-maps</v-icon>
           地図
@@ -146,6 +150,7 @@ export default {
       copyError: false,
       blackList: false,
       noCache: false,
+      isIP: false,
     }
   },
   async fetch() {
@@ -156,6 +161,7 @@ export default {
     if (!this.addr) {
       return
     }
+    this.isIP = this.addr.includes('.')
     if (!this.history.includes(this.addr)) {
       this.history.push(this.addr)
     }
@@ -185,6 +191,13 @@ export default {
         return
       }
       const url = `https://www.google.com/maps/search/?api=1&query=${this.latLong}`
+      window.open(url, '_blank')
+    },
+    showVirusTotal() {
+      if (!this.isIP) {
+        return
+      }
+      const url = `https://www.virustotal.com/gui/ip-address/${this.addr}`
       window.open(url, '_blank')
     },
     copyInfo() {
