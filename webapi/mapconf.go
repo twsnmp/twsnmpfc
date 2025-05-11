@@ -95,6 +95,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.AutoCharCode = mc.AutoCharCode
 	datastore.MapConf.ArpWatchRange = mc.ArpWatchRange
 	datastore.MapConf.DisableOperLog = mc.DisableOperLog
+	datastore.MapConf.EnableSflowd = mc.EnableSflowd
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
