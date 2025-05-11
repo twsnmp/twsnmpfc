@@ -31,6 +31,7 @@
         </template>
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="editPolling(item)"> mdi-card-plus </v-icon>
+          <v-icon small @click="showAddrInfo(item)"> mdi-file-find </v-icon>
         </template>
         <template #[`body.append`]>
           <tr>
@@ -1706,6 +1707,18 @@ export default {
         LogMode: 0,
       }
       this.editPollingDialog = true
+    },
+    showAddrInfo(i) {
+      const ipReg = /\d{1,3}(\.\d{1,3}){3}/
+      const macReg = /[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}/i
+      const ip = i.Message.match(ipReg)
+      if (ip) {
+        this.$router.push({ path: '/report/address/' + ip[0] })
+      }
+      const mac = i.Message.match(macReg)
+      if (mac) {
+        this.$router.push({ path: '/report/address/' + mac[0] })
+      }
     },
     doAddPolling() {
       this.$axios
