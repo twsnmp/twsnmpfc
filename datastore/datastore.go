@@ -90,7 +90,7 @@ var (
 	protMap    map[int]string
 	serviceMap map[string]string
 	geoip      *geoip2.Reader
-	geoipMap   map[string]string
+	geoipMap   sync.Map
 	ouiMap     map[string]string
 	tlsCSMap   map[string]string
 
@@ -132,7 +132,6 @@ func Init(ctx context.Context, path string, fs http.FileSystem, wg *sync.WaitGro
 		112: "vrrp",
 	}
 	serviceMap = make(map[string]string)
-	geoipMap = make(map[string]string)
 	ouiMap = make(map[string]string)
 	tlsCSMap = make(map[string]string)
 	NotifySchedule = make(map[string]string)
