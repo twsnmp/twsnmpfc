@@ -58,6 +58,8 @@ var netflowPort = 2055
 var syslogPort = 514
 var sflowPort = 6343
 var tcpPort = 8086
+var otelGRPCPort = 4317
+var otelHTTPPort = 4318
 
 var resetPassword bool
 
@@ -70,6 +72,10 @@ var autoCertURL = ""
 var autoCertEmail = ""
 var autoCertSANs = ""
 var autoCertInsecure = false
+
+var otelCert = ""
+var otelKey = ""
+var otelCA = ""
 
 func init() {
 	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
@@ -104,6 +110,11 @@ func init() {
 	flag.StringVar(&autoCertEmail, "autoCertEmail", "", "EMail address for ACME")
 	flag.StringVar(&autoCertSANs, "autoCertSANs", "", "Auto cert SANs")
 	flag.BoolVar(&autoCertInsecure, "autoCertInsecure", false, "Dont verify Server Cert for ACME")
+	flag.IntVar(&otelGRPCPort, "otelGRPCPort", 4317, "OpenTelemetry server gRPC port")
+	flag.IntVar(&otelHTTPPort, "otelHTTPPort", 4318, "OpenTelemetry server HTTP port")
+	flag.StringVar(&otelCert, "otelCert", "", "OpenTelemetry server cert path")
+	flag.StringVar(&otelKey, "otelKey", "", "OpenTelemetry server key path")
+	flag.StringVar(&otelCA, "otelCA", "", "OpenTelementry CA cert path")
 
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
@@ -227,6 +238,11 @@ func main() {
 		log.Fatalf("start report err=%v", err)
 	}
 	log.Println("call logger.Start")
+	logger.OTelCA = otelCA
+	logger.OTelKey = otelKey
+	logger.OTelCert = otelCert
+	logger.OTelGRPCPort = otelGRPCPort
+	logger.OTelHTTPPort = otelHTTPPort
 	if err = logger.Start(ctx, wg, trapPort, netflowPort, syslogPort, sflowPort, tcpPort); err != nil {
 		log.Fatalf("start logger err=%v", err)
 	}

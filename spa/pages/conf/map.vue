@@ -304,6 +304,30 @@
               </v-select>
             </v-col>
           </v-row>
+          <v-row dense>
+            <v-col>
+              <v-switch
+                v-model="mapconf.EnableOTel"
+                label="OpenTelemetry"
+              ></v-switch>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="mapconf.OTelRetention"
+                label="OpenTelemetryデータ保持時間"
+                type="number"
+                min="1"
+                required
+              />
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="mapconf.OTelFrom"
+                label="OpenTelemetry送信元"
+                required
+              />
+            </v-col>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -604,6 +628,9 @@ export default {
         DisableOperLog: false,
         MapSize: 0,
         IconSize: 32,
+        OTelRetention: 3,
+        OTelFrom: '',
+        EnableOTel: false,
       },
       aiModeList: [
         { text: 'Local Outiler Factor', value: 'lof' },
@@ -670,7 +697,9 @@ export default {
   },
   methods: {
     submit() {
+      this.saved = false
       this.error = false
+      this.mapconf.OTelRetention *= 1
       this.$axios
         .post('/api/conf/map', this.mapconf)
         .then((r) => {

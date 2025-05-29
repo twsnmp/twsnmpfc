@@ -348,6 +348,12 @@ export default {
           readOnly: true,
         },
         {
+          icon: 'mdi-telescope',
+          title: 'OpenTelemetry',
+          to: '/log/otel',
+          readOnly: true,
+        },
+        {
           icon: 'mdi-card-search',
           title: 'アドレス分析',
           to: '/report/address',

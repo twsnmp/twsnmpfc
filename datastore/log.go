@@ -120,6 +120,33 @@ func ForEachLastEventLog(last int64, f func(*EventLogEnt) bool) error {
 	})
 }
 
+func ForEachLastLog(t string, f func(*LogEnt) bool) error {
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	return db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(t))
+		if b == nil {
+			return nil
+		}
+		c := b.Cursor()
+		for k, v := c.Last(); k != nil; k, v = c.Prev() {
+			if bytes.HasSuffix(v, []byte{0, 0, 255, 255}) {
+				v = deCompressLog(v)
+			}
+			var e LogEnt
+			err := json.Unmarshal(v, &e)
+			if err != nil {
+				continue
+			}
+			if !f(&e) {
+				break
+			}
+		}
+		return nil
+	})
+}
+
 func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
 	if db == nil {
 		return ErrDBNotOpen
@@ -352,6 +379,7 @@ func oldLogChecker(ctx context.Context, wg *sync.WaitGroup) {
 			return
 		case <-timer.C:
 			deleteOldLogs()
+			chekOldOTelData()
 		}
 	}
 }

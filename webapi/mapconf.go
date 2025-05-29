@@ -34,6 +34,7 @@ func getMapConf(c echo.Context) error {
 	r.EnableSshd = datastore.MapConf.EnableSshd
 	r.EnableSflowd = datastore.MapConf.EnableSflowd
 	r.EnableTcpd = datastore.MapConf.EnableTcpd
+	r.EnableOTel = datastore.MapConf.EnableOTel
 	r.AILevel = datastore.MapConf.AILevel
 	r.AIThreshold = datastore.MapConf.AIThreshold
 	r.AIMode = datastore.MapConf.AIMode
@@ -47,8 +48,13 @@ func getMapConf(c echo.Context) error {
 	r.AutoCharCode = datastore.MapConf.AutoCharCode
 	r.DisableOperLog = datastore.MapConf.DisableOperLog
 	r.ArpWatchRange = datastore.MapConf.ArpWatchRange
+	r.OTelFrom = datastore.MapConf.OTelFrom
+	r.OTelRetention = datastore.MapConf.OTelRetention
 	if r.IconSize == 0 {
 		r.IconSize = 32
+	}
+	if r.OTelRetention < 1 {
+		r.OTelRetention = 1
 	}
 	return c.JSON(http.StatusOK, r)
 }
@@ -83,6 +89,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.EnableTrapd = mc.EnableTrapd
 	datastore.MapConf.EnableNetflowd = mc.EnableNetflowd
 	datastore.MapConf.EnableArpWatch = mc.EnableArpWatch
+	datastore.MapConf.EnableOTel = mc.EnableOTel
 	datastore.MapConf.EnableSshd = mc.EnableSshd
 	datastore.MapConf.EnableTcpd = mc.EnableTcpd
 	datastore.MapConf.EnableMobileAPI = mc.EnableMobileAPI
@@ -96,6 +103,8 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.ArpWatchRange = mc.ArpWatchRange
 	datastore.MapConf.DisableOperLog = mc.DisableOperLog
 	datastore.MapConf.EnableSflowd = mc.EnableSflowd
+	datastore.MapConf.OTelRetention = mc.OTelRetention
+	datastore.MapConf.OTelFrom = mc.OTelFrom
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}

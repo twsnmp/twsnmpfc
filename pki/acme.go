@@ -303,6 +303,8 @@ type revokeReqest struct {
 }
 
 func acmeServerFunc(e *echo.Echo) {
+	e.HideBanner = true
+	e.HidePort = true
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 	e.GET("/directory", func(c echo.Context) error {

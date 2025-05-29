@@ -70,6 +70,8 @@ func stopHttpServer() {
 }
 
 func httpServerFunc(e *echo.Echo) {
+	e.HideBanner = true
+	e.HidePort = true
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 	e.GET("/ca.pem", func(c echo.Context) error {

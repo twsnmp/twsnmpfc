@@ -277,6 +277,14 @@ func setup(p *WebAPI) {
 	r.GET("/pki/cert/:id", getExportCert)
 	r.GET("/pki/control", getPKIControl)
 	r.POST("/pki/control", postPKIControl)
+	r.GET("/otel/metrics", getOTelMetrics)
+	r.GET("/otel/metric/:id", getOTelMetric)
+	r.GET("/otel/traceBucketList", getOTelTraceBucketList)
+	r.POST("/otel/traces", postOTelTraces)
+	r.POST("/otel/trace", postOTelTrace)
+	r.POST("/otel/dag", postOTelDAG)
+	r.GET("/otel/logs", getOTelLastLog)
+	r.DELETE("/otel/alldata", deleteOTelAllData)
 
 	// Mobile API
 	m := e.Group("/mobile")

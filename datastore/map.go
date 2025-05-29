@@ -49,6 +49,7 @@ type MapConfEnt struct {
 	EnableSshd      bool
 	EnableSflowd    bool
 	EnableTcpd      bool
+	EnableOTel      bool
 	EnableMobileAPI bool
 	AILevel         string
 	AIThreshold     int
@@ -60,6 +61,8 @@ type MapConfEnt struct {
 	MapSize         int
 	IconSize        int
 	ArpWatchRange   string
+	OTelRetention   int
+	OTelFrom        string
 }
 
 func initConf() {
@@ -78,6 +81,7 @@ func initConf() {
 	MapConf.Password = security.PasswordHash("twsnmp")
 	MapConf.EnableArpWatch = true
 	MapConf.FontSize = 12
+	MapConf.OTelRetention = 3
 	DiscoverConf.Retry = 1
 	DiscoverConf.Timeout = 1
 	NotifyConf.InsecureSkipVerify = true

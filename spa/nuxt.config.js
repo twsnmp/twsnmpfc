@@ -58,6 +58,7 @@ export default {
     '@/plugins/echarts/ping.js',
     '@/plugins/echarts/eventlog.js',
     '@/plugins/echarts/ipam.js',
+    '@/plugins/echarts/otel.js',
     '@/plugins/vpanel.js',
   ],
 
