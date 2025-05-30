@@ -334,56 +334,13 @@
           <span class="headline">メトリック情報</span>
         </v-card-title>
         <v-card-text>
-          <v-table theme="dark">
-            <thead>
-              <tr>
-                <th width="30%" class="text-left">項目</th>
-                <th width="70%" class="text-left">値</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>ホスト名</td>
-                <td>{{ metricInfo.Host }}</td>
-              </tr>
-              <tr>
-                <td>サービス</td>
-                <td>{{ metricInfo.Service }}</td>
-              </tr>
-              <tr>
-                <td>スコープ</td>
-                <td>{{ metricInfo.Scope }}</td>
-              </tr>
-              <tr>
-                <td>名前</td>
-                <td>{{ metricInfo.Name }}</td>
-              </tr>
-              <tr>
-                <td>種別</td>
-                <td>{{ metricInfo.Type }}</td>
-              </tr>
-              <tr>
-                <td>説明</td>
-                <td>{{ metricInfo.Description }}</td>
-              </tr>
-              <tr>
-                <td>単位</td>
-                <td>{{ metricInfo.Unit }}</td>
-              </tr>
-              <tr>
-                <td>回数</td>
-                <td>{{ formatCount(metricInfo.Count) }}</td>
-              </tr>
-              <tr>
-                <td>初回</td>
-                <td>{{ formatTime(metricInfo.First) }}</td>
-              </tr>
-              <tr>
-                <td>最終</td>
-                <td>{{ formatTime(metricInfo.Last) }}</td>
-              </tr>
-            </tbody>
-          </v-table>
+          <v-data-table
+            :headers="metricInfoHeaders"
+            :items="metricInfoData"
+            dense
+            hide-default-footer
+          >
+          </v-data-table>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -642,18 +599,11 @@ export default {
       },
       metricDataKeyList: [],
       metricDataKey: '',
-      metricInfo: {
-        Host: '',
-        Service: '',
-        Scope: '',
-        Name: '',
-        Type: '',
-        Description: '',
-        Unit: '',
-        Count: 0,
-        First: 0,
-        Last: 0,
-      },
+      metricInfoHeaders: [
+        { text: '項目', value: 'name', width: '30%' },
+        { text: '値', value: 'value', width: '70%' },
+      ],
+      metricInfoData: [],
       metricInfoDialog: false,
       histogramDialog: false,
       traceDialog: false,
@@ -675,7 +625,9 @@ export default {
     switch (this.tab) {
       case 0: {
         // Metric
-        const r = await this.$axios.$get('/api/otel/metrics')
+        const r = await this.$axios
+          .$get('/api/otel/metrics')
+          .catch(() => undefined)
         if (!r || r.length < 1) {
           this.metrics = []
           return
@@ -686,7 +638,9 @@ export default {
       case 1: {
         // Trace
         this.traces = []
-        const r = await this.$axios.$get('/api/otel/traceBucketList')
+        const r = await this.$axios
+          .$get('/api/otel/traceBucketList')
+          .catch(() => undefined)
         if (!r || r.length < 1) {
           this.traceBucktList = []
           return
@@ -703,10 +657,9 @@ export default {
         })
         this.traceBuckts = tbs
         if (this.traceBuckts.length > 0) {
-          const r = await this.$axios.$post(
-            '/api/otel/traces',
-            this.traceBuckts
-          )
+          const r = await this.$axios
+            .$post('/api/otel/traces', this.traceBuckts)
+            .catch(() => undefined)
           if (r && r.length > 0) {
             this.traces = r
             this.showTracesChart()
@@ -716,7 +669,9 @@ export default {
       }
       case 2: {
         // Log
-        const r = await this.$axios.$get('/api/otel/logs')
+        const r = await this.$axios
+          .$get('/api/otel/logs')
+          .catch(() => undefined)
         if (!r || r.length < 1) {
           this.logs = []
         }
@@ -802,7 +757,9 @@ export default {
     async showMetric(id) {
       this.metricDataKeyList = []
       this.metricDataKey = ''
-      const r = await this.$axios.$get('/api/otel/metric/' + id)
+      const r = await this.$axios
+        .$get('/api/otel/metric/' + id)
+        .catch(() => undefined)
       if (!r) {
         return
       }
@@ -823,11 +780,53 @@ export default {
       this.showMetricChart()
     },
     async showMetricInfo(id) {
-      const r = await this.$axios.$get('/api/otel/metric/' + id)
+      const r = await this.$axios
+        .$get('/api/otel/metric/' + id)
+        .catch(() => undefined)
       if (!r) {
         return
       }
-      this.metricInfo = r
+      this.metricInfoData = []
+      this.metricInfoData.push({
+        name: 'ホスト名',
+        value: r.Host,
+      })
+      this.metricInfoData.push({
+        name: 'サービス',
+        value: r.Service,
+      })
+      this.metricInfoData.push({
+        name: 'スコープ',
+        value: r.Scope,
+      })
+      this.metricInfoData.push({
+        name: '名前',
+        value: r.Name,
+      })
+      this.metricInfoData.push({
+        name: '種別',
+        value: r.Type,
+      })
+      this.metricInfoData.push({
+        name: '説明',
+        value: r.Description,
+      })
+      this.metricInfoData.push({
+        name: '単位',
+        value: r.Unit,
+      })
+      this.metricInfoData.push({
+        name: '回数',
+        value: this.formatCount(r.Count),
+      })
+      this.metricInfoData.push({
+        name: '初回',
+        value: this.formatTimeCSV(r.First),
+      })
+      this.metricInfoData.push({
+        name: '最終',
+        value: this.formatTimeCSV(r.Last),
+      })
       this.metricInfoDialog = true
     },
     showMetricChart() {
@@ -857,10 +856,12 @@ export default {
       })
     },
     async showTrace(bucket, traceID) {
-      const r = await this.$axios.$post('/api/otel/trace', {
-        Bucket: bucket,
-        TraceID: traceID,
-      })
+      const r = await this.$axios
+        .$post('/api/otel/trace', {
+          Bucket: bucket,
+          TraceID: traceID,
+        })
+        .catch(() => undefined)
       if (!r) {
         return
       }
@@ -874,7 +875,9 @@ export default {
       if (this.traceBuckts.length < 1) {
         return
       }
-      const r = await this.$axios.$post('/api/otel/dag', this.traceBuckts)
+      const r = await this.$axios
+        .$post('/api/otel/dag', this.traceBuckts)
+        .catch(() => undefined)
       if (!r || r.length < 1) {
         return
       }

@@ -270,26 +270,13 @@
               </v-btn>
             </v-col>
           </v-row>
-          <v-table theme="dark">
-            <thead>
-              <tr>
-                <th width="30%" class="text-left">ノード</th>
-                <th width="60%" class="text-left">スケジュール</th>
-                <th width="10%" class="text-left">削除</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="sc in schedules" :key="sc.ID">
-                <td>{{ sc.NodeName }}</td>
-                <td>{{ sc.Schedule }}</td>
-                <td>
-                  <v-btn icon color="error" dark @click="delSchedule(sc.ID)">
-                    <v-icon>mdi-delete</v-icon>
-                  </v-btn>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
+          <v-data-table :headers="schedulesHeaders" :items="schedules" dense>
+            <template #[`item.actions`]="{ item }">
+              <v-icon color="error" small @click="delSchedule(item.ID)">
+                mdi-delete
+              </v-icon>
+            </template>
+          </v-data-table>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -345,6 +332,11 @@ export default {
       scheduleAddError: false,
       scheduleDelError: false,
       schedules: [],
+      schedulesHeaders: [
+        { text: 'ノード', value: 'NodeName', width: '30%' },
+        { text: 'スケジュール', value: 'Schedule', width: '60%' },
+        { text: '削除', value: 'actions', width: '10%' },
+      ],
       schedule: {
         NodeID: '',
         Schedule: '',
