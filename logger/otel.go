@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"runtime"
 	"slices"
 	"sort"
 	"strings"
@@ -170,26 +169,17 @@ func setOTelFrom() {
 	}
 	lastOTelFrom = datastore.MapConf.OTelFrom
 	a := strings.Split(datastore.MapConf.OTelFrom, ",")
-	limitFrom = len(a) > 0
 	otelFromMap.Clear()
+	limitFrom = false
 	for _, f := range a {
-		otelFromMap.Store(f, true)
+		if f != "" {
+			otelFromMap.Store(f, true)
+			limitFrom = true
+		}
 	}
 }
 
 func handleMetrics(ctx context.Context, md pmetric.Metrics) error {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Printf("[ERROR] %s\n", err)
-			for depth := 0; ; depth++ {
-				_, file, line, ok := runtime.Caller(depth)
-				if !ok {
-					break
-				}
-				log.Printf("======> %d: %v:%d", depth, file, line)
-			}
-		}
-	}()
 	f := client.FromContext(ctx)
 	service := "unknown"
 	host := f.Addr.String()
