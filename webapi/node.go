@@ -283,8 +283,8 @@ func postPing(c echo.Context) error {
 
 type portWebAPI struct {
 	Node     *datastore.NodeEnt
-	TcpPorts []*backend.PortEnt
-	UdpPorts []*backend.PortEnt
+	TCPPorts []*backend.PortEnt
+	UDPPorts []*backend.PortEnt
 }
 
 func getPortList(c echo.Context) error {
@@ -295,7 +295,7 @@ func getPortList(c echo.Context) error {
 		log.Printf("host resorce node not found id=%s", id)
 		return echo.ErrBadRequest
 	}
-	r.TcpPorts, r.UdpPorts = backend.GetPortList(r.Node)
+	r.TCPPorts, r.UDPPorts = backend.GetPortList(r.Node)
 	return c.JSON(http.StatusOK, r)
 }
 

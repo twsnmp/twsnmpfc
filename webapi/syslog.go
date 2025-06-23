@@ -317,7 +317,7 @@ const (
 	none = iota
 	splunk
 	number
-	json_type
+	jsonType
 	other
 )
 
@@ -328,7 +328,7 @@ func getExtractType(t string) int {
 	case "re_number":
 		return number
 	case "re_json":
-		return json_type
+		return jsonType
 	case "re_other":
 		return other
 	}
@@ -351,7 +351,7 @@ func regExtract(t int, msg string) (map[string]string, error) {
 			k := fmt.Sprintf("number%d", i+1)
 			r[k] = e
 		}
-	case json_type:
+	case jsonType:
 		if m := reJSON.FindString(msg); m != "" {
 			jd := make(map[string]interface{})
 			if err := json.Unmarshal([]byte(m), &jd); err == nil {

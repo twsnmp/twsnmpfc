@@ -56,7 +56,7 @@ func sendFeedback(fb *feedbackWebAPI) error {
 		if err == nil {
 			msg += fmt.Sprintf("SwapMemory=%v\n", s)
 		}
-		myCpu := []float64{}
+		myCPU := []float64{}
 		myMem := []float64{}
 		load := []float64{}
 		gr := []float64{}
@@ -64,14 +64,14 @@ func sendFeedback(fb *feedbackWebAPI) error {
 			if i == 0 || i == len(datastore.MonitorDataes)-1 {
 				msg += fmt.Sprintf("monitor[%d]-%+v\n", i, m)
 			}
-			myCpu = append(myCpu, m.MyCPU)
+			myCPU = append(myCPU, m.MyCPU)
 			myMem = append(myMem, m.MyMem)
 			load = append(load, m.Load)
 			gr = append(gr, float64(m.NumGoroutine))
 		}
-		min, _ := stats.Min(myCpu)
-		mean, _ := stats.Mean(myCpu)
-		max, _ := stats.Max(myCpu)
+		min, _ := stats.Min(myCPU)
+		mean, _ := stats.Mean(myCPU)
+		max, _ := stats.Max(myCPU)
 		msg += fmt.Sprintf("MyCPU=%.2f/%.2f/%.2f\n", min, mean, max)
 		min, _ = stats.Min(myMem)
 		mean, _ = stats.Mean(myMem)

@@ -268,22 +268,22 @@ func postReGenarateSSHKey(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
-func getSshPublicKey(c echo.Context) error {
+func getSSHPublicKey(c echo.Context) error {
 	return c.String(http.StatusOK, datastore.GetSshdPublicKeys())
 }
 
-type SshPublicKeyPostEnt struct {
+type SSHPublicKeyPostEnt struct {
 	PublicKey string
 }
 
-func postSshPublicKey(c echo.Context) error {
-	pk := new(SshPublicKeyPostEnt)
+func postSSHPublicKey(c echo.Context) error {
+	pk := new(SSHPublicKeyPostEnt)
 	if err := c.Bind(pk); err != nil {
-		log.Printf("postSshPublicKey c=%+v err=%v", c, err)
+		log.Printf("postSSHPublicKey c=%+v err=%v", c, err)
 		return echo.ErrBadRequest
 	}
 	if err := datastore.SaveSshdPublicKeys(pk.PublicKey); err != nil {
-		log.Printf("SaveSshdPublicKeys err=%v", err)
+		log.Printf("SaveSSHdPublicKeys err=%v", err)
 		return echo.ErrBadRequest
 	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
