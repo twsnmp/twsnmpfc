@@ -90,6 +90,12 @@ func doTWSNMPGet(n *datastore.NodeEnt, pe *datastore.PollingEnt) (string, error)
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("twsnmp polling %s", resp.Status)
+	}
+	if resp.ContentLength > 1024*1024 {
+		return "", fmt.Errorf("twsnmp polling resp length too big len=%d", resp.ContentLength)
+	}
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
