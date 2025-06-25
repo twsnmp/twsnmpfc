@@ -25,12 +25,16 @@ type feedbackWebAPI struct {
 }
 
 func postFeedback(c echo.Context) error {
+	version := "unknown"
+	if api, ok := c.Get("api").(*WebAPI); ok {
+		version = api.Version
+	}
 	fb := new(feedbackWebAPI)
 	if err := c.Bind(fb); err != nil {
 		log.Printf("send feedback err=%v", err)
 		return echo.ErrBadRequest
 	}
-	if err := sendFeedback(fb); err != nil {
+	if err := sendFeedback(fb, version); err != nil {
 		log.Printf("send feedback err=%v", err)
 		return echo.ErrBadRequest
 	}
@@ -42,7 +46,7 @@ func postFeedback(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
-func sendFeedback(fb *feedbackWebAPI) error {
+func sendFeedback(fb *feedbackWebAPI, version string) error {
 	msg := fb.Msg
 	if fb.IncludeSysInfo {
 		msg += fmt.Sprintf("\n-----\nGOOS=%s,GOARCH=%s,NumCPU=%d,NumGoroutine=%d\n",
@@ -87,6 +91,7 @@ func sendFeedback(fb *feedbackWebAPI) error {
 		msg += fmt.Sprintf("gr=%.2f/%.2f/%.2f\n", min, mean, max)
 		msg += fmt.Sprintf("panic=%d last=%s", datastore.PanicCount, datastore.LastPanic)
 	}
+	msg += fmt.Sprintf("\nTWSNMP FC %s", version)
 	values := url.Values{}
 	values.Set("msg", msg)
 	values.Add("hash", calcHash(msg))

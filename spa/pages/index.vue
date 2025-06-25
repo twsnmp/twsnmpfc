@@ -8,8 +8,17 @@
         <v-card-title class="headline">ようこそ TWSNMP FC</v-card-title>
         <hr class="my-3" />
         <v-card-subtitle> バージョン : {{ version }}</v-card-subtitle>
-        <v-alert v-model="feedbackDone" color="primary" dense dismissible>
-          フィードバックを送信しました
+        <v-alert v-model="feedbackDone" color="info" dense dismissible>
+          フィードバックを送信しました<br />
+          明日の<a
+            href="https://note.com/twsnmp/m/m9efba610ebb9"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="feedback"
+          >
+            フィードバックの回答
+          </a>
+          を見てください。
         </v-alert>
         <v-card-text>
           <p>
@@ -55,6 +64,17 @@
             >
               GitHubのissue </a
             >からお知らせください。<br />
+            フィードバックは匿名で送信できます。<br />
+            ＜フィードバック＞からの問い合わせは、<br />
+            助手の猫さんが気づけば翌朝には
+            <a
+              href="https://note.com/twsnmp/m/m9efba610ebb9"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="feedback"
+            >
+              フィードバックの回答</a
+            >を通して回答します。<br />
             モバイル版のTWSNMPは
             <a
               href="https://apps.apple.com/app/twsnmp-for-mobile/id1630463521"
@@ -124,6 +144,7 @@
             v-model="feedback.IncludeSysInfo"
             label="メモリ容量/DBサイズ/登録ノード数などの情報を含める"
           ></v-switch>
+          <div>フィードバックは匿名で送信できます。</div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
