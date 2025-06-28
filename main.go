@@ -77,6 +77,9 @@ var otelCert = ""
 var otelKey = ""
 var otelCA = ""
 
+var mcpEnable = false
+var mcpFrom = ""
+
 func init() {
 	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
 	flag.StringVar(&password, "password", "twsnmpfc!", "Master Password")
@@ -115,6 +118,8 @@ func init() {
 	flag.StringVar(&otelCert, "otelCert", "", "OpenTelemetry server cert path")
 	flag.StringVar(&otelKey, "otelKey", "", "OpenTelemetry server key path")
 	flag.StringVar(&otelCA, "otelCA", "", "OpenTelementry CA cert path")
+	flag.StringVar(&mcpFrom, "mcpFrom", "", "Access control for MCP server")
+	flag.BoolVar(&mcpEnable, "mcp", false, "Enable MCP server")
 
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
@@ -285,6 +290,8 @@ func main() {
 		DataStorePath: dataStorePath,
 		QuitSignal:    quit,
 		Timeout:       timeout,
+		EnableMCP:     mcpEnable,
+		MCPFrom:       mcpFrom,
 	}
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go webapi.Start(w)

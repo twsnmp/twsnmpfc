@@ -28,6 +28,8 @@ type WebAPI struct {
 	Host          string
 	IP            string
 	Local         bool
+	EnableMCP     bool
+	MCPFrom       string
 	Timeout       int
 	Password      string
 	DataStorePath string
@@ -51,8 +53,9 @@ func Start(p *WebAPI) {
 }
 
 func Stop() {
-	ctxStopWeb, cancelWeb := context.WithTimeout(context.Background(), 10*time.Second)
+	ctxStopWeb, cancelWeb := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancelWeb()
+	stopMCPServer(ctxStopWeb)
 	if err := e.Shutdown(ctxStopWeb); err != nil {
 		log.Printf("shutdown webapi err=%v", err)
 	}
@@ -79,6 +82,9 @@ func setup(p *WebAPI) {
 	e.GET("/image/:path", getImage)
 	e.GET("/version", getVersion)
 	e.GET("/imageIcon/:id", getImageIcon)
+	if p.EnableMCP {
+		startMCPServer(e, p.MCPFrom)
+	}
 	// JWT保護されたRoute
 	r := e.Group("/api")
 	r.Use(echojwt.JWT([]byte(p.Password)))

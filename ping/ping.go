@@ -36,6 +36,23 @@ const (
 	PingTimeExceeded
 )
 
+func (s PingStat) String() string {
+	switch s {
+	case PingStart:
+		return "strat"
+	case PingOK:
+		return "ok"
+	case PingOtherError:
+		return "error"
+	case PingTimeout:
+		return "timeout"
+	case PingTimeExceeded:
+		return "timeExceeded"
+	default:
+		return "uknown"
+	}
+}
+
 var (
 	pingSendCh chan *PingEnt
 	randGen    *rand.Rand
