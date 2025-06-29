@@ -35,7 +35,7 @@ func startMCPServer(e *echo.Echo, mcpFrom string) {
 	}
 	// Create MCP Server
 	s := server.NewMCPServer(
-		"TWSNMP FK MCP Server",
+		"TWSNMP MCP Server",
 		"1.0.0",
 		server.WithToolCapabilities(true),
 		server.WithLogging(),
@@ -98,7 +98,7 @@ type mcpNodeEnt struct {
 
 func addGetNodeListTool(s *server.MCPServer) {
 	tool := mcp.NewTool("get_node_list",
-		mcp.WithDescription("get node list from TWSNMP FK"),
+		mcp.WithDescription("get node list from TWSNMP"),
 		mcp.WithString("name_filter",
 			mcp.Description("node name filter. Empty is no filter"),
 		),
@@ -162,7 +162,7 @@ type mcpNetworkEnt struct {
 
 func addGetNetworkListTool(s *server.MCPServer) {
 	tool := mcp.NewTool("get_network_list",
-		mcp.WithDescription("get network list from TWSNMP FK"),
+		mcp.WithDescription("get network list from TWSNMP"),
 		mcp.WithString("name_filter",
 			mcp.Description("network name filter. Empty is no filter"),
 		),
@@ -219,7 +219,7 @@ type mcpPollingEnt struct {
 
 func addGetPollingListTool(s *server.MCPServer) {
 	searchTool := mcp.NewTool("get_polling_list",
-		mcp.WithDescription("get polling list from TWSNMP FK"),
+		mcp.WithDescription("get polling list from TWSNMP"),
 		mcp.WithString("type_filter",
 			mcp.Enum("", "ping", "snmp", "tcp", "http", "dns"),
 			mcp.Description("polling type filter. Empty is no filter"),
@@ -375,7 +375,7 @@ func getTragetIP(target string) string {
 
 func addGetMIBTreeTool(s *server.MCPServer) {
 	searchTool := mcp.NewTool("get_MIB_tree",
-		mcp.WithDescription("get MIB tree from TWSNMP FK"),
+		mcp.WithDescription("get MIB tree from TWSNMP"),
 	)
 	s.AddTool(searchTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		j, err := json.Marshal(&datastore.MIBTree)
@@ -527,7 +527,7 @@ v3authprivex: SNMP v3 authentication protocol is SHA1,privacy protocol is AES256
 // add_node tool
 func addAddNodeTool(s *server.MCPServer) {
 	searchTool := mcp.NewTool("add_node",
-		mcp.WithDescription("add node to TWSNMP FK"),
+		mcp.WithDescription("add node to TWSNMP"),
 		mcp.WithString("name",
 			mcp.Required(),
 			mcp.Description("node name"),
