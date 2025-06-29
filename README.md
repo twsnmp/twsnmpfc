@@ -19,9 +19,9 @@
 
 - マップ表示
 - 自動発見
-- ポーリング（PING,SNMP,HTTP,TLS,DNS,NTP,VMWare..)
+- ポーリング(PING,SNMP,HTTP,TLS,DNS,NTP,VMWare..)
 - MIBブラウザー
-- ログ受信検索表示（Event Log,Syslog,SNMP TRAP,NetFlow,IPFIX,ARP Watch)
+- ログ受信検索表示(Event Log,Syslog,SNMP TRAP,NetFlow,IPFIX,ARP Watch)
 - レポート（デバイス、ユーザー、サーバー、フロー、IPアドレス）
 - AI分析
 - ログ、ポーリング結果の分析機能(FFT,ヒストグラム、クラスター)
@@ -53,6 +53,10 @@
 - セッションタイムアウトの改善、MIB表示の改善(v1.24.0)
 - 起動ツールの改善(v1.25.0)
 - HTTP/SNMPポーリングの改善、LXIポーリングの追加(v1.26.0)
+- gNMI
+- sFlow
+- OptenTelmetryコレクタ(v1.54.0)
+- MCPサーバー(v1.55.0)
 
 ![2021-04-10_11-56-00](https://user-images.githubusercontent.com/5225950/114256371-cc61db80-99f3-11eb-8631-c1917554ce26.png)
 
@@ -61,7 +65,7 @@
 ### Build Env
 ビルドするためには、以下の環境が必要です。
 
-- go 1.20
+- go 1.24
 - node.js npm
 - statik
 - docker(Docker版をビルドする場合)
@@ -74,7 +78,7 @@ https://github.com/rakyll/statik
 Docker環境でビルドできます。
 
 ```
-$docker run -it golang:1.20 /bin/bash
+$docker run -it golang:1.24 /bin/bash
 ```
 
 で起動したDokcerコンテナ内のLinux環境で
@@ -88,6 +92,7 @@ $docker run -it golang:1.20 /bin/bash
 ```
 
 でビルドできると思います。
+(2025年時点では試していません)
 
 ### Build
 ビルドはmakeで行います。
@@ -151,5 +156,5 @@ ARP監視を使いたい場合は、ホストのネットワークを指定し�
 see ./LICENSE
 
 ```
-Copyright 2021 Masayuki Yamai
+Copyright 2021-2025 Masayuki Yamai
 ```
