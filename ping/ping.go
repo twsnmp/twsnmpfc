@@ -47,9 +47,9 @@ func (s PingStat) String() string {
 	case PingTimeout:
 		return "timeout"
 	case PingTimeExceeded:
-		return "timeExceeded"
+		return "time exceeded"
 	default:
-		return "uknown"
+		return "unknown"
 	}
 }
 
