@@ -379,7 +379,7 @@ func ForEachStateChangedNodes(f func(string) bool) {
 	})
 }
 
-// SaveNodeMemo:ノードに関するメモを保存する
+// SaveNodeMemo saves a memo related to the specified node.
 func SaveNodeMemo(nodeID, memo string) error {
 	return db.Batch(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("memo"))
@@ -390,7 +390,7 @@ func SaveNodeMemo(nodeID, memo string) error {
 	})
 }
 
-// GetNodeMemo:ノードに関するメモを取得する
+// GetNodeMemo retrieves a memo related to the specified node.
 func GetNodeMemo(nodeID string) string {
 	memo := ""
 	db.View(func(tx *bbolt.Tx) error {

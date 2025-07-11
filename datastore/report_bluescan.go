@@ -7,11 +7,13 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-// type=Device,address=%s,name=%s,rssi=%d,addrType=%s,vendor=%s,md=%s
+// RSSIEnt represents a Bluetooth device RSSI entry.
 type RSSIEnt struct {
 	Time  int64
 	Value int
 }
+
+// BlueDeviceEnt represents a Bluetooth device entry.
 type BlueDeviceEnt struct {
 	ID          string // Host + Address
 	Host        string
@@ -54,6 +56,7 @@ func ForEachBludeDevice(f func(*BlueDeviceEnt) bool) {
 	})
 }
 
+// EnvDataEnt represents environmental data from OMRON environment sensors.
 // type=OMRONEnv,address=%s,name=%s,rssi=%d,seq=%d,temp=%.02f,hum=%.02f,lx=%d,press=%.02f,sound=%.02f,eTVOC=%d,eCO2=%d
 type EnvDataEnt struct {
 	Time               int64

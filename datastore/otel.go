@@ -130,7 +130,7 @@ func LoadOTelMetric() {
 	log.Printf("load otel metric dur=%v", time.Since(st))
 }
 
-// SaveOTelMetricはメトリックをDBに保存します。
+// SaveOTelMetric saves metrics to the database.
 func SaveOTelMetric() {
 	if db == nil {
 		return

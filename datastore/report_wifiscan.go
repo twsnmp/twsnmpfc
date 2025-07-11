@@ -7,7 +7,8 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-//type=APInfo,ssid=%s,bssid=%s,rssi=%s,Channel=%s,info=%s,count=%d,change=%d,ft=%s,lt=%s
+// WifiAPEnt represents a Wi-Fi access point entity.
+// type=APInfo,ssid=%s,bssid=%s,rssi=%s,Channel=%s,info=%s,count=%d,change=%d,ft=%s,lt=%s
 type WifiAPEnt struct {
 	ID        string // HOST + BSSID
 	Host      string

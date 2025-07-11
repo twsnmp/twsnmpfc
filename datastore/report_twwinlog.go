@@ -7,6 +7,7 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+// WinEventIDEnt represents a Windows Event ID entry.
 // type=EventID,computer=%s,channel=%s,provider=%s,eventID=%d,total=%d,count=%d,ft=%s,lt=%s
 type WinEventIDEnt struct {
 	ID        string // Computer + Provider + EventID
@@ -78,6 +79,7 @@ func ForEachWinLogon(f func(*WinLogonEnt) bool) {
 	})
 }
 
+// WinAccountEnt represents a Windows account event entry.
 // type=Account,subject=%s,target=%s,computer=%s,count=%d,edit=%d,password=%d,other=%d,ft=%s,lt=%s",
 type WinAccountEnt struct {
 	ID        string // subject + target + computer
@@ -110,6 +112,7 @@ func ForEachWinAccount(f func(*WinAccountEnt) bool) {
 	})
 }
 
+// WinKerberosEnt represents a Windows Kerberos event entry.
 // type=Kerberos,target=%s,computer=%s,ip=%s,service=%s,ticketType=%s,count=%d,failed=%d,status=%s,cert=%s,ft=%s,lt=%s
 // type=KerberosFailed,target=%s,computer=%s,ip=%s,service=%s,ticketType=%s,status=%s,time=%s
 type WinKerberosEnt struct {
@@ -148,6 +151,7 @@ func ForEachWinKerberos(f func(*WinKerberosEnt) bool) {
 	})
 }
 
+// WinPrivilegeEnt represents a Windows privilege event entry.
 // type=Privilege,subject=%s,computer=%s,count=%d,ft=%s,lt=%s
 type WinPrivilegeEnt struct {
 	ID        string //  subject + computer
@@ -176,6 +180,7 @@ func ForEachWinPrivilege(f func(*WinPrivilegeEnt) bool) {
 	})
 }
 
+// WinProcessEnt represents a Windows process event entry.
 // type=Process,computer=%s,process=%s,count=%d,start=%d,exit=%d,subject=%s,status=%s,parent=%s,ft=%s,lt=%s",
 type WinProcessEnt struct {
 	ID          string // Computer + Process
@@ -209,6 +214,7 @@ func ForEachWinProcess(f func(*WinProcessEnt) bool) {
 	})
 }
 
+// WinTaskEnt represents a Windows scheduled task event entry.
 // type=Task,subject=%s,taskname=%s,computer=%s,count=%d,ft=%s,lt=%s",
 type WinTaskEnt struct {
 	ID        string // Computer + TaskName + Subject

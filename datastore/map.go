@@ -412,7 +412,7 @@ func ResetPassword(ds string) error {
 	})
 }
 
-// Image Iconを取得する
+// GetImageIcon returns the image icon for the given id.
 func GetImageIcon(id string) ([]byte, error) {
 	return os.ReadFile(filepath.Join(dspath, "icons", id))
 }

@@ -338,7 +338,7 @@ func CloseDB() {
 	db = nil
 }
 
-// SaveMapData:  指定時間毎にマップのデータをDBへ保存する
+// SaveMapData saves map data to the DB at specified intervals.
 func SaveMapData() {
 	if db == nil {
 		return
@@ -356,7 +356,7 @@ func makeKey() string {
 	return fmt.Sprintf("%016x", time.Now().UnixNano())
 }
 
-// Data Storeのパスを返す、何かと必要なので
+// GetDataStorePath returns the path to the data store.
 func GetDataStorePath() string {
 	return dspath
 }

@@ -12,7 +12,7 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-// CreateCAReq: フロントエンドからのリクエスト
+// CreateCAReq represents a request from the frontend.
 type CreateCAReq struct {
 	RootCAKeyType string `json:"RootCAKeyType"`
 	Name          string `json:"Name"`
@@ -36,7 +36,7 @@ type PKIControlEnt struct {
 	CertTerm    int    `json:"CertTerm"`
 }
 
-// PKIConfEnt: DBに保存するCAの設定データ
+// PKIConfEnt is the configuration data for a CA stored in the DB.
 type PKIConfEnt struct {
 	Name           string `json:"Name"`
 	SANs           string `json:"AcmeSANs"`
