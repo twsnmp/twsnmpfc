@@ -174,7 +174,7 @@ func getPKIControl(c echo.Context) error {
 		CertTerm:    datastore.PKIConf.CertTerm,
 		CrlInterval: datastore.PKIConf.CrlInterval,
 		AcmeStatus:  pki.GetAcmeServerStatus(),
-		HttpStatus:  pki.GetHttpServerStatus(),
+		HttpStatus:  pki.GetHTTPServerStatus(),
 	})
 }
 

@@ -17,19 +17,19 @@ import (
 
 var httpServer *echo.Echo
 
-var lastHttpServerErr error
+var lastHTTPServerErr error
 var httpServerRunning = false
 
-func GetHttpServerStatus() string {
+func GetHTTPServerStatus() string {
 	if lastAcmeServerErr != nil {
-		return fmt.Sprintf("error %v", lastHttpServerErr)
+		return fmt.Sprintf("error %v", lastHTTPServerErr)
 	} else if acmeServerRunnning {
 		return fmt.Sprintf("running port=%d", datastore.PKIConf.HttpPort)
 	}
 	return "stopped"
 }
 
-func startHttpServer() {
+func startHTTPServer() {
 	if httpServer != nil {
 		return
 	}
@@ -39,13 +39,13 @@ func startHttpServer() {
 		Level: "info",
 		Event: fmt.Sprintf("CRL/OCSP/SCEPサーバーを起動しました port=%d", datastore.PKIConf.HttpPort),
 	})
-	lastHttpServerErr = nil
+	lastHTTPServerErr = nil
 	httpServerRunning = true
 	httpServer = echo.New()
 	go httpServerFunc(httpServer)
 }
 
-func stopHttpServer() {
+func stopHTTPServer() {
 	if httpServer == nil {
 		return
 	}
@@ -53,7 +53,7 @@ func stopHttpServer() {
 	defer func() {
 		cancel()
 		httpServer = nil
-		lastHttpServerErr = nil
+		lastHTTPServerErr = nil
 		httpServerRunning = false
 	}()
 	if err := httpServer.Shutdown(ctx); err != nil {
@@ -116,7 +116,7 @@ func httpServerFunc(e *echo.Echo) {
 		return scepFunc(c)
 	})
 	if err := e.Start(fmt.Sprintf(":%d", datastore.PKIConf.HttpPort)); err != nil {
-		lastHttpServerErr = err
+		lastHTTPServerErr = err
 		httpServerRunning = false
 		log.Printf("http server err=%v", err)
 	}

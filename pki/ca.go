@@ -1,3 +1,5 @@
+// Package pki provides functions for managing a public key infrastructure (PKI),
+// including certificate authority (CA) operations, certificate issuance, and revocation.
 package pki
 
 import (
@@ -74,7 +76,7 @@ func caServer(ctx context.Context, wg *sync.WaitGroup) {
 		select {
 		case <-ctx.Done():
 			stopAcmeServer()
-			stopHttpServer()
+			stopHTTPServer()
 			return
 		case <-timer.C:
 			if rootCAPrivateKey == nil {
@@ -89,10 +91,10 @@ func caServer(ctx context.Context, wg *sync.WaitGroup) {
 			}
 			if datastore.PKIConf.EnableHttp && httpServer == nil {
 				log.Printf("start http server port=%d", datastore.PKIConf.HttpPort)
-				startHttpServer()
+				startHTTPServer()
 			} else if !datastore.PKIConf.EnableHttp && httpServer != nil {
 				log.Printf("stop http server port=%d", datastore.PKIConf.HttpPort)
-				stopHttpServer()
+				stopHTTPServer()
 			}
 			now := time.Now().Unix()
 			if now-lastCrlTime > int64(datastore.PKIConf.CrlInterval*3600) && IsCAValid() {
@@ -382,7 +384,7 @@ func getSerial() int64 {
 	return sn
 }
 
-// CreateCertificate: 手動で証明書を発行する
+// CreateCertificate manually issues a certificate from a given CSR.
 func CreateCertificate(csr []byte) ([]byte, error) {
 	block, _ := pem.Decode(csr)
 	if block == nil || block.Type != "CERTIFICATE REQUEST" {
