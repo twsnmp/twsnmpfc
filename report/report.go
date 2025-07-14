@@ -168,7 +168,7 @@ func reportBackend(ctx context.Context, wg *sync.WaitGroup) {
 					datastore.SaveReport(last)
 					last = time.Now().UnixNano()
 				}
-				clearIpToNameCache()
+				clearIPToNameCache()
 				log.Printf("report timer process dur=%v", time.Since(st))
 			}
 		case <-timer1Min.C:
@@ -255,76 +255,6 @@ func getMeanSD(xs *[]float64) (float64, float64) {
 	return m, sd
 }
 
-func resetPenalty(report string) {
-	switch report {
-	case "devices":
-		datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-			d.Penalty = 0
-			setDevicePenalty(d)
-			d.UpdateTime = time.Now().UnixNano()
-			return true
-		})
-		calcDeviceScore()
-	case "users":
-		datastore.ForEachUsers(func(u *datastore.UserEnt) bool {
-			u.Penalty = 0
-			u.UpdateTime = time.Now().UnixNano()
-			return true
-		})
-		calcUserScore()
-	case "servers":
-		datastore.ForEachServers(func(s *datastore.ServerEnt) bool {
-			if s.Loc == "" {
-				s.Loc = datastore.GetLoc(s.Server)
-			}
-			setServerPenalty(s)
-			s.UpdateTime = time.Now().UnixNano()
-			return true
-		})
-		calcServerScore()
-	case "flows":
-		datastore.ForEachFlows(func(f *datastore.FlowEnt) bool {
-			if f.ServerLoc == "" {
-				f.ServerLoc = datastore.GetLoc(f.Server)
-			}
-			if f.ClientLoc == "" {
-				f.ClientLoc = datastore.GetLoc(f.Client)
-			}
-			setFlowPenalty(f)
-			f.UpdateTime = time.Now().UnixNano()
-			return true
-		})
-		calcFlowScore()
-	case "radius":
-		datastore.ForEachRADIUSFlows(func(e *datastore.RADIUSFlowEnt) bool {
-			setRADIUSFlowPenalty(e)
-			e.UpdateTime = time.Now().UnixNano()
-			return true
-		})
-		calcRADIUSFlowScore()
-	case "tls":
-		datastore.ForEachTLSFlows(func(f *datastore.TLSFlowEnt) bool {
-			if f.ServerLoc == "" {
-				f.ServerLoc = datastore.GetLoc(f.Server)
-			}
-			if f.ClientLoc == "" {
-				f.ClientLoc = datastore.GetLoc(f.Client)
-			}
-			setTLSFlowPenalty(f)
-			f.UpdateTime = time.Now().UnixNano()
-			return true
-		})
-		calcTLSFlowScore()
-	case "cert":
-		datastore.ForEachCerts(func(c *datastore.CertEnt) bool {
-			setCertPenalty(c)
-			c.UpdateTime = time.Now().UnixNano()
-			return true
-		})
-		calcCertScore()
-	}
-}
-
 // utils
 func normMACAddr(m string) string {
 	if hw, err := net.ParseMAC(m); err == nil {
@@ -366,17 +296,17 @@ func findNodeInfoFromIP(ip string) (string, string) {
 	}
 	n := datastore.FindNodeFromIP(ip)
 	if n != nil {
-		addIpToNameChahe(ip, n.Name, n.ID)
+		addIPToNameChache(ip, n.Name, n.ID)
 		return n.Name, n.ID
 	}
 	r := &net.Resolver{}
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
 	defer cancel()
 	if names, err := r.LookupAddr(ctx, ip); err == nil && len(names) > 0 {
-		addIpToNameChahe(ip, names[0], "")
+		addIPToNameChache(ip, names[0], "")
 		return names[0], ""
 	}
-	addIpToNameChahe(ip, ip, "")
+	addIPToNameChache(ip, ip, "")
 	return ip, ""
 }
 
@@ -385,7 +315,7 @@ func FindoHostFromIP(ip string) string {
 	return n
 }
 
-func addIpToNameChahe(ip, name, nodeID string) {
+func addIPToNameChache(ip, name, nodeID string) {
 	ipToNameCache.Store(ip, &ipToNameCacheEnt{
 		Name:      name,
 		NodeID:    nodeID,
@@ -393,7 +323,7 @@ func addIpToNameChahe(ip, name, nodeID string) {
 	})
 }
 
-func clearIpToNameCache() {
+func clearIPToNameCache() {
 	del := 0
 	sz := 0
 	now := time.Now().Unix()

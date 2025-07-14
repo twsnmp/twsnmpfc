@@ -23,8 +23,8 @@ func getDefaultCreateCAReq(c echo.Context) error {
 		SANs:          datastore.PKIConf.SANs,
 		AcmeBaseURL:   datastore.PKIConf.AcmeBaseURL,
 		AcmePort:      datastore.PKIConf.AcmePort,
-		HttpBaseURL:   datastore.PKIConf.HttpBaseURL,
-		HttpPort:      datastore.PKIConf.HttpPort,
+		HTTPBaseURL:   datastore.PKIConf.HTTPBaseURL,
+		HTTPPort:      datastore.PKIConf.HTTPPort,
 		RootCATerm:    datastore.PKIConf.RootCATerm,
 		CrlInterval:   datastore.PKIConf.CrlInterval,
 		CertTerm:      datastore.PKIConf.CertTerm,
@@ -169,12 +169,12 @@ func getExportCert(c echo.Context) error {
 func getPKIControl(c echo.Context) error {
 	return c.JSON(http.StatusOK, &datastore.PKIControlEnt{
 		EnableAcme:  datastore.PKIConf.EnableAcme,
-		EnableHttp:  datastore.PKIConf.EnableHttp,
+		EnableHTTP:  datastore.PKIConf.EnableHTTP,
 		AcmeBaseURL: datastore.PKIConf.AcmeBaseURL,
 		CertTerm:    datastore.PKIConf.CertTerm,
 		CrlInterval: datastore.PKIConf.CrlInterval,
 		AcmeStatus:  pki.GetAcmeServerStatus(),
-		HttpStatus:  pki.GetHTTPServerStatus(),
+		HTTPStatus:  pki.GetHTTPServerStatus(),
 	})
 }
 
@@ -185,7 +185,7 @@ func postPKIControl(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	datastore.PKIConf.EnableAcme = req.EnableAcme
-	datastore.PKIConf.EnableHttp = req.EnableHttp
+	datastore.PKIConf.EnableHTTP = req.EnableHTTP
 	datastore.PKIConf.AcmeBaseURL = req.AcmeBaseURL
 	datastore.PKIConf.CertTerm = req.CertTerm
 	datastore.PKIConf.CrlInterval = req.CrlInterval

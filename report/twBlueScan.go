@@ -9,7 +9,7 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-const MAX_DATA_SIZE = 12 * 24 * 7
+const MaxDataSize = 12 * 24 * 7
 
 func ReportTWBuleScan(l map[string]interface{}) {
 	twBlueScanCh <- l
@@ -76,7 +76,7 @@ func checkBlueDeviceReport(h string, m map[string]string) {
 			e.Vendor = v
 		}
 		e.RSSI = append(e.RSSI, datastore.RSSIEnt{Value: int(rssi), Time: lt})
-		if len(e.RSSI) > MAX_DATA_SIZE {
+		if len(e.RSSI) > MaxDataSize {
 			e.RSSI = e.RSSI[1:]
 		}
 		return
@@ -122,7 +122,7 @@ func checkOMRONEnvReport(h string, m map[string]string) {
 			ETVOC:              getFloatFromTWLog(m["eTVOC"]),
 			ECo2:               getFloatFromTWLog(m["eCO2"]),
 		})
-		if len(e.EnvData) > MAX_DATA_SIZE {
+		if len(e.EnvData) > MaxDataSize {
 			e.EnvData = e.EnvData[1:]
 		}
 		return
@@ -171,7 +171,7 @@ func checkSwitchBotEnvReport(h string, m map[string]string) {
 			Humidity: getFloatFromTWLog(m["hum"]),
 			Battery:  int(getNumberFromTWLog(m["bat"])),
 		})
-		if len(e.EnvData) > MAX_DATA_SIZE {
+		if len(e.EnvData) > MaxDataSize {
 			e.EnvData = e.EnvData[1:]
 		}
 		return
@@ -222,7 +222,7 @@ func checkSwitchBotPlugMiniReport(h string, m map[string]string) {
 			Over:   over,
 			RSSI:   int(rssi),
 		})
-		if len(e.Data) > MAX_DATA_SIZE {
+		if len(e.Data) > MaxDataSize {
 			e.Data = e.Data[1:]
 		}
 		return
@@ -279,7 +279,7 @@ func checkSwitchBotMotionSensorReport(h string, m map[string]string) {
 			LastMoveDiff: lastMoveDiff,
 			RSSI:         int(rssi),
 		})
-		if len(e.Data) > MAX_DATA_SIZE*2 {
+		if len(e.Data) > MaxDataSize*2 {
 			e.Data = e.Data[1:]
 		}
 		return
@@ -311,8 +311,11 @@ func checkOldBlueDevice() {
 	ids := []string{}
 	list := []*datastore.BlueDeviceEnt{}
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
+	delOldRandam := time.Now().AddDate(0, 0, -1).UnixNano()
 	datastore.ForEachBludeDevice(func(e *datastore.BlueDeviceEnt) bool {
 		if e.LastTime < delOld {
+			ids = append(ids, e.ID)
+		} else if e.LastTime < delOldRandam && strings.Contains(e.AddressType, " Random") {
 			ids = append(ids, e.ID)
 		} else {
 			list = append(list, e)

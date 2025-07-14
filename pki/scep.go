@@ -52,7 +52,7 @@ func createScepCACertificate() error {
 		MaxPathLen:            int(1),
 	}
 	for _, san := range strings.Split(datastore.PKIConf.SANs, ",") {
-		baseURL := fmt.Sprintf("http://%s:%d", san, datastore.PKIConf.HttpPort)
+		baseURL := fmt.Sprintf("http://%s:%d", san, datastore.PKIConf.HTTPPort)
 		if ip := net.ParseIP(san); ip == nil {
 			tmp.DNSNames = append(tmp.DNSNames, san)
 		} else {
@@ -61,8 +61,8 @@ func createScepCACertificate() error {
 		tmp.CRLDistributionPoints = append(tmp.CRLDistributionPoints, baseURL+"/crl")
 		tmp.OCSPServer = append(tmp.OCSPServer, baseURL+"/ocsp")
 	}
-	if strings.HasPrefix(datastore.PKIConf.HttpBaseURL, "http://") {
-		baseURL := strings.TrimRight(datastore.PKIConf.HttpBaseURL, "/")
+	if strings.HasPrefix(datastore.PKIConf.HTTPBaseURL, "http://") {
+		baseURL := strings.TrimRight(datastore.PKIConf.HTTPBaseURL, "/")
 		tmp.CRLDistributionPoints = append(tmp.CRLDistributionPoints, baseURL+"/crl")
 		tmp.OCSPServer = append(tmp.OCSPServer, baseURL+"/ocsp")
 	}

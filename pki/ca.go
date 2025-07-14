@@ -89,11 +89,11 @@ func caServer(ctx context.Context, wg *sync.WaitGroup) {
 				log.Printf("stop acme server port=%d", datastore.PKIConf.AcmePort)
 				stopAcmeServer()
 			}
-			if datastore.PKIConf.EnableHttp && httpServer == nil {
-				log.Printf("start http server port=%d", datastore.PKIConf.HttpPort)
+			if datastore.PKIConf.EnableHTTP && httpServer == nil {
+				log.Printf("start http server port=%d", datastore.PKIConf.HTTPPort)
 				startHTTPServer()
-			} else if !datastore.PKIConf.EnableHttp && httpServer != nil {
-				log.Printf("stop http server port=%d", datastore.PKIConf.HttpPort)
+			} else if !datastore.PKIConf.EnableHTTP && httpServer != nil {
+				log.Printf("stop http server port=%d", datastore.PKIConf.HTTPPort)
 				stopHTTPServer()
 			}
 			now := time.Now().Unix()
@@ -445,12 +445,12 @@ func createCertificateFromCSR(csrBytes []byte, certType string, info map[string]
 		OCSPServer:            []string{},
 	}
 	for _, san := range strings.Split(datastore.PKIConf.SANs, ",") {
-		baseURL := fmt.Sprintf("http://%s:%d/", san, datastore.PKIConf.HttpPort)
+		baseURL := fmt.Sprintf("http://%s:%d/", san, datastore.PKIConf.HTTPPort)
 		tmp.CRLDistributionPoints = append(tmp.CRLDistributionPoints, baseURL+"crl")
 		tmp.OCSPServer = append(tmp.OCSPServer, baseURL+"ocsp")
 	}
-	if strings.HasPrefix(datastore.PKIConf.HttpBaseURL, "http://") {
-		baseURL := strings.TrimRight(datastore.PKIConf.HttpBaseURL, "/")
+	if strings.HasPrefix(datastore.PKIConf.HTTPBaseURL, "http://") {
+		baseURL := strings.TrimRight(datastore.PKIConf.HTTPBaseURL, "/")
 		tmp.CRLDistributionPoints = append(tmp.CRLDistributionPoints, baseURL+"/crl")
 		tmp.OCSPServer = append(tmp.OCSPServer, baseURL+"/ocsp")
 	}
@@ -540,7 +540,7 @@ func createCRL() error {
 		FullName: []asn1.RawValue{},
 	}
 	for _, san := range strings.Split(datastore.PKIConf.SANs, ",") {
-		cdp := fmt.Sprintf("http://%s:%d/crl", san, datastore.PKIConf.HttpPort)
+		cdp := fmt.Sprintf("http://%s:%d/crl", san, datastore.PKIConf.HTTPPort)
 		dp.FullName = append(dp.FullName, asn1.RawValue{Tag: 6, Class: 2, Bytes: []byte(cdp)})
 	}
 	var oidExtensionIssuingDistributionPoint = []int{2, 5, 29, 28}

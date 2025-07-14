@@ -69,7 +69,7 @@ func checkAPInfoReport(h string, m map[string]string) {
 		e.Info = m["info"]
 		e.LastTime = now
 		e.RSSI = append(e.RSSI, datastore.RSSIEnt{Value: int(rssi), Time: now})
-		if len(e.RSSI) > MAX_DATA_SIZE {
+		if len(e.RSSI) > MaxDataSize {
 			e.RSSI = e.RSSI[1:]
 		}
 		return
