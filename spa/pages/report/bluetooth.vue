@@ -94,6 +94,26 @@
               </v-list-item-content>
             </v-list-item>
           </v-list>
+          <v-list>
+            <v-list-item @click="openBlueVendorChart">
+              <v-list-item-icon>
+                <v-icon>mdi-chart-bar</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>ベンダー別</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <v-list>
+            <v-list-item @click="openBlueScanGraph">
+              <v-list-item-icon>
+                <v-icon>mdi-lan-connect</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>名前とアドレスの関係</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
         </v-menu>
         <download-excel
           :fetch="makeExports"
@@ -290,6 +310,42 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="blueScanGraphDialog" persistent max-width="98vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">Bluetooth Deviceの名前とアドレスの関係</span>
+        </v-card-title>
+        <div
+          id="blueScanGraph"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="blueScanGraphDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="blueVendorChartDialog" persistent max-width="98vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">Bluetooth Deviceベンダー別</span>
+        </v-card-title>
+        <div
+          id="blueVendorChart"
+          style="width: 95vw; height: 80vh; margin: 0 auto"
+        ></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" @click="blueVendorChartDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -367,6 +423,8 @@ export default {
       options: {},
       rssiTime3DDialog: false,
       rssiLoc3DDialog: false,
+      blueScanGraphDialog: false,
+      blueVendorChartDialog: false,
       setNameDialog: false,
       setNameError: false,
     }
@@ -474,6 +532,18 @@ export default {
           this.blueDevice,
           this.conf
         )
+      })
+    },
+    openBlueScanGraph() {
+      this.blueScanGraphDialog = true
+      this.$nextTick(() => {
+        this.$showBlueScanGraph('blueScanGraph', this.blueDevice, this.conf)
+      })
+    },
+    openBlueVendorChart() {
+      this.blueVendorChartDialog = true
+      this.$nextTick(() => {
+        this.$showBlueVendorChart('blueVendorChart', this.blueDevice, this.conf)
       })
     },
     makeExports() {

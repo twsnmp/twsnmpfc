@@ -311,7 +311,7 @@ func checkOldBlueDevice() {
 	ids := []string{}
 	list := []*datastore.BlueDeviceEnt{}
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
-	delOldRandam := time.Now().AddDate(0, 0, -1).UnixNano()
+	delOldRandam := time.Now().AddDate(0, 0, -2).UnixNano()
 	datastore.ForEachBludeDevice(func(e *datastore.BlueDeviceEnt) bool {
 		if e.LastTime < delOld {
 			ids = append(ids, e.ID)
