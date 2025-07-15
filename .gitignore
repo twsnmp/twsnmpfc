@@ -20,6 +20,10 @@ Docker/twsnmpfc
 #Mac OS
 .DS_Store
 
+# fluentbit
 fluentbit/in_twsnmp/*.h
 fluentbit/out_twsnmp/*.h
 fluentbit/fluentbit_builder.txt
+
+# Test
+.air.toml
