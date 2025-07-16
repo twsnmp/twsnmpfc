@@ -119,6 +119,7 @@ func doPollingCheckLineCond(pe *datastore.PollingEnt) {
 	pe.Result["speed"] = sm
 	pe.Result["speed_cv"] = scv
 	pe.Result["fail"] = float64(fail)
+	delete(pe.Result, "error")
 	setPollingState(pe, "normal")
 }
 

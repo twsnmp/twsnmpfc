@@ -85,19 +85,19 @@ func doPollingTLS(pe *datastore.PollingEnt) {
 	ok := false
 	var rTime int64
 	var cs tls.ConnectionState
-	lr := make(map[string]string)
 	for i := 0; !ok && i <= pe.Retry; i++ {
 		startTime := time.Now().UnixNano()
 		conn, err := tls.DialWithDialer(d, "tcp", target, conf)
 		endTime := time.Now().UnixNano()
 		if err != nil {
-			lr["error"] = fmt.Sprintf("%v", err)
+			pe.Result["error"] = fmt.Sprintf("%v", err)
 			continue
 		}
 		defer conn.Close()
 		rTime = endTime - startTime
 		cs = conn.ConnectionState()
 		ok = true
+		delete(pe.Result, "error")
 	}
 	pe.Result["rtt"] = float64(rTime)
 	if ok {

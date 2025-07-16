@@ -126,7 +126,7 @@ func doPollingSnmpSysUpTime(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 		diff := float64(uptime) - lastUptime
 		pe.Result["sysUpTime"] = float64(uptime)
 		pe.Result["deltaSysUpTime"] = diff
-		pe.Result["error"] = ""
+		delete(pe.Result, "error")
 		if lastUptime < float64(uptime) {
 			setPollingState(pe, "normal")
 			return
@@ -161,6 +161,7 @@ func doPollingSnmpIF(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 	}
 	pe.Result["ifOperStatus"] = float64(oper)
 	pe.Result["ifAdminStatus"] = float64(admin)
+	delete(pe.Result, "error")
 	if oper == 1 {
 		setPollingState(pe, "normal")
 		return
@@ -285,7 +286,7 @@ func doPollingSnmpGet(pe *datastore.PollingEnt, agent *gosnmp.GoSNMP) {
 			setPollingState(pe, pe.Level)
 			return
 		}
-
+		delete(pe.Result, "error")
 		setPollingState(pe, "normal")
 		return
 	}
