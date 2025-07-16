@@ -83,6 +83,9 @@ func nameToOID(name string) string {
 			return name
 		}
 	}
+	if !strings.HasPrefix(oid, ".") {
+		oid = "." + oid
+	}
 	return oid
 }
 

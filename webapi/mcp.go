@@ -100,32 +100,38 @@ func addGetNodeListTool(s *server.MCPServer) {
 	tool := mcp.NewTool("get_node_list",
 		mcp.WithDescription("get node list from TWSNMP"),
 		mcp.WithString("name_filter",
-			mcp.Description("node name filter. Empty is no filter"),
+			mcp.Description(
+				`name_filter specifies the search criteria for node names using regular expressions.
+If blank, all nodes are searched.
+`),
 		),
 		mcp.WithString("ip_filter",
-			mcp.Description("node ip filter. Empty is no filter"),
+			mcp.Description(
+				`ip_filter specifies the search criteria for node IP address using regular expressions.
+If blank, all nodes are searched.
+`),
 		),
 		mcp.WithString("state_filter",
-			mcp.Enum("", "normal", "warn", "low", "high", "repair"),
 			mcp.Description(
-				`node state filter. Empty is no filter
- select state name.(normal,warn,low,high,repair)
+				`state_filter uses a regular expression to specify search criteria for node state names.
+If blank, all nodes are searched.
+State names can be "normal","warn","low","high","repair","unknown"
 `),
 		),
 	)
 	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		name := request.GetString("name_filter", "")
-		ip := request.GetString("ip_filter", "")
-		state := request.GetString("state_filter", "")
+		name := makeRegexFilter(request.GetString("name_filter", ""))
+		ip := makeRegexFilter(request.GetString("ip_filter", ""))
+		state := makeRegexFilter(request.GetString("state_filter", ""))
 		list := []mcpNodeEnt{}
 		datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
-			if name != "" && name != n.Name {
+			if name != nil && !name.MatchString(n.Name) {
 				return true
 			}
-			if ip != "" && ip != n.IP {
+			if ip != nil && !ip.MatchString(n.IP) {
 				return true
 			}
-			if state != "" && state != n.State {
+			if state != nil && !state.MatchString(n.State) {
 				return true
 			}
 			list = append(list, mcpNodeEnt{
@@ -164,21 +170,27 @@ func addGetNetworkListTool(s *server.MCPServer) {
 	tool := mcp.NewTool("get_network_list",
 		mcp.WithDescription("get network list from TWSNMP"),
 		mcp.WithString("name_filter",
-			mcp.Description("network name filter. Empty is no filter"),
+			mcp.Description(
+				`name_filter specifies the search criteria for network names using regular expressions.
+If blank, all networks are searched.
+`),
 		),
 		mcp.WithString("ip_filter",
-			mcp.Description("network ip filter. Empty is no filter"),
+			mcp.Description(
+				`ip_filter specifies the search criteria for network IP address using regular expressions.
+If blank, all networks are searched.
+`),
 		),
 	)
 	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		name := request.GetString("name_filter", "")
-		ip := request.GetString("ip_filter", "")
+		name := makeRegexFilter(request.GetString("name_filter", ""))
+		ip := makeRegexFilter(request.GetString("ip_filter", ""))
 		list := []mcpNetworkEnt{}
 		datastore.ForEachNetworks(func(n *datastore.NetworkEnt) bool {
-			if name != "" && name != n.Name {
+			if name != nil && name.MatchString(n.Name) {
 				return true
 			}
-			if ip != "" && ip != n.IP {
+			if ip != nil && ip.MatchString(n.IP) {
 				return true
 			}
 			ports := []string{}
@@ -221,44 +233,53 @@ func addGetPollingListTool(s *server.MCPServer) {
 	searchTool := mcp.NewTool("get_polling_list",
 		mcp.WithDescription("get polling list from TWSNMP"),
 		mcp.WithString("type_filter",
-			mcp.Enum("", "ping", "snmp", "tcp", "http", "dns"),
-			mcp.Description("polling type filter. Empty is no filter"),
+			mcp.Description(
+				`type_filter uses a regular expression to specify search criteria for polling type names.
+If blank, all pollings are searched.
+Type names can be "ping","tcp","http","dns","twsnmp","syslog"
+`),
 		),
 		mcp.WithString("state_filter",
-			mcp.Enum("", "normal", "warn", "low", "high", "repair"),
 			mcp.Description(
-				`node state filter. Empty is no filter
- select state name.(normal,warn,low,high,repair)
+				`state_filter uses a regular expression to specify search criteria for polling state names.
+If blank, all pollings are searched.
+State names can be "normal","warn","low","high","repair","unknown"
 `),
 		),
 		mcp.WithString("name_filter",
-			mcp.Description("polling name filter. Empty is no filter"),
+			mcp.Description(
+				`name_filter specifies the search criteria for polling names using regular expressions.
+If blank, all pollings are searched.
+`),
 		),
 		mcp.WithString("node_name_filter",
-			mcp.Description("node name filter. Empty is no filter"),
+			mcp.Description(
+				`node_name_filter specifies the search criteria for node names of polling using regular expressions.
+If blank, all pollings are searched.
+`),
 		),
 	)
 	s.AddTool(searchTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		name := request.GetString("name_filter", "")
-		nodeName := request.GetString("node_name_filter", "")
-		typeFilter := request.GetString("type_filter", "")
-		state := request.GetString("state_filter", "")
+		name := makeRegexFilter(request.GetString("name_filter", ""))
+		nodeName := makeRegexFilter(request.GetString("node_name_filter", ""))
+		typeFilter := makeRegexFilter(request.GetString("type_filter", ""))
+		state := makeRegexFilter(request.GetString("state_filter", ""))
 		list := []mcpPollingEnt{}
 		datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
-			if name != "" && name != p.Name {
+			if name != nil && name.MatchString(p.Name) {
 				return true
 			}
-			if typeFilter != "" && typeFilter != p.Type {
+			if typeFilter != nil && typeFilter.MatchString(p.Type) {
 				return true
 			}
 			n := datastore.GetNode(p.NodeID)
 			if n == nil {
 				return true
 			}
-			if nodeName != "" && nodeName != n.Name {
+			if nodeName != nil && nodeName.MatchString(n.Name) {
 				return true
 			}
-			if state != "" && state != p.State {
+			if state != nil && state.MatchString(p.State) {
 				return true
 			}
 			list = append(list, mcpPollingEnt{
@@ -670,4 +691,14 @@ func addUpdateNodeTool(s *server.MCPServer) {
 		}
 		return mcp.NewToolResultText(string(j)), nil
 	})
+}
+
+// makeRegexFilter
+func makeRegexFilter(s string) *regexp.Regexp {
+	if s != "" {
+		if f, err := regexp.Compile(s); err == nil && f != nil {
+			return f
+		}
+	}
+	return nil
 }
