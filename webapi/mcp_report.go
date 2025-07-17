@@ -93,24 +93,78 @@ func addGetMACAddressListTool(s *server.MCPServer) {
 	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		list := []mcpMACEnt{}
 		datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-			if d.ValidScore {
-				name := d.Name
-				if name == d.IP {
-					if n := datastore.GetNode(d.NodeID); n != nil {
-						name = n.Name
-					}
-				}
-				list = append(list, mcpMACEnt{
-					MAC:       d.ID,
-					Name:      name,
-					IP:        d.IP,
-					Vendor:    d.Vendor,
-					Score:     d.Score,
-					Penalty:   d.Penalty,
-					FirstTime: time.Unix(0, d.FirstTime).Format(time.RFC3339Nano),
-					LastTime:  time.Unix(0, d.LastTime).Format(time.RFC3339Nano),
-				})
+			if !d.ValidScore {
+				return true
 			}
+			name := d.Name
+			if name == d.IP && d.NodeID != "" {
+				if n := datastore.GetNode(d.NodeID); n != nil {
+					name = n.Name
+				}
+			}
+			list = append(list, mcpMACEnt{
+				MAC:       d.ID,
+				Name:      name,
+				IP:        d.IP,
+				Vendor:    d.Vendor,
+				Score:     d.Score,
+				Penalty:   d.Penalty,
+				FirstTime: time.Unix(0, d.FirstTime).Format(time.RFC3339Nano),
+				LastTime:  time.Unix(0, d.LastTime).Format(time.RFC3339Nano),
+			})
+			return true
+		})
+		j, err := json.Marshal(&list)
+		if err != nil {
+			j = []byte(err.Error())
+		}
+		return mcp.NewToolResultText(string(j)), nil
+	})
+}
+
+type mcpIPEnt struct {
+	IP        string
+	MAC       string
+	Name      string
+	Location  string
+	Vendor    string
+	Count     int64
+	Change    int64
+	Score     float64
+	Penalty   int64
+	FirstTime string
+	LastTime  string
+}
+
+func addGetIPAddressListTool(s *server.MCPServer) {
+	tool := mcp.NewTool("get_ip_address_list",
+		mcp.WithDescription("get IP address list from TWSNMP"),
+	)
+	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		list := []mcpIPEnt{}
+		datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+			if !i.ValidScore {
+				return true
+			}
+			name := i.Name
+			if name == i.IP && i.NodeID != "" {
+				if n := datastore.GetNode(i.NodeID); n != nil {
+					name = n.Name
+				}
+			}
+			list = append(list, mcpIPEnt{
+				IP:        i.IP,
+				MAC:       i.MAC,
+				Name:      name,
+				Vendor:    i.Vendor,
+				Score:     i.Score,
+				Penalty:   i.Penalty,
+				Location:  i.Loc,
+				Count:     i.Count,
+				Change:    i.Change,
+				FirstTime: time.Unix(0, i.FirstTime).Format(time.RFC3339Nano),
+				LastTime:  time.Unix(0, i.LastTime).Format(time.RFC3339Nano),
+			})
 			return true
 		})
 		j, err := json.Marshal(&list)

@@ -32,6 +32,7 @@ func startMCPServer(e *echo.Echo, mcpFrom string) {
 		server.WithLogging(),
 	)
 	// Add tools to MCP server
+	// map
 	addGetNodeListTool(s)
 	addGetNetworkListTool(s)
 	addGetPollingListTool(s)
@@ -40,9 +41,12 @@ func startMCPServer(e *echo.Echo, mcpFrom string) {
 	addSNMPWalkTool(s)
 	addAddNodeTool(s)
 	addUpdateNodeTool(s)
+	// log
 	addSearchSyslogTool(s)
+	// report
 	addGetSensorListTool(s)
 	addGetMACAddressListTool(s)
+	addGetIPAddressListTool(s)
 	mcpSSEServer = server.NewSSEServer(s)
 	e.Any("/sse", func(c echo.Context) error {
 		if _, ok := mcpAllow.Load(c.RealIP()); !ok {
