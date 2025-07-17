@@ -47,6 +47,7 @@ func startMCPServer(e *echo.Echo, mcpFrom string) {
 	addGetSensorListTool(s)
 	addGetMACAddressListTool(s)
 	addGetIPAddressListTool(s)
+	addGetWifiAPListTool(s)
 	mcpSSEServer = server.NewSSEServer(s)
 	e.Any("/sse", func(c echo.Context) error {
 		if _, ok := mcpAllow.Load(c.RealIP()); !ok {

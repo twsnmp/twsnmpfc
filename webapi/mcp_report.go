@@ -174,3 +174,51 @@ func addGetIPAddressListTool(s *server.MCPServer) {
 		return mcp.NewToolResultText(string(j)), nil
 	})
 }
+
+type mcpWifiAPEnt struct {
+	Host      string
+	BSSID     string
+	SSID      string
+	RSSI      int
+	Channel   string
+	Vendor    string
+	Info      string
+	Count     int
+	Change    int
+	FirstTime string
+	LastTime  string
+}
+
+func addGetWifiAPListTool(s *server.MCPServer) {
+	tool := mcp.NewTool("get_wifi_ap_list",
+		mcp.WithDescription("get Wifi access point list from TWSNMP"),
+	)
+	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		list := []mcpWifiAPEnt{}
+		datastore.ForEachWifiAP(func(e *datastore.WifiAPEnt) bool {
+			rssi := 0
+			if len(e.RSSI) > 0 {
+				rssi = e.RSSI[len(e.RSSI)-1].Value
+			}
+			list = append(list, mcpWifiAPEnt{
+				Host:      e.Host,
+				BSSID:     e.BSSID,
+				SSID:      e.SSID,
+				Channel:   e.Channel,
+				Vendor:    e.Vendor,
+				Info:      e.Info,
+				RSSI:      rssi,
+				Count:     e.Count,
+				Change:    e.Change,
+				FirstTime: time.Unix(0, e.FirstTime).Format(time.RFC3339Nano),
+				LastTime:  time.Unix(0, e.LastTime).Format(time.RFC3339Nano),
+			})
+			return true
+		})
+		j, err := json.Marshal(&list)
+		if err != nil {
+			j = []byte(err.Error())
+		}
+		return mcp.NewToolResultText(string(j)), nil
+	})
+}
