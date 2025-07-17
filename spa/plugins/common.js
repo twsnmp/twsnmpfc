@@ -166,6 +166,9 @@ const iconList = [
   { text: 'Google', icon: 'mdi-google', value: 'mdi-google' ,code: 0xF02AD},
   { text: 'CDプレーヤー', icon: 'mdi-disc-player', value: 'mdi-disc-player' ,code: 0xF0960},
   { text: 'TWSNMP連携マップ', icon: 'mdi-layers-search', value: 'mdi-layers-search' ,code: 0xF1206},
+  { text: 'エアコン', icon: 'mdi-air-conditioner', value: 'mdi-air-conditioner' ,code: 0xf001b},
+  { text: 'Webカメラ', icon: 'mdi-webcam', value: 'mdi-webcam' ,code: 0xf05a0},
+  { text: '太陽光発電パネル', icon: 'mdi-solar-panel', value: 'mdi-solar-panel' ,code: 0xf0d9b},
 ]
 
 const iconMap = {}
