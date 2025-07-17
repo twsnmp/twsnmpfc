@@ -9,6 +9,7 @@ require (
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/PuerkitoBio/goquery v1.10.2
 	github.com/Songmu/timeout v0.4.0
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/beevik/ntp v1.4.3
 	github.com/chewxy/stl v1.3.1
 	github.com/codegaudi/go-iforest v0.0.1
@@ -47,6 +48,7 @@ require (
 	github.com/twsnmp/twlogeye/api v0.1.1
 	github.com/vjeantet/grok v1.0.1
 	github.com/vmware/govmomi v0.48.1
+	github.com/xhit/go-str2duration/v2 v2.1.0
 	go.etcd.io/bbolt v1.3.7
 	go.opentelemetry.io/collector/client v1.33.0
 	go.opentelemetry.io/collector/component v1.33.0
