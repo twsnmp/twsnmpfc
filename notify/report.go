@@ -372,9 +372,9 @@ func getResInfo(htmlMode bool) []string {
 	memMin, _ := stats.Min(mem)
 	memMean, _ := stats.Mean(mem)
 	memMax, _ := stats.Max(mem)
-	myCpuMin, _ := stats.Min(myCPU)
-	myCpuMean, _ := stats.Mean(myCPU)
-	myCpuMax, _ := stats.Max(myCPU)
+	myCPUMin, _ := stats.Min(myCPU)
+	myCPUMean, _ := stats.Mean(myCPU)
+	myCPUMax, _ := stats.Max(myCPU)
 	myMemMin, _ := stats.Min(myMem)
 	myMemMean, _ := stats.Mean(myMem)
 	myMemMax, _ := stats.Max(myMem)
@@ -423,9 +423,9 @@ func getResInfo(htmlMode bool) []string {
 				humanize.FormatFloat("###.##", memMax),
 			),
 			fmt.Sprintf("最小:%s%% 平均:%s%% 最大:%s%%",
-				humanize.FormatFloat("###.##", myCpuMin),
-				humanize.FormatFloat("###.##", myCpuMean),
-				humanize.FormatFloat("###.##", myCpuMax),
+				humanize.FormatFloat("###.##", myCPUMin),
+				humanize.FormatFloat("###.##", myCPUMean),
+				humanize.FormatFloat("###.##", myCPUMax),
 			),
 			fmt.Sprintf("最小:%s%% 平均:%s%% 最大:%s%%",
 				humanize.FormatFloat("###.##", myMemMin),
@@ -461,9 +461,9 @@ func getResInfo(htmlMode bool) []string {
 			humanize.FormatFloat("###.##", memMax),
 		),
 		fmt.Sprintf("My CPU=%s/%s/%s %%",
-			humanize.FormatFloat("###.##", myCpuMin),
-			humanize.FormatFloat("###.##", myCpuMean),
-			humanize.FormatFloat("###.##", myCpuMax),
+			humanize.FormatFloat("###.##", myCPUMin),
+			humanize.FormatFloat("###.##", myCPUMean),
+			humanize.FormatFloat("###.##", myCPUMax),
 		),
 		fmt.Sprintf("My Mem=%s/%s/%s %%",
 			humanize.FormatFloat("###.##", myMemMin),

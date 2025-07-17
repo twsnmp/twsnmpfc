@@ -61,7 +61,7 @@ func sendNotifyMail(list []*datastore.EventLogEnt) {
 	}
 }
 
-// SendActionMailは、通知メールを送信します。
+// SendActionMail sends a notification email with the specified subject and body.
 func SendActionMail(subject, body string) {
 	if err := sendMail(subject, body+"\r\n"+datastore.NotifyConf.URL); err != nil {
 		log.Printf("SendActionMail err=%v", err)
@@ -240,7 +240,7 @@ func makeMailMessage(from, to, subject, body string, bHTML bool) string {
 	header.WriteString("MIME-Version: 1.0\r\n")
 	if bHTML {
 		header.WriteString("Content-Type: text/html; charset=\"utf-8\"\r\n")
-		var message bytes.Buffer = header
+		message := header
 		message.WriteString("\r\n")
 		message.WriteString(body)
 		return message.String()
@@ -248,7 +248,7 @@ func makeMailMessage(from, to, subject, body string, bHTML bool) string {
 	header.WriteString("Content-Type: text/plain; charset=\"utf-8\"\r\n")
 	header.WriteString("Content-Transfer-Encoding: base64\r\n")
 
-	var message bytes.Buffer = header
+	message := header
 	message.WriteString("\r\n")
 	message.WriteString(add76crlf(base64.StdEncoding.EncodeToString([]byte(body))))
 
