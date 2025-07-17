@@ -14,7 +14,6 @@ import (
 
 // get_sensor_list tool
 type mcpSensorEnt struct {
-	ID        string
 	Host      string
 	Type      string
 	Total     int64
@@ -32,7 +31,7 @@ func addGetSensorListTool(s *server.MCPServer) {
 			mcp.Description(
 				`state_filter uses a regular expression to specify search criteria for sensor state names.
 If blank, all sensor are searched.
-State names can be "normal","warn","low","high","repair","unknown"
+State names can be "normal","warn","low","high"
 `),
 		),
 	)
@@ -57,7 +56,6 @@ State names can be "normal","warn","low","high","repair","unknown"
 				)
 			}
 			list = append(list, mcpSensorEnt{
-				ID:        s.ID,
 				Host:      s.Host,
 				Type:      s.Type,
 				State:     s.State,
@@ -67,6 +65,52 @@ State names can be "normal","warn","low","high","repair","unknown"
 				FirstTime: time.Unix(0, s.FirstTime).Format(time.RFC3339Nano),
 				LastTime:  time.Unix(0, s.LastTime).Format(time.RFC3339Nano),
 			})
+			return true
+		})
+		j, err := json.Marshal(&list)
+		if err != nil {
+			j = []byte(err.Error())
+		}
+		return mcp.NewToolResultText(string(j)), nil
+	})
+}
+
+type mcpMACEnt struct {
+	MAC       string
+	Name      string
+	IP        string
+	Vendor    string
+	Score     float64
+	Penalty   int64
+	FirstTime string
+	LastTime  string
+}
+
+func addGetMACAddressListTool(s *server.MCPServer) {
+	tool := mcp.NewTool("get_mac_address_list",
+		mcp.WithDescription("get MAC address list from TWSNMP"),
+	)
+	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		list := []mcpMACEnt{}
+		datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+			if d.ValidScore {
+				name := d.Name
+				if name == d.IP {
+					if n := datastore.GetNode(d.NodeID); n != nil {
+						name = n.Name
+					}
+				}
+				list = append(list, mcpMACEnt{
+					MAC:       d.ID,
+					Name:      name,
+					IP:        d.IP,
+					Vendor:    d.Vendor,
+					Score:     d.Score,
+					Penalty:   d.Penalty,
+					FirstTime: time.Unix(0, d.FirstTime).Format(time.RFC3339Nano),
+					LastTime:  time.Unix(0, d.LastTime).Format(time.RFC3339Nano),
+				})
+			}
 			return true
 		})
 		j, err := json.Marshal(&list)
