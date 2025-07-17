@@ -637,7 +637,7 @@ func getBlueDevcieReport() []string {
 	m := make(map[string]bool)
 	ret := []string{}
 	ret = append(ret, "RSSI(min/avg/max),Address,Name,Host,Address Type,Vendor,Count,Time")
-	datastore.ForEachBludeDevice(func(b *datastore.BlueDeviceEnt) bool {
+	datastore.ForEachBlueDevice(func(b *datastore.BlueDeviceEnt) bool {
 		if b.FirstTime < st {
 			return true
 		}
@@ -658,7 +658,7 @@ func getBlueDevcieList() []*datastore.BlueDeviceEnt {
 	st := time.Now().Add(time.Duration(-24) * time.Hour).UnixNano()
 	ret := []*datastore.BlueDeviceEnt{}
 	m := make(map[string]bool)
-	datastore.ForEachBludeDevice(func(b *datastore.BlueDeviceEnt) bool {
+	datastore.ForEachBlueDevice(func(b *datastore.BlueDeviceEnt) bool {
 		if b.FirstTime < st {
 			return true
 		}

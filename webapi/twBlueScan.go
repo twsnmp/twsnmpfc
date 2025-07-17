@@ -10,7 +10,7 @@ import (
 
 func getBlueDevice(c echo.Context) error {
 	r := []*datastore.BlueDeviceEnt{}
-	datastore.ForEachBludeDevice(func(e *datastore.BlueDeviceEnt) bool {
+	datastore.ForEachBlueDevice(func(e *datastore.BlueDeviceEnt) bool {
 		r = append(r, e)
 		return true
 	})

@@ -49,7 +49,7 @@ func AddBlueDevice(e *BlueDeviceEnt) {
 	blueDevice.Store(e.ID, e)
 }
 
-func ForEachBludeDevice(f func(*BlueDeviceEnt) bool) {
+func ForEachBlueDevice(f func(*BlueDeviceEnt) bool) {
 	blueDevice.Range(func(k, v interface{}) bool {
 		e := v.(*BlueDeviceEnt)
 		return f(e)

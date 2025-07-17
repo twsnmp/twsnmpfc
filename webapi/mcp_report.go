@@ -222,3 +222,48 @@ func addGetWifiAPListTool(s *server.MCPServer) {
 		return mcp.NewToolResultText(string(j)), nil
 	})
 }
+
+type mcpBluetoothDeviceEnt struct {
+	Host        string
+	Address     string
+	Name        string
+	AddressType string
+	RSSI        int
+	Info        string
+	Vendor      string
+	Count       int64
+	FirstTime   string
+	LastTime    string
+}
+
+func addGetBluetoothDeviceListTool(s *server.MCPServer) {
+	tool := mcp.NewTool("get_bluetooth_device_list",
+		mcp.WithDescription("get bluetooth device list from TWSNMP"),
+	)
+	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		list := []mcpBluetoothDeviceEnt{}
+		datastore.ForEachBlueDevice(func(b *datastore.BlueDeviceEnt) bool {
+			rssi := 0
+			if len(b.RSSI) > 0 {
+				rssi = b.RSSI[len(b.RSSI)-1].Value
+			}
+			list = append(list, mcpBluetoothDeviceEnt{
+				Host:        b.Host,
+				Address:     b.Address,
+				AddressType: b.AddressType,
+				RSSI:        rssi,
+				Info:        b.Info,
+				Vendor:      b.Vendor,
+				Count:       b.Count,
+				FirstTime:   time.Unix(0, b.FirstTime).Format(time.RFC3339Nano),
+				LastTime:    time.Unix(0, b.LastTime).Format(time.RFC3339Nano),
+			})
+			return true
+		})
+		j, err := json.Marshal(&list)
+		if err != nil {
+			j = []byte(err.Error())
+		}
+		return mcp.NewToolResultText(string(j)), nil
+	})
+}
