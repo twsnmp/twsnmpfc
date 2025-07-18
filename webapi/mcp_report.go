@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -239,10 +240,16 @@ type mcpBluetoothDeviceEnt struct {
 func addGetBluetoothDeviceListTool(s *server.MCPServer) {
 	tool := mcp.NewTool("get_bluetooth_device_list",
 		mcp.WithDescription("get bluetooth device list from TWSNMP"),
-	)
+		mcp.WithBoolean("public_address_only",
+			mcp.DefaultBool(true),
+			mcp.Description("List only devices with Bluetooth address type Public")))
 	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		onlyPublic := request.GetBool("public_address_only", true)
 		list := []mcpBluetoothDeviceEnt{}
 		datastore.ForEachBlueDevice(func(b *datastore.BlueDeviceEnt) bool {
+			if onlyPublic && !strings.Contains(b.AddressType, "Public") {
+				return true
+			}
 			rssi := 0
 			if len(b.RSSI) > 0 {
 				rssi = b.RSSI[len(b.RSSI)-1].Value
