@@ -322,3 +322,43 @@ func addGetServerCertificateListTool(s *server.MCPServer) {
 		return mcp.NewToolResultText(string(j)), nil
 	})
 }
+
+type mcpResourceMonitorEnt struct {
+	Time        string
+	CPUUsage    string
+	MemoryUsage string
+	SwapUsage   string
+	DiskUsage   string
+	Load        string
+}
+
+func addGetResourceMonitorListTool(s *server.MCPServer) {
+	tool := mcp.NewTool("get_resource_monitor_list",
+		mcp.WithDescription("get resource monitor list from TWSNMP"),
+	)
+	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		list := []mcpResourceMonitorEnt{}
+		skip := 30
+		if len(datastore.MonitorDataes) < 120 {
+			skip = 5
+		}
+		for i, m := range datastore.MonitorDataes {
+			if i%skip != 0 {
+				continue
+			}
+			list = append(list, mcpResourceMonitorEnt{
+				Time:        time.Unix(m.At, 0).Format(time.RFC3339),
+				CPUUsage:    fmt.Sprintf("%.02f%%", m.CPU),
+				MemoryUsage: fmt.Sprintf("%.02f%%", m.Mem),
+				SwapUsage:   fmt.Sprintf("%.02f%%", m.Swap),
+				DiskUsage:   fmt.Sprintf("%.02f%%", m.Disk),
+				Load:        fmt.Sprintf("%.02f", m.Load),
+			})
+		}
+		j, err := json.Marshal(&list)
+		if err != nil {
+			j = []byte(err.Error())
+		}
+		return mcp.NewToolResultText(string(j)), nil
+	})
+}
