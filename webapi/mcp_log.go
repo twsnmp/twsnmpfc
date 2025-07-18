@@ -3,7 +3,8 @@ package webapi
 import (
 	"context"
 	"encoding/json"
-	"strings"
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/araddon/dateparse"
@@ -60,22 +61,32 @@ If blank, no filter.
 			mcp.Min(1),
 			mcp.Description("Limit on number of logs retrieved. min 100,max 10000"),
 		),
-		mcp.WithString("time_range",
-			mcp.Required(),
+		mcp.WithString("start_time",
+			mcp.DefaultString("-1h"),
 			mcp.Description(
-				`Time range of logs to search
-		format is "start date/time, duration"
-		or "start date/time, end date/time".
+				`start date and time of logs to search
+or duration from now
 
-		A duration string is a possibly signed sequence of
-		decimal numbers, each with optional fraction and a unit suffix,
-		such as "300ms", "-1.5h" or "2h45m".
-		Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h", "d", "w".
+A duration string is a possibly signed sequence of
+decimal numbers, each with optional fraction and a unit suffix,
+such as "300ms", "-1.5h" or "2h45m".
+Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h", "d", "w".
 
-		Example:
-		2025/05/07 05:59:00,1h
-		2025/05/07 05:59:00,2025/05/07 06:59:00
-		`),
+Example:
+ 2025/05/07 05:59:00
+ -1h
+`),
+		),
+		mcp.WithString("end_time",
+			mcp.DefaultString(""),
+			mcp.Description(
+				`end date and time of logs to search.
+empty or "now" is current time.
+
+Example:
+ 2025/05/07 06:59:00
+ now
+`),
 		),
 	)
 	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -83,12 +94,14 @@ If blank, no filter.
 		tag := makeRegexFilter(request.GetString("tag_filter", ""))
 		level := makeRegexFilter(request.GetString("level_filter", ""))
 		message := makeRegexFilter(request.GetString("message_filter", ""))
-		timeRange, err := request.RequireString("time_range")
+		start := request.GetString("start_time", "-1h")
+		end := request.GetString("end_time", "")
+		st, et, err := getTimeRange(start, end)
 		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
+			return mcp.NewToolResultText(err.Error()), nil
 		}
-		st, et := getTimeRange(timeRange)
 		limit := request.GetInt("limit_log_count", 100)
+		log.Printf("mcp search_syslog limit=%d st=%v et=%v", limit, time.Unix(0, st), time.Unix(0, et))
 		list := []mcpSyslogEnt{}
 		datastore.ForEachLog(st, et, "syslog", func(l *datastore.LogEnt) bool {
 			var sl = make(map[string]interface{})
@@ -155,25 +168,25 @@ If blank, no filter.
 }
 
 // getTimeRange
-func getTimeRange(timeRange string) (int64, int64) {
-	st := time.Unix(0, 0)
+func getTimeRange(start, end string) (int64, int64, error) {
+	var st time.Time
+	var err error
 	et := time.Now()
-	a := strings.SplitN(timeRange, ",", 2)
-	if len(a) == 1 && a[0] != "" {
-		if d, err := str2duration.ParseDuration(a[0]); err == nil {
-			st = et.Add(d * -1)
-		} else if t, err := dateparse.ParseLocal(a[0]); err == nil {
-			st = t
-		}
-	} else {
-		if t, err := dateparse.ParseLocal(a[0]); err == nil {
-			st = t
-			if t, err := dateparse.ParseLocal(a[1]); err == nil {
-				et = t
-			} else if d, err := str2duration.ParseDuration(a[1]); err == nil {
-				et = st.Add(d)
-			}
+	if start == "" {
+		return 0, 0, fmt.Errorf("start_time must not empty")
+	}
+	if d, err := str2duration.ParseDuration(start); err == nil {
+		st = et.Add(d)
+	} else if st, err = dateparse.ParseLocal(start); err != nil {
+		return 0, 0, err
+	}
+	if end != "" && end != "now" {
+		if et, err = dateparse.ParseLocal(end); err != nil {
+			return 0, 0, err
 		}
 	}
-	return st.UnixNano(), et.UnixNano()
+	if st.UnixNano() > et.UnixNano() {
+		return 0, 0, fmt.Errorf("start_time must before end_time")
+	}
+	return st.UnixNano(), et.UnixNano(), nil
 }
