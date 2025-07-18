@@ -11,7 +11,6 @@ type CertEnt struct {
 	ID           string // Target:PORT
 	Target       string
 	Port         uint16
-	Service      string
 	Subject      string
 	Issuer       string
 	SerialNumber string

@@ -274,3 +274,51 @@ func addGetBluetoothDeviceListTool(s *server.MCPServer) {
 		return mcp.NewToolResultText(string(j)), nil
 	})
 }
+
+type mcpServerCertificateEnt struct {
+	Server       string
+	Port         uint16
+	Subject      string
+	Issuer       string
+	SerialNumber string
+	Verify       bool
+	NotAfter     string
+	NotBefore    string
+	Error        string
+	Score        float64
+	Penalty      int64
+	FirstTime    string
+	LastTime     string
+}
+
+func addGetServerCertificateListTool(s *server.MCPServer) {
+	tool := mcp.NewTool("get_server_certificate_list",
+		mcp.WithDescription("get server certificate list from TWSNMP"),
+	)
+	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		list := []mcpServerCertificateEnt{}
+		datastore.ForEachCerts(func(c *datastore.CertEnt) bool {
+			list = append(list, mcpServerCertificateEnt{
+				Server:       c.Target,
+				Port:         c.Port,
+				Subject:      c.Subject,
+				Issuer:       c.Issuer,
+				SerialNumber: c.SerialNumber,
+				Verify:       c.Verify,
+				NotBefore:    time.Unix(c.NotBefore, 0).Format(time.RFC3339),
+				NotAfter:     time.Unix(c.NotAfter, 0).Format(time.RFC3339),
+				Error:        c.Error,
+				Score:        c.Score,
+				Penalty:      c.Penalty,
+				FirstTime:    time.Unix(0, c.FirstTime).Format(time.RFC3339Nano),
+				LastTime:     time.Unix(0, c.LastTime).Format(time.RFC3339Nano),
+			})
+			return true
+		})
+		j, err := json.Marshal(&list)
+		if err != nil {
+			j = []byte(err.Error())
+		}
+		return mcp.NewToolResultText(string(j)), nil
+	})
+}
