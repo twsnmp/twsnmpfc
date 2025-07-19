@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -281,6 +283,177 @@ Example:
 		}
 		return mcp.NewToolResultText(string(j)), nil
 	})
+}
+
+// get_syslog_summary tool
+type mcpSyslogSummaryEnt struct {
+	Pattern string
+	Count   int
+}
+
+func addGetSyslogSummaryTool(s *server.MCPServer) {
+	tool := mcp.NewTool("get_syslog_summary",
+		mcp.WithDescription("get syslog summary from TWSNMP"),
+		mcp.WithString("host_filter",
+			mcp.Description(
+				`host_filter specifies the search criteria for host names using regular expressions.
+If blank, no filter.
+`),
+		),
+		mcp.WithString("tag_filter",
+			mcp.Description(
+				`tag_filter specifies the search criteria for tag names using regular expressions.
+If blank, no filter.
+`),
+		),
+		mcp.WithString("level_filter",
+			mcp.Description(
+				`level_filter specifies the search criteria for level names using regular expressions.
+If blank, no filter.
+Level names can be "warn","low","high","debug","info" 
+`),
+		),
+		mcp.WithString("message_filter",
+			mcp.Description(
+				`message_filter specifies the search criteria for messages using regular expressions.
+If blank, no filter.
+`),
+		),
+		mcp.WithNumber("top_n",
+			mcp.DefaultNumber(10),
+			mcp.Max(100),
+			mcp.Min(5),
+			mcp.Description("Top n syslog pattern. min 5,max 100"),
+		),
+		mcp.WithString("start_time",
+			mcp.DefaultString("-1h"),
+			mcp.Description(
+				`start date and time of logs to search
+or duration from now
+
+A duration string is a possibly signed sequence of
+decimal numbers, each with optional fraction and a unit suffix,
+such as "300ms", "-1.5h" or "2h45m".
+Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h", "d", "w".
+
+Example:
+ 2025/05/07 05:59:00
+ -1h
+`),
+		),
+		mcp.WithString("end_time",
+			mcp.DefaultString(""),
+			mcp.Description(
+				`end date and time of logs to search.
+empty or "now" is current time.
+
+Example:
+ 2025/05/07 06:59:00
+ now
+`),
+		),
+	)
+	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		host := makeRegexFilter(request.GetString("host_filter", ""))
+		tag := makeRegexFilter(request.GetString("tag_filter", ""))
+		level := makeRegexFilter(request.GetString("level_filter", ""))
+		message := makeRegexFilter(request.GetString("message_filter", ""))
+		start := request.GetString("start_time", "-1h")
+		end := request.GetString("end_time", "")
+		st, et, err := getTimeRange(start, end)
+		if err != nil {
+			return mcp.NewToolResultText(err.Error()), nil
+		}
+		topN := request.GetInt("top_n", 10)
+		log.Printf("mcp get_syslog_summary topn=%d st=%v et=%v", topN, time.Unix(0, st), time.Unix(0, et))
+		patternMap := make(map[string]int)
+		datastore.ForEachLog(st, et, "syslog", func(l *datastore.LogEnt) bool {
+			var sl = make(map[string]interface{})
+			if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
+				return true
+			}
+			var ok bool
+			var sv float64
+			if sv, ok = sl["severity"].(float64); !ok {
+				return true
+			}
+			var fac float64
+			if fac, ok = sl["facility"].(float64); !ok {
+				return true
+			}
+			e := mcpSyslogEnt{}
+			if e.Host, ok = sl["hostname"].(string); !ok {
+				return true
+			}
+			if e.Tag, ok = sl["tag"].(string); !ok {
+				if e.Tag, ok = sl["app_name"].(string); !ok {
+					return true
+				}
+				e.Message = ""
+				for i, k := range []string{"proc_id", "msg_id", "message", "structured_data"} {
+					if m, ok := sl[k].(string); ok && m != "" {
+						if i > 0 {
+							e.Message += " "
+						}
+						e.Message += m
+					}
+				}
+			} else {
+				if e.Message, ok = sl["content"].(string); !ok {
+					return true
+				}
+			}
+			e.Level = getLevelFromSeverity(int(sv))
+			e.Type = getSyslogType(int(sv), int(fac))
+			if message != nil && !message.MatchString(e.Message) {
+				return true
+			}
+			if tag != nil && !tag.MatchString(e.Tag) {
+				return true
+			}
+			if level != nil && !level.MatchString(e.Level) {
+				return true
+			}
+			if host != nil && !host.MatchString(e.Host) {
+				return true
+			}
+			patternMap[normalizeLog(fmt.Sprintf("%s %s %s %s", e.Host, e.Type, e.Tag, e.Message))]++
+			return true
+		})
+		list := []mcpSyslogSummaryEnt{}
+		for p, c := range patternMap {
+			list = append(list, mcpSyslogSummaryEnt{
+				Pattern: p,
+				Count:   c,
+			})
+		}
+		sort.Slice(list, func(i, j int) bool {
+			return list[i].Count > list[j].Count
+		})
+		if len(list) > topN {
+			list = list[:topN]
+		}
+		j, err := json.Marshal(&list)
+		if err != nil {
+			j = []byte(err.Error())
+		}
+		return mcp.NewToolResultText(string(j)), nil
+	})
+}
+
+var regNum = regexp.MustCompile(`\b-?\d+(\.\d+)?\b`)
+var regUUDI = regexp.MustCompile(`[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`)
+var regEmail = regexp.MustCompile(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b`)
+var regIP = regexp.MustCompile(`\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b`)
+var regMAC = regexp.MustCompile(`\b(?:[0-9a-fA-F]{2}[:-]){5}(?:[0-9a-fA-F]{2})\b`)
+
+func normalizeLog(s string) string {
+	s = regUUDI.ReplaceAllString(s, "#UUID#")
+	s = regEmail.ReplaceAllString(s, "#EMAIL#")
+	s = regIP.ReplaceAllString(s, "#IP#")
+	s = regMAC.ReplaceAllString(s, "#MAC#")
+	s = regNum.ReplaceAllString(s, "#NUM#")
+	return s
 }
 
 // search_snmp_trap_log tool

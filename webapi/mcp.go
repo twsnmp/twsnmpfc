@@ -45,6 +45,7 @@ func startMCPServer(e *echo.Echo, mcpFrom string) {
 	// log
 	addSearchEventLogTool(s)
 	addSearchSyslogTool(s)
+	addGetSyslogSummaryTool(s)
 	addSearchSNMPTrapLogTool(s)
 	// report
 	addGetSensorListTool(s)
