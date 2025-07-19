@@ -3,6 +3,7 @@ package webapi
 import (
 	"context"
 	"log"
+	"net"
 	"regexp"
 	"strings"
 	"sync"
@@ -44,6 +45,7 @@ func startMCPServer(e *echo.Echo, mcpFrom string) {
 	// log
 	addSearchEventLogTool(s)
 	addSearchSyslogTool(s)
+	addSearchSNMPTrapLogTool(s)
 	// report
 	addGetSensorListTool(s)
 	addGetMACAddressListTool(s)
@@ -52,17 +54,16 @@ func startMCPServer(e *echo.Echo, mcpFrom string) {
 	addGetBluetoothDeviceListTool(s)
 	addGetServerCertificateListTool(s)
 	addGetResourceMonitorListTool(s)
-	addSearchSNMPTrapLogTool(s)
 	mcpSSEServer = server.NewSSEServer(s)
 	e.Any("/sse", func(c echo.Context) error {
-		if _, ok := mcpAllow.Load(c.RealIP()); !ok {
+		if !mcpCheckFromAddress(c) {
 			return echo.ErrUnauthorized
 		}
 		mcpSSEServer.ServeHTTP(c.Response().Writer, c.Request())
 		return nil
 	})
 	e.Any("/message", func(c echo.Context) error {
-		if _, ok := mcpAllow.Load(c.RealIP()); !ok {
+		if !mcpCheckFromAddress(c) {
 			return echo.ErrUnauthorized
 		}
 		mcpSSEServer.ServeHTTP(c.Response().Writer, c.Request())
@@ -70,7 +71,7 @@ func startMCPServer(e *echo.Echo, mcpFrom string) {
 	})
 	mcpStreamableHTTPServer = server.NewStreamableHTTPServer(s)
 	e.Any("/mcp", func(c echo.Context) error {
-		if _, ok := mcpAllow.Load(c.RealIP()); !ok {
+		if !mcpCheckFromAddress(c) {
 			return echo.ErrUnauthorized
 		}
 		mcpStreamableHTTPServer.ServeHTTP(c.Response().Writer, c.Request())
@@ -95,4 +96,17 @@ func makeRegexFilter(s string) *regexp.Regexp {
 		}
 	}
 	return nil
+}
+
+// check from address
+func mcpCheckFromAddress(c echo.Context) bool {
+	if ip, _, err := net.SplitHostPort(c.Request().RemoteAddr); err == nil {
+		if _, ok := mcpAllow.Load(ip); ok {
+			return true
+		}
+	}
+	if _, ok := mcpAllow.Load(c.RealIP()); ok {
+		return true
+	}
+	return false
 }
