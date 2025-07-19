@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/araddon/dateparse"
@@ -232,46 +233,186 @@ Example:
 			if fac, ok = sl["facility"].(float64); !ok {
 				return true
 			}
-			log := mcpSyslogEnt{}
-			if log.Host, ok = sl["hostname"].(string); !ok {
+			e := mcpSyslogEnt{}
+			if e.Host, ok = sl["hostname"].(string); !ok {
 				return true
 			}
-			if log.Tag, ok = sl["tag"].(string); !ok {
-				if log.Tag, ok = sl["app_name"].(string); !ok {
+			if e.Tag, ok = sl["tag"].(string); !ok {
+				if e.Tag, ok = sl["app_name"].(string); !ok {
 					return true
 				}
-				log.Message = ""
+				e.Message = ""
 				for i, k := range []string{"proc_id", "msg_id", "message", "structured_data"} {
 					if m, ok := sl[k].(string); ok && m != "" {
 						if i > 0 {
-							log.Message += " "
+							e.Message += " "
 						}
-						log.Message += m
+						e.Message += m
 					}
 				}
 			} else {
-				if log.Message, ok = sl["content"].(string); !ok {
+				if e.Message, ok = sl["content"].(string); !ok {
 					return true
 				}
 			}
-			log.Time = time.Unix(0, l.Time).Format(time.RFC3339Nano)
-			log.Level = getLevelFromSeverity(int(sv))
-			log.Type = getSyslogType(int(sv), int(fac))
-			log.Facility = int(fac)
-			log.Severity = int(sv)
-			if message != nil && !message.MatchString(log.Message) {
+			e.Time = time.Unix(0, l.Time).Format(time.RFC3339Nano)
+			e.Level = getLevelFromSeverity(int(sv))
+			e.Type = getSyslogType(int(sv), int(fac))
+			e.Facility = int(fac)
+			e.Severity = int(sv)
+			if message != nil && !message.MatchString(e.Message) {
 				return true
 			}
-			if tag != nil && !tag.MatchString(log.Tag) {
+			if tag != nil && !tag.MatchString(e.Tag) {
 				return true
 			}
-			if level != nil && !level.MatchString(log.Level) {
+			if level != nil && !level.MatchString(e.Level) {
 				return true
 			}
-			if host != nil && !host.MatchString(log.Host) {
+			if host != nil && !host.MatchString(e.Host) {
 				return true
 			}
-			list = append(list, log)
+			list = append(list, e)
+			return len(list) < limit
+		})
+		j, err := json.Marshal(&list)
+		if err != nil {
+			j = []byte(err.Error())
+		}
+		return mcp.NewToolResultText(string(j)), nil
+	})
+}
+
+// search_snmp_trap_log tool
+type mcpSNMPTrapLogEnt struct {
+	Time        string
+	FromAddress string
+	TrapType    string
+	Variables   string
+}
+
+func addSearchSNMPTrapLogTool(s *server.MCPServer) {
+	tool := mcp.NewTool("search_snmp_trap_log",
+		mcp.WithDescription("search SNMP trap log from TWSNMP"),
+		mcp.WithString("from_filter",
+			mcp.Description(
+				`from_filter specifies the search criteria for trap sender address using regular expressions.
+If blank, no filter.
+`),
+		),
+		mcp.WithString("trap_type_filter",
+			mcp.Description(
+				`trap_type_filter specifies the search criteria for SNMP trap types using regular expressions.
+If blank, no filter.
+`),
+		),
+		mcp.WithString("variable_filter",
+			mcp.Description(
+				`variable_filter specifies the search criteria for SNMP trap variables using regular expressions.
+If blank, no filter.
+`),
+		),
+		mcp.WithNumber("limit_log_count",
+			mcp.DefaultNumber(100),
+			mcp.Max(10000),
+			mcp.Min(1),
+			mcp.Description("Limit on number of logs retrieved. min 100,max 10000"),
+		),
+		mcp.WithString("start_time",
+			mcp.DefaultString("-1h"),
+			mcp.Description(
+				`start date and time of logs to search
+or duration from now
+
+A duration string is a possibly signed sequence of
+decimal numbers, each with optional fraction and a unit suffix,
+such as "300ms", "-1.5h" or "2h45m".
+Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h", "d", "w".
+
+Example:
+ 2025/05/07 05:59:00
+ -1h
+`),
+		),
+		mcp.WithString("end_time",
+			mcp.DefaultString(""),
+			mcp.Description(
+				`end date and time of logs to search.
+empty or "now" is current time.
+
+Example:
+ 2025/05/07 06:59:00
+ now
+`),
+		),
+	)
+	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		from := makeRegexFilter(request.GetString("host_filter", ""))
+		trapType := makeRegexFilter(request.GetString("trap_type_filter", ""))
+		variable := makeRegexFilter(request.GetString("variable_filter", ""))
+		start := request.GetString("start_time", "-1h")
+		end := request.GetString("end_time", "")
+		st, et, err := getTimeRange(start, end)
+		if err != nil {
+			return mcp.NewToolResultText(err.Error()), nil
+		}
+		limit := request.GetInt("limit_log_count", 100)
+		log.Printf("mcp search_snmp_trap_log limit=%d st=%v et=%v", limit, time.Unix(0, st), time.Unix(0, et))
+		list := []mcpSNMPTrapLogEnt{}
+		datastore.ForEachLog(st, et, "trap", func(l *datastore.LogEnt) bool {
+			var sl = make(map[string]interface{})
+			if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
+				return true
+			}
+			var ok bool
+			e := mcpSNMPTrapLogEnt{}
+			if fa, ok := sl["FromAddress"].(string); !ok {
+				return true
+			} else {
+				a := strings.SplitN(fa, ":", 2)
+				if len(a) == 2 {
+					e.FromAddress = a[0]
+					n := datastore.FindNodeFromIP(a[0])
+					if n != nil {
+						e.FromAddress += "(" + n.Name + ")"
+					}
+				} else {
+					e.FromAddress = fa
+				}
+			}
+			if e.Variables, ok = sl["Variables"].(string); !ok {
+				return true
+			}
+			var ent string
+			if ent, ok = sl["Enterprise"].(string); !ok || ent == "" {
+				a := trapOidRegexp.FindStringSubmatch(e.Variables)
+				if len(a) > 1 {
+					e.TrapType = a[1]
+				} else {
+					e.TrapType = ""
+				}
+			} else {
+				var gen float64
+				if gen, ok = sl["GenericTrap"].(float64); !ok {
+					return true
+				}
+				var spe float64
+				if spe, ok = sl["SpecificTrap"].(float64); !ok {
+					return true
+				}
+				e.TrapType = fmt.Sprintf("%s:%d:%d", ent, int(gen), int(spe))
+			}
+			e.Time = time.Unix(0, l.Time).Format(time.RFC3339Nano)
+			if from != nil && !from.MatchString(e.FromAddress) {
+				return true
+			}
+			if variable != nil && !variable.MatchString(e.Variables) {
+				return true
+			}
+			if trapType != nil && !trapType.MatchString(e.TrapType) {
+				return true
+			}
+			list = append(list, e)
 			return len(list) < limit
 		})
 		j, err := json.Marshal(&list)

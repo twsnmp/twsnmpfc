@@ -52,6 +52,7 @@ func startMCPServer(e *echo.Echo, mcpFrom string) {
 	addGetBluetoothDeviceListTool(s)
 	addGetServerCertificateListTool(s)
 	addGetResourceMonitorListTool(s)
+	addSearchSNMPTrapLogTool(s)
 	mcpSSEServer = server.NewSSEServer(s)
 	e.Any("/sse", func(c echo.Context) error {
 		if _, ok := mcpAllow.Load(c.RealIP()); !ok {
