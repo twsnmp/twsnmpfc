@@ -141,6 +141,12 @@
                 <v-list-item-title> ホスト別ログ </v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="showSyslogSummary">
+              <v-list-item-icon><v-icon>mdi-filter</v-icon> </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title> 正規化分析 </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item @click="showHost3D">
               <v-list-item-icon
                 ><v-icon>mdi-chart-scatter-plot</v-icon>
@@ -1028,6 +1034,57 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="syslogSummaryDialog" persistent max-width="98vw">
+      <v-card style="width: 100%">
+        <v-card-title>
+          syslogの正規化分析
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <v-card-text>
+          <div
+            id="syslogSummary"
+            style="width: 90vw; height: 30vh; margin: 0 auto"
+          ></div>
+          <v-data-table
+            :headers="syslogSummaryListHeader"
+            :items="syslogSummaryList"
+            item-key="Pattern"
+            sort-by="Count"
+            sort-desc
+            dense
+          >
+            <template #[`item.Pattern`]="{ item }">
+              {{ showSampleLog ? item.Sample : item.Pattern }}
+            </template>
+            <template #[`item.Count`]="{ item }">
+              {{ formatCount(item.Count) }}
+            </template>
+            <template #[`body.append`]>
+              <tr>
+                <td>
+                  <v-text-field
+                    v-model="patternFilter"
+                    label="pattern"
+                  ></v-text-field>
+                </td>
+                <td></td>
+              </tr>
+            </template>
+          </v-data-table>
+        </v-card-text>
+        <v-card-actions>
+          <v-switch
+            v-model="showSampleLog"
+            label="サンプルログを表示"
+          ></v-switch>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="syslogSummaryDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -1214,6 +1271,22 @@ export default {
       polling: {},
       nodeList: [],
       addPollingDone: false,
+      syslogSummaryListHeader: [
+        {
+          text: 'パターン/サンプルログ',
+          value: 'Pattern',
+          width: '90%',
+          filter: (value) => {
+            if (!this.patternFilter) return true
+            return value.includes(this.patternFilter)
+          },
+        },
+        { text: '回数', value: 'Count', width: '10%' },
+      ],
+      syslogSummaryList: [],
+      syslogSummaryDialog: false,
+      showSampleLog: false,
+      patternFilter: '',
     }
   },
   async fetch() {
@@ -1719,6 +1792,13 @@ export default {
       if (mac) {
         this.$router.push({ path: '/report/address/' + mac[0] })
       }
+    },
+    showSyslogSummary() {
+      this.syslogSummaryList = this.$getSyslogSummary(this.getFilteredSyslog())
+      this.syslogSummaryDialog = true
+      this.$nextTick(() => {
+        this.$showSyslogSummary('syslogSummary', this.syslogSummaryList)
+      })
     },
     doAddPolling() {
       this.$axios
