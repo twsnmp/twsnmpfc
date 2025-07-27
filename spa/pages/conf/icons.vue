@@ -5,13 +5,21 @@
         アイコン
         <v-spacer></v-spacer>
       </v-card-title>
-      <v-alert v-model="deleteError" color="error" dense dismissible>
-        アイコンの登録を削除できませんでした
-      </v-alert>
       <v-alert v-model="updateError" color="error" dense dismissible>
         アイコンを登録できませんでした
       </v-alert>
-      <v-data-table :headers="headers" :items="icons" dense sort-by="Text">
+      <v-alert v-model="importError" color="error" dense dismissible>
+        {{ importErrorMsg }}
+      </v-alert>
+      <v-data-table
+        v-model="selectedIcons"
+        show-select
+        item-key="Icon"
+        :headers="headers"
+        :items="icons"
+        dense
+        sort-by="Text"
+      >
         <template #[`item.Icon`]="{ item }">
           <v-icon>{{ item.Icon }}</v-icon>
           {{ item.Icon }}
@@ -21,7 +29,6 @@
         </template>
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="editIcon(item)"> mdi-pencil </v-icon>
-          <v-icon small @click="deleteIcon(item)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
       <v-card-actions>
@@ -29,6 +36,45 @@
         <v-btn color="primary" dark @click="addIcon">
           <v-icon>mdi-plus</v-icon>
           追加
+        </v-btn>
+        <v-btn
+          :loading="importWait"
+          :disabled="importWait"
+          color="primary"
+          dark
+          @click="selectIconFile"
+        >
+          <v-icon>mdi-upload</v-icon>
+          インポート
+        </v-btn>
+        <input
+          ref="iconFileInput"
+          type="file"
+          accept=".csv;.txt"
+          style="display: none"
+          @change="importIcon"
+        />
+        <download-excel
+          v-if="icons.length > 0"
+          :fetch="makeExports"
+          type="csv"
+          :escape-csv="false"
+          name="TWSNMP_FC_Icons.csv"
+          class="v-btn ml-0"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-download</v-icon>
+            エクスポート
+          </v-btn>
+        </download-excel>
+        <v-btn
+          v-if="selectedIcons.length > 0"
+          color="error"
+          class="ml-1"
+          @click="deleteDialog = true"
+        >
+          <v-icon>mdi-delete</v-icon>
+          削除
         </v-btn>
         <v-btn color="normal" dark @click="$fetch()">
           <v-icon>mdi-cached</v-icon>
@@ -69,12 +115,15 @@
         <v-card-title>
           <span class="headline">アイコン削除</span>
         </v-card-title>
-        <v-card-text>
-          {{ selected.Text }}({{ selected.Icon }})を削除しますか？
-        </v-card-text>
+        <v-card-text> 選択したアイコンを削除しますか？ </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" @click="doDelete">
+          <v-btn
+            :loading="deleteWait"
+            :disabled="deleteWait"
+            color="error"
+            @click="doDelete"
+          >
             <v-icon>mdi-delete</v-icon>
             削除
           </v-btn>
@@ -94,7 +143,6 @@ export default {
     return {
       editDialog: false,
       deleteDialog: false,
-      deleteError: false,
       updateError: false,
       selected: {
         Icon: '',
@@ -123,9 +171,15 @@ export default {
       iconList: [],
       iconCode: new Map(),
       add: false,
+      importError: false,
+      importErrorMsg: '',
+      importWait: false,
+      deleteWait: false,
+      selectedIcons: [],
     }
   },
   async fetch() {
+    this.selectedIcons = []
     const r = await this.$axios.$get('/api/conf/icons')
     if (r) {
       this.icons = r
@@ -183,19 +237,14 @@ export default {
       this.selected = item
       this.deleteDialog = true
     },
-    doDelete() {
-      this.deleteError = false
-      this.$axios
-        .delete('/api/conf/icon/' + this.selected.Icon)
-        .then(() => {
-          this.$fetch()
-          this.deleteDialog = false
-          this.$delIcon(this.selected.Icon)
-        })
-        .catch((e) => {
-          this.deleteError = true
-          this.$fetch()
-        })
+    async doDelete() {
+      this.deleteWait = true
+      for (const i of this.selectedIcons) {
+        await this.$axios.delete('/api/conf/icon/' + i.Icon)
+      }
+      this.$fetch()
+      this.deleteWait = false
+      this.deleteDialog = false
     },
     doUpdate() {
       this.selected.Code = this.iconCode.has(this.selected.Icon)
@@ -214,6 +263,74 @@ export default {
           this.updateError = true
           this.$fetch()
         })
+    },
+    selectIconFile() {
+      if (this.$refs.iconFileInput) {
+        this.$refs.iconFileInput.click()
+      }
+    },
+    importIcon() {
+      this.importErrorMsg = ''
+      this.importError = false
+      const iconFile = this.$refs.iconFileInput.files[0]
+      if (iconFile) {
+        const fileReader = new FileReader()
+        fileReader.onload = async (event) => {
+          if (!event.target.result) {
+            return
+          }
+          this.importWait = true
+          const lines = event.target.result.split('\n')
+          const icons = []
+          const errors = []
+          for (const l of lines) {
+            const a = l.split(iconFile.type === 'text/plain' ? ' ' : ',', 2)
+            if (a.length !== 2) {
+              continue
+            }
+            const i = a[0].trim()
+            const t = a[1].trim()
+            if (!i || !t || i === 'Icon' || i.startsWith('#')) {
+              continue
+            }
+            const icon = i.replace(/([A-Z])/g, '-$1').toLowerCase()
+            if (this.iconCode.has(icon)) {
+              icons.push({
+                Icon: icon,
+                Text: t,
+                Code: this.iconCode.get(icon),
+              })
+            } else {
+              errors.push(icon)
+            }
+          }
+          if (errors.length > 0) {
+            this.importError = true
+            this.importErrorMsg =
+              '次のアイコンはインポートできません。 ' + errors.join(',')
+            this.$refs.iconFileInput.value = ''
+            this.importWait = false
+            return
+          }
+          this.$refs.iconFileInput.value = ''
+          for (const icon of icons) {
+            await this.$axios.$post('/api/conf/icon', icon)
+          }
+          this.importWait = false
+          this.$fetch()
+        }
+        fileReader.readAsText(iconFile)
+      }
+    },
+    makeExports() {
+      const exports = []
+      this.icons.forEach((i) => {
+        exports.push({
+          Icon: i.Icon,
+          Text: i.Text,
+        })
+      })
+      return exports
     },
   },
 }
