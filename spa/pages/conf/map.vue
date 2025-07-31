@@ -645,8 +645,6 @@ export default {
       mapSizeList: [
         { text: '2500x5000', value: 0 },
         { text: '5000x5000', value: 1 },
-        { text: '5000x10000', value: 2 },
-        { text: '10000x10000', value: 3 },
         { text: '2894x4093 A4縦', value: 4 },
         { text: '4093x2894 A4横', value: 5 },
       ],
@@ -692,6 +690,9 @@ export default {
     this.backImage = this.mapconf.BackImage
     if (!this.backImage.Color) {
       this.backImage.Color = '#171717'
+    }
+    if (this.mapconf.MapSize === 2 || this.mapconf.MapSize === 3) {
+      this.mapconf.MapSize = 1
     }
     this.sshPublicKey = await this.$axios.$get('/api/conf/sshPublicKey')
   },

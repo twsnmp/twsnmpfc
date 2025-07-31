@@ -163,17 +163,11 @@ const initMap = (div, ms) => {
     }
   }
   switch (ms) {
-    case 1:
-      mapSizeX = 5000
-      mapSizeY = 5000
-      break
     case 2:
-      mapSizeX = 5000
-      mapSizeY = 10000
-      break
     case 3:
-      mapSizeX = 10000
-      mapSizeY = 10000
+    case 1:
+      mapSizeX = window.screen.width > 3000 ? 5000 : 2500;
+      mapSizeY = 5000
       break
     case 4:
       mapSizeX = 2894
