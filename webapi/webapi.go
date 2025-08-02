@@ -30,6 +30,7 @@ type WebAPI struct {
 	Local         bool
 	EnableMCP     bool
 	MCPFrom       string
+	MCPMode       string
 	Timeout       int
 	Password      string
 	DataStorePath string
@@ -83,7 +84,7 @@ func setup(p *WebAPI) {
 	e.GET("/version", getVersion)
 	e.GET("/imageIcon/:id", getImageIcon)
 	if p.EnableMCP {
-		startMCPServer(e, p.MCPFrom)
+		startMCPServer(e, p)
 	}
 	// JWT保護されたRoute
 	r := e.Group("/api")

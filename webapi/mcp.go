@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -16,10 +17,10 @@ var mcpSSEServer *server.SSEServer
 var mcpStreamableHTTPServer *server.StreamableHTTPServer
 var mcpAllow sync.Map
 
-func startMCPServer(e *echo.Echo, mcpFrom string) {
-	log.Println("start mcp server")
+func startMCPServer(e *echo.Echo, p *WebAPI) {
+	log.Printf("start mcp server mode=%s,form=%s", p.MCPMode, p.MCPFrom)
 	mcpAllow.Store("127.0.0.1", true)
-	for _, ip := range strings.Split(mcpFrom, ",") {
+	for _, ip := range strings.Split(p.MCPFrom, ",") {
 		ip = strings.TrimSpace(ip)
 		if ip != "" {
 			mcpAllow.Store(ip, true)
@@ -55,29 +56,42 @@ func startMCPServer(e *echo.Echo, mcpFrom string) {
 	addGetBluetoothDeviceListTool(s)
 	addGetServerCertificateListTool(s)
 	addGetResourceMonitorListTool(s)
-	mcpSSEServer = server.NewSSEServer(s)
-	e.Any("/sse", func(c echo.Context) error {
-		if !mcpCheckFromAddress(c) {
-			return echo.ErrUnauthorized
-		}
-		mcpSSEServer.ServeHTTP(c.Response().Writer, c.Request())
-		return nil
-	})
-	e.Any("/message", func(c echo.Context) error {
-		if !mcpCheckFromAddress(c) {
-			return echo.ErrUnauthorized
-		}
-		mcpSSEServer.ServeHTTP(c.Response().Writer, c.Request())
-		return nil
-	})
-	mcpStreamableHTTPServer = server.NewStreamableHTTPServer(s)
-	e.Any("/mcp", func(c echo.Context) error {
-		if !mcpCheckFromAddress(c) {
-			return echo.ErrUnauthorized
-		}
-		mcpStreamableHTTPServer.ServeHTTP(c.Response().Writer, c.Request())
-		return nil
-	})
+	switch p.MCPMode {
+	case "sse":
+		mcpSSEServer = server.NewSSEServer(s)
+		e.Any("/sse", func(c echo.Context) error {
+			if !mcpCheckFromAddress(c) {
+				return echo.ErrUnauthorized
+			}
+			mcpSSEServer.ServeHTTP(c.Response().Writer, c.Request())
+			return nil
+		})
+		e.Any("/message", func(c echo.Context) error {
+			if !mcpCheckFromAddress(c) {
+				return echo.ErrUnauthorized
+			}
+			mcpSSEServer.ServeHTTP(c.Response().Writer, c.Request())
+			return nil
+		})
+	case "auth":
+		mcpStreamableHTTPServer = server.NewStreamableHTTPServer(s)
+		e.Any("/mcp", func(c echo.Context) error {
+			if !mcpCheckFromAddress(c) {
+				return echo.ErrUnauthorized
+			}
+			mcpStreamableHTTPServer.ServeHTTP(c.Response().Writer, c.Request())
+			return nil
+		}, echojwt.JWT([]byte(p.Password)))
+	default:
+		mcpStreamableHTTPServer = server.NewStreamableHTTPServer(s)
+		e.Any("/mcp", func(c echo.Context) error {
+			if !mcpCheckFromAddress(c) {
+				return echo.ErrUnauthorized
+			}
+			mcpStreamableHTTPServer.ServeHTTP(c.Response().Writer, c.Request())
+			return nil
+		})
+	}
 }
 
 func stopMCPServer(ctx context.Context) {
