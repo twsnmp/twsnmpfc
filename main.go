@@ -250,6 +250,7 @@ func main() {
 	logger.OTelCert = otelCert
 	logger.OTelGRPCPort = otelGRPCPort
 	logger.OTelHTTPPort = otelHTTPPort
+	logger.Version = version
 	if err = logger.Start(ctx, wg, trapPort, netflowPort, syslogPort, sflowPort, tcpPort); err != nil {
 		log.Fatalf("start logger err=%v", err)
 	}

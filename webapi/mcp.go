@@ -29,7 +29,7 @@ func startMCPServer(e *echo.Echo, p *WebAPI) {
 	// Create MCP Server
 	s := server.NewMCPServer(
 		"TWSNMP MCP Server",
-		"1.56.0",
+		p.Version,
 		server.WithToolCapabilities(true),
 		server.WithLogging(),
 	)

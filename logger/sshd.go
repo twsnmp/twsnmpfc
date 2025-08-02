@@ -24,6 +24,7 @@ import (
 )
 
 var SshdPort = 2222
+var Version = "v(x.x.x)"
 
 func sshd(stopCh chan bool) {
 	defer func() {
@@ -40,7 +41,7 @@ func sshd(stopCh chan bool) {
 	}
 	sv := ssh.Server{
 		Addr:             fmt.Sprintf(":%d", SshdPort),
-		Version:          "TWSNNMP FC v1.56.0",
+		Version:          "TWSNNMP FC " + Version,
 		HostSigners:      []ssh.Signer{signer},
 		IdleTimeout:      time.Second * 30,
 		MaxTimeout:       time.Minute * 10,
