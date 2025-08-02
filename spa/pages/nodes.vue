@@ -219,12 +219,13 @@
           </v-row>
           <v-row dense>
             <v-col>
-              <v-select
+              <v-autocomplete
                 v-model="editNode.Icon"
                 :items="$iconList"
+                dense
                 label="アイコン"
               >
-              </v-select>
+              </v-autocomplete>
             </v-col>
             <v-col>
               <v-icon x-large style="margin-top: 10px; margin-left: 10px">

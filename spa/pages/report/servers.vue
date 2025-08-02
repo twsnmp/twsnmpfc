@@ -404,8 +404,13 @@
           </v-row>
           <v-row dense>
             <v-col>
-              <v-select v-model="node.Icon" :items="$iconList" label="アイコン">
-              </v-select>
+              <v-autocomplete
+                v-model="node.Icon"
+                :items="$iconList"
+                dense
+                label="アイコン"
+              >
+              </v-autocomplete>
             </v-col>
             <v-col>
               <v-icon x-large style="margin-top: 10px; margin-left: 10px">
