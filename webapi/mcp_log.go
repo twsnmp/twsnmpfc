@@ -133,6 +133,43 @@ Example:
 	})
 }
 
+// add_event_log tool
+func addAddEventLogTool(s *server.MCPServer) {
+	searchTool := mcp.NewTool("add_event_log",
+		mcp.WithDescription("add event log to TWSNMP"),
+		mcp.WithString("level",
+			mcp.Enum("info", "normal", "warn", "low", "high"),
+			mcp.Description("Level of event (info,normal,warn,low,high)"),
+		),
+		mcp.WithString("node",
+			mcp.Description("Node name associated with the event"),
+		),
+		mcp.WithString("event",
+			mcp.Description("Event log contents"),
+		),
+	)
+	s.AddTool(searchTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		level := request.GetString("level", "info")
+		event := request.GetString("event", "")
+		node := request.GetString("node", "")
+		nodeID := ""
+		if node != "" {
+			if n := datastore.FindNodeFromName(node); n != nil {
+				nodeID = n.ID
+			}
+		}
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Time:     time.Now().UnixNano(),
+			Level:    level,
+			Type:     "mcp",
+			Event:    event,
+			NodeName: node,
+			NodeID:   nodeID,
+		})
+		return mcp.NewToolResultText("ok"), nil
+	})
+}
+
 // search_syslog tool
 type mcpSyslogEnt struct {
 	Time     string

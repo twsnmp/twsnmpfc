@@ -38,6 +38,7 @@ func startMCPServer(e *echo.Echo, p *WebAPI) {
 	addGetNodeListTool(s)
 	addGetNetworkListTool(s)
 	addGetPollingListTool(s)
+	addGetPollingLogTool(s)
 	addDoPingtTool(s)
 	addGetMIBTreeTool(s)
 	addSNMPWalkTool(s)
@@ -45,6 +46,7 @@ func startMCPServer(e *echo.Echo, p *WebAPI) {
 	addUpdateNodeTool(s)
 	// log
 	addSearchEventLogTool(s)
+	addAddEventLogTool(s)
 	addSearchSyslogTool(s)
 	addGetSyslogSummaryTool(s)
 	addSearchSNMPTrapLogTool(s)

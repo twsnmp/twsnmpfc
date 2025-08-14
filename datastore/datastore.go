@@ -72,7 +72,6 @@ var (
 	wifiAP sync.Map
 	// MAP Changed check
 	stateChangedNodes sync.Map
-	lastLogAdded      time.Time
 	lastNodeChanged   time.Time
 	//
 	MIBDB        *gomibdb.MIBDB

@@ -233,6 +233,54 @@ If blank, all pollings are searched.
 	})
 }
 
+// get_polling_log tool
+type mcpPollingLogEnt struct {
+	Time   string
+	State  string
+	Result map[string]any
+}
+
+func addGetPollingLogTool(s *server.MCPServer) {
+	searchTool := mcp.NewTool("get_polling_log",
+		mcp.WithDescription("get polling log from TWSNMP"),
+		mcp.WithString("id",
+			mcp.Required(),
+			mcp.Description(`The ID of the polling to retrieve the polling log`),
+		),
+		mcp.WithNumber("limit",
+			mcp.DefaultNumber(100),
+			mcp.Max(2000),
+			mcp.Min(1),
+			mcp.Description("Limit on number of logs retrieved. min 1,max 2000"),
+		),
+	)
+	s.AddTool(searchTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		id, err := request.RequireString("id")
+		if err != nil {
+			return mcp.NewToolResultText(err.Error()), nil
+		}
+		polling := datastore.GetPolling(id)
+		if polling == nil {
+			return mcp.NewToolResultText("polling not found"), nil
+		}
+		limit := request.GetInt("limit", 100)
+		list := []mcpPollingLogEnt{}
+		datastore.ForEachLastPollingLog(id, func(l *datastore.PollingLogEnt) bool {
+			list = append(list, mcpPollingLogEnt{
+				Time:   time.Unix(0, l.Time).Format(time.RFC3339),
+				State:  l.State,
+				Result: l.Result,
+			})
+			return len(list) <= limit
+		})
+		j, err := json.Marshal(&list)
+		if err != nil {
+			j = []byte(err.Error())
+		}
+		return mcp.NewToolResultText(string(j)), nil
+	})
+}
+
 // do_ping tool
 type mcpPingEnt struct {
 	Result       string `json:"Result"`

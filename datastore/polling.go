@@ -227,6 +227,39 @@ func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bo
 	})
 }
 
+// ForEachLastPollingLog iterates over the last polling log entries for a given pollingID.
+func ForEachLastPollingLog(pollingID string, f func(*PollingLogEnt) bool) error {
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	return db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("pollingLogs"))
+		if b == nil {
+			return nil
+		}
+		bs := b.Bucket([]byte(pollingID))
+		if bs == nil {
+			return nil
+		}
+		c := bs.Cursor()
+		for k, v := c.Last(); k != nil; k, v = c.Prev() {
+			var e PollingLogEnt
+			err := json.Unmarshal(v, &e)
+			if err != nil {
+				log.Printf("load polling log err=%v", err)
+				continue
+			}
+			if e.PollingID != pollingID {
+				continue
+			}
+			if !f(&e) {
+				break
+			}
+		}
+		return nil
+	})
+}
+
 // ClearPollingLog : ポーリングログを削除する
 func ClearPollingLog(pollingID string) error {
 	st := time.Now()
