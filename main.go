@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"runtime/pprof"
 	"strings"
@@ -29,6 +30,7 @@ import (
 	"github.com/twsnmp/twsnmpfc/polling"
 	"github.com/twsnmp/twsnmpfc/report"
 	"github.com/twsnmp/twsnmpfc/webapi"
+	"gopkg.in/ini.v1"
 )
 
 // From ENV or Command Args
@@ -58,6 +60,7 @@ var netflowPort = 2055
 var syslogPort = 514
 var sflowPort = 6343
 var tcpPort = 8086
+var sshdPort = 2222
 var otelGRPCPort = 4317
 var otelHTTPPort = 4318
 
@@ -105,6 +108,7 @@ func init() {
 	flag.IntVar(&syslogPort, "syslogPort", 514, "syslog port")
 	flag.IntVar(&sflowPort, "sflowPort", 6343, "sflow port")
 	flag.IntVar(&tcpPort, "tcpPort", 8086, "tcp server port")
+	flag.IntVar(&sshdPort, "sshdPort", 2222, "ssh server port")
 	flag.IntVar(&saveMapInterval, "saveMap", -1, "Save Map Interval default: windows=5min,other=60min")
 	flag.BoolVar(&resetPassword, "resetPassword", false, "Reset user:password to twsnmp:twsnmp")
 	flag.StringVar(&clientCert, "clientCert", "", "Client Cert")
@@ -148,6 +152,7 @@ func main() {
 			log.Printf("%s='%s'", f.Name, f.Value.String())
 		}
 	})
+	loadIni()
 	if cpuprofile != "" {
 		f, err := os.Create(cpuprofile)
 		if err != nil {
@@ -251,7 +256,7 @@ func main() {
 	logger.OTelGRPCPort = otelGRPCPort
 	logger.OTelHTTPPort = otelHTTPPort
 	logger.Version = version
-	if err = logger.Start(ctx, wg, trapPort, netflowPort, syslogPort, sflowPort, tcpPort); err != nil {
+	if err = logger.Start(ctx, wg, trapPort, netflowPort, syslogPort, sflowPort, tcpPort, sshdPort); err != nil {
 		log.Fatalf("start logger err=%v", err)
 	}
 	log.Println("call polling.Start")
@@ -372,5 +377,81 @@ func stopper(sig chan os.Signal) {
 				sig <- os.Interrupt
 			}
 		}
+	}
+}
+
+func loadIni() {
+	cfg, err := ini.Load(filepath.Join(dataStorePath, ".twsnmpfc.ini"))
+	if err != nil {
+		log.Printf("Fail to read ini file: %v", err)
+		return
+	}
+	// main
+	if v := cfg.Section("").Key("port").MustInt(0); v > 0 {
+		port = fmt.Sprintf("%d", v)
+	}
+	if v := cfg.Section("").Key("timeout").MustInt(0); v > 0 {
+		timeout = v
+	}
+	if v := cfg.Section("").Key("saveMap").MustInt(0); v > 0 {
+		saveMapInterval = v
+	}
+	if v := cfg.Section("").Key("tls").MustBool(false); v {
+		tls = v
+	}
+	if v := cfg.Section("").Key("local").MustBool(false); v {
+		local = v
+	}
+	// logger
+	if v := cfg.Section("logger").Key("trapPort").MustInt(0); v > 0 {
+		trapPort = v
+	}
+	if v := cfg.Section("logger").Key("syslogPort").MustInt(0); v > 0 {
+		syslogPort = v
+	}
+	if v := cfg.Section("logger").Key("sshdPort").MustInt(0); v > 0 {
+		sshdPort = v
+	}
+	if v := cfg.Section("logger").Key("netflowPort").MustInt(0); v > 0 {
+		netflowPort = v
+	}
+	if v := cfg.Section("logger").Key("sFlowPort").MustInt(0); v > 0 {
+		sflowPort = v
+	}
+	if v := cfg.Section("logger").Key("tcpdPort").MustInt(0); v > 0 {
+		tcpPort = v
+	}
+	// Open Telemetry
+	if v := cfg.Section("OTel").Key("otelGRPCPort").MustInt(0); v > 0 {
+		otelGRPCPort = v
+	}
+	if v := cfg.Section("OTel").Key("otelHTTPPort").MustInt(0); v > 0 {
+		otelHTTPPort = v
+	}
+	if v := cfg.Section("OTel").Key("otelCert").MustString(""); v != "" {
+		otelCert = v
+	}
+	if v := cfg.Section("OTel").Key("otelKey").MustString(""); v != "" {
+		otelKey = v
+	}
+	if v := cfg.Section("OTel").Key("otelCA").MustString(""); v != "" {
+		otelCA = v
+	}
+	// TLS | gRPC Client
+	if v := cfg.Section("client").Key("clientCert").MustString(""); v != "" {
+		datastore.ClientCert = v
+	}
+	if v := cfg.Section("client").Key("clientKey").MustString(""); v != "" {
+		datastore.ClientKey = v
+	}
+	if v := cfg.Section("client").Key("caCert").MustString(""); v != "" {
+		datastore.CACert = v
+	}
+	// MCP
+	if v := cfg.Section("MCP").Key("mcpFrom").MustString(""); v != "" {
+		mcpFrom = v
+	}
+	if v := cfg.Section("MCP").Key("mcpMode").MustString(""); v != "" {
+		mcpMode = v
 	}
 }

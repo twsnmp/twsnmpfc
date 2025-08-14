@@ -24,12 +24,13 @@ var syslogListen = "0.0.0.0:514"
 var sflowListen = ":6343"
 var tcpListen = ":8086"
 
-func Start(ctx context.Context, wg *sync.WaitGroup, trap, netflow, syslog, sflow, tcp int) error {
+func Start(ctx context.Context, wg *sync.WaitGroup, trap, netflow, syslog, sflow, tcp, sshd int) error {
 	trapListen = fmt.Sprintf("0.0.0.0:%d", trap)
 	netflowListen = fmt.Sprintf(":%d", netflow)
 	syslogListen = fmt.Sprintf("0.0.0.0:%d", syslog)
 	sflowListen = fmt.Sprintf(":%d", sflow)
 	tcpListen = fmt.Sprintf(":%d", tcp)
+	sshdPort = sshd
 	logCh = make(chan *datastore.LogEnt, 100)
 	wg.Add(1)
 	go logger(ctx, wg)

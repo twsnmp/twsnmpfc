@@ -23,7 +23,7 @@ import (
 	"gopkg.in/mcuadros/go-syslog.v2/format"
 )
 
-var SshdPort = 2222
+var sshdPort = 2222
 var Version = "v(x.x.x)"
 
 func sshd(stopCh chan bool) {
@@ -40,7 +40,7 @@ func sshd(stopCh chan bool) {
 		return
 	}
 	sv := ssh.Server{
-		Addr:             fmt.Sprintf(":%d", SshdPort),
+		Addr:             fmt.Sprintf(":%d", sshdPort),
 		Version:          "TWSNNMP FC " + Version,
 		HostSigners:      []ssh.Signer{signer},
 		IdleTimeout:      time.Second * 30,
