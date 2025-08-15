@@ -24,6 +24,12 @@
         <v-alert v-model="execOK" color="primary" dense dismissible>
           通信コマンドの試験に成功しました
         </v-alert>
+        <v-alert v-model="webhookFailed" color="error" dense dismissible>
+          Webhookの実行に失敗しました
+        </v-alert>
+        <v-alert v-model="webhookOK" color="primary" dense dismissible>
+          Webhookの試験に成功しました
+        </v-alert>
         <v-card-text>
           <v-row dense>
             <v-col>
@@ -201,6 +207,20 @@
           </v-row>
           <v-row dense>
             <v-col>
+              <v-text-field
+                v-model="notify.WebHookNotify"
+                label="Webhook通知"
+              />
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="notify.WebHookReport"
+                label="Webhookレポート"
+              />
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
               <v-text-field v-model="notify.ExecCmd" label="コマンド実行" />
             </v-col>
           </v-row>
@@ -227,6 +247,15 @@
           <v-btn v-if="notify.ExecCmd" color="normal" dark @click="execTest">
             <v-icon>mdi-run</v-icon>
             コマンドテスト
+          </v-btn>
+          <v-btn
+            v-if="notify.WebHookNotify || notify.WebHookReport"
+            color="normal"
+            dark
+            @click="webhookTest"
+          >
+            <v-icon>mdi-webhook</v-icon>
+            Webhookテスト
           </v-btn>
           <v-btn color="primary" dark @click="submit">
             <v-icon>mdi-content-save</v-icon>
@@ -322,6 +351,8 @@ export default {
       failed: false,
       execFailed: false,
       execOK: false,
+      webhookFailed: false,
+      webhookOK: false,
       chatList: [
         { text: '使用しない', value: '' },
         { text: 'Discord', value: 'discord' },
@@ -398,6 +429,17 @@ export default {
           this.execFailed = true
         })
     },
+    webhookTest() {
+      this.clearMsg()
+      this.$axios
+        .post('/api/notify/webhook/test', this.notify)
+        .then((r) => {
+          this.webhookOK = true
+        })
+        .catch((e) => {
+          this.webhookFailed = true
+        })
+    },
     clearMsg() {
       this.saved = false
       this.error = false
@@ -405,6 +447,8 @@ export default {
       this.failed = false
       this.execOK = false
       this.execFailed = false
+      this.webhookOK = false
+      this.webhookFailed = false
     },
     async showScheduleDialog() {
       if (this.nodeList.length < 1) {

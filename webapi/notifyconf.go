@@ -33,6 +33,8 @@ func getNotifyConf(c echo.Context) error {
 	r.ChatType = datastore.NotifyConf.ChatType
 	r.ChatWebhookURL = datastore.NotifyConf.ChatWebhookURL
 	r.ExecCmd = datastore.NotifyConf.ExecCmd
+	r.WebHookNotify = datastore.NotifyConf.WebHookNotify
+	r.WebHookReport = datastore.NotifyConf.WebHookReport
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -61,6 +63,8 @@ func postNotifyConf(c echo.Context) error {
 	datastore.NotifyConf.ChatType = nc.ChatType
 	datastore.NotifyConf.ChatWebhookURL = nc.ChatWebhookURL
 	datastore.NotifyConf.ExecCmd = nc.ExecCmd
+	datastore.NotifyConf.WebHookNotify = nc.WebHookNotify
+	datastore.NotifyConf.WebHookReport = nc.WebHookReport
 	if nc.Password != "" {
 		datastore.NotifyConf.Password = nc.Password
 	}
@@ -144,6 +148,27 @@ func postNotifyExecTest(c echo.Context) error {
 		Type:  "user",
 		Level: "info",
 		Event: "通知コマンド実行の試験に成功しました",
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postNotifyWebhookTest(c echo.Context) error {
+	nc := new(datastore.NotifyConfEnt)
+	if err := c.Bind(nc); err != nil {
+		return echo.ErrBadRequest
+	}
+	if err := notify.WebHookTest(nc); err != nil {
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "user",
+			Level: "warn",
+			Event: fmt.Sprintf("Webhookの試験に失敗しました err=%v", err),
+		})
+		return echo.ErrBadRequest
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: "Webhookの試験に成功しました",
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }

@@ -35,6 +35,8 @@ type NotifyConfEnt struct {
 	ExecCmd            string
 	//
 	InsecureCipherSuites bool
+	WebHookNotify        string
+	WebHookReport        string
 }
 
 func SaveNotifyConf() error {

@@ -762,6 +762,9 @@ func sendReportHTML() {
 	nu, bu := getUserList()
 	nip, bip := getIPList()
 	title := fmt.Sprintf("%s(定期レポート) at %s", datastore.NotifyConf.Subject, time.Now().Format("2006/01/02 15:04:05"))
+	aiList := getAIList()
+	sensorList := getSensorList()
+	webhookReport(title, info, sensorList, aiList)
 	f := template.FuncMap{
 		"levelName":     levelName,
 		"formatLogTime": formatLogTime,
@@ -784,7 +787,7 @@ func sendReportHTML() {
 		"URL":            datastore.NotifyConf.URL,
 		"Info":           info,
 		"Logs":           logs,
-		"Sensors":        getSensorList(),
+		"Sensors":        sensorList,
 		"NewDevices":     nd,
 		"BadDevices":     bd,
 		"NewUsers":       nu,
@@ -793,7 +796,7 @@ func sendReportHTML() {
 		"BadIPs":         bip,
 		"NewWifiAPs":     getWifiAPList(),
 		"NewBlueDevcies": getBlueDevcieList(),
-		"AIList":         getAIList(),
+		"AIList":         aiList,
 		"NotifyLowScore": datastore.NotifyConf.NotifyLowScore,
 		"NotifyNewInfo":  datastore.NotifyConf.NotifyNewInfo,
 	}); err != nil {

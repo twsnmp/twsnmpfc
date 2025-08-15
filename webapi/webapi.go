@@ -115,6 +115,7 @@ func setup(p *WebAPI) {
 	r.POST("/notify/test", postNotifyTest)
 	r.POST("/notify/chat/test", postNotifyChatTest)
 	r.POST("/notify/exec/test", postNotifyExecTest)
+	r.POST("/notify/webhook/test", postNotifyWebhookTest)
 	r.GET("/conf/influxdb", getInfluxdb)
 	r.POST("/conf/influxdb", postInfluxdb)
 	r.DELETE("/conf/influxdb", deleteInfluxdb)
