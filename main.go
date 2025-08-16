@@ -454,4 +454,7 @@ func loadIni() {
 	if v := cfg.Section("MCP").Key("mcpMode").MustString(""); v != "" {
 		mcpMode = v
 	}
+	if v := cfg.Section("MCP").Key("mcp").MustBool(false); v {
+		mcpEnable = v
+	}
 }
