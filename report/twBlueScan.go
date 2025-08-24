@@ -151,7 +151,7 @@ func checkOMRONEnvReport(h string, m map[string]string) {
 	})
 }
 
-// type=SwitchBotEnv,address=%s,name=%s,rssi=%d,temp=%.02f,hum=%.02f,bat=%d
+// type=SwitchBotEnv,address=%s,name=%s,rssi=%d,temp=%.02f,hum=%.02f,bat=%d,co2=%d
 func checkSwitchBotEnvReport(h string, m map[string]string) {
 	addr, ok := m["address"]
 	if !ok {
@@ -170,6 +170,7 @@ func checkSwitchBotEnvReport(h string, m map[string]string) {
 			Temp:     getFloatFromTWLog(m["temp"]),
 			Humidity: getFloatFromTWLog(m["hum"]),
 			Battery:  int(getNumberFromTWLog(m["bat"])),
+			ECo2:     float64(getNumberFromTWLog(m["co2"])),
 		})
 		if len(e.EnvData) > MaxDataSize {
 			e.EnvData = e.EnvData[1:]
@@ -311,7 +312,7 @@ func checkOldBlueDevice() {
 	ids := []string{}
 	list := []*datastore.BlueDeviceEnt{}
 	delOld := time.Now().AddDate(0, 0, -datastore.ReportConf.ReportDays).UnixNano()
-	delOldRandam := time.Now().AddDate(0, 0, -2).UnixNano()
+	delOldRandam := time.Now().AddDate(0, 0, -1).UnixNano()
 	datastore.ForEachBlueDevice(func(e *datastore.BlueDeviceEnt) bool {
 		if e.LastTime < delOld {
 			ids = append(ids, e.ID)

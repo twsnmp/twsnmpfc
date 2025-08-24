@@ -62,6 +62,15 @@
             <td>
               <v-text-field v-model="conf.vendor" label="Vendor"></v-text-field>
             </td>
+            <td>
+              <v-switch v-model="notRandom" label="Random以外"></v-switch>
+            </td>
+            <td>
+              <v-switch v-model="hasName" label="名前あり"></v-switch>
+            </td>
+            <td>
+              <v-switch v-model="hasVendor" label="ベンダーあり"></v-switch>
+            </td>
           </tr>
         </template>
       </v-data-table>
@@ -369,6 +378,9 @@ export default {
           value: 'AddressType',
           width: '12%',
           filter: (value) => {
+            if (this.notRandom) {
+              return !value.includes('Random')
+            }
             if (!this.conf.addressType) return true
             return value.includes(this.conf.addressType)
           },
@@ -378,6 +390,9 @@ export default {
           value: 'Name',
           width: '8%',
           filter: (value) => {
+            if (this.hasName) {
+              return value !== ''
+            }
             if (!this.conf.name) return true
             return value.includes(this.conf.name)
           },
@@ -396,6 +411,9 @@ export default {
           value: 'Vendor',
           width: '15%',
           filter: (value) => {
+            if (this.hasVendor) {
+              return value.includes('(0x')
+            }
             if (!this.conf.vendor) return true
             return value.includes(this.conf.vendor)
           },
@@ -404,6 +422,9 @@ export default {
         { text: '最終', value: 'Last', width: '15%' },
         { text: '操作', value: 'actions', width: '10%' },
       ],
+      hasName: false,
+      hasVendor: false,
+      notRandom: false,
       blueDevice: [],
       selected: {},
       deleteDialog: false,
