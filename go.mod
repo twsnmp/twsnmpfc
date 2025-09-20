@@ -45,7 +45,7 @@ require (
 	github.com/twsnmp/golof v1.0.0
 	github.com/twsnmp/lxi v0.3.2
 	github.com/twsnmp/rdap v0.9.1
-	github.com/twsnmp/twlogeye/api v0.1.1
+	github.com/twsnmp/twlogeye/api v0.3.0
 	github.com/vjeantet/grok v1.0.1
 	github.com/vmware/govmomi v0.48.1
 	github.com/xhit/go-str2duration/v2 v2.1.0
