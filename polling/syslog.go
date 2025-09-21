@@ -1,7 +1,5 @@
 package polling
 
-// LOG監視ポーリング処理
-
 import (
 	"encoding/json"
 	"fmt"
@@ -564,14 +562,14 @@ func doPollingSyslogCheck(pe *datastore.PollingEnt) {
 
 }
 
-func doPollingSyslogPri(pe *datastore.PollingEnt) bool {
+func doPollingSyslogPri(pe *datastore.PollingEnt) {
 	var err error
 	var regexFilter *regexp.Regexp
 	filter := pe.Filter
 	if filter != "" {
 		if regexFilter, err = regexp.Compile(filter); err != nil {
 			setPollingError("syslog", pe, err)
-			return false
+			return
 		}
 	}
 	st := time.Now().Add(-time.Second * time.Duration(pe.PollInt)).UnixNano()
@@ -609,7 +607,6 @@ func doPollingSyslogPri(pe *datastore.PollingEnt) bool {
 		pe.Result[fmt.Sprintf("pri_%d", int(pri))] = float64(c)
 	}
 	setPollingState(pe, "normal")
-	return true
 }
 
 func getProt(p string) int {
@@ -625,21 +622,21 @@ func getProt(p string) int {
 	return 0
 }
 
-func doPollingSyslogState(pe *datastore.PollingEnt) bool {
+func doPollingSyslogState(pe *datastore.PollingEnt) {
 	var err error
 	var ngFilter *regexp.Regexp
 	var okFilter *regexp.Regexp
 	if pe.Filter == "" || pe.Params == "" {
 		setPollingError("syslog", pe, fmt.Errorf("no filter fo state"))
-		return false
+		return
 	}
 	if ngFilter, err = regexp.Compile(pe.Filter); err != nil {
 		setPollingError("syslog", pe, err)
-		return false
+		return
 	}
 	if okFilter, err = regexp.Compile(pe.Params); err != nil {
 		setPollingError("syslog", pe, err)
-		return false
+		return
 	}
 	st := time.Now().Add(-time.Second * time.Duration(pe.PollInt)).UnixNano()
 	if v, ok := pe.Result["lastTime"]; ok {
@@ -677,17 +674,15 @@ func doPollingSyslogState(pe *datastore.PollingEnt) bool {
 				// 正常とする
 				setPollingState(pe, "normal")
 			}
-			// 現状維持
-			return true
+			return
 		}
 	} else {
 		if ngTime < okTime {
 			// OKが後の場合は正常（NGがない場合も含む）
 			setPollingState(pe, "normal")
-			return true
+			return
 		}
 	}
 	//それ以外はすべてNG
 	setPollingState(pe, pe.Level)
-	return true
 }

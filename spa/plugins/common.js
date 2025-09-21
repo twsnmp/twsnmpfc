@@ -79,6 +79,7 @@ const typeList = [
   { text: 'Pi-hole', value: 'pihole' },
   { text: 'VMware', value: 'vmware' },
   { text: 'LXI', value: 'lxi' },
+  { text: 'Monitor', value: 'monitor' },
 ]
 
 const logModeList = [

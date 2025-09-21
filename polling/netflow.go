@@ -1,7 +1,5 @@
 package polling
 
-// LOG監視ポーリング処理
-
 import (
 	"encoding/json"
 	"fmt"

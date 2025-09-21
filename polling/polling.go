@@ -253,7 +253,11 @@ func doPolling(pe *datastore.PollingEnt) {
 	case "twlogeye":
 		doPollingTwLogEye(pe)
 	case "pihole":
-		docPollingPiHole(pe)
+		doPollingPiHole(pe)
+	case "monitor":
+		if !doPollingMonitor(pe) {
+			return
+		}
 	}
 	datastore.UpdatePolling(pe)
 	if pe.LogMode == datastore.LogModeAlways || pe.LogMode == datastore.LogModeAI || (pe.LogMode == datastore.LogModeOnChange && oldState != pe.State) {
@@ -285,7 +289,7 @@ func setPollingState(pe *datastore.PollingEnt, newState string) {
 		if pe.State != "normal" && pe.State != "repair" {
 			if pe.State == "unknown" ||
 				pe.Type == "syslog" || pe.Type == "trap" ||
-				pe.Type == "netflow" || pe.Type == "ipfix" || pe.Type == "arplog" {
+				pe.Type == "netflow" || pe.Type == "ipfix" || pe.Type == "arplog" || pe.Type == "monitor" {
 				pe.State = "normal"
 			} else {
 				pe.State = "repair"

@@ -15,7 +15,7 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func docPollingPiHole(pe *datastore.PollingEnt) {
+func doPollingPiHole(pe *datastore.PollingEnt) {
 	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
 		setPollingError("pihole", pe, fmt.Errorf("node not found"))
