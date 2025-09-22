@@ -17,6 +17,8 @@ import (
 
 func doPollingSyslog(pe *datastore.PollingEnt) {
 	switch pe.Mode {
+	case "stats":
+		doPollingSyslogStats(pe)
 	case "pri":
 		doPollingSyslogPri(pe)
 	case "state":
@@ -685,4 +687,112 @@ func doPollingSyslogState(pe *datastore.PollingEnt) {
 	}
 	//それ以外はすべてNG
 	setPollingState(pe, pe.Level)
+}
+
+func doPollingSyslogStats(pe *datastore.PollingEnt) {
+	script := pe.Script
+	st := time.Now().Add(-time.Second * time.Duration(pe.PollInt)).UnixNano()
+	if v, ok := pe.Result["lastTime"]; ok {
+		if vf, ok := v.(float64); ok {
+			st = int64(vf)
+		}
+	}
+	et := time.Now().UnixNano()
+	count := 0
+	normal := 0
+	warns := 0
+	errors := 0
+	patternMap := make(map[string]int)
+	errorPatternMap := make(map[string]int)
+	datastore.ForEachLog(st, et, pe.Type, func(l *datastore.LogEnt) bool {
+		var sl = make(map[string]interface{})
+		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
+			return true
+		}
+		sv, ok := sl["severity"].(float64)
+		if !ok {
+			sv = 5
+		}
+		host, ok := sl["hostname"].(string)
+		if !ok {
+			host = ""
+		}
+		var message string
+		tag, ok := sl["tag"].(string)
+		if !ok {
+			if tag, ok = sl["app_name"].(string); !ok {
+				tag = ""
+			}
+			for i, k := range []string{"proc_id", "msg_id", "message", "structured_data"} {
+				if m, ok := sl[k].(string); ok && m != "" {
+					if i > 0 {
+						message += " "
+					}
+					message += m
+				}
+			}
+		} else {
+			message, ok = sl["content"].(string)
+			if !ok {
+				message = ""
+			}
+		}
+		msg := host + " " + tag + " " + message
+		nl := normalizeSyslog(msg)
+		patternMap[nl]++
+		switch {
+		case sv < 4:
+			errorPatternMap[nl]++
+			errors++
+		case sv == 4.0:
+			warns++
+		default:
+			normal++
+		}
+		count++
+		return true
+	})
+	pe.Result["lastTime"] = et
+	pe.Result["count"] = float64(count)
+	pe.Result["error"] = float64(errors)
+	pe.Result["warn"] = float64(warns)
+	pe.Result["normal"] = float64(normal)
+	pe.Result["patterns"] = float64(len(patternMap))
+	pe.Result["errorPatterns"] = float64(len(errorPatternMap))
+	if script == "" {
+		setPollingState(pe, "normal")
+		return
+	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
+	for k, v := range pe.Result {
+		vm.Set(k, v)
+	}
+	vm.Set("interval", pe.PollInt)
+	value, err := vm.Run(script)
+	if err != nil {
+		setPollingError("syslog", pe, err)
+		return
+	}
+	if ok, _ := value.ToBoolean(); ok {
+		setPollingState(pe, "normal")
+	} else {
+		setPollingState(pe, pe.Level)
+	}
+}
+
+var regNum = regexp.MustCompile(`\b-?\d+(\.\d+)?\b`)
+var regUUDI = regexp.MustCompile(`[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`)
+var regEmail = regexp.MustCompile(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b`)
+var regIP = regexp.MustCompile(`\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b`)
+var regMAC = regexp.MustCompile(`\b(?:[0-9a-fA-F]{2}[:-]){5}(?:[0-9a-fA-F]{2})\b`)
+
+func normalizeSyslog(msg string) string {
+	normalized := msg
+	normalized = regUUDI.ReplaceAllString(normalized, "#UUID#")
+	normalized = regEmail.ReplaceAllString(normalized, "#EMAIL#")
+	normalized = regIP.ReplaceAllString(normalized, "#IP#")
+	normalized = regMAC.ReplaceAllString(normalized, "#MAC#")
+	normalized = regNum.ReplaceAllString(normalized, "#NUM#")
+	return normalized
 }

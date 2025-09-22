@@ -5,6 +5,7 @@ package polling
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/robertkrimen/otto"
@@ -14,6 +15,8 @@ import (
 
 func doPollingArpLog(pe *datastore.PollingEnt) {
 	switch pe.Mode {
+	case "stats":
+		doPollingArpLogStats(pe)
 	case "count":
 		doPollingArpLogCount(pe)
 	default:
@@ -150,4 +153,61 @@ func doPollingArpLogCheck(pe *datastore.PollingEnt) {
 		return
 	}
 	setPollingState(pe, "normal")
+}
+
+func doPollingArpLogStats(pe *datastore.PollingEnt) {
+	script := pe.Script
+	st := time.Now().Add(-time.Second * time.Duration(pe.PollInt)).UnixNano()
+	if v, ok := pe.Result["lastTime"]; ok {
+		if vf, ok := v.(float64); ok {
+			st = int64(vf)
+		}
+	}
+	et := time.Now().UnixNano()
+	count := 0
+	patternMap := make(map[string]int)
+	stateMap := make(map[string]int)
+	ipMap := make(map[string]int)
+	macMap := make(map[string]int)
+	datastore.ForEachLog(st, et, pe.Type, func(l *datastore.LogEnt) bool {
+		a := strings.Split(l.Log, ",")
+		if len(a) < 3 {
+			return true
+		}
+		state := a[0]
+		ip := a[1]
+		mac := a[2]
+		patternMap[ip+mac]++
+		stateMap[state]++
+		ipMap[ip]++
+		macMap[mac]++
+		count++
+		return true
+	})
+	pe.Result["lastTime"] = et
+	pe.Result["count"] = float64(count)
+	pe.Result["pattern"] = float64(len(patternMap))
+	pe.Result["states"] = float64(len(stateMap))
+	pe.Result["IPs"] = float64(len(ipMap))
+	pe.Result["MACs"] = float64(len(macMap))
+	if script == "" {
+		setPollingState(pe, "normal")
+		return
+	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
+	for k, v := range pe.Result {
+		vm.Set(k, v)
+	}
+	vm.Set("interval", pe.PollInt)
+	value, err := vm.Run(script)
+	if err != nil {
+		setPollingError("arplog", pe, err)
+		return
+	}
+	if ok, _ := value.ToBoolean(); ok {
+		setPollingState(pe, "normal")
+	} else {
+		setPollingState(pe, pe.Level)
+	}
 }

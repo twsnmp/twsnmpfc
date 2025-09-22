@@ -58,6 +58,7 @@ const filterEventTypeList = [
 ]
 
 const typeList = [
+  { text: '', value: '' },
   { text: 'PING', value: 'ping' },
   { text: 'SNMP', value: 'snmp' },
   { text: 'gNMI', value: 'gnmi' },

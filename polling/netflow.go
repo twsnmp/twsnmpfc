@@ -15,7 +15,10 @@ import (
 )
 
 func doPollingNetflow(pe *datastore.PollingEnt) {
+	delete(pe.Result, "error")
 	switch pe.Mode {
+	case "stats":
+		doPollingNetflowStats(pe)
 	case "count":
 		doPollingNetflowCount(pe)
 	case "traffic":
@@ -354,8 +357,6 @@ func doPollingNetFlowTraffic(pe *datastore.PollingEnt) {
 		}
 		return true
 	})
-	vm := otto.New()
-	setVMFuncAndValues(pe, vm)
 	pe.Result["lastTime"] = et
 	pe.Result["bytes"] = totalBytes
 	pe.Result["packets"] = totalPackets
@@ -365,10 +366,170 @@ func doPollingNetFlowTraffic(pe *datastore.PollingEnt) {
 		setPollingState(pe, "normal")
 		return
 	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
 	vm.Set("bps", bps)
 	vm.Set("pps", pps)
 	vm.Set("bytes", totalBytes)
 	vm.Set("packets", totalPackets)
+	value, err := vm.Run(pe.Script)
+	if err != nil {
+		setPollingError("netflow", pe, err)
+		return
+	}
+	if ok, _ := value.ToBoolean(); ok {
+		setPollingState(pe, "normal")
+	} else {
+		setPollingState(pe, pe.Level)
+	}
+}
+
+func doPollingNetflowStats(pe *datastore.PollingEnt) {
+	st := time.Now().Add(-time.Second * time.Duration(pe.PollInt)).UnixNano()
+	if v, ok := pe.Result["lastTime"]; ok {
+		if vf, ok := v.(float64); ok {
+			st = int64(vf)
+		}
+	}
+	et := time.Now().UnixNano()
+	isNetflow := pe.Type == "netflow"
+	count := 0
+	totalPacktes := float64(0)
+	totalBytes := float64(0)
+	fumbles := float64(0)
+	ipMap := make(map[string]int)
+	macMap := make(map[string]int)
+	flowMap := make(map[string]int)
+	protMap := make(map[string]int)
+	fumbleSrcMap := make(map[string]int)
+	fumbleFlowMap := make(map[string]int)
+	datastore.ForEachLog(st, et, pe.Type, func(l *datastore.LogEnt) bool {
+		var sl = make(map[string]interface{})
+		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
+			return true
+		}
+		var ok bool
+		var sa string
+		var sp float64
+		var da string
+		var dp float64
+		var packets float64
+		var bytes float64
+		var pi int
+		var mac string
+		var prot string
+		if isNetflow {
+			if sa, ok = sl["srcAddr"].(string); !ok {
+				sa = ""
+			}
+			if sp, ok = sl["srcPort"].(float64); !ok {
+				sp = 0
+			}
+			if da, ok = sl["dstAddr"].(string); !ok {
+				da = ""
+			}
+			if dp, ok = sl["dstPort"].(float64); !ok {
+				dp = 0
+			}
+			if packets, ok = sl["packets"].(float64); !ok {
+				return true
+			}
+			if bytes, ok = sl["bytes"].(float64); !ok {
+				bytes = 0
+			}
+			pi = 0
+			if v, ok := sl["protocol"]; ok {
+				pi = int(v.(float64))
+			}
+		} else {
+			if mac, ok = sl["sourceMacAddress"].(string); ok {
+				macMap[mac]++
+			}
+			if sa, ok = sl["sourceIPv4Address"].(string); !ok {
+				if sa, ok = sl["sourceIPv6Address"].(string); !ok {
+					sa = ""
+				}
+			}
+			if da, ok = sl["destinationIPv4Address"].(string); !ok {
+				if da, ok = sl["destinationIPv6Address"].(string); !ok {
+					da = ""
+				}
+			}
+			if packets, ok = sl["packetDeltaCount"].(float64); !ok {
+				return true
+			}
+			if bytes, ok = sl["octetDeltaCount"].(float64); !ok {
+				return true
+			}
+			sp = 0
+			dp = 0
+			var icmpTypeCode float64
+			if icmpTypeCode, ok = sl["icmpTypeCodeIPv6"].(float64); ok {
+				sp = float64(int(icmpTypeCode) / 256)
+				dp = float64(int(icmpTypeCode) % 256)
+				pi = 1
+			} else if icmpTypeCode, ok = sl["icmpTypeCodeIPv4"].(float64); ok {
+				sp = float64(int(icmpTypeCode) / 256)
+				dp = float64(int(icmpTypeCode) % 256)
+				pi = 1
+			} else if pif, ok := sl["protocolIdentifier"].(float64); ok {
+				if sp, ok = sl["sourceTransportPort"].(float64); !ok {
+					return true
+				}
+				if dp, ok = sl["destinationTransportPort"].(float64); !ok {
+					return true
+				}
+				pi = int(pif)
+			}
+		}
+		var flowKey string
+		if sa > da {
+			flowKey = da + ":" + sa
+		} else {
+			flowKey = sa + ":" + da
+		}
+		if prot, ok = datastore.GetServiceName(pi, int(sp)); !ok {
+			prot, _ = datastore.GetServiceName(pi, int(dp))
+		}
+		protMap[prot]++
+		ipMap[sa]++
+		flowMap[flowKey]++
+		if pi == 6 && packets < 4 {
+			fumbleFlowMap[flowKey]++
+			fumbleSrcMap[sa]++
+			fumbles++
+		}
+		// ICMP 3
+		if pi == 1 && sp == 3 {
+			fumbleFlowMap[flowKey]++
+			fumbleSrcMap[da]++
+			fumbles++
+		}
+		count++
+		totalBytes += bytes
+		totalPacktes += packets
+		return true
+	})
+	pe.Result["lastTime"] = et
+	pe.Result["count"] = float64(count)
+	pe.Result["bytes"] = totalBytes
+	pe.Result["packets"] = totalPacktes
+	pe.Result["IPs"] = len(ipMap)
+	pe.Result["MACs"] = len(macMap)
+	pe.Result["flows"] = len(flowMap)
+	pe.Result["fumbleFlows"] = len(fumbleFlowMap)
+	pe.Result["fumbleSrc"] = len(fumbleSrcMap)
+	pe.Result["fumbles"] = fumbles
+	if pe.Script == "" {
+		setPollingState(pe, "normal")
+		return
+	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
+	vm.Set("interval", pe.PollInt)
+	for k, v := range pe.Result {
+		vm.Set(k, v)
+	}
 	value, err := vm.Run(pe.Script)
 	if err != nil {
 		setPollingError("netflow", pe, err)
