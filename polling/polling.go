@@ -246,12 +246,13 @@ func doPolling(pe *datastore.PollingEnt) {
 	case "lxi":
 		doPollingLxi(pe)
 	case "gnmi":
-		doPollingGNMI(pe)
-		if pe.Mode == "subscribe" {
+		if !doPollingGNMI(pe) {
 			return
 		}
 	case "twlogeye":
-		doPollingTwLogEye(pe)
+		if !doPollingTwLogEye(pe) {
+			return
+		}
 	case "pihole":
 		doPollingPiHole(pe)
 	case "monitor":

@@ -14,15 +14,15 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func doPollingGNMI(pe *datastore.PollingEnt) {
+func doPollingGNMI(pe *datastore.PollingEnt) bool {
 	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
 		log.Printf("node not found id=%x", pe.NodeID)
-		return
+		return false
 	}
 	if pe.Script == "" {
 		setPollingError("gnmi", pe, fmt.Errorf("gnmi no script"))
-		return
+		return false
 	}
 	target := pe.Params
 	if target == "" {
@@ -36,12 +36,12 @@ func doPollingGNMI(pe *datastore.PollingEnt) {
 	}
 	if pe.Mode == "subscribe" {
 		doPollingGNMISubscribe(pe, n, target)
-		return
+		return false
 	}
-	doPollingGNMIGet(pe, n, target)
+	return doPollingGNMIGet(pe, n, target)
 }
 
-func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target string) {
+func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target string) bool {
 	tg, err := api.NewTarget(
 		api.Name(n.Name),
 		api.Address(target),
@@ -51,14 +51,14 @@ func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target str
 	)
 	if err != nil {
 		setPollingError("gnmi", pe, err)
-		return
+		return false
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	err = tg.CreateGNMIClient(ctx)
 	if err != nil {
 		setPollingError("gnmi", pe, err)
-		return
+		return false
 	}
 	defer tg.Close()
 	enc := n.GNMIEncoding
@@ -70,12 +70,12 @@ func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target str
 		api.Encoding(enc))
 	if err != nil {
 		setPollingError("gnmi", pe, err)
-		return
+		return false
 	}
 	getResp, err := tg.Get(ctx, getReq)
 	if err != nil {
 		setPollingError("gnmi", pe, err)
-		return
+		return false
 	}
 	data := []byte{}
 	for _, not := range getResp.GetNotification() {
@@ -95,7 +95,7 @@ func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target str
 	}
 	if len(data) < 1 {
 		setPollingError("gnmi", pe, fmt.Errorf("json data not found"))
-		return
+		return false
 	}
 	vm := otto.New()
 	setVMFuncAndValues(pe, vm)
@@ -116,15 +116,15 @@ func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target str
 	pe.Result["last"] = time.Now().UnixMilli()
 	value, err := vm.Run(pe.Script)
 	if err != nil {
-		log.Printf("gnmi polling err=%v", err)
 		setPollingError("gnmi", pe, err)
-		return
+		return false
 	}
 	if ok, _ := value.ToBoolean(); !ok {
 		setPollingState(pe, pe.Level)
-		return
+		return true
 	}
 	setPollingState(pe, "normal")
+	return true
 }
 
 var gNMISubscribeMap = sync.Map{}

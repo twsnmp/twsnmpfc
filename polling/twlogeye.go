@@ -22,24 +22,39 @@ import (
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
-func doPollingTwLogEye(pe *datastore.PollingEnt) {
+func doPollingTwLogEye(pe *datastore.PollingEnt) bool {
+	switch pe.Mode {
+	case "report.syslog":
+		return doPollingTwLogEyeSyslogReport(pe)
+	case "report.trap", "report.snmptrap":
+		return doPollingTwLogEyeSnmpTrapReport(pe)
+	case "report.netflow":
+		return doPollingTwLogEyeNetflowReport(pe)
+	case "report.winevent":
+		return doPollingTwLogEyeWindowsEventReport(pe)
+	case "report.anomaly":
+		return doPollingTwLogEyeAnomalyReport(pe)
+	default: // notify
+		return doPollingTwLogEyeNotify(pe)
+	}
+}
+
+func doPollingTwLogEyeNotify(pe *datastore.PollingEnt) bool {
 	n := datastore.GetNode(pe.NodeID)
 	if n == nil {
-		log.Printf("node not found id=%x", pe.NodeID)
-		return
+		log.Printf("twlogeye polling node not found id=%x", pe.NodeID)
+		return false
 	}
 	client, err := getTwLogEyeClient(n, pe)
 	if err != nil {
 		setPollingError("twlogeye", pe, err)
-		log.Printf("getTwLogEyeClient err=%v", err)
-		return
+		return false
 	}
 	var regFilter *regexp.Regexp
 	if pe.Filter != "" {
 		if regFilter, err = regexp.Compile(pe.Filter); err != nil {
-			log.Printf("filter compile err=%v", err)
 			setPollingError("twlogeye", pe, err)
-			return
+			return false
 		}
 	}
 	st := time.Now().Add(time.Duration(pe.PollInt) * time.Second * -1).UnixNano()
@@ -54,8 +69,7 @@ func doPollingTwLogEye(pe *datastore.PollingEnt) {
 	s, err := client.SearchNotify(ctx, &api.NofifyRequest{Level: pe.Mode, Start: st, End: et})
 	if err != nil {
 		setPollingError("twlogeye", pe, err)
-		log.Printf("twLogEye search notify err=%v", err)
-		return
+		return false
 	}
 	count := 0
 	l := ""
@@ -65,12 +79,10 @@ func doPollingTwLogEye(pe *datastore.PollingEnt) {
 			break
 		}
 		if err != nil {
-			log.Printf("search notify err=%v", err)
 			setPollingError("twlogeye", pe, err)
-			return
+			return false
 		}
 		l = fmt.Sprintf("%s %s %s %s %s %s", getTimeStr(r.GetTime()), r.GetSrc(), r.GetLevel(), r.GetId(), r.GetTags(), r.GetTitle())
-		log.Println(l)
 		if regFilter != nil && !regFilter.MatchString(l) {
 			continue
 		}
@@ -83,7 +95,7 @@ func doPollingTwLogEye(pe *datastore.PollingEnt) {
 	}
 	if pe.Script == "" {
 		setPollingState(pe, "normal")
-		return
+		return true
 	}
 	vm := otto.New()
 	setVMFuncAndValues(pe, vm)
@@ -91,14 +103,292 @@ func doPollingTwLogEye(pe *datastore.PollingEnt) {
 	vm.Set("interval", pe.PollInt)
 	value, err := vm.Run(pe.Script)
 	if err != nil {
-		setPollingError("twlogeye", pe, fmt.Errorf("invalid script err=%v", err))
-		return
+		setPollingError("twlogeye", pe, err)
+		return false
 	}
 	if ok, _ := value.ToBoolean(); ok {
 		setPollingState(pe, "normal")
 	} else {
 		setPollingState(pe, pe.Level)
 	}
+	return true
+}
+
+func doPollingTwLogEyeSyslogReport(pe *datastore.PollingEnt) bool {
+	n := datastore.GetNode(pe.NodeID)
+	if n == nil {
+		log.Printf("node not found id=%x", pe.NodeID)
+		return false
+	}
+	client, err := getTwLogEyeClient(n, pe)
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	st := time.Now().Add(time.Duration(pe.PollInt) * time.Second * -1).UnixNano()
+	if v, ok := pe.Result["lastTime"]; ok {
+		if lt, ok := v.(int64); ok {
+			st = lt
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pe.Timeout)*time.Second)
+	defer cancel()
+	l, err := client.GetLastSyslogReport(ctx, &api.Empty{})
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	if st >= l.Time {
+		return false
+	}
+	pe.Result["lastTime"] = l.Time
+	pe.Result["errors"] = float64(l.GetError())
+	pe.Result["warns"] = float64(l.GetWarn())
+	pe.Result["normal"] = float64(l.GetNormal())
+	pe.Result["patterns"] = float64(l.GetPatterns())
+	pe.Result["errPatterns"] = float64(l.GetErrPatterns())
+	if pe.Script == "" {
+		setPollingState(pe, "normal")
+		return true
+	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
+	for k, v := range pe.Result {
+		vm.Set(k, v)
+	}
+	vm.Set("interval", pe.PollInt)
+	value, err := vm.Run(pe.Script)
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	if ok, _ := value.ToBoolean(); ok {
+		setPollingState(pe, "normal")
+	} else {
+		setPollingState(pe, pe.Level)
+	}
+	return true
+}
+
+func doPollingTwLogEyeSnmpTrapReport(pe *datastore.PollingEnt) bool {
+	n := datastore.GetNode(pe.NodeID)
+	if n == nil {
+		log.Printf("node not found id=%x", pe.NodeID)
+		return false
+	}
+	client, err := getTwLogEyeClient(n, pe)
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	st := time.Now().Add(time.Duration(pe.PollInt) * time.Second * -1).UnixNano()
+	if v, ok := pe.Result["lastTime"]; ok {
+		if lt, ok := v.(int64); ok {
+			st = lt
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pe.Timeout)*time.Second)
+	defer cancel()
+	l, err := client.GetLastTrapReport(ctx, &api.Empty{})
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	if st >= l.Time {
+		return false
+	}
+	pe.Result["lastTime"] = l.Time
+	pe.Result["count"] = float64(l.GetCount())
+	pe.Result["types"] = float64(l.GetTypes())
+	if pe.Script == "" {
+		setPollingState(pe, "normal")
+		return true
+	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
+	for k, v := range pe.Result {
+		vm.Set(k, v)
+	}
+	vm.Set("interval", pe.PollInt)
+	value, err := vm.Run(pe.Script)
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	if ok, _ := value.ToBoolean(); ok {
+		setPollingState(pe, "normal")
+	} else {
+		setPollingState(pe, pe.Level)
+	}
+	return true
+}
+
+func doPollingTwLogEyeNetflowReport(pe *datastore.PollingEnt) bool {
+	n := datastore.GetNode(pe.NodeID)
+	if n == nil {
+		log.Printf("node not found id=%x", pe.NodeID)
+		return false
+	}
+	client, err := getTwLogEyeClient(n, pe)
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	st := time.Now().Add(time.Duration(pe.PollInt) * time.Second * -1).UnixNano()
+	if v, ok := pe.Result["lastTime"]; ok {
+		if lt, ok := v.(int64); ok {
+			st = lt
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pe.Timeout)*time.Second)
+	defer cancel()
+	l, err := client.GetLastNetflowReport(ctx, &api.Empty{})
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	if st >= l.Time {
+		return false
+	}
+	pe.Result["lastTime"] = l.Time
+	pe.Result["bytes"] = float64(l.GetBytes())
+	pe.Result["flows"] = float64(l.GetFlows())
+	pe.Result["fumbles"] = float64(l.GetFumbles())
+	pe.Result["IPs"] = float64(l.GetIps())
+	pe.Result["MACs"] = float64(l.GetMacs())
+	pe.Result["protocols"] = float64(l.GetProtocols())
+	pe.Result["packets"] = float64(l.GetPackets())
+	if pe.Script == "" {
+		setPollingState(pe, "normal")
+		return true
+	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
+	for k, v := range pe.Result {
+		vm.Set(k, v)
+	}
+	vm.Set("interval", pe.PollInt)
+	value, err := vm.Run(pe.Script)
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	if ok, _ := value.ToBoolean(); ok {
+		setPollingState(pe, "normal")
+	} else {
+		setPollingState(pe, pe.Level)
+	}
+	return true
+}
+
+func doPollingTwLogEyeWindowsEventReport(pe *datastore.PollingEnt) bool {
+	n := datastore.GetNode(pe.NodeID)
+	if n == nil {
+		log.Printf("node not found id=%x", pe.NodeID)
+		return false
+	}
+	client, err := getTwLogEyeClient(n, pe)
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	st := time.Now().Add(time.Duration(pe.PollInt) * time.Second * -1).UnixNano()
+	if v, ok := pe.Result["lastTime"]; ok {
+		if lt, ok := v.(int64); ok {
+			st = lt
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pe.Timeout)*time.Second)
+	defer cancel()
+	l, err := client.GetLastWindowsEventReport(ctx, &api.Empty{})
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	if st >= l.Time {
+		return false
+	}
+	pe.Result["lastTime"] = l.Time
+	pe.Result["errors"] = float64(l.GetError())
+	pe.Result["warns"] = float64(l.GetWarn())
+	pe.Result["normal"] = float64(l.GetNormal())
+	pe.Result["types"] = float64(l.GetTypes())
+	pe.Result["errTypes"] = float64(l.GetErrorTypes())
+	if pe.Script == "" {
+		setPollingState(pe, "normal")
+		return true
+	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
+	for k, v := range pe.Result {
+		vm.Set(k, v)
+	}
+	vm.Set("interval", pe.PollInt)
+	value, err := vm.Run(pe.Script)
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	if ok, _ := value.ToBoolean(); ok {
+		setPollingState(pe, "normal")
+	} else {
+		setPollingState(pe, pe.Level)
+	}
+	return true
+}
+
+func doPollingTwLogEyeAnomalyReport(pe *datastore.PollingEnt) bool {
+	n := datastore.GetNode(pe.NodeID)
+	if n == nil {
+		log.Printf("node not found id=%x", pe.NodeID)
+		return false
+	}
+	client, err := getTwLogEyeClient(n, pe)
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	st := time.Now().Add(time.Duration(pe.PollInt) * time.Second * -1).UnixNano()
+	if v, ok := pe.Result["lastTime"]; ok {
+		if lt, ok := v.(int64); ok {
+			st = lt
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pe.Timeout)*time.Second)
+	defer cancel()
+	l, err := client.GetLastAnomalyReport(ctx, &api.Empty{})
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	if st >= l.Time {
+		return false
+	}
+	pe.Result["lastTime"] = l.Time
+	for _, e := range l.GetScoreList() {
+		pe.Result[e.Type+"_Score"] = e.GetScore()
+	}
+	if pe.Script == "" {
+		setPollingState(pe, "normal")
+		return true
+	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
+	for k, v := range pe.Result {
+		vm.Set(k, v)
+	}
+	vm.Set("interval", pe.PollInt)
+	value, err := vm.Run(pe.Script)
+	if err != nil {
+		setPollingError("twlogeye", pe, err)
+		return false
+	}
+	if ok, _ := value.ToBoolean(); ok {
+		setPollingState(pe, "normal")
+	} else {
+		setPollingState(pe, pe.Level)
+	}
+	return true
 }
 
 func getTwLogEyeClient(n *datastore.NodeEnt, pe *datastore.PollingEnt) (api.TWLogEyeServiceClient, error) {
