@@ -56,8 +56,6 @@ func doPollingSyslogCount(pe *datastore.PollingEnt) {
 		}
 	}
 	et := time.Now().UnixNano()
-	vm := otto.New()
-	setVMFuncAndValues(pe, vm)
 	count := 0
 	keys := []string{}
 	datastore.ForEachLog(st, et, pe.Type, func(l *datastore.LogEnt) bool {
@@ -89,6 +87,8 @@ func doPollingSyslogCount(pe *datastore.PollingEnt) {
 		setPollingState(pe, "normal")
 		return
 	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
 	vm.Set("count", count)
 	vm.Set("interval", pe.PollInt)
 	value, err := vm.Run(script)

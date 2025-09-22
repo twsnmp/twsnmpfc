@@ -13,8 +13,12 @@ import (
 	"github.com/vjeantet/grok"
 )
 
+var trapOidRegexp = regexp.MustCompile(`snmpTrapOID.0=(\S+)`)
+
 func doPollingSnmpTrap(pe *datastore.PollingEnt) {
 	switch pe.Mode {
+	case "stats":
+		doPollingSnmpTrapStats(pe)
 	case "count":
 		doPollingSnmpTrapCount(pe)
 	default:
@@ -44,29 +48,23 @@ func doPollingSnmpTrapCount(pe *datastore.PollingEnt) {
 		}
 	}
 	et := time.Now().UnixNano()
-	vm := otto.New()
-	setVMFuncAndValues(pe, vm)
 	count := 0
 	keys := []string{}
 	datastore.ForEachLog(st, et, pe.Type, func(l *datastore.LogEnt) bool {
 		msg := ""
-		if pe.Type == "arplog" {
-			msg = l.Log
-		} else {
-			var sl = make(map[string]interface{})
-			if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
-				return true
+		var sl = make(map[string]interface{})
+		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
+			return true
+		}
+		if len(keys) < 1 {
+			for k := range sl {
+				keys = append(keys, k)
 			}
-			if len(keys) < 1 {
-				for k := range sl {
-					keys = append(keys, k)
-				}
-				sort.Strings(keys)
-			}
-			for _, k := range keys {
-				if v, ok := sl[k]; ok {
-					msg += k + "\t" + fmt.Sprintf("%v", v) + "\n"
-				}
+			sort.Strings(keys)
+		}
+		for _, k := range keys {
+			if v, ok := sl[k]; ok {
+				msg += k + "\t" + fmt.Sprintf("%v", v) + "\n"
 			}
 		}
 		if regexFilter != nil && !regexFilter.Match([]byte(msg)) {
@@ -81,6 +79,8 @@ func doPollingSnmpTrapCount(pe *datastore.PollingEnt) {
 		setPollingState(pe, "normal")
 		return
 	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
 	vm.Set("count", count)
 	vm.Set("interval", pe.PollInt)
 	value, err := vm.Run(script)
@@ -194,4 +194,80 @@ func doPollingSnmpTrapCheck(pe *datastore.PollingEnt) {
 		return
 	}
 	setPollingState(pe, "normal")
+}
+
+func doPollingSnmpTrapStats(pe *datastore.PollingEnt) {
+	script := pe.Script
+	st := time.Now().Add(-time.Second * time.Duration(pe.PollInt)).UnixNano()
+	if v, ok := pe.Result["lastTime"]; ok {
+		if vf, ok := v.(float64); ok {
+			st = int64(vf)
+		}
+	}
+	et := time.Now().UnixNano()
+	count := 0
+	typeMap := make(map[string]int)
+	fromMap := make(map[string]int)
+	typeFromMap := make(map[string]int)
+	datastore.ForEachLog(st, et, pe.Type, func(l *datastore.LogEnt) bool {
+		count++
+		var sl = make(map[string]interface{})
+		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
+			return true
+		}
+		fa, ok := sl["FromAddress"].(string)
+		if !ok {
+			fa = "unknown"
+		}
+		vb, ok := sl["Variables"].(string)
+		if !ok {
+			vb = ""
+		}
+		trapType := "unknown"
+		if ent, ok := sl["Enterprise"].(string); !ok || ent == "" {
+			a := trapOidRegexp.FindStringSubmatch(vb)
+			if len(a) > 1 {
+				trapType = a[1]
+			}
+		} else {
+			gen, ok := sl["GenericTrap"].(float64)
+			if !ok {
+				gen = -1
+			}
+			spe, ok := sl["SpecificTrap"].(float64)
+			if !ok {
+				spe = -1
+			}
+			trapType = fmt.Sprintf("%s:%d:%d", ent, int(gen), int(spe))
+		}
+		typeMap[trapType]++
+		fromMap[fa]++
+		typeFromMap[trapType+":"+fa]++
+		return true
+	})
+	pe.Result["lastTime"] = et
+	pe.Result["types"] = float64(len(typeMap))
+	pe.Result["froms"] = float64(len(fromMap))
+	pe.Result["typeFroms"] = float64(len(typeFromMap))
+	pe.Result["count"] = float64(count)
+	if script == "" {
+		setPollingState(pe, "normal")
+		return
+	}
+	vm := otto.New()
+	setVMFuncAndValues(pe, vm)
+	for k, v := range pe.Result {
+		vm.Set(k, v)
+	}
+	vm.Set("interval", pe.PollInt)
+	value, err := vm.Run(script)
+	if err != nil {
+		setPollingError("trap", pe, err)
+		return
+	}
+	if ok, _ := value.ToBoolean(); ok {
+		setPollingState(pe, "normal")
+	} else {
+		setPollingState(pe, pe.Level)
+	}
 }
