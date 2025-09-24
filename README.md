@@ -10,6 +10,16 @@
 コンテナ環境で動作するTWSNMPを開発するプロジェクトです。
 コンテナ以外の環境(Windows,Linux,Max OS)でも動作します。
 
+詳しくは
+
+[マニュアル](https://note.com/twsnmp/m/meed0d0ddab5e)
+
+と
+
+[リリースノート](https://note.com/twsnmp/m/m9efba610ebb9)
+
+を参照してください。
+
 ## Status
 
 実現したい機能は全て対応しました。
@@ -57,6 +67,7 @@
 - sFlow
 - OpenTelmetryコレクタ(v1.54.0)
 - MCPサーバー(v1.55.0)
+- Webhook通知(v1.58.0)
 
 ![2021-04-10_11-56-00](https://user-images.githubusercontent.com/5225950/114256371-cc61db80-99f3-11eb-8631-c1917554ce26.png)
 
