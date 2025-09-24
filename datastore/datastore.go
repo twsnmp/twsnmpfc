@@ -48,6 +48,8 @@ var (
 	flows   sync.Map
 	servers sync.Map
 	ips     sync.Map
+	// Netflow fumble
+	fumbleFlows sync.Map
 	// TWPCAP
 	etherType   sync.Map
 	radiusFlows sync.Map
@@ -295,7 +297,7 @@ func initDB() error {
 		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report", "grok", "images",
 		"sflow", "sflowCounter", "certs", "memo", "otelTrace", "otelMetric",
 	}
-	reports := []string{"devices", "users", "flows", "servers", "ips",
+	reports := []string{"devices", "users", "flows", "fumbleFlows", "servers", "ips",
 		"ether", "dns", "radius", "tls", "cert",
 		"sensor",
 		"winEventID", "winLogon", "winAccount", "winKerberos",

@@ -48,6 +48,14 @@ type FlowEnt struct {
 	UpdateTime   int64
 }
 
+type FumbleEnt struct {
+	ID        string
+	TCPCount  int64
+	IcmpCount int64
+	FirstTime int64
+	LastTime  int64
+}
+
 func GetFlow(id string) *FlowEnt {
 	if v, ok := flows.Load(id); ok {
 		return v.(*FlowEnt)
@@ -146,6 +154,57 @@ func saveFlows(b *bbolt.Bucket, last int64) {
 		err = r.Put([]byte(f.ID), s)
 		if err != nil {
 			log.Printf("save flow report err=%v", err)
+		}
+		return true
+	})
+}
+
+func GetFumbleFlow(id string) *FumbleEnt {
+	if v, ok := fumbleFlows.Load(id); ok {
+		return v.(*FumbleEnt)
+	}
+	return nil
+}
+
+func AddFumbleFlow(f *FumbleEnt) {
+	fumbleFlows.Store(f.ID, f)
+}
+
+func ForEachFumbleFlows(f func(*FumbleEnt) bool) {
+	fumbleFlows.Range(func(k, v interface{}) bool {
+		fl := v.(*FumbleEnt)
+		return f(fl)
+	})
+}
+
+func loadFumbleFlows(r *bbolt.Bucket) {
+	b := r.Bucket([]byte("fumbleFlows"))
+	if b != nil {
+		_ = b.ForEach(func(k, v []byte) error {
+			var f FumbleEnt
+			if err := json.Unmarshal(v, &f); err == nil {
+				fumbleFlows.Store(f.ID, &f)
+			}
+			return nil
+		})
+	}
+}
+
+func saveFumbleFlows(b *bbolt.Bucket, last int64) {
+	r := b.Bucket([]byte("fumbleFlows"))
+	fumbleFlows.Range(func(k, v interface{}) bool {
+		f := v.(*FumbleEnt)
+		if f.LastTime < last {
+			return true
+		}
+		s, err := json.Marshal(f)
+		if err != nil {
+			log.Printf("save fumble flow report err=%v", err)
+			return true
+		}
+		err = r.Put([]byte(f.ID), s)
+		if err != nil {
+			log.Printf("save fumble flow report err=%v", err)
 		}
 		return true
 	})

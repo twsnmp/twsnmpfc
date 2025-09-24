@@ -37,6 +37,7 @@ func LoadReport() error {
 		loadWifiAP(r)
 		loadPowerMonitor(r)
 		loadMotionSensor(r)
+		loadFumbleFlows(r)
 		return nil
 	})
 }
@@ -71,6 +72,7 @@ func SaveReport(last int64) error {
 		saveWifiAP(b, last)
 		savePowerMonitor(b, last)
 		saveMotionSensor(b, last)
+		saveFumbleFlows(b, last)
 		log.Printf("SaveReport dur=%v", time.Since(st))
 		return nil
 	})
@@ -81,6 +83,7 @@ var reportNameToMap = map[string]*sync.Map{
 	"users":        &users,
 	"servers":      &servers,
 	"flows":        &flows,
+	"fumbleFlows":  &fumbleFlows,
 	"ips":          &ips,
 	"ether":        &etherType,
 	"dns":          &dnsq,

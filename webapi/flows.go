@@ -57,3 +57,27 @@ func getUnknownPortList(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, r)
 }
+
+func getFumbleFlows(c echo.Context) error {
+	r := []*datastore.FumbleEnt{}
+	datastore.ForEachFumbleFlows(func(f *datastore.FumbleEnt) bool {
+		r = append(r, f)
+		return true
+	})
+	return c.JSON(http.StatusOK, r)
+}
+
+func deleteFumbleFlow(c echo.Context) error {
+	id := c.Param("id")
+	if id == "all" {
+		go datastore.ClearReport("fumbleFlows")
+	} else {
+		datastore.DeleteReport("fumbleFlows", []string{id})
+	}
+	datastore.AddEventLog(&datastore.EventLogEnt{
+		Type:  "user",
+		Level: "info",
+		Event: fmt.Sprintf("Fumbleフローを削除しました(%s)", id),
+	})
+	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}

@@ -271,6 +271,7 @@ export default {
         { text: 'ユーザーレポート', value: 'report/user/all' },
         { text: 'サーバーレポート', value: 'report/server/all' },
         { text: 'フローレポート', value: 'report/flow/all' },
+        { text: 'Fumbleフローレポート', value: 'report/fumbleFlow/all' },
         { text: 'IPアドレスレポート', value: 'report/ip/all' },
         { text: 'AI分析結果', value: 'report/ai/all' },
         { text: '全てのログ', value: 'log' },

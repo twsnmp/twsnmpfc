@@ -428,6 +428,11 @@ export default {
           title: 'フロー',
           to: '/report/flows',
         },
+        {
+          icon: 'mdi-swap-horizontal-circle',
+          title: 'Fumbleフロー',
+          to: '/report/fumbleFlows',
+        },
       ],
       twpcapMenus: [
         {

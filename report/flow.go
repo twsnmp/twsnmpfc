@@ -17,14 +17,11 @@ type flowReportEnt struct {
 	DstIP   string
 	DstPort int
 	Prot    int
+	Packets int64
 	Bytes   int64
 }
 
 func ReportFlow(src string, sp int, dst string, dp, prot int, pkts, bytes int64, t int64) {
-	if prot == 6 &&
-		pkts < int64(datastore.ReportConf.DropFlowThTCPPacket) {
-		return
-	}
 	flowReportCh <- &flowReportEnt{
 		Time:    t,
 		SrcIP:   src,
@@ -32,6 +29,7 @@ func ReportFlow(src string, sp int, dst string, dp, prot int, pkts, bytes int64,
 		DstIP:   dst,
 		DstPort: dp,
 		Prot:    prot,
+		Packets: pkts,
 		Bytes:   bytes,
 	}
 }
@@ -237,6 +235,9 @@ func cleanupUDPPending() {
 }
 
 func checkFlowReport(fr *flowReportEnt) {
+	if checkFumble(fr) {
+		return
+	}
 	checkIPReport(fr.SrcIP, "", fr.Time)
 	server, client, service := getFlowDir(fr)
 	if server == "" {
@@ -300,6 +301,51 @@ func checkFlowReport(fr *flowReportEnt) {
 	f.Services[service] = 1
 	setFlowPenalty(f)
 	datastore.AddFlow(f)
+}
+
+func checkFumble(fr *flowReportEnt) bool {
+	now := time.Now().UnixNano()
+	if fr.Prot == 6 &&
+		fr.Packets < int64(datastore.ReportConf.DropFlowThTCPPacket) {
+		// 最初に見つけた方向を優先する
+		id := fr.DstIP + "_" + fr.SrcIP
+		f := datastore.GetFumbleFlow(id)
+		if f != nil {
+			f.TCPCount++
+			f.LastTime = now
+		} else {
+			id = fr.SrcIP + "_" + fr.DstIP
+			f := datastore.GetFumbleFlow(id)
+			if f != nil {
+				f.TCPCount++
+				f.LastTime = now
+			} else {
+				datastore.AddFumbleFlow(&datastore.FumbleEnt{
+					ID:        id,
+					TCPCount:  1,
+					LastTime:  now,
+					FirstTime: now,
+				})
+			}
+		}
+		return true
+	} else if fr.Prot == 1 && (fr.DstPort/256) == 3 {
+		// ICMP 3
+		id := fr.DstIP + "_" + fr.SrcIP
+		f := datastore.GetFumbleFlow(id)
+		if f != nil {
+			f.IcmpCount++
+			f.LastTime = now
+		} else {
+			datastore.AddFumbleFlow(&datastore.FumbleEnt{
+				ID:        id,
+				IcmpCount: 1,
+				LastTime:  now,
+				FirstTime: now,
+			})
+		}
+	}
+	return false
 }
 
 func checkServerReport(server, service string, bytes, t int64) {

@@ -17,16 +17,6 @@ const showFlowsChart = (div, flows, filter, layout) => {
     { name: 'Other' },
   ]
   const option = {
-    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
-      {
-        offset: 0,
-        color: '#4b5769',
-      },
-      {
-        offset: 1,
-        color: '#404a59',
-      },
-    ]),
     grid: {
       left: '7%',
       right: '5%',
@@ -329,8 +319,286 @@ const getLatLong = (loc) => {
   return [a[1], a[0]]
 }
 
+const showFumbleFlowChart = (div, fumbleFlows, filter, layout) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const categories = [{ name: 'Src' }, { name: 'Dst' }, { name: 'Src/Dst' }]
+  const option = {
+    grid: {
+      left: '7%',
+      right: '5%',
+      bottom: '5%',
+      containLabel: true,
+    },
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    tooltip: {
+      trigger: 'item',
+    },
+    animationDurationUpdate: 1500,
+    animationEasingUpdate: 'quinticInOut',
+    legend: [
+      {
+        orient: 'vertical',
+        top: 50,
+        right: 20,
+        textStyle: {
+          fontSize: 10,
+          color: '#ccc',
+        },
+        data: categories.map(function (a) {
+          return a.name
+        }),
+      },
+    ],
+    color: ['#e31a1c', '#1f78b4', '#dfdf22'],
+    series: [
+      {
+        type: 'graph',
+        layout: layout || 'force',
+        symbolSize: 6,
+        categories,
+        roam: true,
+        label: {
+          show: false,
+          fontSize: 10,
+          fontStyle: 'normal',
+          color: '#ccc',
+        },
+        data: [],
+        links: [],
+        lineStyle: {
+          width: 1,
+          curveness: 0,
+        },
+      },
+    ],
+  }
+  const flows = []
+  fumbleFlows.forEach((f) => {
+    if (filter.src && !f.Src.includes(filter.src)) {
+      return
+    }
+    if (filter.dst && !f.Dst.includes(filter.dst)) {
+      return
+    }
+    flows.push(f)
+  })
+  if (!flows) {
+    return false
+  }
+  let max = 0
+  const maxMap = new Map()
+  const dstMap = new Map()
+  const srcMap = new Map()
+  flows.forEach((f) => {
+    max = Math.max(max, f.TCPCount + f.IcmpCount)
+    const c = f.TCPCount + f.IcmpCount
+    srcMap.set(f.Src, true)
+    let e = maxMap.get(f.Src)
+    if (!e || e < c) {
+      maxMap.set(f.Src, c)
+    }
+    dstMap.set(f.Dst, true)
+    e = maxMap.get(f.Dst)
+    if (!e || e < c) {
+      maxMap.set(f.Dst, c)
+    }
+  })
+  const nodes = new Map()
+  flows.forEach((f) => {
+    if (option.series[0].links.length > 2000) {
+      return
+    }
+    const s = f.Src
+    const d = f.Dst
+    let c = maxMap.get(s) || 0
+    max = Math.max(1, max)
+    if (!nodes.has(s)) {
+      nodes.set(s, {
+        name: s,
+        draggable: true,
+        category: dstMap.has(s) ? 2 : 0,
+        value: c,
+        symbolSize: Math.max(6, 20 * (c / max)),
+        label: {
+          show: true,
+          position: 'right',
+        },
+      })
+    }
+    c = maxMap.get(d) || 0
+    if (!nodes.has(d)) {
+      nodes.set(d, {
+        name: d,
+        draggable: true,
+        category: srcMap.has(d) ? 2 : 1,
+        symbolSize: Math.max(6, 20 * (c / max)),
+        value: c,
+        label: {
+          show: true,
+          position: 'right',
+        },
+      })
+    }
+    const p = (f.TCPCount + f.IcmpCount) / max
+    option.series[0].links.push({
+      source: s,
+      target: d,
+      value: f.TCPCount + f.IcmpCount,
+      lineStyle: {
+        width: Math.max(1, p * 5),
+        color: p > 0.8 ? '#cc2500' : '#ccc',
+      },
+    })
+  })
+  nodes.forEach((n) => {
+    option.series[0].data.push(n)
+  })
+  option.series[0].zoom = 3.0
+  chart.setOption(option)
+  chart.resize()
+}
+
+const showFumbleIPChart = (div, list) => {
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div))
+  const option = {
+    backgroundColor: new echarts.graphic.RadialGradient(0.5, 0.5, 0.4, [
+      {
+        offset: 0,
+        color: '#4b5769',
+      },
+      {
+        offset: 1,
+        color: '#404a59',
+      },
+    ]),
+    toolbox: {
+      iconStyle: {
+        color: '#ccc',
+      },
+      feature: {
+        saveAsImage: { name: 'twsnmp_' + div },
+      },
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow',
+      },
+    },
+    color: ['#e31a1c', '#dfdf22'],
+    legend: {
+      top: 15,
+      textStyle: {
+        fontSize: 10,
+        color: '#ccc',
+      },
+      data: ['TCP', 'ICMP'],
+    },
+    grid: {
+      top: '10%',
+      left: '5%',
+      right: '10%',
+      bottom: '10%',
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'value',
+      name: '回数',
+      nameTextStyle: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 10,
+        margin: 2,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#ccc',
+        },
+      },
+    },
+    yAxis: {
+      type: 'category',
+      axisLine: {
+        show: false,
+      },
+      axisTick: {
+        show: false,
+      },
+      axisLabel: {
+        color: '#ccc',
+        fontSize: 8,
+        margin: 2,
+      },
+      data: [],
+    },
+    series: [
+      {
+        name: 'TCP',
+        type: 'bar',
+        stack: '回数',
+        data: [],
+      },
+      {
+        name: 'ICMP',
+        type: 'bar',
+        stack: '回数',
+        data: [],
+      },
+    ],
+  }
+  if (!list) {
+    return
+  }
+  const data = {}
+  list.forEach((f) => {
+    if (!data[f.Src]) {
+      data[f.Src] = [0, 0]
+    }
+    if (f.TCPCount > 0) {
+      data[f.Src][0] += f.TCPCount
+    }
+    if (f.IcmpCount > 0) {
+      data[f.Src][1] += f.IcmpCount
+    }
+  })
+  const keys = Object.keys(data)
+  keys.sort(function (a, b) {
+    return data[b][0] + data[b][1] - data[a][0] - data[a][1]
+  })
+  let i = keys.length - 1
+  if (i > 49) {
+    i = 49
+  }
+  for (; i >= 0; i--) {
+    option.yAxis.data.push(keys[i])
+    option.series[0].data.push(data[keys[i]][0])
+    option.series[1].data.push(data[keys[i]][1])
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showFlowsChart', showFlowsChart)
+  inject('showFumbleFlowChart', showFumbleFlowChart)
+  inject('showFumbleIPChart', showFumbleIPChart)
   inject('showFlows3DChart', showFlows3DChart)
   inject('filterFlow', filterFlow)
 }
