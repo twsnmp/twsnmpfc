@@ -329,20 +329,23 @@ func checkFumble(fr *flowReportEnt) bool {
 			}
 		}
 		return true
-	} else if fr.Prot == 1 && (fr.DstPort/256) == 3 {
-		// ICMP 3
-		id := fr.DstIP + "_" + fr.SrcIP
-		f := datastore.GetFumbleFlow(id)
-		if f != nil {
-			f.IcmpCount++
-			f.LastTime = now
-		} else {
-			datastore.AddFumbleFlow(&datastore.FumbleEnt{
-				ID:        id,
-				IcmpCount: 1,
-				LastTime:  now,
-				FirstTime: now,
-			})
+	} else if fr.Prot == 1 {
+		// ICMP Type
+		switch fr.DstPort / 256 {
+		case 3, 4, 5, 11, 12:
+			id := fr.DstIP + "_" + fr.SrcIP
+			f := datastore.GetFumbleFlow(id)
+			if f != nil {
+				f.IcmpCount++
+				f.LastTime = now
+			} else {
+				datastore.AddFumbleFlow(&datastore.FumbleEnt{
+					ID:        id,
+					IcmpCount: 1,
+					LastTime:  now,
+					FirstTime: now,
+				})
+			}
 		}
 	}
 	return false
