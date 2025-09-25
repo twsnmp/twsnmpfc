@@ -207,7 +207,20 @@ func logIPFIX(p *ipfix.Message) int {
 						)
 					}
 				} else {
-					log.Printf("unknown ipfix record=%#v", record)
+					if _, ok := record["icmpTypeCodeIPv6"].(uint16); ok {
+						report.ReportFlow(
+							record["sourceIPv6Address"].(net.IP).String(),
+							0,
+							record["destinationIPv6Address"].(net.IP).String(),
+							int(record["icmpTypeCodeIPv6"].(uint16)),
+							1,
+							int64(record["packetDeltaCount"].(uint64)),
+							int64(record["octetDeltaCount"].(uint64)),
+							time.Now().UnixNano(),
+						)
+					} else {
+						log.Printf("no protocolIdentifier  ipfix record=%#v", record)
+					}
 				}
 			} else {
 				log.Printf("unknown ipfix record=%#v", record)
