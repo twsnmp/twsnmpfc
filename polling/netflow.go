@@ -494,16 +494,20 @@ func doPollingNetflowStats(pe *datastore.PollingEnt) {
 		protMap[prot]++
 		ipMap[sa]++
 		flowMap[flowKey]++
+		// TCP short
 		if pi == 6 && packets < 4 {
 			fumbleFlowMap[flowKey]++
 			fumbleSrcMap[sa]++
 			fumbles++
 		}
-		// ICMP 3
-		if pi == 1 && sp == 3 {
-			fumbleFlowMap[flowKey]++
-			fumbleSrcMap[da]++
-			fumbles++
+		// ICMP error
+		if pi == 1 {
+			switch sp {
+			case 3, 4, 5, 11, 12:
+				fumbleFlowMap[flowKey]++
+				fumbleSrcMap[da]++
+				fumbles++
+			}
 		}
 		count++
 		totalBytes += bytes
