@@ -81,6 +81,7 @@ const typeList = [
   { text: 'VMware', value: 'vmware' },
   { text: 'LXI', value: 'lxi' },
   { text: 'Monitor', value: 'monitor' },
+  { text: 'MQTT', value: 'mqtt' },
 ]
 
 const logModeList = [

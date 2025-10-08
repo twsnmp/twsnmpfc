@@ -126,6 +126,7 @@ func pollingBackend(ctx context.Context, wg *sync.WaitGroup) {
 		select {
 		case <-ctx.Done():
 			gNMIStopAllSubscription()
+			mqttStopAllSubscription()
 			log.Println("stop polling")
 			stopPolling = true
 			return
@@ -239,6 +240,10 @@ func doPolling(pe *datastore.PollingEnt) {
 		doPollingPiHole(pe)
 	case "monitor":
 		if !doPollingMonitor(pe) {
+			return
+		}
+	case "mqtt":
+		if !doPollingMqtt(pe) {
 			return
 		}
 	}

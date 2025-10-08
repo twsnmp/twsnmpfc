@@ -34,11 +34,13 @@ func doPollingGNMI(pe *datastore.PollingEnt) bool {
 	} else if p, err := strconv.Atoi(target); err == nil && p > 0 && p < 65535 {
 		target = fmt.Sprintf("%s:%d", n.IP, p)
 	}
-	if pe.Mode == "subscribe" {
+	switch pe.Mode {
+	case "subscribe":
 		doPollingGNMISubscribe(pe, n, target)
 		return false
+	default:
+		return doPollingGNMIGet(pe, n, target)
 	}
-	return doPollingGNMIGet(pe, n, target)
 }
 
 func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target string) bool {
@@ -178,14 +180,14 @@ func doPollingGNMISubscribe(pe *datastore.PollingEnt, n *datastore.NodeEnt, targ
 			if rsp.Response.GetUpdate() != nil {
 				oldState := pe.State
 				gNMISetSubscribeResp(pe, rsp)
-				gNMIUpdatePolling(pe, oldState)
+				subscribeUpdatePolling(pe, oldState)
 			}
 		case tgErr := <-subErrChan:
 			if _, ok := gNMISubscribeMap.Load(pe.ID); ok {
 				log.Printf("polling %s subscription %q stopped: %v", pe.Name, tgErr.SubscriptionName, tgErr.Err)
 				oldState := pe.State
 				setPollingError("gnmi", pe, tgErr.Err)
-				gNMIUpdatePolling(pe, oldState)
+				subscribeUpdatePolling(pe, oldState)
 				gNMISubscribeMap.Delete(pe.ID)
 			}
 			return
@@ -240,7 +242,7 @@ func gNMISetSubscribeResp(pe *datastore.PollingEnt, rsp *target.SubscribeRespons
 	setPollingState(pe, "normal")
 }
 
-func gNMIUpdatePolling(pe *datastore.PollingEnt, oldState string) {
+func subscribeUpdatePolling(pe *datastore.PollingEnt, oldState string) {
 	datastore.UpdatePolling(pe)
 	if pe.LogMode == datastore.LogModeAlways || pe.LogMode == datastore.LogModeAI || (pe.LogMode == datastore.LogModeOnChange && oldState != pe.State) {
 		if err := datastore.AddPollingLog(pe); err != nil {

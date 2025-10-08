@@ -51,8 +51,12 @@ func deletePollings(c echo.Context) error {
 	}
 	for _, id := range ids {
 		pe := datastore.GetPolling(id)
-		if pe != nil && pe.Type == "gnmi" && pe.Mode == "subscribe" {
-			polling.GNMIStopSubscription(pe.ID)
+		if pe != nil {
+			if pe.Type == "gnmi" && pe.Mode == "subscribe" {
+				polling.GNMIStopSubscription(pe.ID)
+			} else if pe.Type == "mqtt" {
+				polling.MqttStopSubscription(pe.ID)
+			}
 		}
 	}
 	if err := datastore.DeletePollings(ids); err != nil {
@@ -184,6 +188,9 @@ func postPollingUpdate(c echo.Context) error {
 	}
 	if p.Type == "gnmi" && p.Mode == "subscribe" {
 		polling.GNMIStopSubscription(p.ID)
+		time.Sleep(time.Millisecond * 20)
+	} else if p.Type == "mqtt" {
+		polling.MqttStopSubscription(p.ID)
 		time.Sleep(time.Millisecond * 20)
 	}
 	p.Name = pu.Name
