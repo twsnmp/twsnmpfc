@@ -45,11 +45,13 @@ func doPollingTwLogEyeNotify(pe *datastore.PollingEnt) bool {
 		log.Printf("twlogeye polling node not found id=%x", pe.NodeID)
 		return false
 	}
-	client, err := getTwLogEyeClient(n, pe)
+	conn, err := getTwLogEyeClientConn(n, pe)
 	if err != nil {
 		setPollingError("twlogeye", pe, err)
 		return false
 	}
+	defer conn.Close()
+	client := api.NewTWLogEyeServiceClient(conn)
 	var regFilter *regexp.Regexp
 	if pe.Filter != "" {
 		if regFilter, err = regexp.Compile(pe.Filter); err != nil {
@@ -120,18 +122,20 @@ func doPollingTwLogEyeSyslogReport(pe *datastore.PollingEnt) bool {
 		log.Printf("node not found id=%x", pe.NodeID)
 		return false
 	}
-	client, err := getTwLogEyeClient(n, pe)
+	conn, err := getTwLogEyeClientConn(n, pe)
 	if err != nil {
 		setPollingError("twlogeye", pe, err)
 		return false
 	}
+	defer conn.Close()
+	client := api.NewTWLogEyeServiceClient(conn)
 	st := time.Now().Add(time.Duration(pe.PollInt) * time.Second * -1).UnixNano()
 	if v, ok := pe.Result["lastTime"]; ok {
 		if lt, ok := v.(int64); ok {
 			st = lt
 		}
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pe.Timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pe.Timeout+4)*time.Second)
 	defer cancel()
 	l, err := client.GetLastSyslogReport(ctx, &api.Empty{})
 	if err != nil {
@@ -176,11 +180,13 @@ func doPollingTwLogEyeSnmpTrapReport(pe *datastore.PollingEnt) bool {
 		log.Printf("node not found id=%x", pe.NodeID)
 		return false
 	}
-	client, err := getTwLogEyeClient(n, pe)
+	conn, err := getTwLogEyeClientConn(n, pe)
 	if err != nil {
 		setPollingError("twlogeye", pe, err)
 		return false
 	}
+	defer conn.Close()
+	client := api.NewTWLogEyeServiceClient(conn)
 	st := time.Now().Add(time.Duration(pe.PollInt) * time.Second * -1).UnixNano()
 	if v, ok := pe.Result["lastTime"]; ok {
 		if lt, ok := v.(int64); ok {
@@ -229,11 +235,13 @@ func doPollingTwLogEyeNetflowReport(pe *datastore.PollingEnt) bool {
 		log.Printf("node not found id=%x", pe.NodeID)
 		return false
 	}
-	client, err := getTwLogEyeClient(n, pe)
+	conn, err := getTwLogEyeClientConn(n, pe)
 	if err != nil {
 		setPollingError("twlogeye", pe, err)
 		return false
 	}
+	defer conn.Close()
+	client := api.NewTWLogEyeServiceClient(conn)
 	st := time.Now().Add(time.Duration(pe.PollInt) * time.Second * -1).UnixNano()
 	if v, ok := pe.Result["lastTime"]; ok {
 		if lt, ok := v.(int64); ok {
@@ -287,11 +295,13 @@ func doPollingTwLogEyeWindowsEventReport(pe *datastore.PollingEnt) bool {
 		log.Printf("node not found id=%x", pe.NodeID)
 		return false
 	}
-	client, err := getTwLogEyeClient(n, pe)
+	conn, err := getTwLogEyeClientConn(n, pe)
 	if err != nil {
 		setPollingError("twlogeye", pe, err)
 		return false
 	}
+	defer conn.Close()
+	client := api.NewTWLogEyeServiceClient(conn)
 	st := time.Now().Add(time.Duration(pe.PollInt) * time.Second * -1).UnixNano()
 	if v, ok := pe.Result["lastTime"]; ok {
 		if lt, ok := v.(int64); ok {
@@ -343,11 +353,13 @@ func doPollingTwLogEyeAnomalyReport(pe *datastore.PollingEnt) bool {
 		log.Printf("node not found id=%x", pe.NodeID)
 		return false
 	}
-	client, err := getTwLogEyeClient(n, pe)
+	conn, err := getTwLogEyeClientConn(n, pe)
 	if err != nil {
 		setPollingError("twlogeye", pe, err)
 		return false
 	}
+	defer conn.Close()
+	client := api.NewTWLogEyeServiceClient(conn)
 	st := time.Now().Add(time.Duration(pe.PollInt) * time.Second * -1).UnixNano()
 	if v, ok := pe.Result["lastTime"]; ok {
 		if lt, ok := v.(int64); ok {
@@ -391,9 +403,7 @@ func doPollingTwLogEyeAnomalyReport(pe *datastore.PollingEnt) bool {
 	return true
 }
 
-func getTwLogEyeClient(n *datastore.NodeEnt, pe *datastore.PollingEnt) (api.TWLogEyeServiceClient, error) {
-	var conn *grpc.ClientConn
-	var err error
+func getTwLogEyeClientConn(n *datastore.NodeEnt, pe *datastore.PollingEnt) (*grpc.ClientConn, error) {
 	port := 8081
 	if i, err := strconv.Atoi(pe.Params); err == nil {
 		port = i
@@ -401,13 +411,10 @@ func getTwLogEyeClient(n *datastore.NodeEnt, pe *datastore.PollingEnt) (api.TWLo
 	address := fmt.Sprintf("%s:%d", n.IP, port)
 	if datastore.CACert == "" {
 		// not TLS
-		conn, err = grpc.NewClient(
+		return grpc.NewClient(
 			address,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
-		if err != nil {
-			return nil, err
-		}
 	} else {
 		if datastore.ClientCert != "" && datastore.ClientKey != "" {
 			// mTLS
@@ -428,23 +435,16 @@ func getTwLogEyeClient(n *datastore.NodeEnt, pe *datastore.PollingEnt) (api.TWLo
 				Certificates: []tls.Certificate{cert},
 				RootCAs:      ca,
 			}
-			conn, err = grpc.NewClient(address, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
-			if err != nil {
-				return nil, err
-			}
+			return grpc.NewClient(address, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 		} else {
 			// TLS
 			creds, err := credentials.NewClientTLSFromFile(datastore.CACert, "")
 			if err != nil {
 				return nil, err
 			}
-			conn, err = grpc.NewClient(address, grpc.WithTransportCredentials(creds))
-			if err != nil {
-				return nil, err
-			}
+			return grpc.NewClient(address, grpc.WithTransportCredentials(creds))
 		}
 	}
-	return api.NewTWLogEyeServiceClient(conn), nil
 }
 
 func getTimeStr(t int64) string {

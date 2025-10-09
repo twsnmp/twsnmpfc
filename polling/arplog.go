@@ -17,10 +17,10 @@ func doPollingArpLog(pe *datastore.PollingEnt) {
 	switch pe.Mode {
 	case "stats":
 		doPollingArpLogStats(pe)
-	case "count":
-		doPollingArpLogCount(pe)
-	default:
+	case "check":
 		doPollingArpLogCheck(pe)
+	default:
+		doPollingArpLogCount(pe)
 	}
 }
 
@@ -53,6 +53,7 @@ func doPollingArpLogCount(pe *datastore.PollingEnt) {
 	})
 	pe.Result["lastTime"] = et
 	pe.Result["count"] = float64(count)
+	delete(pe.Result, "error")
 	if script == "" {
 		setPollingState(pe, "normal")
 		return
