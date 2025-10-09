@@ -132,6 +132,9 @@ func doPollingGNMIGet(pe *datastore.PollingEnt, n *datastore.NodeEnt, target str
 var gNMISubscribeMap = sync.Map{}
 
 func doPollingGNMISubscribe(pe *datastore.PollingEnt, n *datastore.NodeEnt, target string) {
+	if _, ok := gNMISubscribeMap.Load(pe.ID); ok {
+		return
+	}
 	tg, err := api.NewTarget(
 		api.Name(n.Name),
 		api.Address(target),
