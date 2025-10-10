@@ -759,7 +759,12 @@ export default {
         )
       }
       if (this.pollingHistogramDialog) {
-        this.$showPollingHistogram(this.polling, this.logs, this.selectedValEnt)
+        this.$showPollingHistogram(
+          'pollingHistogram',
+          this.polling,
+          this.logs,
+          this.selectedValEnt
+        )
       }
     },
     doFilter() {
