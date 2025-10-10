@@ -102,7 +102,6 @@ func doPollingMqttSubscribe(pe *datastore.PollingEnt) {
 			setPollingState(pe, pe.Level)
 		}
 		subscribeUpdatePolling(pe, oldState)
-		log.Printf("Received message: %s from topic: %s\n", msg.Payload(), msg.Topic())
 	})
 	token.Wait()
 	err = token.Error()

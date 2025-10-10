@@ -438,24 +438,14 @@
     "AutoMode": "disable"
   },
   {
-    "Name": "TRAP受信",
-    "Type": "trap",
-    "Mode": "count",
-    "Params": "TODO：送信元IP",
-    "Filter": "TODO:フィルター条件（TRAP名)",
-    "Script": "count < 1",
-    "Level": "low",
-    "Descr": "フィルター条件に一致するSNMP TARPの件数をモニタ",
-    "AutoMode": "disable"
-  },
-  {
-    "Name": "NetFlowで通信監視",
-    "Type": "netflow",
-    "Filter": "フィルター条件",
-    "Script": "count < 1",
+    "Name": "Syslog統計",
+    "Type": "syslog",
+    "Mode": "stats",
+    "Params": "",
+    "Filter": "",
+    "Script": "",
     "Level": "off",
-    "Descr": "NetFlowで通信監視",
-    "AutoMode": "disable"
+    "Descr": "syslogの統計情報"
   },
   {
     "Name": "SYSLOG PRI監視",
@@ -496,6 +486,102 @@
     "Descr": "WELFログから通信フローレポート作成",
     "AutoMode": "disable"
   },
+  {
+    "Name": "TRAP受信",
+    "Type": "trap",
+    "Mode": "count",
+    "Params": "TODO：送信元IP",
+    "Filter": "TODO:フィルター条件（TRAP名)",
+    "Script": "count < 1",
+    "Level": "low",
+    "Descr": "フィルター条件に一致するSNMP TARPの件数をモニタ",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "SNMP TRAP統計情報",
+    "Type": "trap",
+    "Mode": "stats",
+    "Params": "",
+    "Filter": "",
+    "Script": "",
+    "Level": "off",
+    "Descr": "SNMP TARPの受信統計情報"
+  },
+  {
+    "Name": "NetFlowで通信監視",
+    "Type": "netflow",
+    "Filter": "フィルター条件",
+    "Script": "count < 1",
+    "Level": "off",
+    "Descr": "NetFlowで通信監視",
+    "AutoMode": "disable"
+  },
+   {
+    "Name": "NetFlow通信量測定",
+    "Type": "netflow",
+    "Mode": "traffic",
+    "Params": "",
+    "Level": "off",
+    "Descr": "NetFlowの情報から通信量を集計",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "IPFIX通信量測定",
+    "Type": "ipfix",
+    "Mode": "traffic",
+    "Params": "",
+    "Level": "off",
+    "Descr": "IPFIXの情報から通信量を集計",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "NetFlow統計",
+    "Type": "netflow",
+    "Mode": "stats",
+    "Params": "",
+    "Level": "off",
+    "Descr": "NetFlowの統計",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "IPFIX統計",
+    "Type": "ipfix",
+    "Mode": "stats",
+    "Params": "",
+    "Level": "off",
+    "Descr": "IPFIXの統計",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "新規MACアドレスの検知",
+    "Type": "arplog",
+    "Mode": "count",
+    "Filter": "New",
+    "Extractor": "",
+    "Script": "count < 1",
+    "Level": "off",
+    "Descr": "ARPログを監視して新規のMACアドレスの通信を検知する",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "MACアドレス変化",
+    "Type": "arplog",
+    "Mode": "",
+    "Filter": "Change",
+    "Script": "count < 1",
+    "Level": "off",
+    "Descr": "ARPログを監視してMACアドレスの変化を検知"
+  },
+  {
+    "Name": "ARPログ統計情報",
+    "Type": "arplog",
+    "Mode": "stats",
+    "Filter": "",
+    "Script": "",
+    "Level": "off",
+    "Descr": "ARPログの統計情報",
+    "AutoMode": "disable"
+  }, 
   {
     "Name": "デバイスレポート信用スコア監視",
     "Type": "report",
@@ -540,32 +626,70 @@
     "AutoMode": "disable"
   },
   {
-    "Name": "NetFlow通信量測定",
-    "Type": "netflow",
-    "Mode": "traffic",
-    "Params": "",
-    "Level": "off",
-    "Descr": "NetFlowの情報から通信量を集計",
-    "AutoMode": "disable"
-  },
-  {
-    "Name": "IPFIX通信量測定",
-    "Type": "ipfix",
-    "Mode": "traffic",
-    "Params": "",
-    "Level": "off",
-    "Descr": "IPFIXの情報から通信量を集計",
-    "AutoMode": "disable"
-  },
-  {
-    "Name": "ARP監視により新規デバイスの接続を検知",
-    "Type": "arplog",
-    "Mode": "",
-    "Filter": "New",
-    "Extractor": "",
+    "Name": "TwLogEye通知",
+    "Type": "twlogeye",
+    "Level": "low",
     "Script": "count < 1",
+    "Descr": "TwLogEye通知監視",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "TwLogEye Syslogレポート",
+    "Type": "twlogeye",
+    "Mode": "report.syslog",
     "Level": "off",
-    "Descr": "ARPログを監視して新規のMACアドレスの登録を検知する",
+    "Descr": "TwLogEye Syslogレポート監視",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "TwLogEye SNMP TRAPレポート",
+    "Type": "twlogeye",
+    "Mode": "report.snmptrap",
+    "Level": "off",
+    "Descr": "TwLogEye SNMP TRAPレポート監視",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "TwLogEye Netflowレポート",
+    "Type": "twlogeye",
+    "Mode": "report.netflow",
+    "Level": "off",
+    "Descr": "TwLogEye Netflowレポート監視",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "TwLogEye Windows event logレポート",
+    "Type": "twlogeye",
+    "Mode": "report.winevent",
+    "Level": "off",
+    "Descr": "TwLogEye Windows event logレポート監視",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "TwLogEye 異常検知レポート",
+    "Type": "twlogeye",
+    "Mode": "report.anomaly",
+    "Level": "off",
+    "Descr": "TwLogEye 異常検知レポート監視",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "MQTT接続確認",
+    "Type": "mqtt",
+    "Mode": "connect",
+    "Params": "TODO：MQTTブロッカーのURL",
+    "Level": "off",
+    "Descr": "MQTTブロッカーへの接続確認",
+    "AutoMode": "disable"
+  },
+  {
+    "Name": "MQTT Topic監視",
+    "Type": "mqtt",
+    "Mode": "subscribe",
+    "Params": "TODO：MQTTブロッカーのURL",
+    "Filter": "TODO:Topicパス",
+    "Level": "off",
+    "Descr": "MQTTのTopic監視",
     "AutoMode": "disable"
   },
   {
@@ -574,13 +698,7 @@
     "Mode": "stats/summary",
     "Script": "var pb = jsonpath('$.queries.percent_blocked');\nsetResult('percent_blocked',pb);\npb < 10",
     "Level": "off",
-    "Descr": "Pi-holeのブロック率の監視"
-  },
-  {
-    "Name": "TwLogEye連携",
-    "Type": "twlogeye",
-    "Level": "low",
-    "Script": "count < 1",
-    "Descr": "TwLogEye連携"
+    "Descr": "Pi-holeのブロック率の監視",
+    "AutoMode": "disable"
   }
 ]
