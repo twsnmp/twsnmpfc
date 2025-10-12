@@ -30,8 +30,25 @@
         <v-alert v-model="webhookOK" color="primary" dense dismissible>
           Webhookの試験に成功しました
         </v-alert>
-        <v-card-text>
-          <v-row dense>
+        <v-alert v-model="waitOAuth2" color="normal" dense dismissible>
+          <v-progress-circular
+            color="primary"
+            indeterminate
+          ></v-progress-circular>
+          OAuth2認証中...
+        </v-alert>
+        <v-card-text v-if="!waitOAuth2">
+          <v-select
+            v-model="notify.Provider"
+            :items="smtpProviderList"
+            label="プロバイダー"
+            @change="changeProvider"
+          >
+          </v-select>
+          <v-row
+            v-if="notify.Provider == '' || notify.Provider == 'smtp'"
+            dense
+          >
             <v-col>
               <v-text-field
                 v-model="notify.MailServer"
@@ -52,6 +69,34 @@
                 label="暗号強度を下げる"
                 dense
               ></v-switch>
+            </v-col>
+          </v-row>
+          <v-row
+            v-if="notify.Provider == 'microsoft' || notify.Provider == 'google'"
+            dense
+          >
+            <v-col>
+              <v-text-field
+                v-model="notify.ClientID"
+                label="クライアントID"
+                required
+              />
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="notify.ClientSecret"
+                type="password"
+                autocomplete="new-password"
+                label="クライアントシークレット"
+                required
+              />
+            </v-col>
+            <v-col v-if="notify.Provider == 'microsoft'">
+              <v-text-field
+                v-model="notify.MSTenat"
+                label="テナント名"
+                required
+              />
             </v-col>
           </v-row>
           <v-row dense>
@@ -225,15 +270,24 @@
             </v-col>
           </v-row>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions v-if="!waitOAuth2">
           <v-spacer></v-spacer>
           <v-btn color="primary" dark @click="showScheduleDialog()">
             <v-icon>mdi-clock</v-icon>
             スケジュール設定
           </v-btn>
-          <v-btn color="normal" dark @click="test">
+          <v-btn v-if="canTest" color="normal" dark @click="test">
             <v-icon>mdi-email-send</v-icon>
             テスト
+          </v-btn>
+          <v-btn
+            v-if="canGetOAuth2Token"
+            color="error"
+            dark
+            @click="getOAuth2Token"
+          >
+            <v-icon>mdi-key</v-icon>
+            OAuth2トークン取得
           </v-btn>
           <v-btn
             v-if="notify.ChatType.startsWith('discord')"
@@ -320,6 +374,7 @@
 </template>
 
 <script>
+const sleep = (time) => new Promise((resolve) => setTimeout(resolve, time))
 export default {
   data() {
     return {
@@ -344,6 +399,10 @@ export default {
         ChatType: '',
         ChatWebhookURL: '',
         ExecCmd: '',
+        Provider: '',
+        ClientID: '',
+        ClientSercret: '',
+        MSTenat: '',
       },
       error: false,
       saved: false,
@@ -373,10 +432,42 @@ export default {
         Schedule: '',
       },
       nodeMap: {},
+      smtpProviderList: [
+        { text: '', value: '' },
+        { text: 'Google', value: 'google' },
+        { text: 'Microsoft', value: 'microsoft' },
+      ],
+      hasNotifyValidOAuth2Token: false,
+      waitOAuth2: false,
     }
   },
   async fetch() {
     this.notify = await this.$axios.$get('/api/conf/notify')
+    const r = await this.$axios.$post(
+      '/api/notify/oauth2/hastoken',
+      this.notify
+    )
+    this.hasNotifyValidOAuth2Token = r && r.valid === 'true'
+  },
+  computed: {
+    canTest() {
+      switch (this.notify.Provider) {
+        case 'microsoft':
+        case 'google':
+          return this.hasNotifyValidOAuth2Token
+        default:
+          return this.notify.MailServer !== ''
+      }
+    },
+    canGetOAuth2Token() {
+      switch (this.notify.Provider) {
+        case 'microsoft':
+        case 'google':
+          return !this.hasNotifyValidOAuth2Token
+        default:
+          return false
+      }
+    },
   },
   activated() {
     if (this.$fetchState.timestamp <= Date.now() - 30000) {
@@ -406,6 +497,31 @@ export default {
         .catch((e) => {
           this.failed = true
         })
+    },
+    async getOAuth2Token() {
+      this.clearMsg()
+      this.waitOAuth2 = true
+      const r = await this.$axios.$get('/api/notify/oauth2/gettoken')
+      if (r && r.url) {
+        window.open(r.url, '_blank')
+        for (let i = 0; i < 60 && !this.hasNotifyValidOAuth2Token; i++) {
+          await sleep(1000)
+          const r2 = await this.$axios.$post(
+            '/api/notify/oauth2/hastoken',
+            this.notify
+          )
+          this.hasNotifyValidOAuth2Token = r2 && r2.valid === 'true'
+        }
+      }
+      this.waitOAuth2 = false
+      this.$fetch()
+    },
+    async changeProvider() {
+      const r = await this.$axios.$post(
+        '/api/notify/oauth2/hastoken',
+        this.notify
+      )
+      this.hasNotifyValidOAuth2Token = r && r.valid === 'true'
     },
     chatTest() {
       this.clearMsg()

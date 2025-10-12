@@ -12,14 +12,21 @@ import (
 	"net/smtp"
 	"strings"
 
+	"github.com/wneessen/go-mail"
+
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
 func canSendMail() bool {
-	if datastore.NotifyConf.MailServer == "" ||
-		datastore.NotifyConf.MailFrom == "" ||
-		datastore.NotifyConf.MailTo == "" {
-		return false
+	switch datastore.NotifyConf.Provider {
+	case "google", "microsoft":
+		return datastore.HasValidNotifyOAuth2Token(&datastore.NotifyConf)
+	default:
+		if datastore.NotifyConf.MailServer == "" ||
+			datastore.NotifyConf.MailFrom == "" ||
+			datastore.NotifyConf.MailTo == "" {
+			return false
+		}
 	}
 	return true
 }
@@ -72,6 +79,17 @@ func sendMail(subject, body string) error {
 	if !canSendMail() {
 		return nil
 	}
+	switch datastore.NotifyConf.Provider {
+	case "google":
+		return sendMailOAuth2("smtp.gmail.com", subject, body)
+	case "microsoft":
+		return sendMailOAuth2("smtp-mail.outlook.com", subject, body)
+	default:
+		return sendMailSMTP(subject, body)
+	}
+}
+
+func sendMailSMTP(subject, body string) error {
 	host, _, err := net.SplitHostPort(datastore.NotifyConf.MailServer)
 	if err != nil {
 		host = datastore.NotifyConf.MailServer
@@ -149,6 +167,17 @@ func convNewline(str, nlcode string) string {
 }
 
 func SendTestMail(testConf *datastore.NotifyConfEnt) error {
+	switch testConf.Provider {
+	case "google":
+		return sendTestMailOAuth2("smtp.gmail.com", testConf)
+	case "microsoft":
+		return sendTestMailOAuth2("smtp-mail.outlook.com", testConf)
+	default:
+		return sendTestMailSMTP(testConf)
+	}
+}
+
+func sendTestMailSMTP(testConf *datastore.NotifyConfEnt) error {
 	host, _, err := net.SplitHostPort(testConf.MailServer)
 	if err != nil {
 		host = testConf.MailServer
@@ -294,4 +323,84 @@ func encodeSubject(subject string) string {
 		buffer.WriteString("?=\r\n")
 	}
 	return buffer.String()
+}
+
+func sendMailOAuth2(server, subject, body string) error {
+	token := getNotifyOAuth2Token()
+	if token == nil {
+		return fmt.Errorf("oauth2 token not found")
+	}
+	client, err := mail.NewClient(server,
+		mail.WithTLSPortPolicy(mail.TLSMandatory),
+		mail.WithSMTPAuth(mail.SMTPAuthXOAUTH2),
+		mail.WithUsername(datastore.NotifyConf.User), mail.WithPassword(token.AccessToken))
+	if err != nil {
+		return err
+	}
+	message := mail.NewMsg()
+	if err := message.From(datastore.NotifyConf.MailFrom); err != nil {
+		return err
+	}
+	for _, rcpt := range strings.Split(datastore.NotifyConf.MailTo, ",") {
+		if !strings.Contains(rcpt, "@") {
+			continue
+		}
+		if err := message.To(rcpt); err != nil {
+			return err
+		}
+	}
+
+	message.Subject(subject)
+	if datastore.NotifyConf.HTMLMail {
+		message.SetBodyString(mail.TypeTextHTML, body)
+	} else {
+		message.SetBodyString(mail.TypeTextPlain, body)
+	}
+	return client.DialAndSend(message)
+}
+
+func sendTestMailOAuth2(server string, testConf *datastore.NotifyConfEnt) error {
+	token := getNotifyOAuth2Token()
+	if token == nil {
+		return fmt.Errorf("oauth2 token not found")
+	}
+	log.Printf("send test mail token=%v", token.Expiry)
+	client, err := mail.NewClient(server,
+		mail.WithTLSPortPolicy(mail.TLSMandatory),
+		mail.WithSMTPAuth(mail.SMTPAuthXOAUTH2),
+		mail.WithUsername(testConf.User), mail.WithPassword(token.AccessToken))
+	if err != nil {
+		return err
+	}
+	message := mail.NewMsg()
+	if err := message.From(testConf.MailFrom); err != nil {
+		return err
+	}
+	for _, rcpt := range strings.Split(testConf.MailTo, ",") {
+		if !strings.Contains(rcpt, "@") {
+			continue
+		}
+		if err := message.To(rcpt); err != nil {
+			return err
+		}
+	}
+	message.Subject(testConf.Subject)
+	if testConf.HTMLMail {
+		t, err := template.New("test").Parse(datastore.LoadMailTemplate("test"))
+		if err != nil {
+			log.Printf("send test mail err=%s", err)
+			return err
+		}
+		buffer := new(bytes.Buffer)
+		if err = t.Execute(buffer, map[string]interface{}{
+			"Title": testConf.Subject + "(試験メール）",
+			"URL":   testConf.URL,
+		}); err != nil {
+			return err
+		}
+		message.SetBodyString(mail.TypeTextHTML, buffer.String())
+	} else {
+		message.SetBodyString(mail.TypeTextPlain, "Test Mail.\r\n試験メール.\r\n")
+	}
+	return client.DialAndSend(message)
 }

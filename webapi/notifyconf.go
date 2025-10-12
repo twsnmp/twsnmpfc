@@ -35,6 +35,10 @@ func getNotifyConf(c echo.Context) error {
 	r.ExecCmd = datastore.NotifyConf.ExecCmd
 	r.WebHookNotify = datastore.NotifyConf.WebHookNotify
 	r.WebHookReport = datastore.NotifyConf.WebHookReport
+	r.Provider = datastore.NotifyConf.Provider
+	r.ClientID = datastore.NotifyConf.ClientID
+	r.ClientSecret = datastore.NotifyConf.ClientSecret
+	r.MSTenant = datastore.NotifyConf.MSTenant
 	return c.JSON(http.StatusOK, r)
 }
 
@@ -42,6 +46,13 @@ func postNotifyConf(c echo.Context) error {
 	nc := new(datastore.NotifyConfEnt)
 	if err := c.Bind(nc); err != nil {
 		return echo.ErrBadRequest
+	}
+	delOAuth2Token := false
+	if nc.Provider != datastore.NotifyConf.Provider ||
+		nc.ClientID != datastore.NotifyConf.ClientID ||
+		nc.ClientSecret != datastore.NotifyConf.ClientSecret ||
+		nc.MSTenant != datastore.NotifyConf.MSTenant {
+		delOAuth2Token = true
 	}
 	datastore.NotifyConf.MailServer = nc.MailServer
 	datastore.NotifyConf.User = nc.User
@@ -65,6 +76,10 @@ func postNotifyConf(c echo.Context) error {
 	datastore.NotifyConf.ExecCmd = nc.ExecCmd
 	datastore.NotifyConf.WebHookNotify = nc.WebHookNotify
 	datastore.NotifyConf.WebHookReport = nc.WebHookReport
+	datastore.NotifyConf.Provider = nc.Provider
+	datastore.NotifyConf.ClientID = nc.ClientID
+	datastore.NotifyConf.ClientSecret = nc.ClientSecret
+	datastore.NotifyConf.MSTenant = nc.MSTenant
 	if nc.Password != "" {
 		datastore.NotifyConf.Password = nc.Password
 	}
@@ -79,6 +94,9 @@ func postNotifyConf(c echo.Context) error {
 		Level: "info",
 		Event: "通知設定を更新しました",
 	})
+	if delOAuth2Token {
+		datastore.DeleteNotifyOAuth2Token()
+	}
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
 }
 
@@ -221,4 +239,33 @@ func deleteNotifySchedule(c echo.Context) error {
 		Event: "通知除外スケジュールを削除しました",
 	})
 	return c.JSON(http.StatusOK, map[string]string{"resp": "ok"})
+}
+
+func postNotifyHasValidOAuth2Token(c echo.Context) error {
+	nc := new(datastore.NotifyConfEnt)
+	if err := c.Bind(nc); err != nil {
+		return echo.ErrBadRequest
+	}
+	if datastore.HasValidNotifyOAuth2Token(nc) {
+		return c.JSON(http.StatusOK, map[string]string{"valid": "true"})
+	}
+	return c.JSON(http.StatusOK, map[string]string{"valid": "false"})
+}
+
+func getNotifyGetOAuth2Token(c echo.Context) error {
+	url, err := notify.GetNotifyOAuth2TokenStep1()
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+	return c.JSON(http.StatusOK, map[string]string{"url": url})
+}
+
+func getNotifyOAuth2Callback(c echo.Context) error {
+	state := c.FormValue("state")
+	code := c.FormValue("code")
+	err := notify.GetNotifyOAuth2TokenStep2(state, code)
+	if err != nil {
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+	return c.String(http.StatusOK, "OAuth2の認証が完了しました。このWindowを閉じてください。")
 }

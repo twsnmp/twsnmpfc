@@ -127,6 +127,7 @@ func loadConf() error {
 				log.Printf("load conf err=%v", err)
 			}
 		}
+		loadNotifyOAuth2Token(b)
 		v = b.Get([]byte("backup"))
 		if v != nil {
 			if err := json.Unmarshal(v, &Backup); err != nil {

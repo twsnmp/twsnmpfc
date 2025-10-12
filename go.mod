@@ -49,6 +49,7 @@ require (
 	github.com/twsnmp/twlogeye/api v0.3.0
 	github.com/vjeantet/grok v1.0.1
 	github.com/vmware/govmomi v0.48.1
+	github.com/wneessen/go-mail v0.7.2
 	github.com/xhit/go-str2duration/v2 v2.1.0
 	go.etcd.io/bbolt v1.3.7
 	go.opentelemetry.io/collector/client v1.33.0
@@ -61,6 +62,7 @@ require (
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.127.0
 	golang.org/x/crypto v0.42.0
 	golang.org/x/net v0.44.0
+	golang.org/x/oauth2 v0.26.0
 	golang.org/x/text v0.29.0
 	google.golang.org/grpc v1.72.1
 	gopkg.in/ini.v1 v1.67.0
@@ -173,7 +175,6 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20231121144256-b99613f794b6 // indirect
 	golang.org/x/mod v0.27.0 // indirect
-	golang.org/x/oauth2 v0.26.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/time v0.10.0 // indirect
