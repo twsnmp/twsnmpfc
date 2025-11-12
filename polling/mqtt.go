@@ -55,7 +55,7 @@ func doPollingMqttConnect(pe *datastore.PollingEnt) bool {
 		}
 		if ok, _ := value.ToBoolean(); !ok {
 			setPollingState(pe, pe.Level)
-			return false
+			return true
 		}
 	}
 	setPollingState(pe, "normal")
