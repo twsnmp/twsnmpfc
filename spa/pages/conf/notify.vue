@@ -439,10 +439,12 @@ export default {
       ],
       hasNotifyValidOAuth2Token: false,
       waitOAuth2: false,
+      savedProvider: '',
     }
   },
   async fetch() {
     this.notify = await this.$axios.$get('/api/conf/notify')
+    this.savedProvider = this.notify.Provider
     const r = await this.$axios.$post(
       '/api/notify/oauth2/hastoken',
       this.notify
@@ -463,7 +465,10 @@ export default {
       switch (this.notify.Provider) {
         case 'microsoft':
         case 'google':
-          return !this.hasNotifyValidOAuth2Token
+          return (
+            !this.hasNotifyValidOAuth2Token &&
+            this.savedProvider === this.notify.Provider
+          )
         default:
           return false
       }

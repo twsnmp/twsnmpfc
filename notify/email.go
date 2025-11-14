@@ -18,13 +18,15 @@ import (
 )
 
 func canSendMail() bool {
+	if datastore.NotifyConf.MailFrom == "" ||
+		datastore.NotifyConf.MailTo == "" {
+		return false
+	}
 	switch datastore.NotifyConf.Provider {
 	case "google", "microsoft":
 		return datastore.HasValidNotifyOAuth2Token(&datastore.NotifyConf)
 	default:
-		if datastore.NotifyConf.MailServer == "" ||
-			datastore.NotifyConf.MailFrom == "" ||
-			datastore.NotifyConf.MailTo == "" {
+		if datastore.NotifyConf.MailServer == "" {
 			return false
 		}
 	}
@@ -43,13 +45,15 @@ func sendNotifyMail(list []*datastore.EventLogEnt) {
 	if nd.failureBody != "" {
 		err := sendMail(nd.failureSubject, nd.failureBody)
 		r := ""
+		level := "info"
 		if err != nil {
 			log.Printf("send mail err=%v", err)
 			r = fmt.Sprintf("失敗 エラー=%v", err)
+			level = "high"
 		}
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
-			Level: "info",
+			Level: level,
 			Event: fmt.Sprintf("通知メール送信 %s", r),
 		})
 	}

@@ -810,6 +810,11 @@ func sendReportHTML() {
 	}
 	if err := sendMail(title, body.String()); err != nil {
 		log.Printf("send report mail err=%v", err)
+		datastore.AddEventLog(&datastore.EventLogEnt{
+			Type:  "system",
+			Level: "high",
+			Event: fmt.Sprintf("定期レポートメール送信失敗 err=%v", err),
+		})
 	} else {
 		datastore.AddEventLog(&datastore.EventLogEnt{
 			Type:  "system",
