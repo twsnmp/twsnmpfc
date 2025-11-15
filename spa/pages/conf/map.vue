@@ -327,6 +327,18 @@
                 required
               />
             </v-col>
+            <v-col>
+              <v-switch
+                v-model="mapconf.EnableMqtt"
+                label="MQTTサーバー"
+              ></v-switch>
+            </v-col>
+            <v-col>
+              <v-switch
+                v-model="mapconf.MqttToSyslog"
+                label="MQTTのデータをSyslogに記録"
+              ></v-switch>
+            </v-col>
           </v-row>
         </v-card-text>
         <v-card-actions>
@@ -631,6 +643,8 @@ export default {
         OTelRetention: 3,
         OTelFrom: '',
         EnableOTel: false,
+        EnableMqtt: false,
+        MqttToSyslog: false,
       },
       aiModeList: [
         { text: 'Local Outiler Factor', value: 'lof' },

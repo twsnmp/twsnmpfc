@@ -84,6 +84,14 @@ var mcpEnable = false
 var mcpFrom = ""
 var mcpMode = ""
 
+// MQTT server
+var mqttTCPPort = 1883
+var mqttWSPort = 1884
+var mqttCert = ""
+var mqttKey = ""
+var mqttFrom = ""
+var mqttUsers = ""
+
 func init() {
 	flag.StringVar(&dataStorePath, "datastore", "./datastore", "Path to Data Store directory")
 	flag.StringVar(&password, "password", "twsnmpfc!", "Master Password")
@@ -126,6 +134,11 @@ func init() {
 	flag.StringVar(&mcpFrom, "mcpFrom", "", "Access control for MCP server")
 	flag.StringVar(&mcpMode, "mcpMode", "noauth", "MCP server trasport mode (sse | auth | noauth)")
 	flag.BoolVar(&mcpEnable, "mcp", false, "Enable MCP server")
+	flag.IntVar(&mqttTCPPort, "mqttTCPPort", 1883, "MQTT server TCP port")
+	flag.IntVar(&mqttWSPort, "mqttWSPort", 1884, "MQTT server Websock port")
+	flag.StringVar(&mqttCert, "mqttCert", "", "MQTT server cert path")
+	flag.StringVar(&mqttFrom, "mqttFrom", "", "MQTT server clintes")
+	flag.StringVar(&mqttUsers, "mqttKey", "", "MQTT server users")
 
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
@@ -255,6 +268,12 @@ func main() {
 	logger.OTelCert = otelCert
 	logger.OTelGRPCPort = otelGRPCPort
 	logger.OTelHTTPPort = otelHTTPPort
+	logger.MqttFrom = mqttFrom
+	logger.MqttUsers = mqttUsers
+	logger.MqttKey = mqttKey
+	logger.MqttCert = mqttCert
+	logger.MqttTCPPort = mqttTCPPort
+	logger.MqttWSPort = mqttWSPort
 	logger.Version = version
 	if err = logger.Start(ctx, wg, trapPort, netflowPort, syslogPort, sflowPort, tcpPort, sshdPort); err != nil {
 		log.Fatalf("start logger err=%v", err)
@@ -436,6 +455,25 @@ func loadIni() {
 	}
 	if v := cfg.Section("OTel").Key("otelCA").MustString(""); v != "" {
 		otelCA = v
+	}
+	// MQTT
+	if v := cfg.Section("MQTT").Key("mqttTCPPort").MustInt(0); v > 0 {
+		mqttTCPPort = v
+	}
+	if v := cfg.Section("MQTT").Key("mqttWSPort").MustInt(0); v > 0 {
+		mqttWSPort = v
+	}
+	if v := cfg.Section("MQTT").Key("mqttCert").MustString(""); v != "" {
+		mqttCert = v
+	}
+	if v := cfg.Section("MQTT").Key("mqttKey").MustString(""); v != "" {
+		mqttKey = v
+	}
+	if v := cfg.Section("MQTT").Key("mqttFrom").MustString(""); v != "" {
+		mqttFrom = v
+	}
+	if v := cfg.Section("MQTT").Key("mqttUsers").MustString(""); v != "" {
+		mqttUsers = v
 	}
 	// TLS | gRPC Client
 	if v := cfg.Section("client").Key("clientCert").MustString(""); v != "" {

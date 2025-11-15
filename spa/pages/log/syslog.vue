@@ -29,6 +29,9 @@
           }}</v-icon>
           {{ $getStateName(item.Level) }}
         </template>
+        <template #[`item.Message`]="{ item }">
+          {{ truncateText(item.Message) }}
+        </template>
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="editPolling(item)"> mdi-card-plus </v-icon>
           <v-icon small @click="showAddrInfo(item)"> mdi-file-find </v-icon>
@@ -1623,6 +1626,12 @@ export default {
           this.copyError = true
         }
       )
+    },
+    truncateText(text, maxLength = 500) {
+      if (text.length > maxLength) {
+        return text.substring(0, maxLength) + '...'
+      }
+      return text
     },
     makeSyslogExports() {
       const exports = []

@@ -47,6 +47,7 @@ func logger(ctx context.Context, wg *sync.WaitGroup) {
 	var sflowdRunning = false
 	var tcpdRunning = false
 	var oteldRunning = false
+	var mqttdRunning = false
 	var stopSyslogd chan bool
 	var stopTrapd chan bool
 	var stopNetflowd chan bool
@@ -55,6 +56,7 @@ func logger(ctx context.Context, wg *sync.WaitGroup) {
 	var stopSflowd chan bool
 	var stopTcpd chan bool
 	var stopOteld chan bool
+	var stopMqttd chan bool
 	log.Println("start logger")
 	timer1 := time.NewTicker(time.Second * 10)
 	timer2 := time.NewTicker(time.Second * 1)
@@ -89,6 +91,9 @@ func logger(ctx context.Context, wg *sync.WaitGroup) {
 				if oteldRunning {
 					close(stopOteld)
 				}
+				// if mqttdRunning {
+				// 	close(stopMqttd)
+				// }
 				if len(logBuffer) > 0 {
 					datastore.SaveLogBuffer(logBuffer)
 				}
@@ -166,6 +171,14 @@ func logger(ctx context.Context, wg *sync.WaitGroup) {
 			} else if !datastore.MapConf.EnableOTel && oteldRunning {
 				close(stopOteld)
 				oteldRunning = false
+			}
+			if datastore.MapConf.EnableMqtt && !mqttdRunning {
+				stopMqttd = make(chan bool)
+				mqttdRunning = true
+				go mqttd(stopMqttd)
+			} else if !datastore.MapConf.EnableMqtt && mqttdRunning {
+				close(stopMqttd)
+				mqttdRunning = false
 			}
 			if datastore.RestartSnmpTrapd && trapdRunning {
 				close(stopTrapd)

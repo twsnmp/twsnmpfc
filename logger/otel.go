@@ -23,6 +23,7 @@ import (
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/report"
 )
 
 var OTelGRPCPort = 4717
@@ -188,6 +189,7 @@ func handleMetrics(ctx context.Context, md pmetric.Metrics) error {
 			return nil
 		}
 	}
+	report.UpdateSensor(host, "otel:metric", 1)
 	for _, rm := range md.ResourceMetrics().All() {
 		if v, ok := rm.Resource().Attributes().Get("host.name"); ok {
 			host = v.AsString()
@@ -231,6 +233,7 @@ func handleTraces(ctx context.Context, td ptrace.Traces) error {
 			return nil
 		}
 	}
+	report.UpdateSensor(host, "otel:tarce", 1)
 	service := "unknown"
 	for _, rs := range td.ResourceSpans().All() {
 		if v, ok := rs.Resource().Attributes().Get("service.name"); ok {
@@ -296,6 +299,7 @@ func handleLogs(ctx context.Context, ld plog.Logs) error {
 			return nil
 		}
 	}
+	report.UpdateSensor(host, "otel:log", 1)
 	service := "unknown"
 	for _, rl := range ld.ResourceLogs().All() {
 		if v, ok := rl.Resource().Attributes().Get("host.name"); ok {

@@ -50,6 +50,8 @@ type MapConfEnt struct {
 	EnableSflowd    bool
 	EnableTcpd      bool
 	EnableOTel      bool
+	EnableMqtt      bool
+	MqttToSyslog    bool
 	EnableMobileAPI bool
 	AILevel         string
 	AIThreshold     int
