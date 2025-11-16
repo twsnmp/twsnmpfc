@@ -7,358 +7,352 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
-
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/twsnmp/twsnmpfc/datastore"
 )
 
 // get_sensor_list tool
+
+type mcpSensorMonitorEnt struct {
+	CPU     float64 `json:"cpu"`
+	Memory  float64 `json:"memory"`
+	Load    float64 `json:"load"`
+	Process int64   `json:"process"`
+}
 type mcpSensorEnt struct {
-	Host      string
-	Type      string
-	Total     int64
-	Send      int64
-	State     string
-	Monitor   string
-	FirstTime string
-	LastTime  string
+	Host      string              `json:"host"`
+	Type      string              `json:"type"`
+	Total     int64               `json:"total"`
+	Send      int64               `json:"send"`
+	State     string              `json:"state"`
+	Monitor   mcpSensorMonitorEnt `json:"monitor"`
+	FirstTime string              `json:"first_time"`
+	LastTime  string              `json:"last_time"`
+}
+type mcpGetSensorListParams struct {
+	StateFilter string `json:"state_filter" jsonschema:"state_filter uses a regular expression to specify search criteria for sensor state names(normal,warn,low,high,unknown).If blank, all sensors are searched."`
 }
 
-func addGetSensorListTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_sensor_list",
-		mcp.WithDescription("get sensor list from TWSNMP"),
-		mcp.WithString("state_filter",
-			mcp.Description(
-				`state_filter uses a regular expression to specify search criteria for sensor state names.
-If blank, all sensor are searched.
-State names can be "normal","warn","low","high"
-`),
-		),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		state := makeRegexFilter(request.GetString("state_filter", ""))
-		list := []mcpSensorEnt{}
-		datastore.ForEachSensors(func(s *datastore.SensorEnt) bool {
-			if state != nil && !state.MatchString(s.State) {
-				return true
-			}
-			if s.Ignore {
-				return true
-			}
-			monitor := ""
-			if len(s.Monitors) > 0 {
-				i := len(s.Monitors) - 1
-				monitor = fmt.Sprintf("cpu=%.02f%% mem=%.02f%% load=%.02f%% process=%d",
-					s.Monitors[i].CPU,
-					s.Monitors[i].Mem,
-					s.Monitors[i].Load,
-					s.Monitors[i].Process,
-				)
-			}
-			list = append(list, mcpSensorEnt{
-				Host:      s.Host,
-				Type:      s.Type,
-				State:     s.State,
-				Total:     s.Total,
-				Send:      s.Send,
-				Monitor:   monitor,
-				FirstTime: time.Unix(0, s.FirstTime).Format(time.RFC3339Nano),
-				LastTime:  time.Unix(0, s.LastTime).Format(time.RFC3339Nano),
-			})
+func mcpGetSensorList(ctx context.Context, req *mcp.CallToolRequest, args mcpGetSensorListParams) (*mcp.CallToolResult, any, error) {
+	state := makeRegexFilter(args.StateFilter)
+	list := []mcpSensorEnt{}
+	datastore.ForEachSensors(func(s *datastore.SensorEnt) bool {
+		if state != nil && !state.MatchString(s.State) {
 			return true
-		})
-		j, err := json.Marshal(&list)
-		if err != nil {
-			j = []byte(err.Error())
 		}
-		return mcp.NewToolResultText(string(j)), nil
+		if s.Ignore {
+			return true
+		}
+		monitor := mcpSensorMonitorEnt{}
+		if len(s.Monitors) > 0 {
+			i := len(s.Monitors) - 1
+			monitor.CPU = s.Monitors[i].CPU
+			monitor.Memory = s.Monitors[i].Mem
+			monitor.Load = s.Monitors[i].Load
+			monitor.Process = s.Monitors[i].Process
+		}
+		list = append(list, mcpSensorEnt{
+			Host:      s.Host,
+			Type:      s.Type,
+			State:     s.State,
+			Total:     s.Total,
+			Send:      s.Send,
+			Monitor:   monitor,
+			FirstTime: time.Unix(0, s.FirstTime).Format(time.RFC3339Nano),
+			LastTime:  time.Unix(0, s.LastTime).Format(time.RFC3339Nano),
+		})
+		return true
 	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
 }
 
 type mcpMACEnt struct {
-	MAC       string
-	Name      string
-	IP        string
-	Vendor    string
-	Score     float64
-	Penalty   int64
-	FirstTime string
-	LastTime  string
+	MAC       string  `json:"mac"`
+	Name      string  `json:"name"`
+	IP        string  `json:"ip"`
+	Vendor    string  `json:"vendor"`
+	Score     float64 `json:"score"`
+	Penalty   int64   `json:"penalty"`
+	FirstTime string  `json:"first_time"`
+	LastTime  string  `json:"last_time"`
 }
 
-func addGetMACAddressListTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_mac_address_list",
-		mcp.WithDescription("get MAC address list from TWSNMP"),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		list := []mcpMACEnt{}
-		datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
-			if !d.ValidScore {
-				return true
-			}
-			name := d.Name
-			if name == d.IP && d.NodeID != "" {
-				if n := datastore.GetNode(d.NodeID); n != nil {
-					name = n.Name
-				}
-			}
-			list = append(list, mcpMACEnt{
-				MAC:       d.ID,
-				Name:      name,
-				IP:        d.IP,
-				Vendor:    d.Vendor,
-				Score:     d.Score,
-				Penalty:   d.Penalty,
-				FirstTime: time.Unix(0, d.FirstTime).Format(time.RFC3339Nano),
-				LastTime:  time.Unix(0, d.LastTime).Format(time.RFC3339Nano),
-			})
+func mcpGetMACAddressList(ctx context.Context, req *mcp.CallToolRequest, _ any) (*mcp.CallToolResult, any, error) {
+	list := []mcpMACEnt{}
+	datastore.ForEachDevices(func(d *datastore.DeviceEnt) bool {
+		if !d.ValidScore {
 			return true
-		})
-		j, err := json.Marshal(&list)
-		if err != nil {
-			j = []byte(err.Error())
 		}
-		return mcp.NewToolResultText(string(j)), nil
+		name := d.Name
+		if name == d.IP && d.NodeID != "" {
+			if n := datastore.GetNode(d.NodeID); n != nil {
+				name = n.Name
+			}
+		}
+		list = append(list, mcpMACEnt{
+			MAC:       d.ID,
+			Name:      name,
+			IP:        d.IP,
+			Vendor:    d.Vendor,
+			Score:     d.Score,
+			Penalty:   d.Penalty,
+			FirstTime: time.Unix(0, d.FirstTime).Format(time.RFC3339Nano),
+			LastTime:  time.Unix(0, d.LastTime).Format(time.RFC3339Nano),
+		})
+		return true
 	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
 }
 
 type mcpIPEnt struct {
-	IP        string
-	MAC       string
-	Name      string
-	Location  string
-	Vendor    string
-	Count     int64
-	Change    int64
-	Score     float64
-	Penalty   int64
-	FirstTime string
-	LastTime  string
+	IP        string  `json:"ip"`
+	MAC       string  `json:"mac"`
+	Name      string  `json:"name"`
+	Location  string  `json:"location"`
+	Vendor    string  `json:"vendor"`
+	Count     int64   `json:"count"`
+	Change    int64   `json:"change"`
+	Score     float64 `json:"score"`
+	Penalty   int64   `json:"penalty"`
+	FirstTime string  `json:"first_time"`
+	LastTime  string  `json:"last_time"`
 }
 
-func addGetIPAddressListTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_ip_address_list",
-		mcp.WithDescription("get IP address list from TWSNMP"),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		list := []mcpIPEnt{}
-		datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
-			if !i.ValidScore {
-				return true
-			}
-			name := i.Name
-			if name == i.IP && i.NodeID != "" {
-				if n := datastore.GetNode(i.NodeID); n != nil {
-					name = n.Name
-				}
-			}
-			list = append(list, mcpIPEnt{
-				IP:        i.IP,
-				MAC:       i.MAC,
-				Name:      name,
-				Vendor:    i.Vendor,
-				Score:     i.Score,
-				Penalty:   i.Penalty,
-				Location:  i.Loc,
-				Count:     i.Count,
-				Change:    i.Change,
-				FirstTime: time.Unix(0, i.FirstTime).Format(time.RFC3339Nano),
-				LastTime:  time.Unix(0, i.LastTime).Format(time.RFC3339Nano),
-			})
+func mcpGetIPAddressList(ctx context.Context, req *mcp.CallToolRequest, _ any) (*mcp.CallToolResult, any, error) {
+	list := []mcpIPEnt{}
+	datastore.ForEachIPReport(func(i *datastore.IPReportEnt) bool {
+		if !i.ValidScore {
 			return true
-		})
-		j, err := json.Marshal(&list)
-		if err != nil {
-			j = []byte(err.Error())
 		}
-		return mcp.NewToolResultText(string(j)), nil
+		name := i.Name
+		if name == i.IP && i.NodeID != "" {
+			if n := datastore.GetNode(i.NodeID); n != nil {
+				name = n.Name
+			}
+		}
+		list = append(list, mcpIPEnt{
+			IP:        i.IP,
+			MAC:       i.MAC,
+			Name:      name,
+			Vendor:    i.Vendor,
+			Score:     i.Score,
+			Penalty:   i.Penalty,
+			Location:  i.Loc,
+			Count:     i.Count,
+			Change:    i.Change,
+			FirstTime: time.Unix(0, i.FirstTime).Format(time.RFC3339Nano),
+			LastTime:  time.Unix(0, i.LastTime).Format(time.RFC3339Nano),
+		})
+		return true
 	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
 }
 
 type mcpWifiAPEnt struct {
-	Host      string
-	BSSID     string
-	SSID      string
-	RSSI      int
-	Channel   string
-	Vendor    string
-	Info      string
-	Count     int
-	Change    int
-	FirstTime string
-	LastTime  string
+	Host      string `json:"host"`
+	BSSID     string `json:"bssid"`
+	SSID      string `json:"ssid"`
+	RSSI      int    `json:"rssi"`
+	Channel   string `json:"channel"`
+	Vendor    string `json:"vendor"`
+	Info      string `json:"info"`
+	Count     int    `json:"count"`
+	Change    int    `json:"change"`
+	FirstTime string `json:"first_time"`
+	LastTime  string `json:"last_time"`
 }
 
-func addGetWifiAPListTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_wifi_ap_list",
-		mcp.WithDescription("get Wifi access point list from TWSNMP"),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		list := []mcpWifiAPEnt{}
-		datastore.ForEachWifiAP(func(e *datastore.WifiAPEnt) bool {
-			rssi := 0
-			if len(e.RSSI) > 0 {
-				rssi = e.RSSI[len(e.RSSI)-1].Value
-			}
-			list = append(list, mcpWifiAPEnt{
-				Host:      e.Host,
-				BSSID:     e.BSSID,
-				SSID:      e.SSID,
-				Channel:   e.Channel,
-				Vendor:    e.Vendor,
-				Info:      e.Info,
-				RSSI:      rssi,
-				Count:     e.Count,
-				Change:    e.Change,
-				FirstTime: time.Unix(0, e.FirstTime).Format(time.RFC3339Nano),
-				LastTime:  time.Unix(0, e.LastTime).Format(time.RFC3339Nano),
-			})
-			return true
-		})
-		j, err := json.Marshal(&list)
-		if err != nil {
-			j = []byte(err.Error())
+func mcpGetWifiAPList(ctx context.Context, req *mcp.CallToolRequest, _ any) (*mcp.CallToolResult, any, error) {
+	list := []mcpWifiAPEnt{}
+	datastore.ForEachWifiAP(func(e *datastore.WifiAPEnt) bool {
+		rssi := 0
+		if len(e.RSSI) > 0 {
+			rssi = e.RSSI[len(e.RSSI)-1].Value
 		}
-		return mcp.NewToolResultText(string(j)), nil
+		list = append(list, mcpWifiAPEnt{
+			Host:      e.Host,
+			BSSID:     e.BSSID,
+			SSID:      e.SSID,
+			Channel:   e.Channel,
+			Vendor:    e.Vendor,
+			Info:      e.Info,
+			RSSI:      rssi,
+			Count:     e.Count,
+			Change:    e.Change,
+			FirstTime: time.Unix(0, e.FirstTime).Format(time.RFC3339Nano),
+			LastTime:  time.Unix(0, e.LastTime).Format(time.RFC3339Nano),
+		})
+		return true
 	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
 }
 
 type mcpBluetoothDeviceEnt struct {
-	Host        string
-	Address     string
-	Name        string
-	AddressType string
-	RSSI        int
-	Info        string
-	Vendor      string
-	Count       int64
-	FirstTime   string
-	LastTime    string
+	Host        string `json:"host"`
+	Address     string `json:"address"`
+	Name        string `json:"name"`
+	AddressType string `json:"address_type"`
+	RSSI        int    `json:"rssi"`
+	Info        string `json:"info"`
+	Vendor      string `json:"vendor"`
+	Count       int64  `json:"count"`
+	FirstTime   string `json:"first_time"`
+	LastTime    string `json:"last_time"`
 }
 
-func addGetBluetoothDeviceListTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_bluetooth_device_list",
-		mcp.WithDescription("get bluetooth device list from TWSNMP"),
-		mcp.WithBoolean("public_address_only",
-			mcp.DefaultBool(true),
-			mcp.Description("List only devices with Bluetooth address type Public")))
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		onlyPublic := request.GetBool("public_address_only", true)
-		list := []mcpBluetoothDeviceEnt{}
-		datastore.ForEachBlueDevice(func(b *datastore.BlueDeviceEnt) bool {
-			if onlyPublic && !strings.Contains(b.AddressType, "Public") {
-				return true
-			}
-			rssi := 0
-			if len(b.RSSI) > 0 {
-				rssi = b.RSSI[len(b.RSSI)-1].Value
-			}
-			list = append(list, mcpBluetoothDeviceEnt{
-				Host:        b.Host,
-				Address:     b.Address,
-				AddressType: b.AddressType,
-				RSSI:        rssi,
-				Info:        b.Info,
-				Vendor:      b.Vendor,
-				Count:       b.Count,
-				FirstTime:   time.Unix(0, b.FirstTime).Format(time.RFC3339Nano),
-				LastTime:    time.Unix(0, b.LastTime).Format(time.RFC3339Nano),
-			})
+type mcpGetBluetoothDeviceListParams struct {
+	PublicAddressOnly bool `json:"public_address_only" jsonschema:"List only devices with Bluetooth address type Public."`
+}
+
+func mcpGetBluetoothDeviceList(ctx context.Context, req *mcp.CallToolRequest, args mcpGetBluetoothDeviceListParams) (*mcp.CallToolResult, any, error) {
+	onlyPublic := args.PublicAddressOnly
+	list := []mcpBluetoothDeviceEnt{}
+	datastore.ForEachBlueDevice(func(b *datastore.BlueDeviceEnt) bool {
+		if onlyPublic && !strings.Contains(b.AddressType, "Public") {
 			return true
-		})
-		j, err := json.Marshal(&list)
-		if err != nil {
-			j = []byte(err.Error())
 		}
-		return mcp.NewToolResultText(string(j)), nil
+		rssi := 0
+		if len(b.RSSI) > 0 {
+			rssi = b.RSSI[len(b.RSSI)-1].Value
+		}
+		list = append(list, mcpBluetoothDeviceEnt{
+			Host:        b.Host,
+			Address:     b.Address,
+			AddressType: b.AddressType,
+			RSSI:        rssi,
+			Info:        b.Info,
+			Vendor:      b.Vendor,
+			Count:       b.Count,
+			FirstTime:   time.Unix(0, b.FirstTime).Format(time.RFC3339Nano),
+			LastTime:    time.Unix(0, b.LastTime).Format(time.RFC3339Nano),
+		})
+		return true
 	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
 }
 
 type mcpServerCertificateEnt struct {
-	Server       string
-	Port         uint16
-	Subject      string
-	Issuer       string
-	SerialNumber string
-	Verify       bool
-	NotAfter     string
-	NotBefore    string
-	Error        string
-	Score        float64
-	Penalty      int64
-	FirstTime    string
-	LastTime     string
+	Server       string  `json:"server"`
+	Port         uint16  `json:"port"`
+	Subject      string  `json:"subject"`
+	Issuer       string  `json:"issuer"`
+	SerialNumber string  `json:"serial_number"`
+	Verify       bool    `json:"verify"`
+	NotAfter     string  `json:"not_after"`
+	NotBefore    string  `json:"not_before"`
+	Error        string  `json:"error"`
+	Score        float64 `json:"score"`
+	Penalty      int64   `json:"penalty"`
+	FirstTime    string  `json:"first_time"`
+	LastTime     string  `json:"last_time"`
 }
 
-func addGetServerCertificateListTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_server_certificate_list",
-		mcp.WithDescription("get server certificate list from TWSNMP"),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		list := []mcpServerCertificateEnt{}
-		datastore.ForEachCerts(func(c *datastore.CertEnt) bool {
-			list = append(list, mcpServerCertificateEnt{
-				Server:       c.Target,
-				Port:         c.Port,
-				Subject:      c.Subject,
-				Issuer:       c.Issuer,
-				SerialNumber: c.SerialNumber,
-				Verify:       c.Verify,
-				NotBefore:    time.Unix(c.NotBefore, 0).Format(time.RFC3339),
-				NotAfter:     time.Unix(c.NotAfter, 0).Format(time.RFC3339),
-				Error:        c.Error,
-				Score:        c.Score,
-				Penalty:      c.Penalty,
-				FirstTime:    time.Unix(0, c.FirstTime).Format(time.RFC3339Nano),
-				LastTime:     time.Unix(0, c.LastTime).Format(time.RFC3339Nano),
-			})
-			return true
+func mcpGetServerCertificateList(ctx context.Context, req *mcp.CallToolRequest, _ any) (*mcp.CallToolResult, any, error) {
+	list := []mcpServerCertificateEnt{}
+	datastore.ForEachCerts(func(c *datastore.CertEnt) bool {
+		list = append(list, mcpServerCertificateEnt{
+			Server:       c.Target,
+			Port:         c.Port,
+			Subject:      c.Subject,
+			Issuer:       c.Issuer,
+			SerialNumber: c.SerialNumber,
+			Verify:       c.Verify,
+			NotBefore:    time.Unix(c.NotBefore, 0).Format(time.RFC3339),
+			NotAfter:     time.Unix(c.NotAfter, 0).Format(time.RFC3339),
+			Error:        c.Error,
+			Score:        c.Score,
+			Penalty:      c.Penalty,
+			FirstTime:    time.Unix(0, c.FirstTime).Format(time.RFC3339Nano),
+			LastTime:     time.Unix(0, c.LastTime).Format(time.RFC3339Nano),
 		})
-		j, err := json.Marshal(&list)
-		if err != nil {
-			j = []byte(err.Error())
-		}
-		return mcp.NewToolResultText(string(j)), nil
+		return true
 	})
+	j, err := json.Marshal(&list)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
 }
 
 type mcpResourceMonitorEnt struct {
-	Time        string
-	CPUUsage    string
-	MemoryUsage string
-	SwapUsage   string
-	DiskUsage   string
-	Load        string
+	Time   string `json:"time"`
+	CPU    string `json:"cpu"`
+	Memory string `json:"memory"`
+	Swap   string `json:"swap"`
+	Disk   string `json:"disk"`
+	Load   string `json:"load"`
 }
 
-func addGetResourceMonitorListTool(s *server.MCPServer) {
-	tool := mcp.NewTool("get_resource_monitor_list",
-		mcp.WithDescription("get resource monitor list from TWSNMP"),
-	)
-	s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		list := []mcpResourceMonitorEnt{}
-		skip := 30
-		if len(datastore.MonitorDataes) < 120 {
-			skip = 5
+func mcpGetResourceMonitorList(ctx context.Context, req *mcp.CallToolRequest, _ any) (*mcp.CallToolResult, any, error) {
+	list := []mcpResourceMonitorEnt{}
+	skip := 30
+	if len(datastore.MonitorDataes) < 120 {
+		skip = 5
+	}
+	for i, m := range datastore.MonitorDataes {
+		if i%skip != 0 {
+			continue
 		}
-		for i, m := range datastore.MonitorDataes {
-			if i%skip != 0 {
-				continue
-			}
-			list = append(list, mcpResourceMonitorEnt{
-				Time:        time.Unix(m.At, 0).Format(time.RFC3339),
-				CPUUsage:    fmt.Sprintf("%.02f%%", m.CPU),
-				MemoryUsage: fmt.Sprintf("%.02f%%", m.Mem),
-				SwapUsage:   fmt.Sprintf("%.02f%%", m.Swap),
-				DiskUsage:   fmt.Sprintf("%.02f%%", m.Disk),
-				Load:        fmt.Sprintf("%.02f", m.Load),
-			})
-		}
-		j, err := json.Marshal(&list)
-		if err != nil {
-			j = []byte(err.Error())
-		}
-		return mcp.NewToolResultText(string(j)), nil
-	})
+		list = append(list, mcpResourceMonitorEnt{
+			Time:   time.Unix(m.At, 0).Format(time.RFC3339),
+			CPU:    fmt.Sprintf("%.02f%%", m.CPU),
+			Memory: fmt.Sprintf("%.02f%%", m.Mem),
+			Swap:   fmt.Sprintf("%.02f%%", m.Swap),
+			Disk:   fmt.Sprintf("%.02f%%", m.Disk),
+			Load:   fmt.Sprintf("%.02f", m.Load),
+		})
+	}
+	j, err := json.Marshal(&list)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
 }

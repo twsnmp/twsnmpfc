@@ -27,10 +27,10 @@ require (
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
 	github.com/labstack/echo-jwt/v4 v4.3.0
 	github.com/labstack/echo/v4 v4.13.3
-	github.com/mark3labs/mcp-go v0.32.0
 	github.com/mdlayher/netx v0.0.0-20230430222610-7e21880baee8
 	github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12
 	github.com/mochi-mqtt/server/v2 v2.7.9
+	github.com/modelcontextprotocol/go-sdk v1.1.0
 	github.com/montanaflynn/stats v0.7.1
 	github.com/mrichman/godnsbl v1.0.0
 	github.com/openconfig/gnmi v0.13.0
@@ -63,7 +63,7 @@ require (
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.127.0
 	golang.org/x/crypto v0.42.0
 	golang.org/x/net v0.44.0
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.30.0
 	golang.org/x/text v0.29.0
 	google.golang.org/grpc v1.72.1
 	gopkg.in/ini.v1 v1.67.0
@@ -103,6 +103,7 @@ require (
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/flatbuffers v25.2.10+incompatible // indirect
 	github.com/google/go-tpm v0.9.5 // indirect
+	github.com/google/jsonschema-go v0.3.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
@@ -134,7 +135,6 @@ require (
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/smallstep/pkcs7 v0.2.1 // indirect
-	github.com/spf13/cast v1.7.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.14 // indirect
 	github.com/tklauser/numcpus v0.9.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

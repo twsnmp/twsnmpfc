@@ -56,7 +56,6 @@ func Start(p *WebAPI) {
 func Stop() {
 	ctxStopWeb, cancelWeb := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancelWeb()
-	stopMCPServer(ctxStopWeb)
 	if err := e.Shutdown(ctxStopWeb); err != nil {
 		log.Printf("shutdown webapi err=%v", err)
 	}
