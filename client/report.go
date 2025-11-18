@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// GetDevicesはTWSNMP FCからLANデバイスレポートを取得します。
+// GetDevices はTWSNMP FCからLANデバイスレポートを取得します。
 func (a *TWSNMPApi) GetDevices() ([]*DeviceEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -19,7 +19,7 @@ func (a *TWSNMPApi) GetDevices() ([]*DeviceEnt, error) {
 	return devices, err
 }
 
-// GetUsersはTWSNMP FCからユーザーレポートを取得します。
+// GetUsers はTWSNMP FCからユーザーレポートを取得します。
 func (a *TWSNMPApi) GetUsers() ([]*UserEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -33,7 +33,7 @@ func (a *TWSNMPApi) GetUsers() ([]*UserEnt, error) {
 	return users, err
 }
 
-// GetServersはTWSNMP FCからサーバーレポートを取得します。
+// GetServers はTWSNMP FCからサーバーレポートを取得します。
 func (a *TWSNMPApi) GetServers() ([]*ServerEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -47,7 +47,7 @@ func (a *TWSNMPApi) GetServers() ([]*ServerEnt, error) {
 	return servers, err
 }
 
-// GetFlowsはTWSNMP FCからフローレポートを取得します。
+// GetFlows はTWSNMP FCからフローレポートを取得します。
 func (a *TWSNMPApi) GetFlows() ([]*FlowEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -61,7 +61,7 @@ func (a *TWSNMPApi) GetFlows() ([]*FlowEnt, error) {
 	return flows, err
 }
 
-// GetIPsはTWSNMP FCからIPレポートを取得します。
+// GetIPs はTWSNMP FCからIPレポートを取得します。
 func (a *TWSNMPApi) GetIPs() ([]*IPReportEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -75,7 +75,7 @@ func (a *TWSNMPApi) GetIPs() ([]*IPReportEnt, error) {
 	return ips, err
 }
 
-// GetSensorsはTWSNMP FCからセンサーレポートを取得します。
+// GetSensors はTWSNMP FCからセンサーレポートを取得します。
 func (a *TWSNMPApi) GetSensors() ([]*SensorEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -89,7 +89,7 @@ func (a *TWSNMPApi) GetSensors() ([]*SensorEnt, error) {
 	return sensors, err
 }
 
-// GetMonitorはTWSNMP FCからモニターレポートを取得します。
+// GetMonitor はTWSNMP FCからモニターレポートを取得します。
 func (a *TWSNMPApi) GetMonitor() ([]*MonitorDataEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -103,7 +103,7 @@ func (a *TWSNMPApi) GetMonitor() ([]*MonitorDataEnt, error) {
 	return monitor, err
 }
 
-// AiListEntWebAPIは、AI分析リストのデータ構造です。
+// AiListEntWebAPI は、AI分析リストのデータ構造です。
 type AiListEntWebAPI struct {
 	ID          string  // 内部ID
 	NodeID      string  // ノードの内部ID
@@ -114,7 +114,7 @@ type AiListEntWebAPI struct {
 	LastTime    int64   // 最終分析日時
 }
 
-// GetAIListはTWSNMP FCからAI分析リストを取得します。
+// GetAIList はTWSNMP FCからAI分析リストを取得します。
 func (a *TWSNMPApi) GetAIList() ([]*AiListEntWebAPI, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -128,7 +128,7 @@ func (a *TWSNMPApi) GetAIList() ([]*AiListEntWebAPI, error) {
 	return aiList, err
 }
 
-// DeleteReportは,指定された種別とIDのレポートを削除します。
+// DeleteReport は,指定された種別とIDのレポートを削除します。
 func (a *TWSNMPApi) DeleteReport(t, id string) error {
 	if a.Token == "" {
 		return fmt.Errorf("not login")
@@ -136,7 +136,7 @@ func (a *TWSNMPApi) DeleteReport(t, id string) error {
 	return a.Delete("/api/report/" + t + "/" + id)
 }
 
-// ResetReportは,指定された種別とIDのレポートのスコアを再計算します。
+// ResetReport は,指定された種別とIDのレポートのスコアを再計算します。
 func (a *TWSNMPApi) ResetReport(t string) error {
 	if a.Token == "" {
 		return fmt.Errorf("not login")

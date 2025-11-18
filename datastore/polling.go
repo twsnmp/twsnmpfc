@@ -31,6 +31,8 @@ type PollingEnt struct {
 	State        string
 	FailAction   string
 	RepairAction string
+	AIMode       string
+	VectorCols   string
 }
 
 type PollingLogEnt struct {

@@ -245,6 +245,22 @@
               </v-select>
             </v-col>
           </v-row>
+          <v-row v-if="editPolling.LogMode == 3" dense no-gutters>
+            <v-col cols="3">
+              <v-select
+                v-model="editPolling.AIMode"
+                :items="$aiModeList"
+                label="AIアルゴリズム"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editPolling.VectorCols"
+                label="ベクトル化カラム"
+              ></v-text-field>
+            </v-col>
+          </v-row>
           <label>判定スクリプト</label>
           <prism-editor
             v-model="editPolling.Script"

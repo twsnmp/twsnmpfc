@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"time"
@@ -208,6 +209,8 @@ func postPollingUpdate(c echo.Context) error {
 	p.LogMode = pu.LogMode
 	p.FailAction = pu.FailAction
 	p.RepairAction = pu.RepairAction
+	p.VectorCols = pu.VectorCols
+	p.AIMode = pu.AIMode
 	p.NextTime = 0
 	p.State = "unknown"
 	if err := datastore.UpdatePolling(p); err != nil {
@@ -345,7 +348,11 @@ func getPollingAIData(c echo.Context) error {
 	if err := backend.MakeAIData(&r); err != nil {
 		return echo.ErrBadRequest
 	}
-	return c.JSON(http.StatusOK, r)
+	var b bytes.Buffer
+	if err := r.Df.ToCSV(&b); err != nil {
+		return echo.ErrBadRequest
+	}
+	return c.Blob(http.StatusOK, "text/csv", b.Bytes())
 }
 
 func getPollingLogTimeAnalyze(c echo.Context) error {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// GetNodesはTWSNMP FCからノードリストを取得します。
+// GetNodes はTWSNMP FCからノードリストを取得します。
 func (a *TWSNMPApi) GetNodes() ([]*NodeEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -19,7 +19,7 @@ func (a *TWSNMPApi) GetNodes() ([]*NodeEnt, error) {
 	return nodes, err
 }
 
-// UpdateNodeは、ノードを追加または削除します。
+// UpdateNode は、ノードを追加または削除します。
 func (a *TWSNMPApi) UpdateNode(node *NodeEnt) error {
 	if a.Token == "" {
 		return fmt.Errorf("not login")
@@ -32,7 +32,7 @@ func (a *TWSNMPApi) UpdateNode(node *NodeEnt) error {
 	return err
 }
 
-// DeleteNodesは、ノードを削除します。
+// DeleteNodes は、ノードを削除します。
 func (a *TWSNMPApi) DeleteNodes(ids []string) error {
 	if a.Token == "" {
 		return fmt.Errorf("not login")
@@ -45,13 +45,13 @@ func (a *TWSNMPApi) DeleteNodes(ids []string) error {
 	return err
 }
 
-// PollingsWebAPIは、ポーリングの応答データの構造です。
+// PollingsWebAPI は、ポーリングの応答データの構造です。
 type PollingsWebAPI struct {
 	Pollings []*PollingEnt
 	NodeList []selectEntWebAPI
 }
 
-// GetPollingsはTWSNMP FCからポーリングリストを取得します。
+// GetPollings はTWSNMP FCからポーリングリストを取得します。
 func (a *TWSNMPApi) GetPollings() (*PollingsWebAPI, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -65,7 +65,7 @@ func (a *TWSNMPApi) GetPollings() (*PollingsWebAPI, error) {
 	return &pollings, err
 }
 
-// UpdatePollingは、ポーリングの追加または更新します。
+// UpdatePolling は、ポーリングの追加または更新します。
 func (a *TWSNMPApi) UpdatePolling(polling *PollingEnt) error {
 	if a.Token == "" {
 		return fmt.Errorf("not login")
@@ -82,7 +82,7 @@ func (a *TWSNMPApi) UpdatePolling(polling *PollingEnt) error {
 	return err
 }
 
-// DeletePollingsは、ポーリングを削除します。
+// DeletePollings は、ポーリングを削除します。
 func (a *TWSNMPApi) DeletePollings(ids []string) error {
 	if a.Token == "" {
 		return fmt.Errorf("not login")

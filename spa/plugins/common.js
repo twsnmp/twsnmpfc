@@ -110,6 +110,12 @@ const aiThList = [
   { text: '1%以下', value: 74 },
 ]
 
+const aiModeList = [
+  { text: 'デフォルト', value: '' },
+  { text: 'Local Outiler Factor', value: 'lof' },
+  { text: 'Isolation Forest', value: 'iforest' },
+]
+
 const extractorList = [
   {text: '',ID: ''},
   {
@@ -448,6 +454,7 @@ export default (context, inject) => {
   inject('addrModeList', addrModeList)
   inject('snmpModeList', snmpModeList)
   inject('aiThList', aiThList)
+  inject('aiModeList', aiModeList)
   inject('filterEventLevelList', filterEventLevelList)
   inject('filterEventTypeList', filterEventTypeList)
   inject('timeFormat', timeFormat)

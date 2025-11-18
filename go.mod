@@ -43,6 +43,7 @@ require (
 	github.com/sleepinggenius2/gosmi v0.3.2
 	github.com/smallstep/scep v0.0.0-20250221100424-171a5fa4fb1b
 	github.com/tehmaze/netflow v0.0.0-20170921210347-852af103667f
+	github.com/tobgu/qframe v0.4.0
 	github.com/twsnmp/go-mibdb v0.0.0-20210104220414-91387072cee7
 	github.com/twsnmp/golof v1.0.0
 	github.com/twsnmp/lxi v0.3.2
@@ -119,6 +120,7 @@ require (
 	github.com/lufia/plan9stats v0.0.0-20240909124753-873cd0166683 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mauricelam/genny v0.0.0-20190320071652-0800202903e5 // indirect
 	github.com/miekg/dns v1.1.62 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect

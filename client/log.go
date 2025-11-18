@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// EventLogFilterは、イベントログの検索条件です。
+// EventLogFilter is the search criteria for event logs.
 type EventLogFilter struct {
 	Level     string // ログのレベル
 	StartDate string // 検索の開始日 例:2006-01-02
@@ -17,13 +17,13 @@ type EventLogFilter struct {
 	Event     string // イベントに含まれる文字列（正規表現)
 }
 
-// EventLogsWebAPIは、イベントログの検索結果です。
+// EventLogsWebAPI is the search result for event logs.
 type EventLogsWebAPI struct {
 	EventLogs []*EventLogEnt    // イベントログの検索結果
 	NodeList  []selectEntWebAPI // ノード名選択肢
 }
 
-// GetEventLogsはTWSNMP FCからイベントログを取得します。
+// GetEventLogs gets event logs from TWSNMP FC.
 func (a *TWSNMPApi) GetEventLogs(filter *EventLogFilter) (*EventLogsWebAPI, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -41,7 +41,7 @@ func (a *TWSNMPApi) GetEventLogs(filter *EventLogFilter) (*EventLogsWebAPI, erro
 	return &logs, err
 }
 
-// SyslogFilterは、syslogの検索条件です。
+// SyslogFilter is the search criteria for syslog.
 type SyslogFilter struct {
 	StartDate string // 検索の開始日 例:2006-01-02
 	StartTime string // 検索の開始時刻 例: 15:04
@@ -57,7 +57,7 @@ type SyslogFilter struct {
 	Filter    int    // ログの累積件数
 }
 
-// SyslogWebAPIは、syslogの検索結果です。
+// SyslogWebAPI は、syslogの検索結果です。
 type SyslogWebAPI struct {
 	Logs          []*SyslogWebAPILogEnt // sysylogの検索結果
 	ExtractHeader []string              // 抽出データのヘッダ
@@ -68,7 +68,7 @@ type SyslogWebAPI struct {
 	Limit         int                   // 検索上限
 }
 
-// SyslogWebAPILogEntは、syslogのデータ構造です。
+// SyslogWebAPILogEnt is the data structure for syslog.
 type SyslogWebAPILogEnt struct {
 	Time     int64  // タイムスタンプ(nano Sec)
 	Level    string // レベル
@@ -80,7 +80,7 @@ type SyslogWebAPILogEnt struct {
 	Facility int    // Facility
 }
 
-// GetSyslogsはTWSNMP FCからsyslogを取得します。
+// GetSyslogs はTWSNMP FCからsyslogを取得します。
 func (a *TWSNMPApi) GetSyslogs(filter *SyslogFilter) (*SyslogWebAPI, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -98,7 +98,7 @@ func (a *TWSNMPApi) GetSyslogs(filter *SyslogFilter) (*SyslogWebAPI, error) {
 	return &logs, err
 }
 
-// SnmpTrapFilterは、SNMP TRAPログの検索条件です。
+// SnmpTrapFilter は、SNMP TRAPログの検索条件です。
 type SnmpTrapFilter struct {
 	StartDate   string // 検索の開始日 例:2006-01-02
 	StartTime   string // 検索の開始時刻 例: 15:04
@@ -109,7 +109,7 @@ type SnmpTrapFilter struct {
 	Variables   string // TRAPに付帯したMIB
 }
 
-// SnmpTrapWebAPIは、SNMP TRAPログです。
+// SnmpTrapWebAPI は、SNMP TRAPログです。
 type SnmpTrapWebAPI struct {
 	Time        int64  // TRAPの受信日時
 	FromAddress string // TRAPの送信元アドレス
@@ -117,7 +117,7 @@ type SnmpTrapWebAPI struct {
 	Variables   string // TRAPに付帯したMIB
 }
 
-// GetSnmpTrapsはTWSNMP FCからSNMP Trapログを取得します。
+// GetSnmpTraps はTWSNMP FCからSNMP Trapログを取得します。
 func (a *TWSNMPApi) GetSnmpTraps(filter *SnmpTrapFilter) ([]*SnmpTrapWebAPI, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -135,7 +135,7 @@ func (a *TWSNMPApi) GetSnmpTraps(filter *SnmpTrapFilter) ([]*SnmpTrapWebAPI, err
 	return logs, err
 }
 
-// NetflowFilterは、NetFlow/IPFIXの検索条件です。
+// NetflowFilter は、NetFlow/IPFIXの検索条件です。
 type NetflowFilter struct {
 	StartDate string // 検索の開始日 例:2006-01-02
 	StartTime string // 検索の開始時刻 例: 15:04
@@ -154,7 +154,7 @@ type NetflowFilter struct {
 	Filter    int    // 累計の検索数
 }
 
-// NetflowWebAPIは、NetFlow/IPFIXログの検索結果です。
+// NetflowWebAPI は、NetFlow/IPFIXログの検索結果です。
 type NetflowWebAPI struct {
 	Logs     []*NetflowWebAPILogEnt // ログの検索結果
 	NextTime int64                  // 継続検索の次回の時刻(nano Sec)
@@ -163,7 +163,7 @@ type NetflowWebAPI struct {
 	Limit    int                    // 上限
 }
 
-// NetflowWebAPILogEntは、NetFlow/IPFIXログのデータ構造です。
+// NetflowWebAPILogEnt は、NetFlow/IPFIXログのデータ構造です。
 type NetflowWebAPILogEnt struct {
 	Time     int64   // ログの受信日時
 	Src      string  // 送信元ホスト名
@@ -181,7 +181,7 @@ type NetflowWebAPILogEnt struct {
 	Duration float64 // 通信期間
 }
 
-// GetNetFlowはTWSNMP FCからNetFlowログを取得します。
+// GetNetFlow はTWSNMP FCからNetFlowログを取得します。
 func (a *TWSNMPApi) GetNetFlow(filter *NetflowFilter) (*NetflowWebAPI, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -199,7 +199,7 @@ func (a *TWSNMPApi) GetNetFlow(filter *NetflowFilter) (*NetflowWebAPI, error) {
 	return &r, err
 }
 
-// GetIPFIXはTWSNMP FCからIPFIXログを取得します。
+// GetIPFIX はTWSNMP FCからIPFIXログを取得します。
 func (a *TWSNMPApi) GetIPFIX(filter *NetflowFilter) (*NetflowWebAPI, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -217,7 +217,7 @@ func (a *TWSNMPApi) GetIPFIX(filter *NetflowFilter) (*NetflowWebAPI, error) {
 	return &r, err
 }
 
-// SFlowFilterはSFlowログ検索条件です。
+// SFlowFilter はSFlowログ検索条件です。
 type SFlowFilter struct {
 	StartDate string // 検索の開始日 例:2006-01-02
 	StartTime string // 検索の開始時刻 例: 15:04
@@ -237,7 +237,7 @@ type SFlowFilter struct {
 	Filter    int    // 累計検索件数
 }
 
-// SFlowWebAPIは、SFlowログの検索結果です。
+// SFlowWebAPI は、SFlowログの検索結果です。
 type SFlowWebAPI struct {
 	Logs     []*SFlowWebAPILogEnt // 検索結果のログ
 	NextTime int64                // 継続検索の次回時刻(nano Sec)
@@ -246,7 +246,7 @@ type SFlowWebAPI struct {
 	Limit    int                  // 上限
 }
 
-// SFlowWebAPILogEntは、SFlowログです。
+// SFlowWebAPILogEnt は、SFlowログです。
 type SFlowWebAPILogEnt struct {
 	Time     int64  // ログ受信日時
 	Src      string // 送信元ホスト
@@ -263,7 +263,7 @@ type SFlowWebAPILogEnt struct {
 	Reason   int    // 切断理由
 }
 
-// GetSFlowはTWSNMP FCからSFlowログを取得します。
+// GetSFlow はTWSNMP FCからSFlowログを取得します。
 func (a *TWSNMPApi) GetSFlow(filter *SFlowFilter) (*SFlowWebAPI, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -281,7 +281,7 @@ func (a *TWSNMPApi) GetSFlow(filter *SFlowFilter) (*SFlowWebAPI, error) {
 	return &logs, err
 }
 
-// SFlowCounterFilterは、SFlow Counterログの検索条件です。
+// SFlowCounterFilter は、SFlow Counterログの検索条件です。
 type SFlowCounterFilter struct {
 	Remote    string // 送信元
 	Type      string // 種別
@@ -293,7 +293,7 @@ type SFlowCounterFilter struct {
 	Filter    int    // 累計検索件数
 }
 
-// SFlowCounterWebAPIは、SFlow Counterログの検索結果です。
+// SFlowCounterWebAPI は、SFlow Counterログの検索結果です。
 type SFlowCounterWebAPI struct {
 	Logs     []*SFlowCounterWebAPILogEnt // 検索結果のログ
 	NextTime int64                       // 継続検索の次回時刻
@@ -302,13 +302,13 @@ type SFlowCounterWebAPI struct {
 	Limit    int                         // 上限
 }
 
-// SFlowCounterWebAPILogEntは、SFlowCounterログです。
+// SFlowCounterWebAPILogEnt は、SFlowCounterログです。
 type SFlowCounterWebAPILogEnt struct {
 	Time            int64 // 受信時刻
 	SFlowCounterEnt       // カウンターサンプルのデータ
 }
 
-// GetSFlowCounterはTWSNMP FCからSFlow Counterログを取得します。
+// GetSFlowCounter はTWSNMP FCからSFlow Counterログを取得します。
 func (a *TWSNMPApi) GetSFlowCounter(filter *SFlowCounterFilter) (*SFlowCounterWebAPI, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -326,7 +326,7 @@ func (a *TWSNMPApi) GetSFlowCounter(filter *SFlowCounterFilter) (*SFlowCounterWe
 	return &logs, err
 }
 
-// ArpFilterは、ARPログの検索条件を指定します。
+// ArpFilter は、ARPログの検索条件を指定します。
 type ArpFilter struct {
 	StartDate string // 検索の開始日 例:2006-01-02
 	StartTime string // 検索の開始時刻 例: 15:04
@@ -336,7 +336,7 @@ type ArpFilter struct {
 	MAC       string // MACアドレス
 }
 
-// ArpWebAPIは、ARPログです。
+// ArpWebAPI は、ARPログです。
 type ArpWebAPI struct {
 	Time      int64  // 検知日時
 	State     string // 状態
@@ -347,7 +347,7 @@ type ArpWebAPI struct {
 	OldVendor string // 前のベンダー
 }
 
-// GetArpLogsはTWSNMP FCからARPログを取得します。
+// GetArpLogs はTWSNMP FCからARPログを取得します。
 func (a *TWSNMPApi) GetArpLogs(filter *ArpFilter) ([]*ArpWebAPI, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -365,7 +365,7 @@ func (a *TWSNMPApi) GetArpLogs(filter *ArpFilter) ([]*ArpWebAPI, error) {
 	return logs, err
 }
 
-// TimeFilterは、ポーリングログの時間範囲の条件を指定します。
+// TimeFilter は、ポーリングログの時間範囲の条件を指定します。
 type TimeFilter struct {
 	StartDate string // 検索の開始日 例:2006-01-02
 	StartTime string // 検索の開始時刻 例: 15:04
@@ -373,7 +373,7 @@ type TimeFilter struct {
 	EndTime   string // 検索の終了時刻 例: 15:04
 }
 
-// GetPollingLogsはTWSNMP FCからポーリングログを取得します。
+// GetPollingLogs はTWSNMP FCからポーリングログを取得します。
 func (a *TWSNMPApi) GetPollingLogs(id string, filter *TimeFilter) ([]*PollingLogEnt, error) {
 	if a.Token == "" {
 		return nil, fmt.Errorf("not login")
@@ -391,7 +391,7 @@ func (a *TWSNMPApi) GetPollingLogs(id string, filter *TimeFilter) ([]*PollingLog
 	return logs, err
 }
 
-// DeleteLogは、idで指定されたログを全て削除します。
+// DeleteLog は、idで指定されたログを全て削除します。
 func (a *TWSNMPApi) DeleteLog(id string) error {
 	if a.Token == "" {
 		return fmt.Errorf("not login")

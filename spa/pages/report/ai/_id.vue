@@ -68,6 +68,10 @@
             </v-list-item>
           </v-list>
         </v-menu>
+        <v-btn color="primaly" dark @click="download()">
+          <v-icon>mdi-file-delimited</v-icon>
+          エクスポート
+        </v-btn>
         <v-btn color="normal" dark @click="$router.go(-1)">
           <v-icon>mdi-arrow-left</v-icon>
           戻る
@@ -171,6 +175,7 @@
 </template>
 
 <script>
+import { saveAs } from 'file-saver'
 export default {
   data() {
     return {
@@ -283,6 +288,16 @@ export default {
         this.logs,
         this.selectedValEnt
       )
+    },
+    async download() {
+      const r = await this.$axios.get('/api/aidata/' + this.$route.params.id, {
+        responseType: 'blob',
+      })
+      if (!r || r.status !== 200) {
+        return
+      }
+      const fn = this.$timeFormat(new Date(), '{yyyy}{MM}{dd}{HH}{mm}')
+      saveAs(r.data, 'aidata_' + this.ai.PollingName + '_' + fn + '.csv')
     },
   },
 }

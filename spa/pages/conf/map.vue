@@ -144,7 +144,7 @@
             <v-col>
               <v-select
                 v-model="mapconf.AIMode"
-                :items="aiModeList"
+                :items="$aiModeList"
                 label="AIアルゴリズム"
               >
               </v-select>
@@ -646,10 +646,6 @@ export default {
         EnableMqtt: false,
         MqttToSyslog: false,
       },
-      aiModeList: [
-        { text: 'Local Outiler Factor', value: 'lof' },
-        { text: 'Isolation Forest', value: 'iforest' },
-      ],
       fontSizeList: [
         { text: '小さい', value: 10 },
         { text: '普通', value: 12 },

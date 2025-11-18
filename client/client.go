@@ -1,4 +1,4 @@
-// Package clinet : Web APIを利用したクライントライブラリです。
+// Package client : Web APIを利用したクライントライブラリです。
 package client
 
 import (
@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// TWSNMPApiは、TWSNMP FCと通信するためのデータ構造です。
+// TWSNMPApi is a data structure for communicating with TWSNMP FC.
 type TWSNMPApi struct {
 	URL                string // TWSNMP FCのURL
 	Token              string // JWTアクセストークン
@@ -24,7 +24,7 @@ type selectEntWebAPI struct {
 	Value string `json:"value"`
 }
 
-// NewClientは新しいクライアントを作成します。
+// NewClient creates a new client.
 func NewClient(url string) *TWSNMPApi {
 	return &TWSNMPApi{
 		URL: url,
@@ -50,7 +50,7 @@ type loginParam struct {
 	Password string
 }
 
-// LoginはTWSNMP FCにログインします。
+// Login logs in to TWSNMP FC.
 func (a *TWSNMPApi) Login(user, password string) error {
 	lp := &loginParam{
 		UserID:   user,
@@ -87,7 +87,7 @@ func (a *TWSNMPApi) Login(user, password string) error {
 	return nil
 }
 
-// GetはTWSNMP FCにGETリクエストを送信します。
+// Get sends a GET request to TWSNMP FC.
 func (a *TWSNMPApi) Get(path string) ([]byte, error) {
 	req, err := http.NewRequest(
 		"GET",
@@ -115,7 +115,7 @@ func (a *TWSNMPApi) Get(path string) ([]byte, error) {
 	return body, nil
 }
 
-// PostはTWSNMP FCにPOSTリクエストを送信します。
+// Post sends a POST request to TWSNMP FC.
 func (a *TWSNMPApi) Post(path string, data []byte) ([]byte, error) {
 	req, err := http.NewRequest(
 		"POST",
@@ -143,7 +143,7 @@ func (a *TWSNMPApi) Post(path string, data []byte) ([]byte, error) {
 	return body, nil
 }
 
-// DeleteはTWSNMP FCにDELETEリクエストを送信します。
+// Delete sends a DELETE request to TWSNMP FC.
 func (a *TWSNMPApi) Delete(path string) error {
 	req, err := http.NewRequest(
 		"DELETE",
@@ -244,6 +244,8 @@ type PollingEnt struct {
 	State        string
 	FailAction   string
 	RepairAction string
+	AIMode       string
+	VecotrCols   string
 }
 
 type PollingLogEnt struct {
