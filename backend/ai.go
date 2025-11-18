@@ -3,13 +3,13 @@ package backend
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/montanaflynn/stats"
-	"github.com/tobgu/qframe"
 	"github.com/twsnmp/golof/lof"
 
 	go_iforest "github.com/codegaudi/go-iforest"
@@ -32,9 +32,51 @@ func aiBackend(ctx context.Context, wg *sync.WaitGroup) {
 	}
 }
 
+type aiDataFrame struct {
+	Time []int64
+	Data map[string][]float64
+}
+
+func (df aiDataFrame) Len() int {
+	return len(df.Time)
+}
+
+func (df aiDataFrame) ColumnNames() []string {
+	cols := []string{}
+	for k := range df.Data {
+		cols = append(cols, k)
+	}
+	return cols
+}
+
+func (df aiDataFrame) ToCSV(w io.Writer) error {
+	cols := []string{}
+	row := "time"
+	for k := range df.Data {
+		cols = append(cols, k)
+		row += "," + k
+	}
+	if _, err := w.Write([]byte(row + "\n")); err != nil {
+		return err
+	}
+	for i, t := range df.Time {
+		row = time.Unix(t, 0).Format(time.RFC3339)
+		for _, col := range cols {
+			row += ","
+			if v, ok := df.Data[col]; ok && len(v) > i {
+				row += fmt.Sprintf("%f", v[i])
+			}
+		}
+		if _, err := w.Write([]byte(row + "\n")); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 type AIReq struct {
 	PollingID string
-	Df        qframe.QFrame
+	Df        aiDataFrame
 }
 
 func makeYasumiMap() {
@@ -135,13 +177,14 @@ func MakeAIData(req *AIReq) error {
 		return fmt.Errorf("no keys")
 	}
 	keys = append(keys, "state")
-	data := make(map[string]interface{})
-	data["time"] = []float64{}
-	data["time_str"] = []string{}
-	data["hour"] = []float64{}
-	data["weekday"] = []float64{}
+	req.Df = aiDataFrame{
+		Time: []int64{},
+		Data: make(map[string][]float64),
+	}
+	req.Df.Data["hour"] = []float64{}
+	req.Df.Data["weekday"] = []float64{}
 	for _, k := range keys {
-		data[k] = []float64{}
+		req.Df.Data[k] = []float64{}
 	}
 	logs := datastore.GetAllPollingLog(req.PollingID)
 	if len(logs) < 1 {
@@ -164,17 +207,16 @@ func MakeAIData(req *AIReq) error {
 				continue
 			}
 			ts := time.Unix(ct, 0)
-			data["time"] = append(data["time"].([]float64), float64(ts.Unix()))
-			data["time_str"] = append(data["time_str"].([]string), ts.Format(time.RFC3339))
-			data["hour"] = append(data["hour"].([]float64), float64(ts.Hour())/23)
+			req.Df.Time = append(req.Df.Time, ts.Unix())
+			req.Df.Data["hour"] = append(req.Df.Data["hour"], float64(ts.Hour())/23)
 			wd := float64(ts.Weekday())
 			if _, ok := yasumiMap[ts.Format("2006-01-02")]; ok {
 				wd = 0.0
 			}
-			data["weekday"] = append(data["weekday"].([]float64), wd/6)
+			req.Df.Data["weekday"] = append(req.Df.Data["weekday"], wd/6)
 			for _, k := range keys {
 				avg := ent[k] / count
-				data[k] = append(data[k].([]float64), avg)
+				req.Df.Data[k] = append(req.Df.Data[k], avg)
 				if maxVals[k] < avg {
 					maxVals[k] = avg
 				}
@@ -199,11 +241,11 @@ func MakeAIData(req *AIReq) error {
 		}
 	}
 	for _, k := range keys {
-		for j := range data[k].([]float64) {
+		for j := range req.Df.Data[k] {
 			if maxVals[k] > 0.0 {
-				data[k].([]float64)[j] /= maxVals[k]
+				req.Df.Data[k][j] /= maxVals[k]
 			} else {
-				data[k].([]float64)[j] = 0.0
+				req.Df.Data[k][j] = 0.0
 			}
 		}
 	}
@@ -215,15 +257,12 @@ func MakeAIData(req *AIReq) error {
 				colMap[c] = true
 			}
 		}
-		colMap["time"] = true
-		colMap["time_str"] = true
-		for k := range data {
+		for k := range req.Df.Data {
 			if _, ok := colMap[k]; !ok {
-				delete(data, k)
+				delete(req.Df.Data, k)
 			}
 		}
 	}
-	req.Df = qframe.New(data)
 	return nil
 }
 
@@ -286,18 +325,13 @@ func getSampleData(req *AIReq) [][]float64 {
 	cols := req.Df.ColumnNames()
 	data := make([][]float64, req.Df.Len())
 	for i := range data {
-		data[i] = make([]float64, len(cols)-1)
+		data[i] = make([]float64, len(cols))
 	}
-	i := 0
-	for _, col := range cols {
-		if col == "time" || col == "time_str" {
-			continue
-		}
-		if v, err := req.Df.FloatView(col); err == nil {
-			for j, d := range v.Slice() {
+	for i, col := range cols {
+		if v, ok := req.Df.Data[col]; ok {
+			for j, d := range v {
 				data[j][i] = d
 			}
-			i++
 		}
 	}
 	return data
@@ -341,21 +375,12 @@ func calcLOF(req *AIReq) *datastore.AIResult {
 	if err != nil {
 		return &res
 	}
-	times := []int64{}
-	if v, err := req.Df.FloatView("time"); err != nil {
-		log.Println(err)
-		return &res
-	} else {
-		for _, t := range v.Slice() {
-			times = append(times, int64(t))
-		}
-	}
 	for i := range r {
 		score := ((10 * (float64(r[i]) - mean) / sd) + 50)
-		res.ScoreData = append(res.ScoreData, []float64{float64(times[i]), score})
+		res.ScoreData = append(res.ScoreData, []float64{float64(req.Df.Time[i]), score})
 	}
 	res.PollingID = req.PollingID
-	res.LastTime = times[len(times)-1]
+	res.LastTime = req.Df.Time[len(req.Df.Time)-1]
 	return &res
 }
 
@@ -400,20 +425,11 @@ func calcIForest(req *AIReq) *datastore.AIResult {
 	if err != nil {
 		return &res
 	}
-	times := []int64{}
-	if v, err := req.Df.FloatView("time"); err != nil {
-		log.Println(err)
-		return &res
-	} else {
-		for _, t := range v.Slice() {
-			times = append(times, int64(t))
-		}
-	}
 	for i := range r {
 		score := ((10 * (float64(r[i]) - mean) / sd) + 50)
-		res.ScoreData = append(res.ScoreData, []float64{float64(times[i]), score})
+		res.ScoreData = append(res.ScoreData, []float64{float64(req.Df.Time[i]), score})
 	}
 	res.PollingID = req.PollingID
-	res.LastTime = times[len(times)-1]
+	res.LastTime = req.Df.Time[len(req.Df.Time)-1]
 	return &res
 }
