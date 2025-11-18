@@ -245,6 +245,24 @@
             </v-btn>
           </download-excel>
           <download-excel
+            :fetch="makeDataExports"
+            type="csv"
+            :escape-csv="false"
+            name="TWSNMP_FC_Polling_Log_Data.csv"
+            :header="
+              'TWSNMP FCのポーリングログデータ - ' +
+              node.Name +
+              ' - ' +
+              polling.Name
+            "
+            class="v-btn"
+          >
+            <v-btn color="primary" dark>
+              <v-icon>mdi-file-delimited</v-icon>
+              CSV(DATA)
+            </v-btn>
+          </download-excel>
+          <download-excel
             :fetch="makeExports"
             type="xls"
             name="TWSNMP_FC_Polling_Log.xls"
@@ -914,6 +932,26 @@ export default {
           error: '',
         }
         exports.push(Object.assign(r, e.Result))
+      })
+      return exports
+    },
+    makeDataExports() {
+      const exports = []
+      this.logs.forEach((e) => {
+        const r = {
+          time: e.TimeStr,
+          state: e.State,
+        }
+        const numericalResults = {}
+        if (e.Result) {
+          Object.keys(e.Result).forEach((key) => {
+            const value = e.Result[key]
+            if (typeof value === 'number') {
+              numericalResults[key] = value
+            }
+          })
+        }
+        exports.push(Object.assign(r, numericalResults))
       })
       return exports
     },
