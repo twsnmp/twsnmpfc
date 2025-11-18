@@ -126,6 +126,10 @@ func addMCPTools(s *mcp.Server) {
 		Description: "get polling log from TWSNMP",
 	}, mcpGetPollingLog)
 	mcp.AddTool(s, &mcp.Tool{
+		Name:        "get_polling_log_data",
+		Description: "get polling log data from TWSNMP",
+	}, mcpGetPollingLogData)
+	mcp.AddTool(s, &mcp.Tool{
 		Name:        "do_ping",
 		Description: "do ping",
 	}, mcpDoPing)

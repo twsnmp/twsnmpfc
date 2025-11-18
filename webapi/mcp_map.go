@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gosnmp/gosnmp"
@@ -242,6 +243,60 @@ func mcpGetPollingLog(ctx context.Context, req *mcp.CallToolRequest, args mcpGet
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			&mcp.TextContent{Text: string(j)},
+		},
+	}, nil, nil
+}
+
+func mcpGetPollingLogData(ctx context.Context, req *mcp.CallToolRequest, args mcpGetPollingLogParams) (*mcp.CallToolResult, any, error) {
+	id := args.ID
+	if id == "" {
+		return nil, nil, fmt.Errorf("no id")
+	}
+	polling := datastore.GetPolling(id)
+	if polling == nil {
+		return nil, nil, fmt.Errorf("polling not found")
+	}
+	limit := args.Limit
+	if limit < 100 || limit > 2000 {
+		limit = 100
+	}
+	list := []mcpPollingLogEnt{}
+	datastore.ForEachLastPollingLog(id, func(l *datastore.PollingLogEnt) bool {
+		list = append(list, mcpPollingLogEnt{
+			Time:   time.Unix(0, l.Time).Format(time.RFC3339),
+			State:  l.State,
+			Result: l.Result,
+		})
+		return len(list) < limit
+	})
+	if len(list) < 1 {
+		return nil, nil, fmt.Errorf("polling log not found")
+	}
+	keys := []string{}
+	for k, v := range list[0].Result {
+		if k == "lastTime" {
+			continue
+		}
+		if _, ok := v.(float64); !ok {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	csv := []string{"time,state," + strings.Join(keys, ",")}
+	for _, l := range list {
+		s := fmt.Sprintf("%s,%s", l.Time, l.State)
+		for _, k := range keys {
+			if v, ok := l.Result[k].(float64); ok {
+				s += "," + fmt.Sprintf("%f", v)
+			} else {
+				s += ","
+			}
+		}
+		csv = append(csv, s)
+	}
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: strings.Join(csv, "\n")},
 		},
 	}, nil, nil
 }
