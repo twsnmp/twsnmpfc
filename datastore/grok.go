@@ -18,27 +18,6 @@ type GrokEnt struct {
 
 var defGrockList = []GrokEnt{
 	{
-		ID:    "EPSLOGIN",
-		Name:  "EPSの認証",
-		Descr: "EPSで認証した時のユーザーID、クライアントを抽出",
-		Pat:   `Login %{NOTSPACE:stat}: \[(host/)*%{USER:user}\].+cli %{MAC:client}`,
-		Ok:    "OK",
-	},
-	{
-		ID:    "FZLOGIN",
-		Name:  "FileZenログイン",
-		Descr: "FileZenにログインした時のユーザーID、クラアンとを抽出",
-		Pat:   `FileZen: %{IP:client} %{USER:user} "Authentication %{NOTSPACE:stat}`,
-		Ok:    "succeeded.",
-	},
-	{
-		ID:    "NAOSLOGIN",
-		Name:  "NAOSログイン",
-		Descr: "NAOSのログイン",
-		Pat:   `Login %{NOTSPACE:stat}: \[.+\] %{USER:user}`,
-		Ok:    "Success",
-	},
-	{
 		ID:    "DEVICE",
 		Name:  "デバイス情報(ip)",
 		Descr: "デバイス情報を取得mac=が先のケース",

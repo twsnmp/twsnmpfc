@@ -6,7 +6,7 @@ export const session = writable({
   error: false,
 });
 
-// FileZenへログインする関数
+// TWSNMPへログインする関数
 export const login = async (user,password) => {
   try {
     const res = await fetch('APIURL/login', {
@@ -121,7 +121,7 @@ export const twsnmpApiUpload = async (api,files) => {
   }
 }
 
-// twsnmpApiDownload : FileZenからファイルをダウンロードする
+// twsnmpApiDownload : ファイルのダウンロード
 export const twsnmpApiDownload = async (api,file) => {
   const s = get(session);
   try {
