@@ -137,8 +137,9 @@ func init() {
 	flag.IntVar(&mqttTCPPort, "mqttTCPPort", 1883, "MQTT server TCP port")
 	flag.IntVar(&mqttWSPort, "mqttWSPort", 1884, "MQTT server Websock port")
 	flag.StringVar(&mqttCert, "mqttCert", "", "MQTT server cert path")
+	flag.StringVar(&mqttKey, "mqttKey", "", "MQTT server private key path")
 	flag.StringVar(&mqttFrom, "mqttFrom", "", "MQTT server clintes")
-	flag.StringVar(&mqttUsers, "mqttKey", "", "MQTT server users")
+	flag.StringVar(&mqttUsers, "mqttUsers", "", "MQTT server users")
 
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSNMPFC_" + strings.ToUpper(f.Name)); s != "" {
