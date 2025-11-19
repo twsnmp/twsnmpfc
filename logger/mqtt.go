@@ -132,11 +132,45 @@ func (h *mqttHook) Init(config any) error {
 
 func (h *mqttHook) OnConnect(cl *mqtt.Client, pk packets.Packet) error {
 	log.Printf("mqtt client connected client=%s", cl.ID)
+	if datastore.MapConf.MqttToSyslog && datastore.MapConf.EnableSyslogd {
+		logMap := make(map[string]any)
+		logMap["content"] = fmt.Sprintf("mqtt clinet connected client=%s remote=%s", cl.ID, cl.Net.Remote)
+		logMap["tag"] = "mqtt:connect"
+		logMap["severity"] = 6
+		logMap["facility"] = float64(17)
+		logMap["hostname"] = cl.ID
+		if j, err := json.Marshal(&logMap); err == nil {
+			logCh <- &datastore.LogEnt{
+				Time: time.Now().UnixNano(),
+				Type: "syslog",
+				Log:  string(j),
+			}
+		}
+	}
 	return nil
 }
 
 func (h *mqttHook) OnDisconnect(cl *mqtt.Client, err error, expire bool) {
 	log.Printf("mqtt client disconnected client=%s,expire=%v,err=%v", cl.ID, expire, err)
+	if datastore.MapConf.MqttToSyslog && datastore.MapConf.EnableSyslogd {
+		logMap := make(map[string]any)
+		logMap["content"] = fmt.Sprintf("mqtt clinet disconnected client=%s remote=%s exire=%v err=%v",
+			cl.ID, cl.Net.Remote, expire, err)
+		logMap["tag"] = "mqtt:disconnect"
+		logMap["severity"] = 6
+		if err != nil {
+			logMap["severity"] = 4
+		}
+		logMap["facility"] = float64(17)
+		logMap["hostname"] = cl.ID
+		if j, err := json.Marshal(&logMap); err == nil {
+			logCh <- &datastore.LogEnt{
+				Time: time.Now().UnixNano(),
+				Type: "syslog",
+				Log:  string(j),
+			}
+		}
+	}
 }
 
 func (h *mqttHook) OnSubscribed(cl *mqtt.Client, pk packets.Packet, reasonCodes []byte) {
@@ -149,7 +183,7 @@ func (h *mqttHook) OnUnsubscribed(cl *mqtt.Client, pk packets.Packet) {
 
 func (h *mqttHook) OnPublished(cl *mqtt.Client, pk packets.Packet) {
 	report.UpdateSensor(cl.ID, "mqtt", 1)
-	if datastore.MapConf.MqttToSyslog {
+	if datastore.MapConf.MqttToSyslog && datastore.MapConf.EnableSyslogd {
 		logMap := make(map[string]any)
 		logMap["content"] = string(pk.Payload)
 		logMap["tag"] = fmt.Sprintf("mqtt:%s", pk.TopicName)
