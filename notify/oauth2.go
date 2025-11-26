@@ -59,7 +59,7 @@ func getNotifyOAuth2Config() *oauth2.Config {
 			ClientSecret: datastore.NotifyConf.ClientSecret,
 			Endpoint:     microsoft.AzureADEndpoint(datastore.NotifyConf.MSTenant),
 			RedirectURL:  redirectURL,
-			Scopes:       []string{"https://outlook.office.com/SMTP.Send"},
+			Scopes:       []string{"https://outlook.office.com/SMTP.Send", "offline_access"},
 		}
 	default:
 		return nil
