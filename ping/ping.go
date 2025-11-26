@@ -190,7 +190,7 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 	}
 	conn, err := icmp.ListenPacket(netProto, "0.0.0.0")
 	if err != nil {
-		log.Fatalf("ping listen err=%v", err)
+		log.Printf("ping listen err=%v", err)
 		return
 	}
 	defer conn.Close()
