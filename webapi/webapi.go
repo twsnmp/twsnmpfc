@@ -117,6 +117,7 @@ func setup(p *WebAPI) {
 	r.POST("/notify/webhook/test", postNotifyWebhookTest)
 	r.POST("/notify/oauth2/hastoken", postNotifyHasValidOAuth2Token)
 	r.GET("/notify/oauth2/gettoken", getNotifyGetOAuth2Token)
+	r.GET("/notify/oauth2/tokenInfo", getNotifyOAuth2TokenInfo)
 	e.GET("/notify/oauth2/callback", getNotifyOAuth2Callback)
 	r.GET("/conf/influxdb", getInfluxdb)
 	r.POST("/conf/influxdb", postInfluxdb)

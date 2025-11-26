@@ -99,6 +99,14 @@
               />
             </v-col>
           </v-row>
+          <v-row
+            v-if="notify.Provider == 'microsoft' || notify.Provider == 'google'"
+            dense
+          >
+            <v-col>
+              {{ oauth2TokenInfo }}
+            </v-col>
+          </v-row>
           <v-row dense>
             <v-col>
               <v-text-field
@@ -440,6 +448,7 @@ export default {
       hasNotifyValidOAuth2Token: false,
       waitOAuth2: false,
       savedProvider: '',
+      oauth2TokenInfo: '',
     }
   },
   async fetch() {
@@ -450,6 +459,9 @@ export default {
       this.notify
     )
     this.hasNotifyValidOAuth2Token = r && r.valid === 'true'
+    this.oauth2TokenInfo = await this.$axios.$get(
+      '/api/notify/oauth2/tokenInfo'
+    )
   },
   computed: {
     canTest() {
@@ -517,6 +529,9 @@ export default {
           )
           this.hasNotifyValidOAuth2Token = r2 && r2.valid === 'true'
         }
+        this.oauth2TokenInfo = await this.$axios.$get(
+          '/api/notify/oauth2/tokenInfo'
+        )
       }
       this.waitOAuth2 = false
       this.$fetch()
@@ -527,6 +542,9 @@ export default {
         this.notify
       )
       this.hasNotifyValidOAuth2Token = r && r.valid === 'true'
+      this.oauth2TokenInfo = await this.$axios.$get(
+        '/api/notify/oauth2/tokenInfo'
+      )
     },
     chatTest() {
       this.clearMsg()

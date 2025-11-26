@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -250,6 +251,15 @@ func postNotifyHasValidOAuth2Token(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"valid": "true"})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"valid": "false"})
+}
+
+func getNotifyOAuth2TokenInfo(c echo.Context) error {
+	token := datastore.GetNotifyOAuth2Token()
+	if token == nil {
+		return c.String(http.StatusOK, "トークンなし")
+	}
+	return c.String(http.StatusOK, fmt.Sprintf("期限:%s リフレッシュ:%v",
+		token.Expiry.Format(time.DateTime), token.RefreshToken != ""))
 }
 
 func getNotifyGetOAuth2Token(c echo.Context) error {
