@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -73,6 +74,23 @@ func postMIBBr(c echo.Context) error {
 	return c.JSON(http.StatusOK, r)
 }
 
+type mibSetReqWebAPI struct {
+	NodeID string
+	Name   string
+	Type   string
+	Value  string
+}
+
+func postSNMPSet(c echo.Context) error {
+	p := new(mibSetReqWebAPI)
+	if err := c.Bind(p); err != nil {
+		log.Printf("SNMP set err=%v", err)
+		return echo.ErrBadRequest
+	}
+	r := snmpset(p)
+	return c.String(http.StatusOK, r)
+}
+
 func nameToOID(name string) string {
 	oid := datastore.MIBDB.NameToOID(name)
 	if oid == ".1" {
@@ -91,14 +109,81 @@ func nameToOID(name string) string {
 
 func snmpWalk(p *mibGetReqWebAPI) ([]*mibEnt, error) {
 	ret := []*mibEnt{}
-	n := datastore.GetNode(p.NodeID)
-	if n == nil {
-		if !strings.HasPrefix(p.NodeID, "NET:") {
-			return ret, fmt.Errorf("node not found")
+	agent, err := getSNMPAgent(p.NodeID)
+	if err != nil {
+		return ret, err
+	}
+	if err := agent.Connect(); err != nil {
+		return ret, err
+	}
+	et := time.Now().Unix() + (3 * 60)
+	defer agent.Conn.Close()
+	err = agent.Walk(nameToOID(p.Name), func(variable gosnmp.SnmpPDU) error {
+		if et < time.Now().Unix() {
+			return fmt.Errorf("timeout")
 		}
-		nt := datastore.GetNetwork(p.NodeID)
+		name := datastore.MIBDB.OIDToName(variable.Name)
+		value := datastore.GetMIBValueString(name, &variable, p.Raw)
+		ret = append(ret, &mibEnt{
+			Name:  name,
+			Value: value,
+		})
+		return nil
+	})
+	if err != nil {
+		log.Printf("n=%s o=%s err=%v", p.Name, nameToOID(p.Name), err)
+	}
+	return ret, err
+}
+
+func snmpset(p *mibSetReqWebAPI) string {
+	agent, err := getSNMPAgent(p.NodeID)
+	if err != nil {
+		return err.Error()
+	}
+	if err := agent.Connect(); err != nil {
+		return err.Error()
+	}
+	defer agent.Conn.Close()
+	setPDU := []gosnmp.SnmpPDU{}
+	switch p.Type {
+	case "integer":
+		i, err := strconv.Atoi(p.Value)
+		if err != nil {
+			return err.Error()
+		}
+		setPDU = append(setPDU, gosnmp.SnmpPDU{
+			Name:  nameToOID(p.Name),
+			Type:  gosnmp.Integer,
+			Value: i,
+		})
+	default:
+		// string
+		setPDU = append(setPDU, gosnmp.SnmpPDU{
+			Name:  nameToOID(p.Name),
+			Type:  gosnmp.OctetString,
+			Value: []byte(p.Value),
+		})
+	}
+	r, err := agent.Set(setPDU)
+	if err != nil {
+		return err.Error()
+	}
+	if r.Error != gosnmp.NoError {
+		return r.Error.String()
+	}
+	return ""
+}
+
+func getSNMPAgent(nodeID string) (*gosnmp.GoSNMP, error) {
+	n := datastore.GetNode(nodeID)
+	if n == nil {
+		if !strings.HasPrefix(nodeID, "NET:") {
+			return nil, fmt.Errorf("node not found")
+		}
+		nt := datastore.GetNetwork(nodeID)
 		if nt == nil {
-			return ret, fmt.Errorf("network not found")
+			return nil, fmt.Errorf("network not found")
 		}
 		n = &datastore.NodeEnt{
 			IP:        nt.IP,
@@ -151,26 +236,5 @@ func snmpWalk(p *mibGetReqWebAPI) ([]*mibEnt, error) {
 			PrivacyPassphrase:        n.Password,
 		}
 	}
-	err := agent.Connect()
-	if err != nil {
-		return ret, err
-	}
-	et := time.Now().Unix() + (3 * 60)
-	defer agent.Conn.Close()
-	err = agent.Walk(nameToOID(p.Name), func(variable gosnmp.SnmpPDU) error {
-		if et < time.Now().Unix() {
-			return fmt.Errorf("timeout")
-		}
-		name := datastore.MIBDB.OIDToName(variable.Name)
-		value := datastore.GetMIBValueString(name, &variable, p.Raw)
-		ret = append(ret, &mibEnt{
-			Name:  name,
-			Value: value,
-		})
-		return nil
-	})
-	if err != nil {
-		log.Printf("n=%s o=%s err=%v", p.Name, nameToOID(p.Name), err)
-	}
-	return ret, err
+	return agent, nil
 }

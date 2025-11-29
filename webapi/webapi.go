@@ -157,6 +157,7 @@ func setup(p *WebAPI) {
 
 	r.POST("/mibbr", postMIBBr)
 	r.GET("/mibbr/:id", getMIBBr)
+	r.POST("/snmpset", postSNMPSet)
 	r.POST("/gnmi", postGNMI)
 	r.GET("/gnmi/:id", getGNMI)
 	r.GET("/map", getMap)

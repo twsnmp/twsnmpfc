@@ -63,6 +63,9 @@
             mdi-card-plus
           </v-icon>
           <v-icon small @click="copyOneMIB(item)"> mdi-content-copy </v-icon>
+          <v-icon small color="red" @click="showSNMPSet(item)">
+            mdi-send
+          </v-icon>
         </template>
       </v-data-table>
       <v-snackbar v-model="copyError" absolute centered color="error">
@@ -477,6 +480,44 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="showSNMPSetDialog" persistent max-width="70vw">
+      <v-card>
+        <v-card-title> SNMP MIB SET </v-card-title>
+        <v-alert v-model="snmpSetError" color="error" dense dismissible>
+          {{ snmpSetErrorMsg }}
+        </v-alert>
+        <v-card-text>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="mibset.Name"
+                label="オブジェクト名"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-select
+                v-model="mibset.Type"
+                :items="setTypeList"
+                label="タイプ"
+              >
+              </v-select>
+            </v-col>
+          </v-row>
+          <v-text-field v-model="mibset.Value" label="値"></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" dark @click="doMIBSet">
+            <v-icon>mdi-content-save</v-icon>
+            SET
+          </v-btn>
+          <v-btn color="normal" dark @click="showSNMPSetDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -556,6 +597,19 @@ export default {
         { text: 'スカラー', value: 'scalar' },
         { text: 'テーブル', value: 'table' },
       ],
+      showSNMPSetDialog: false,
+      snmpSetError: false,
+      snmpSetErrorMsg: '',
+      mibset: {
+        NodeID: '',
+        Name: '',
+        Type: 'integer',
+        Value: '',
+      },
+      setTypeList: [
+        { text: 'INTEGER', value: 'integer' },
+        { text: 'String', value: 'string' },
+      ],
     }
   },
   async fetch() {
@@ -565,6 +619,7 @@ export default {
     }
     this.node = r.Node
     this.mibget.NodeID = r.Node.ID
+    this.mibset.NodeID = r.Node.ID
     this.mibtree = r.MIBTree
     if (this.extractorList.length < 1) {
       this.extractorList = this.$extractorList
@@ -912,6 +967,23 @@ export default {
           this.copyError = true
         }
       )
+    },
+    showSNMPSet(e) {
+      this.mibset.Name = e.Name
+      this.mibset.Value = e.Value
+      this.snmpSetError = false
+      this.showSNMPSetDialog = true
+    },
+    async doMIBSet() {
+      this.snmpSetError = false
+      const r = await this.$axios.$post('/api/snmpset', this.mibset)
+      if (r === '') {
+        this.showSNMPSetDialog = false
+        this.doMIBGet()
+        return
+      }
+      this.snmpSetError = true
+      this.snmpSetErrorMsg = r
     },
     addPolling(e) {
       const n = e.Name.split('.')[0] || ''
