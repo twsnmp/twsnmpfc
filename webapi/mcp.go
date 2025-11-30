@@ -142,6 +142,10 @@ func addMCPTools(s *mcp.Server) {
 		Description: "SNMP walk tool",
 	}, mcpSnmpWalk)
 	mcp.AddTool(s, &mcp.Tool{
+		Name:        "snmpset",
+		Description: "SNMP set tool",
+	}, mcpSnmpSet)
+	mcp.AddTool(s, &mcp.Tool{
 		Name:        "add_node",
 		Description: "add node to TWSNMP.A PING polling is also added automatically.",
 	}, mcpAddNode)
