@@ -1,7 +1,6 @@
 package datastore
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -191,7 +190,7 @@ func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bo
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	sk := fmt.Sprintf("%016x", st)
+	ek := fmt.Sprintf("%016x", et)
 	return db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("pollingLogs"))
 		if b == nil {
@@ -202,10 +201,11 @@ func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bo
 			return nil
 		}
 		c := bs.Cursor()
-		for k, v := c.Seek([]byte(sk)); k != nil; k, v = c.Next() {
-			if !bytes.Contains(v, []byte(pollingID)) {
-				continue
-			}
+		k, v := c.Seek([]byte(ek))
+		if k == nil {
+			k, v = c.Prev()
+		}
+		for ; k != nil; k, v = c.Prev() {
 			var e PollingLogEnt
 			err := json.Unmarshal(v, &e)
 			if err != nil {
@@ -215,10 +215,7 @@ func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bo
 			if e.PollingID != pollingID {
 				continue
 			}
-			if e.Time < st {
-				continue
-			}
-			if e.Time > et {
+			if e.Time < st || e.Time > et {
 				break
 			}
 			if !f(&e) {

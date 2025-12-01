@@ -70,7 +70,7 @@
           <v-icon>mdi-magnify</v-icon>
           検索条件
         </v-btn>
-        <v-btn v-if="filter.NextTime > 0" color="info" dark @click="nextLog">
+        <v-btn v-if="filter.NextTime > 0" color="info" dark @click="$fetch">
           <v-icon>mdi-page-next</v-icon>
           続きを検索
         </v-btn>
@@ -1294,24 +1294,22 @@ export default {
   },
   async fetch() {
     this.fftMap = null
+    this.logs = []
+    this.extractDatas = []
+    this.extractHeader = []
+    this.numExtractTypeList = []
+    this.strExtractTypeList = []
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
     const r = await this.$axios.$post('/api/log/syslog', this.filter)
     if (!r) {
       return
     }
-    if (this.filter.NextTime === 0) {
-      this.logs = []
-      this.extractDatas = []
-      this.extractHeader = []
-      this.numExtractTypeList = []
-      this.strExtractTypeList = []
-      if (this.conf.page > 1) {
-        this.options.page = this.conf.page
-        this.conf.page = 1
-      }
-    }
     this.count = r.Filter
     this.process += r.Process
-    this.logs = this.logs.concat(r.Logs ? r.Logs : [])
+    this.logs = r.Logs ? r.Logs : []
     let id = 0
     this.ft = ''
     let lt
@@ -1365,14 +1363,12 @@ export default {
       this.checkNextlog(r)
       return
     }
-    if (this.filter.NextTime === 0) {
-      r.ExtractHeader.forEach((col) => {
-        this.extractHeader.push({
-          text: col,
-          value: col,
-        })
+    r.ExtractHeader.forEach((col) => {
+      this.extractHeader.push({
+        text: col,
+        value: col,
       })
-    }
+    })
     let firstData = true
     r.ExtractDatas.forEach((row) => {
       if (row.length !== r.ExtractHeader.length) {
@@ -1445,13 +1441,6 @@ export default {
       this.limit = r.Limit
       this.filter.NextTime = r.NextTime
       this.filter.Filter = r.Filter
-    },
-    nextLog() {
-      if (this.limit > 3 && this.filter.Filter >= this.limit) {
-        this.logs.splice(0, this.limit / 4)
-        this.filter.Filter = this.logs.length
-      }
-      this.$fetch()
     },
     showHistogram() {
       this.histogramDialog = true

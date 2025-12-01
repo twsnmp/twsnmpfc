@@ -44,7 +44,7 @@
           <v-icon>mdi-magnify</v-icon>
           検索条件
         </v-btn>
-        <v-btn v-if="filter.NextTime > 0" color="info" dark @click="nextLog">
+        <v-btn v-if="filter.NextTime > 0" color="info" dark @click="$fetch">
           <v-icon>mdi-page-next</v-icon>
           続きを検索
         </v-btn>
@@ -542,26 +542,24 @@ export default {
     }
   },
   async fetch() {
+    this.logs = []
+    if (this.conf.page > 1) {
+      this.options.page = this.conf.page
+      this.conf.page = 1
+    }
+    // Clear Data
+    this.ifCounters.clear()
+    this.cpuCounters.clear()
+    this.memCounters.clear()
+    this.diskCounters.clear()
+    this.netCounters.clear()
     const r = await this.$axios.$post('/api/log/sflowCounter', this.filter)
     if (!r) {
       return
     }
-    if (this.filter.NextTime === 0) {
-      this.logs = []
-      if (this.conf.page > 1) {
-        this.options.page = this.conf.page
-        this.conf.page = 1
-      }
-      // Clear Data
-      this.ifCounters.clear()
-      this.cpuCounters.clear()
-      this.memCounters.clear()
-      this.diskCounters.clear()
-      this.netCounters.clear()
-    }
     this.count = r.Filter
     this.process += r.Process
-    this.logs = this.logs.concat(r.Logs ? r.Logs : [])
+    this.logs = r.Logs ? r.Logs : []
     this.ft = ''
     let lt
     this.logs.forEach((e) => {
@@ -746,13 +744,6 @@ export default {
       this.limit = r.Limit
       this.filter.NextTime = r.NextTime
       this.filter.Filter = r.Filter
-    },
-    nextLog() {
-      if (this.limit > 3 && this.filter.Filter >= this.limit) {
-        this.logs.splice(0, this.limit / 4)
-        this.filter.Filter = this.logs.length
-      }
-      this.$fetch()
     },
     showIFCounter() {
       if (this.ifCounters.size < 1) {

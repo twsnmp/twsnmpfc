@@ -36,10 +36,9 @@ func postArp(c echo.Context) error {
 	}
 	ipFilter := makeStringFilter(filter.IP)
 	macFilter := makeStringFilter(filter.MAC)
-	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24)
-	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
-	i := 0
-	datastore.ForEachLog(st, et, "arplog", func(l *datastore.LogEnt) bool {
+	st := makeStartTimeFilter(filter.StartDate, filter.StartTime)
+	et := makeEndTimeFilter(filter.EndDate, filter.EndTime)
+	datastore.ForEachLogReverse(st, et, "arplog", func(l *datastore.LogEnt) bool {
 		a := strings.Split(l.Log, ",")
 		if len(a) < 3 {
 			return true
@@ -63,8 +62,11 @@ func postArp(c echo.Context) error {
 			return true
 		}
 		r = append(r, &re)
-		i++
-		return i <= datastore.MapConf.LogDispSize
+		return len(r) <= datastore.MapConf.LogDispSize
 	})
+	// 逆順にする
+	for i, j := 0, len(r)-1; i < j; i, j = i+1, j-1 {
+		r[i], r[j] = r[j], r[i]
+	}
 	return c.JSON(http.StatusOK, r)
 }

@@ -40,10 +40,9 @@ func postSnmpTrap(c echo.Context) error {
 	fromAddressFilter := makeStringFilter(filter.FromAddress)
 	trapTypeFilter := makeStringFilter(filter.TrapType)
 	variablesFilter := makeStringFilter(filter.Variables)
-	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24)
-	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
-	i := 0
-	datastore.ForEachLog(st, et, "trap", func(l *datastore.LogEnt) bool {
+	st := makeStartTimeFilter(filter.StartDate, filter.StartTime)
+	et := makeEndTimeFilter(filter.EndDate, filter.EndTime)
+	datastore.ForEachLogReverse(st, et, "trap", func(l *datastore.LogEnt) bool {
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
 			return true
@@ -98,8 +97,11 @@ func postSnmpTrap(c echo.Context) error {
 			return true
 		}
 		r = append(r, re)
-		i++
-		return i <= datastore.MapConf.LogDispSize
+		return len(r) <= datastore.MapConf.LogDispSize
 	})
+	// 逆順にする
+	for i, j := 0, len(r)-1; i < j; i, j = i+1, j-1 {
+		r[i], r[j] = r[j], r[i]
+	}
 	return c.JSON(http.StatusOK, r)
 }

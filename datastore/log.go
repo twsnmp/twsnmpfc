@@ -66,14 +66,18 @@ func ForEachEventLog(st, et int64, f func(*EventLogEnt) bool) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
-	sk := fmt.Sprintf("%016x", st)
+	ek := fmt.Sprintf("%016x", et)
 	return db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte("logs"))
 		if b == nil {
 			return nil
 		}
 		c := b.Cursor()
-		for k, v := c.Seek([]byte(sk)); k != nil; k, v = c.Next() {
+		k, v := c.Seek([]byte(ek))
+		if k == nil {
+			k, v = c.Prev()
+		}
+		for ; k != nil; k, v = c.Prev() {
 			var e EventLogEnt
 			err := json.Unmarshal(v, &e)
 			if err != nil {
@@ -168,10 +172,43 @@ func ForEachLog(st, et int64, t string, f func(*LogEnt) bool) error {
 				log.Printf("ForEachLog v=%s err=%v", v, err)
 				continue
 			}
-			if e.Time < st {
+			if e.Time < st || e.Time > et {
+				break
+			}
+			if !f(&e) {
+				break
+			}
+		}
+		return nil
+	})
+}
+
+func ForEachLogReverse(st, et int64, t string, f func(*LogEnt) bool) error {
+	if db == nil {
+		return ErrDBNotOpen
+	}
+	ek := fmt.Sprintf("%016x", et)
+	return db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(t))
+		if b == nil {
+			return nil
+		}
+		c := b.Cursor()
+		k, v := c.Seek([]byte(ek))
+		if k == nil {
+			k, v = c.Prev()
+		}
+		for ; k != nil; k, v = c.Prev() {
+			if bytes.HasSuffix(v, []byte{0, 0, 255, 255}) {
+				v = deCompressLog(v)
+			}
+			var e LogEnt
+			err := json.Unmarshal(v, &e)
+			if err != nil {
+				log.Printf("ForEachLog v=%s err=%v", v, err)
 				continue
 			}
-			if e.Time > et {
+			if e.Time < st || e.Time > et {
 				break
 			}
 			if !f(&e) {

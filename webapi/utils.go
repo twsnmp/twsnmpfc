@@ -14,16 +14,24 @@ var logLevelMap = map[string]*regexp.Regexp{
 	"warn": regexp.MustCompile("(high|low|warn)"),
 }
 
-func makeTimeFilter(sd, st string, oh int) int64 {
+func makeStartTimeFilter(sd, st string) int64 {
 	if sd == "" {
-		return time.Now().Add(-time.Hour * time.Duration(oh)).UnixNano()
+		return 0
 	}
-	var t time.Time
-	var err error
-	if t, err = time.Parse("2006-01-02T15:04 MST", fmt.Sprintf("%sT%s JST", sd, st)); err != nil {
-		t = time.Now().Add(-time.Hour * time.Duration(oh))
+	if t, err := time.Parse("2006-01-02T15:04 MST", fmt.Sprintf("%sT%s JST", sd, st)); err == nil {
+		return t.UnixNano()
 	}
-	return t.UnixNano()
+	return 0
+}
+
+func makeEndTimeFilter(ed, et string) int64 {
+	if ed == "" {
+		return time.Now().UnixNano()
+	}
+	if t, err := time.Parse("2006-01-02T15:04 MST", fmt.Sprintf("%sT%s JST", ed, et)); err == nil {
+		return t.UnixNano()
+	}
+	return time.Now().UnixNano()
 }
 
 func makeStringFilter(f string) *regexp.Regexp {

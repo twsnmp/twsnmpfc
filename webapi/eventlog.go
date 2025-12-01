@@ -39,8 +39,8 @@ func postEventLogs(c echo.Context) error {
 	}
 	eventFilter := makeStringFilter(filter.Event)
 	levelFilter := getLogLevelFilter(filter.Level)
-	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24)
-	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
+	st := makeStartTimeFilter(filter.StartDate, filter.StartTime)
+	et := makeEndTimeFilter(filter.EndDate, filter.EndTime)
 
 	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
 		r.NodeList = append(r.NodeList, selectEntWebAPI{Text: n.Name, Value: n.ID})
@@ -64,6 +64,10 @@ func postEventLogs(c echo.Context) error {
 		i++
 		return i <= datastore.MapConf.LogDispSize
 	})
+	// 逆順にする
+	for i, j := 0, len(r.EventLogs)-1; i < j; i, j = i+1, j-1 {
+		r.EventLogs[i], r.EventLogs[j] = r.EventLogs[j], r.EventLogs[i]
+	}
 	return c.JSON(http.StatusOK, r)
 }
 

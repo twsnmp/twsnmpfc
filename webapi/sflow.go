@@ -78,11 +78,11 @@ func postSFlow(c echo.Context) error {
 	reasonFilter := makeNumberFilter(filter.Reason)
 	srcPortFilter := makeNumberFilter(filter.SrcPort)
 	dstPortFilter := makeNumberFilter(filter.DstPort)
-	st := makeTimeFilter(filter.StartDate, filter.StartTime, 1)
+	st := makeStartTimeFilter(filter.StartDate, filter.StartTime)
+	et := makeEndTimeFilter(filter.EndDate, filter.EndTime)
 	if filter.NextTime > 0 {
-		st = filter.NextTime
+		et = filter.NextTime
 	}
-	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	r.NextTime = 0
 	r.Process = 0
 	r.Filter = filter.Filter
@@ -92,7 +92,7 @@ func postSFlow(c echo.Context) error {
 		to = datastore.MapConf.LogTimeout
 	}
 	end := time.Now().Unix() + int64(to)
-	datastore.ForEachLog(st, et, "sflow", func(l *datastore.LogEnt) bool {
+	datastore.ForEachLogReverse(st, et, "sflow", func(l *datastore.LogEnt) bool {
 		if i > 1000 {
 			// 検索期間が15秒を超えた場合
 			if time.Now().Unix() > end {
@@ -102,7 +102,7 @@ func postSFlow(c echo.Context) error {
 			i = 0
 		}
 		i++
-		if r.Filter >= datastore.MapConf.LogDispSize {
+		if len(r.Logs) >= datastore.MapConf.LogDispSize {
 			// 検索数が表示件数を超えた場合
 			r.NextTime = l.Time
 			return false
@@ -229,6 +229,10 @@ func postSFlow(c echo.Context) error {
 		r.Filter++
 		return true
 	})
+	// 逆順にする
+	for i, j := 0, len(r.Logs)-1; i < j; i, j = i+1, j-1 {
+		r.Logs[i], r.Logs[j] = r.Logs[j], r.Logs[i]
+	}
 	r.Limit = datastore.MapConf.LogDispSize
 	return c.JSON(http.StatusOK, r)
 }
@@ -264,11 +268,11 @@ func postSFlowCounter(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	remoteFilter := makeStringFilter(filter.Remote)
-	st := makeTimeFilter(filter.StartDate, filter.StartTime, 24)
+	st := makeStartTimeFilter(filter.StartDate, filter.StartTime)
+	et := makeEndTimeFilter(filter.EndDate, filter.EndTime)
 	if filter.NextTime > 0 {
-		st = filter.NextTime
+		et = filter.NextTime
 	}
-	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	r.NextTime = 0
 	r.Process = 0
 	r.Filter = filter.Filter
@@ -288,7 +292,7 @@ func postSFlowCounter(c echo.Context) error {
 			i = 0
 		}
 		i++
-		if r.Filter >= datastore.MapConf.LogDispSize {
+		if len(r.Logs) >= datastore.MapConf.LogDispSize {
 			// 検索数が表示件数を超えた場合
 			r.NextTime = l.Time
 			return false
@@ -310,6 +314,10 @@ func postSFlowCounter(c echo.Context) error {
 		r.Filter++
 		return true
 	})
+	// 逆順にする
+	for i, j := 0, len(r.Logs)-1; i < j; i, j = i+1, j-1 {
+		r.Logs[i], r.Logs[j] = r.Logs[j], r.Logs[i]
+	}
 	r.Limit = datastore.MapConf.LogDispSize
 	return c.JSON(http.StatusOK, r)
 }

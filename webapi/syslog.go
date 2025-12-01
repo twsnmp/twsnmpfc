@@ -131,11 +131,11 @@ func postSyslog(c echo.Context) error {
 	hostFilter := makeStringFilter(filter.Host)
 	tagFilter := makeStringFilter(filter.Tag)
 	levelFilter := getLogLevelFilter(filter.Level)
-	st := makeTimeFilter(filter.StartDate, filter.StartTime, 1)
+	st := makeStartTimeFilter(filter.StartDate, filter.StartTime)
+	et := makeEndTimeFilter(filter.EndDate, filter.EndTime)
 	if filter.NextTime > 0 {
-		st = filter.NextTime
+		et = filter.NextTime
 	}
-	et := makeTimeFilter(filter.EndDate, filter.EndTime, 0)
 	grokCap := ""
 	var grokExtractor *grok.Grok
 	regExtractor := getExtractType(filter.Extractor)
@@ -163,7 +163,7 @@ func postSyslog(c echo.Context) error {
 	}
 	end := time.Now().Unix() + int64(to)
 	var hostMap = make(map[string]string)
-	datastore.ForEachLog(st, et, "syslog", func(l *datastore.LogEnt) bool {
+	datastore.ForEachLogReverse(st, et, "syslog", func(l *datastore.LogEnt) bool {
 		if i > 1000 {
 			// 検索期間が15秒を超えた場合
 			if time.Now().Unix() > end {
@@ -173,7 +173,7 @@ func postSyslog(c echo.Context) error {
 			i = 0
 		}
 		i++
-		if r.Filter >= datastore.MapConf.LogDispSize {
+		if len(r.Logs) >= datastore.MapConf.LogDispSize {
 			// 検索数が表示件数を超えた場合
 			r.NextTime = l.Time
 			return false
@@ -301,6 +301,10 @@ func postSyslog(c echo.Context) error {
 		r.Filter++
 		return true
 	})
+	// 逆順にする
+	for i, j := 0, len(r.Logs)-1; i < j; i, j = i+1, j-1 {
+		r.Logs[i], r.Logs[j] = r.Logs[j], r.Logs[i]
+	}
 	r.Limit = datastore.MapConf.LogDispSize
 	return c.JSON(http.StatusOK, r)
 }
