@@ -467,6 +467,12 @@ func setVMFuncAndValues(pe *datastore.PollingEnt, vm *otto.Otto) {
 				}
 			} else if call.Argument(1).IsString() {
 				pe.Result[n] = call.Argument(1).String()
+			} else if call.Argument(1).IsBoolean() {
+				if v, err := call.Argument(1).ToBoolean(); err == nil && v {
+					pe.Result[n] = float64(1)
+				} else {
+					pe.Result[n] = float64(0)
+				}
 			}
 		}
 		return otto.Value{}
