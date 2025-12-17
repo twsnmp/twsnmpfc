@@ -349,7 +349,7 @@ func sendMailOAuth2(server, subject, body string) error {
 		if !strings.Contains(rcpt, "@") {
 			continue
 		}
-		if err := message.To(rcpt); err != nil {
+		if err := message.AddTo(rcpt); err != nil {
 			return err
 		}
 	}
@@ -384,7 +384,7 @@ func sendTestMailOAuth2(server string, testConf *datastore.NotifyConfEnt) error 
 		if !strings.Contains(rcpt, "@") {
 			continue
 		}
-		if err := message.To(rcpt); err != nil {
+		if err := message.AddTo(rcpt); err != nil {
 			return err
 		}
 	}
