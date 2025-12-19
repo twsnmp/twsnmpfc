@@ -137,6 +137,14 @@
                 <v-list-item-title>ヒストグラム</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
+            <v-list-item @click="showPollingQQPlot">
+              <v-list-item-icon
+                ><v-icon>mdi-chart-scatter-plot</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>QQプロット</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item @click="pollingLogSTL">
               <v-list-item-icon>
                 <v-icon>mdi-chart-timeline-variant</v-icon>
@@ -382,6 +390,37 @@
             時間範囲
           </v-btn>
           <v-btn color="normal" dark @click="pollingHistogramDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="pollingQQPlotDialog" persistent max-width="98vw">
+      <v-card style="width: 100%">
+        <v-card-title>
+          QQプロット - {{ node.Name }} - {{ polling.Name }}
+          <v-spacer></v-spacer>
+          <v-select
+            v-model="selectedValEnt"
+            :items="numValEntList"
+            label="項目"
+            single-line
+            hide-details
+            @change="selectValEnt"
+          ></v-select>
+        </v-card-title>
+        <div
+          id="pollingQQPlot"
+          style="width: 95vw; height: 50vh; margin: 0 auto"
+        ></div>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="filterDialog = true">
+            <v-icon>mdi-calendar-clock</v-icon>
+            時間範囲
+          </v-btn>
+          <v-btn color="normal" dark @click="pollingQQPlotDialog = false">
             <v-icon>mdi-cancel</v-icon>
             閉じる
           </v-btn>
@@ -695,6 +734,7 @@ export default {
       per1h: false,
       at: undefined,
       pollingHistogramDialog: false,
+      pollingQQPlotDialog: false,
       stlDialog: false,
       fftDialog: false,
       timeAnalyzeData: null,
@@ -779,10 +819,12 @@ export default {
       if (this.pollingHistogramDialog) {
         this.$showPollingHistogram(
           'pollingHistogram',
-          this.polling,
           this.logs,
           this.selectedValEnt
         )
+      }
+      if (this.pollingQQPlotDialog) {
+        this.$showPollingQQPlot('pollingQQPlot', this.logs, this.selectedValEnt)
       }
     },
     doFilter() {
@@ -835,10 +877,15 @@ export default {
       this.$nextTick(() => {
         this.$showPollingHistogram(
           'pollingHistogram',
-          this.polling,
           this.logs,
           this.selectedValEnt
         )
+      })
+    },
+    showPollingQQPlot() {
+      this.pollingQQPlotDialog = true
+      this.$nextTick(() => {
+        this.$showPollingQQPlot('pollingQQPlot', this.logs, this.selectedValEnt)
       })
     },
     pollingLogSTL() {

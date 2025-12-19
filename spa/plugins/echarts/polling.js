@@ -1,5 +1,6 @@
 import * as echarts from 'echarts'
 import * as ecStat from 'echarts-stat'
+import { probit } from 'simple-statistics'
 import { getChartParams } from '~/plugins/echarts/chartparams.js'
 
 let chart
@@ -336,7 +337,7 @@ const makePollingHistogram = (div) => {
   chart.resize()
 }
 
-const showPollingHistogram = (div, polling, logs, ent) => {
+const showPollingHistogram = (div, logs, ent) => {
   makePollingHistogram(div)
   if (ent === '') {
     return
@@ -350,6 +351,9 @@ const showPollingHistogram = (div, polling, logs, ent) => {
       data.push(numVal)
     }
   })
+  if (data.length < 1) {
+    return
+  }
   const bins = ecStat.histogram(data)
   chart.setOption({
     xAxis: {
@@ -873,6 +877,142 @@ const showPollingLogForecast = (div, polling, logs, ent) => {
   forecastChart.resize()
 }
 
+/**
+ * QQプロット用のデータセットを計算する関数
+ * @param {Array<number>} data - 標本データ
+ * @returns {Array<Array<number>>} [[理論分位点, 標本分位点], ...] の形式
+ */
+const calculateQQPlotData = (data, mu, sigma) => {
+  const n = data.length
+  if (n === 0) return []
+
+  // 1. 標本データをソート (Sample Quantiles)
+  const sortedData = [...data].sort((a, b) => a - b)
+
+  const qqData = []
+
+  // 2. 理論的分位点 (Theoretical Quantiles) の計算
+  // 標準正規分布 (平均0, 標準偏差1) を仮定
+  // Cunnaneのプロット位置: p_i = (i - 0.5) / n を使用
+
+  for (let i = 0; i < n; i++) {
+    const rank = i + 1 // 順位 (1 から n)
+
+    // 累積確率 p
+    const p = (rank - 0.5) / n
+
+    // 平均 mu, 標準偏差 sigma の正規分布の場合
+    const theoreticalQuantile = mu + sigma * probit(p)
+    const sampleQuantile = sortedData[i]
+
+    // [理論分位点, 標本分位点] のペアを保存
+    qqData.push([theoreticalQuantile, sampleQuantile])
+  }
+  return qqData
+}
+
+const showPollingQQPlot = (div, logs, ent) => {
+  if (ent === '') {
+    return
+  }
+  const data = []
+  const dp = getChartParams(ent)
+  logs.forEach((l) => {
+    if (!l.Result.error) {
+      let numVal = getNumVal(ent, l.Result)
+      numVal *= dp.mul
+      data.push(numVal)
+    }
+  })
+  const mu = ecStat.statistics.mean(data)
+  const sigma = ecStat.statistics.deviation(data)
+  const qqPlotData = calculateQQPlotData(data, mu, sigma)
+  const scatterData = qqPlotData
+  // 基準線の座標 (対角線 y=x)
+  const lineMin = mu - 4 * sigma // 平均から下方向に4標準偏差
+  const lineMax = mu + 4 * sigma // 平均から上方向に4標準偏差
+  const lineData = [
+    [lineMin, lineMin],
+    [lineMax, lineMax],
+  ]
+  if (chart) {
+    chart.dispose()
+  }
+  chart = echarts.init(document.getElementById(div), 'dark')
+  const option = {
+    tooltip: {
+      trigger: 'item',
+      formatter: (params) => {
+        if (params.seriesName === 'Sample plot') {
+          return `理論分位点(Z): 
+            ${params.value[0].toFixed(4)}
+            <br/>標本分位点: ${params.value[1].toFixed(4)}`
+        }
+        return params.seriesName
+      },
+    },
+    graphic: [
+      {
+        type: 'text',
+        left: '10%',
+        bottom: '15%',
+        style: {
+          text: `μ: ${mu.toFixed(2)}\nσ: ${sigma.toFixed(2)}`,
+          fill: '#fff',
+          font: '14px sans-serif',
+        },
+      },
+    ],
+    grid: {
+      left: '10%',
+      right: '15%',
+      top: 30,
+      buttom: 0,
+    },
+    xAxis: {
+      name: '理論分位点',
+      type: 'value',
+      scale: true,
+      splitLine: {
+        show: false,
+      },
+    },
+    yAxis: {
+      name: '標本分位点',
+      type: 'value',
+      scale: true,
+      splitLine: {
+        show: false,
+      },
+    },
+    series: [
+      {
+        name: 'Reference line (y=x)',
+        type: 'line',
+        data: lineData,
+        symbol: 'none',
+        lineStyle: {
+          color: 'red',
+          type: 'dashed',
+        },
+        z: 1,
+      },
+      {
+        name: 'Sample plot',
+        type: 'scatter',
+        data: scatterData,
+        symbolSize: 8,
+        itemStyle: {
+          color: 'steelblue',
+        },
+        z: 2,
+      },
+    ],
+  }
+  chart.setOption(option)
+  chart.resize()
+}
+
 export default (context, inject) => {
   inject('showPollingChart', showPollingChart)
   inject('showPollingHistogram', showPollingHistogram)
@@ -880,4 +1020,5 @@ export default (context, inject) => {
   inject('showPollingLogSTL', showPollingLogSTL)
   inject('showPollingLogFFT', showPollingLogFFT)
   inject('showPollingLogForecast', showPollingLogForecast)
+  inject('showPollingQQPlot', showPollingQQPlot)
 }
