@@ -71,6 +71,10 @@ func PollNowNode(nodeID string) {
 				GNMIStopSubscription(pe.ID)
 				time.Sleep(time.Millisecond * 20)
 			}
+			if pe.Type == "mqtt" && pe.Mode == "subscribe" {
+				MqttStopSubscription(pe.ID)
+				time.Sleep(time.Millisecond * 20)
+			}
 			datastore.UpdatePolling(pe)
 			doPollingCh <- pe.ID
 		}
@@ -99,6 +103,10 @@ func CheckAllPoll() {
 			datastore.SetNodeStateChanged(n.ID)
 			if pe.Type == "gnmi" && pe.Mode == "subscribe" {
 				GNMIStopSubscription(pe.ID)
+				time.Sleep(time.Millisecond * 20)
+			}
+			if pe.Type == "mqtt" && pe.Mode == "subscribe" {
+				MqttStopSubscription(pe.ID)
 				time.Sleep(time.Millisecond * 20)
 			}
 			datastore.UpdatePolling(pe)
