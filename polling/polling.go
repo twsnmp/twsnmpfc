@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/Songmu/timeout"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/robertkrimen/otto"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/notify"
@@ -310,11 +312,11 @@ func setPollingState(pe *datastore.PollingEnt, newState string) {
 		}
 		datastore.AddEventLog(l)
 		notify.SendNotifyChat(l)
-		go doAction(pe)
+		go doAction(pe, nodeName)
 	}
 }
 
-func doAction(pe *datastore.PollingEnt) {
+func doAction(pe *datastore.PollingEnt, nodeName string) {
 	if pe.State == "unknown" {
 		return
 	}
@@ -327,6 +329,8 @@ func doAction(pe *datastore.PollingEnt) {
 	}
 	for _, a := range strings.Split(action, "\n") {
 		a = strings.TrimSpace(a)
+		a = strings.ReplaceAll(a, "$NODE", nodeName)
+		a = strings.ReplaceAll(a, "$STATE", pe.State)
 		al := strings.Split(a, " ")
 		if !doOneAction(al) {
 			// アクションをwaitの条件で途中で終了できる
@@ -364,7 +368,7 @@ func doOneAction(alin []string) bool {
 			subject := al[1]
 			body := subject
 			if len(al) > 2 {
-				body = al[2]
+				body = strings.Join(al[2:], " ")
 			}
 			if subject != "" {
 				notify.SendActionMail(subject, body)
@@ -378,7 +382,7 @@ func doOneAction(alin []string) bool {
 			if len(al) > 2 {
 				level = al[2]
 				if len(al) > 3 {
-					message = al[3]
+					message = strings.Join(al[3:], " ")
 				}
 			}
 			notify.SendChat(&datastore.NotifyConf, subject, level, message)
@@ -399,6 +403,8 @@ func doOneAction(alin []string) bool {
 		}
 	case "cmd":
 		doActionCmd(al[1:])
+	case "mqtt":
+		doNotifyToMQTT(al[1:])
 	}
 	return true
 }
@@ -503,4 +509,38 @@ func setVMFuncAndValues(pe *datastore.PollingEnt, vm *otto.Otto) {
 		}
 	}
 	vm.Set("iterval", pe.PollInt)
+}
+
+func doNotifyToMQTT(p []string) {
+	if len(p) < 3 {
+		log.Printf("doNotifyToMQTT missing params %+v", p)
+		return
+	}
+	name := datastore.MapConf.MapName
+	if name == "" {
+		var err error
+		name, err = os.Hostname()
+		if err != nil {
+			name = "unknown"
+			log.Printf("failed to get hostname: %v", err)
+		}
+	}
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(p[0])
+	opts.SetClientID("TWSNMP_FC_" + name)
+
+	client := mqtt.NewClient(opts)
+	token := client.Connect()
+	token.Wait()
+	if token.Error() != nil {
+		log.Println(token.Error())
+		return
+	}
+	defer client.Disconnect(250)
+	token = client.Publish(p[1], 1, false, strings.Join(p[2:], " "))
+	token.Wait()
+	if token.Error() != nil {
+		log.Println(token.Error())
+		return
+	}
 }

@@ -13,14 +13,6 @@ import (
 	_ "github.com/twsnmp/twsnmpfc/statik"
 )
 
-func getTmpDBFile() (string, error) {
-	f, err := os.CreateTemp("", "twsnmpfc_test")
-	if err != nil {
-		return "", err
-	}
-	return f.Name(), err
-}
-
 func TestDiscover(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	ping.Start(ctx, &sync.WaitGroup{}, "")
