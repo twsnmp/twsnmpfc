@@ -245,6 +245,26 @@
               </v-select>
             </v-col>
           </v-row>
+          <v-row dense>
+            <v-col cols="5">
+              <v-text-field
+                v-model="editPolling.MqttURL"
+                label="MQTTサーバーURL"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="4">
+              <v-text-field
+                v-model="editPolling.MqttTopic"
+                label="Topic"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editPolling.MqttCols"
+                label="送信カラム"
+              ></v-text-field>
+            </v-col>
+          </v-row>
           <v-row v-if="editPolling.LogMode == 3" dense no-gutters>
             <v-col cols="3">
               <v-select

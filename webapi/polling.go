@@ -210,6 +210,9 @@ func postPollingUpdate(c echo.Context) error {
 	p.FailAction = pu.FailAction
 	p.RepairAction = pu.RepairAction
 	p.VectorCols = pu.VectorCols
+	p.MqttURL = pu.MqttURL
+	p.MqttTopic = pu.MqttTopic
+	p.MqttCols = pu.MqttCols
 	p.AIMode = pu.AIMode
 	p.NextTime = 0
 	p.State = "unknown"

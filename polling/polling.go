@@ -3,6 +3,7 @@ package polling
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -269,6 +270,9 @@ func doPolling(pe *datastore.PollingEnt) {
 				log.Printf("send polling log to influxdb1 err=%v", err)
 			}
 		}
+	}
+	if pe.MqttURL != "" {
+		mqttPublishPollingResult(pe)
 	}
 }
 
@@ -546,6 +550,61 @@ func doNotifyToMQTT(p []string) {
 	}
 	defer client.Disconnect(250)
 	token = client.Publish(p[1], 1, false, strings.Join(p[2:], " "))
+	token.Wait()
+	if token.Error() != nil {
+		log.Println(token.Error())
+		return
+	}
+}
+
+func mqttPublishPollingResult(pe *datastore.PollingEnt) {
+	if pe.MqttTopic == "" {
+		log.Println("mqttPublishPollingResult missing MQTT topic")
+		return
+	}
+	data := make(map[string]interface{})
+	if pe.MqttCols != "" {
+		for _, k := range strings.Split(pe.MqttCols, ",") {
+			switch k {
+			case "state":
+				data["state"] = pe.State
+			default:
+				if v, ok := pe.Result[k]; ok {
+					data[k] = v
+				}
+			}
+		}
+	} else {
+		data["state"] = pe.State
+		for k, v := range pe.Result {
+			switch k {
+			case "payload":
+			case "error":
+			case "lastTime":
+			default:
+				data[k] = v
+			}
+		}
+	}
+	j, err := json.Marshal(&data)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(pe.MqttURL)
+	opts.SetClientID("TWSNMP_FC_Polling_" + pe.ID)
+
+	client := mqtt.NewClient(opts)
+	token := client.Connect()
+	token.Wait()
+	if token.Error() != nil {
+		log.Println(token.Error())
+		return
+	}
+	defer client.Disconnect(250)
+
+	token = client.Publish(pe.MqttTopic, 1, false, string(j))
 	token.Wait()
 	if token.Error() != nil {
 		log.Println(token.Error())

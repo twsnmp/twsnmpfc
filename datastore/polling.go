@@ -32,6 +32,9 @@ type PollingEnt struct {
 	RepairAction string
 	AIMode       string
 	VectorCols   string
+	MqttURL      string
+	MqttTopic    string
+	MqttCols     string
 }
 
 type PollingLogEnt struct {

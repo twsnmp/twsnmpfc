@@ -259,6 +259,9 @@ func subscribeUpdatePolling(pe *datastore.PollingEnt, oldState string) {
 			}
 		}
 	}
+	if pe.MqttURL != "" {
+		mqttPublishPollingResult(pe)
+	}
 }
 
 func gNMIStopAllSubscription() {
