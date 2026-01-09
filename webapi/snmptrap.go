@@ -3,6 +3,7 @@ package webapi
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -45,6 +46,7 @@ func postSnmpTrap(c echo.Context) error {
 	datastore.ForEachLogReverse(st, et, "trap", func(l *datastore.LogEnt) bool {
 		var sl = make(map[string]interface{})
 		if err := json.Unmarshal([]byte(l.Log), &sl); err != nil {
+			log.Println(err)
 			return true
 		}
 		var ok bool
@@ -65,6 +67,7 @@ func postSnmpTrap(c echo.Context) error {
 		}
 
 		if re.Variables, ok = sl["Variables"].(string); !ok {
+			log.Println("no trap variVariablesables")
 			return true
 		}
 		var ent string
@@ -84,7 +87,26 @@ func postSnmpTrap(c echo.Context) error {
 			if spe, ok = sl["SpecificTrap"].(float64); !ok {
 				return true
 			}
-			re.TrapType = fmt.Sprintf("%s:%d:%d", ent, int(gen), int(spe))
+			switch int(gen) {
+			case 0:
+				re.TrapType = "coldStart(v1)"
+			case 1:
+				re.TrapType = "warmStart(v1)"
+			case 2:
+				re.TrapType = "linkDown(v1)"
+			case 3:
+				re.TrapType = "linkUp(v1)"
+			case 4:
+				re.TrapType = "authenticationFailure(v1)"
+			case 5:
+				re.TrapType = "egpNeighborLoss(v1)"
+			default:
+				re.TrapType = fmt.Sprintf("enterpriseSpecific(%d)", int(spe))
+			}
+			if re.Variables != "" {
+				re.Variables += ","
+			}
+			re.Variables += "Enterprise=" + ent
 		}
 		re.Time = l.Time
 		if fromAddressFilter != nil && !fromAddressFilter.Match([]byte(re.FromAddress)) {
