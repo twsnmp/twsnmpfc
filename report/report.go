@@ -408,7 +408,10 @@ func GetAddressInfo(addr, dnsbl, noCache string) *[]AddrInfoEnt {
 	if _, err := net.ParseMAC(addr); err == nil {
 		return getMACInfo(addr)
 	}
-	return getIPInfo(addr, dnsbl, noCache)
+	if ip := net.ParseIP(addr); ip != nil {
+		return getIPInfo(addr, dnsbl, noCache)
+	}
+	return getDomainInfo(addr, noCache)
 }
 
 type ipInfoCache struct {
@@ -490,7 +493,7 @@ func getIPInfo(ip, dnsbl, noCache string) *[]AddrInfoEnt {
 		ret = append(ret, AddrInfoEnt{Level: "info", Title: "管理対象ノード", Value: "いいえ"})
 	}
 	r := &net.Resolver{}
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*500)
 	defer cancel()
 	if names, err := r.LookupAddr(ctx, ip); err == nil && len(names) > 0 {
 		for _, n := range names {
@@ -615,4 +618,84 @@ func findIPFromArp(mac string) string {
 		return true
 	})
 	return ip
+}
+
+type domainInfoCache struct {
+	Time int64
+	Info *[]AddrInfoEnt
+}
+
+var domainInfoCacheMap = make(map[string]*domainInfoCache)
+
+func getDomainInfo(domain, noCache string) *[]AddrInfoEnt {
+	if noCache != "true" {
+		if c, ok := domainInfoCacheMap[domain]; ok {
+			if c.Time > time.Now().Unix()-60*60*24 {
+				return c.Info
+			}
+		}
+	}
+	ret := []AddrInfoEnt{}
+	ret = append(ret, AddrInfoEnt{Level: "info", Title: "ドメイン", Value: domain})
+	r := &net.Resolver{}
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*3000)
+	defer cancel()
+	if ips, err := r.LookupHost(ctx, domain); err == nil && len(ips) > 0 {
+		for _, ip := range ips {
+			ret = append(ret, AddrInfoEnt{Level: "info", Title: "IPアドレス", Value: ip})
+			loc := datastore.GetLoc(ip)
+			if !isSafeCountry(loc) {
+				ret = append(ret, AddrInfoEnt{Level: "high", Title: "位置", Value: loc})
+			} else {
+				ret = append(ret, AddrInfoEnt{Level: "info", Title: "位置", Value: loc})
+			}
+		}
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "warn", Title: "IPアドレス", Value: "なし"})
+	}
+	if list, err := r.LookupNS(ctx, domain); err == nil && len(list) > 0 {
+		for _, e := range list {
+			ret = append(ret, AddrInfoEnt{Level: "info", Title: "ネームサーバー", Value: e.Host})
+		}
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "warn", Title: "ネームサーバー", Value: "なし"})
+	}
+	if list, err := r.LookupMX(ctx, domain); err == nil && len(list) > 0 {
+		for _, e := range list {
+			ret = append(ret, AddrInfoEnt{Level: "info", Title: "メールサーバー", Value: e.Host})
+		}
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "warn", Title: "メールサーバー", Value: "なし"})
+	}
+	if list, err := r.LookupTXT(ctx, domain); err == nil && len(list) > 0 {
+		for _, e := range list {
+			ret = append(ret, AddrInfoEnt{Level: "info", Title: "TXTレコード", Value: e})
+		}
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "warn", Title: "TXTレコード", Value: "なし"})
+	}
+	if cname, list, err := r.LookupSRV(ctx, "https", "tcp", domain); err == nil && len(list) > 0 {
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "SRV(CNAME)", Value: cname})
+		for _, e := range list {
+			ret = append(ret, AddrInfoEnt{Level: "info", Title: "SRVレコード", Value: fmt.Sprintf("%s:%d %d %d", e.Target, e.Port, e.Priority, e.Weight)})
+		}
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "SRVレコード", Value: "未登録"})
+	}
+	client := &rdap.Client{}
+	ri, err := client.QueryDomain(domain)
+	if err != nil {
+		log.Printf("rdap query err=%v", err)
+		ret = append(ret, AddrInfoEnt{Level: "warn", Title: "RDAP:error", Value: fmt.Sprintf("%v", err)})
+	} else {
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "RDAP:Handole", Value: ri.Handle})
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "RDAP:LDHName", Value: ri.LDHName})
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "RDAP:UnicodeName", Value: ri.UnicodeName})
+		ret = append(ret, AddrInfoEnt{Level: "info", Title: "RDAP:Whois Server", Value: ri.Port43}) // Whoisの情報源
+	}
+	domainInfoCacheMap[domain] = &domainInfoCache{
+		Time: time.Now().Unix(),
+		Info: &ret,
+	}
+	return &ret
 }
