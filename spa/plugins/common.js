@@ -82,6 +82,7 @@ const typeList = [
   { text: 'LXI', value: 'lxi' },
   { text: 'Monitor', value: 'monitor' },
   { text: 'MQTT', value: 'mqtt' },
+  { text: 'EMAIL', value: 'email' },
 ]
 
 const logModeList = [

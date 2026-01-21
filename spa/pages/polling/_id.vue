@@ -788,6 +788,9 @@ export default {
         e.TimeStr = this.$timeFormat(t)
         e.ResultStr = ''
         Object.keys(e.Result).forEach((k) => {
+          if (typeof e.Result[k] === 'boolean') {
+            e.Result[k + '_num'] = e.Result[k] ? 1 : 0
+          }
           e.ResultStr += k + '=' + e.Result[k] + ' '
         })
         this.$setDataList(e.Result, this.numValEntList)

@@ -257,6 +257,8 @@ func doPolling(pe *datastore.PollingEnt) {
 		if !doPollingMqtt(pe) {
 			return
 		}
+	case "email":
+		doPollingEMail(pe)
 	}
 	datastore.UpdatePolling(pe)
 	if pe.LogMode == datastore.LogModeAlways || pe.LogMode == datastore.LogModeAI || (pe.LogMode == datastore.LogModeOnChange && oldState != pe.State) {

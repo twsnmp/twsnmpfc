@@ -74,7 +74,10 @@ func ForEachEventLog(st, et int64, f func(*EventLogEnt) bool) error {
 		}
 		c := b.Cursor()
 		k, v := c.Seek([]byte(ek))
+		// et (ek) より後ろにいる、または末尾に達した場合は一歩手前へ
 		if k == nil {
+			k, v = c.Last()
+		} else if string(k) > ek {
 			k, v = c.Prev()
 		}
 		for ; k != nil; k, v = c.Prev() {
@@ -195,7 +198,10 @@ func ForEachLogReverse(st, et int64, t string, f func(*LogEnt) bool) error {
 		}
 		c := b.Cursor()
 		k, v := c.Seek([]byte(ek))
+		// et (ek) より後ろにいる、または末尾に達した場合は一歩手前へ
 		if k == nil {
+			k, v = c.Last()
+		} else if string(k) > ek {
 			k, v = c.Prev()
 		}
 		for ; k != nil; k, v = c.Prev() {

@@ -260,7 +260,8 @@ export default {
           EndTime: this.$timeFormat(et, '{HH}:{mm}'),
         }
       )
-      if (!logs) {
+      if (!logs || logs.length < 1) {
+        this.pollingChartDialog = false
         return
       }
       this.polling = r.Polling

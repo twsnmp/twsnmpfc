@@ -159,10 +159,11 @@ func getAIDataKeys(p *datastore.PollingEnt) []string {
 		if k == "lastTime" {
 			continue
 		}
-		if _, ok := v.(float64); !ok {
-			continue
+		if _, ok := v.(float64); ok {
+			keys = append(keys, k)
+		} else if _, ok := v.(bool); ok {
+			keys = append(keys, k)
 		}
-		keys = append(keys, k)
 	}
 	return keys
 }
@@ -236,6 +237,12 @@ func MakeAIData(req *AIReq) error {
 			if v, ok := l.Result[k]; ok {
 				if fv, ok := v.(float64); ok {
 					ent[k] += fv
+				} else if bv, ok := v.(bool); ok {
+					if bv {
+						ent[k] = float64(1)
+					} else {
+						ent[k] = float64(0)
+					}
 				}
 			}
 		}
@@ -389,7 +396,6 @@ func calcIForest(req *AIReq) *datastore.AIResult {
 	sub := 256
 	if req.Df.Len() < sub {
 		sub = req.Df.Len() / 2
-		log.Printf("IForest subSample=%d", sub)
 	}
 	data := getSampleData(req)
 	iforest, err := go_iforest.NewIForest(data, 1000, sub)

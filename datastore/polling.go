@@ -205,7 +205,10 @@ func ForEachPollingLog(st, et int64, pollingID string, f func(*PollingLogEnt) bo
 		}
 		c := bs.Cursor()
 		k, v := c.Seek([]byte(ek))
+		// et (ek) より後ろにいる、または末尾に達した場合は一歩手前へ
 		if k == nil {
+			k, v = c.Last()
+		} else if string(k) > ek {
 			k, v = c.Prev()
 		}
 		for ; k != nil; k, v = c.Prev() {

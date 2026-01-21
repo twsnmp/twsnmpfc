@@ -16,6 +16,7 @@ require (
 	github.com/davidebianchi/go-jsonclient v1.5.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/eclipse/paho.mqtt.golang v1.5.1
+	github.com/emersion/go-imap/v2 v2.0.0-beta.7
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-acme/lego v2.7.2+incompatible
 	github.com/go-acme/lego/v4 v4.22.2
@@ -25,6 +26,7 @@ require (
 	github.com/google/gopacket v1.1.19
 	github.com/gosnmp/gosnmp v1.38.0
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
+	github.com/knadh/go-pop3 v1.0.0
 	github.com/labstack/echo-jwt/v4 v4.3.0
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/mdlayher/netx v0.0.0-20230430222610-7e21880baee8
@@ -88,6 +90,8 @@ require (
 	github.com/chewxy/hm v1.0.0 // indirect
 	github.com/chewxy/math32 v1.11.1 // indirect
 	github.com/chewxy/tightywhities v1.0.0 // indirect
+	github.com/emersion/go-message v0.18.1 // indirect
+	github.com/emersion/go-sasl v0.0.0-20231106173351-e73c9f7bad43 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/foxboron/go-tpm-keyfiles v0.0.0-20250323135004-b31fac66206e // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
