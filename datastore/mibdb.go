@@ -705,11 +705,12 @@ func PrintHintedMIBIntVal(val int32, hint string, us bool) string {
 		if len(hint) > 2 && hint[1:2] == "-" {
 			s, err := strconv.Atoi(hint[2:])
 			if err == nil && s != 0 {
-				if s <= len(r) {
-					r = r[0:s] + "." + r[s:]
+				if s < len(r) {
+					pos := len(r) - s
+					r = r[0:pos] + "." + r[pos:]
 				} else {
-					tmp := "."
-					for len(tmp) < s-len(r)+1 {
+					tmp := "0."
+					for i := 0; i < s-len(r); i++ {
 						tmp += "0"
 					}
 					r = tmp + r
