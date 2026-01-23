@@ -323,9 +323,9 @@ func loadExtMIB(asn1 []byte, fileType, file string, retry bool) bool {
 				log.Printf("type syntax enum(%s) = %#v ", t.Name, t.Syntax)
 			}
 			if t.TextualConvention != nil {
-				enum := []string{}
-				enumMap := make(map[int]string)
 				if t.TextualConvention.Syntax.Enum != nil {
+					enum := []string{}
+					enumMap := make(map[int]string)
 					for _, e := range t.TextualConvention.Syntax.Enum {
 						enum = append(enum, fmt.Sprintf("%s:%s ", e.Value, e.Name))
 						if i, err := strconv.Atoi(e.Value); err == nil {
@@ -336,6 +336,11 @@ func loadExtMIB(asn1 []byte, fileType, file string, retry bool) bool {
 						Hint:    t.TextualConvention.DisplayHint,
 						Enum:    strings.Join(enum, ","),
 						EnumMap: enumMap,
+					}
+				}
+				if t.TextualConvention.DisplayHint != "" {
+					MIBTypeMap[t.Name.String()] = MIBTypeEnt{
+						Hint: t.TextualConvention.DisplayHint,
 					}
 				}
 			}
