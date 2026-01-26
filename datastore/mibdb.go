@@ -911,7 +911,7 @@ func GetMIBValueString(name string, variable *gosnmp.SnmpPDU, raw bool) string {
 		if !raw {
 			mi := FindMIBInfo(name)
 			if mi != nil {
-				v := int(gosnmp.ToBigInt(variable.Value).Uint64())
+				v := int(gosnmp.ToBigInt(variable.Value).Int64())
 				if mi.Enum != "" {
 					if vn, ok := mi.EnumMap[v]; ok {
 						value += "(" + vn + ")"
