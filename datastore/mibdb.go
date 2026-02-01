@@ -835,7 +835,7 @@ func GetMIBValueString(name string, variable *gosnmp.SnmpPDU, raw bool) string {
 		mi := FindMIBInfo(name)
 		if mi != nil {
 			switch mi.Type {
-			case "PhysAddress", "OctetString":
+			case "PhysAddress", "OctetString", "MacAddress":
 				a, ok := variable.Value.([]uint8)
 				if !ok {
 					a = []uint8(PrintMIBStringVal(variable.Value))
