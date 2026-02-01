@@ -194,6 +194,8 @@ RADIUS-ACCT-SERVER-MIB.mib
 RADIUS-STAT-MIB.mib
 SYSAPPL-MIB.mib
 LLDP-MIB.mib
+P-BRIDGE-MIB.mib
+Q-BRIDGE-MIB.mib
 `
 
 func loadMIBsFromFS(fs http.FileSystem) {
