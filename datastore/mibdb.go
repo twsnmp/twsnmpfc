@@ -196,6 +196,7 @@ SYSAPPL-MIB.mib
 LLDP-MIB.mib
 P-BRIDGE-MIB.mib
 Q-BRIDGE-MIB.mib
+U-BRIDGE-MIB.mib
 `
 
 func loadMIBsFromFS(fs http.FileSystem) {
