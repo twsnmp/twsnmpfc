@@ -62,14 +62,6 @@
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-menu offset-y>
-          <template #activator="{ on, attrs }">
-            <v-btn color="primary" dark v-bind="attrs" v-on="on">
-              <v-icon>mdi-chart-line</v-icon>
-              グラフと集計
-            </v-btn>
-          </template>
-        </v-menu>
         <download-excel
           :fetch="makeExports"
           type="csv"
