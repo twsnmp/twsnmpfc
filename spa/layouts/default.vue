@@ -404,8 +404,13 @@ export default {
         },
         {
           icon: 'mdi-format-list-bulleted-type',
-          title: 'アドレス一覧',
+          title: 'IPv4アドレス一覧',
           to: '/report/ipreport',
+        },
+        {
+          icon: 'mdi-format-list-bulleted-type',
+          title: 'IPv6アドレス一覧',
+          to: '/report/ipv6report',
         },
       ],
       userMenus: [

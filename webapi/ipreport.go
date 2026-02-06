@@ -23,6 +23,41 @@ func getIPReport(c echo.Context) error {
 	return c.JSON(http.StatusOK, r)
 }
 
+type WebAPIIPv6Ent struct {
+	Node   string
+	IPv4   string
+	IPv6   string
+	MAC    string
+	Vendor string
+}
+
+func getIPv6Report(c echo.Context) error {
+	r := []*WebAPIIPv6Ent{}
+	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
+		if n.IPv6 != "" {
+			ipv6s := strings.Split(n.IPv6, ",")
+			mac := n.MAC
+			vendor := ""
+			if idx := strings.Index(mac, "("); idx > 0 {
+				vendor = mac[idx+1:]
+				vendor = strings.TrimSuffix(vendor, ")")
+				mac = mac[:idx]
+			}
+			for _, ipv6 := range ipv6s {
+				r = append(r, &WebAPIIPv6Ent{
+					Node:   n.Name,
+					IPv4:   n.IP,
+					IPv6:   ipv6,
+					MAC:    mac,
+					Vendor: vendor,
+				})
+			}
+		}
+		return true
+	})
+	return c.JSON(http.StatusOK, r)
+}
+
 func deleteIPReport(c echo.Context) error {
 	ip := c.Param("ip")
 	if ip == "all" {
