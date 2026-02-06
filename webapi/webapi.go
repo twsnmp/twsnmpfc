@@ -271,6 +271,10 @@ func setup(p *WebAPI) {
 	r.POST("/report/sdrPower/delete", deleteSdrPower)
 	r.GET("/report/MotionSensor", getMotionSensor)
 	r.DELETE("/report/MotionSensor/:id", deleteMotionSensor)
+	r.GET("/report/ifPortTable", getIfPortTable)
+	r.DELETE("/report/ifPortTable/:id", deleteIfPortTable)
+	r.GET("/report/fdbTable", getFDBTable)
+	r.DELETE("/report/fdbTable/:id", deleteFDBTable)
 	// AI
 	r.GET("/report/ailist", getAIList)
 	r.GET("/report/ai/:id", getAIResult)

@@ -31,6 +31,7 @@ type NetworkEnt struct {
 	URL       string
 	ArpWatch  bool
 	Unmanaged bool
+	PortWatch bool
 	HPorts    int
 	X         int
 	Y         int

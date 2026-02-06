@@ -475,6 +475,12 @@
             </v-col>
             <v-col>
               <v-switch
+                v-model="editNetwork.PortWatch"
+                label="ポート監視"
+              ></v-switch>
+            </v-col>
+            <v-col>
+              <v-switch
                 v-model="editNetwork.ArpWatch"
                 label="ARP監視"
               ></v-switch>
@@ -2310,6 +2316,7 @@ export default {
         Error: '',
         LLDP: false,
         Unmanaged: false,
+        PortWatch: false,
       }
       this.totalPorts = 8
       this.editNetworkDialog = true

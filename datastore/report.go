@@ -38,6 +38,8 @@ func LoadReport() error {
 		loadPowerMonitor(r)
 		loadMotionSensor(r)
 		loadFumbleFlows(r)
+		loadIfPortTable(r)
+		loadFDBTable(r)
 		return nil
 	})
 }
@@ -73,6 +75,8 @@ func SaveReport(last int64) error {
 		savePowerMonitor(b, last)
 		saveMotionSensor(b, last)
 		saveFumbleFlows(b, last)
+		saveIfPortTable(b)
+		saveFDBTable(b)
 		log.Printf("SaveReport dur=%v", time.Since(st))
 		return nil
 	})
@@ -103,11 +107,16 @@ var reportNameToMap = map[string]*sync.Map{
 	"wifiAP":       &wifiAP,
 	"powerMonitor": &powerMonitor,
 	"motionSensor": &motionSensor,
+	"ifPortTable":  &ifPortTable,
+	"fdbTable":     &fdbTable,
 }
 
 func DeleteReport(report string, ids []string) error {
 	if db == nil {
 		return ErrDBNotOpen
+	}
+	if _, ok := reportNameToMap[report]; !ok {
+		return nil
 	}
 	st := time.Now()
 	db.Batch(func(tx *bbolt.Tx) error {

@@ -385,6 +385,16 @@ export default {
           title: 'Wifi AP',
           to: '/report/wifiAP',
         },
+        {
+          icon: ' mdi-format-list-bulleted',
+          title: 'FDBテーブル',
+          to: '/report/fdbTable',
+        },
+        {
+          icon: 'mdi-lan',
+          title: 'Portテーブル',
+          to: '/report/ifPortTable',
+        },
       ],
       ipamMenus: [
         {

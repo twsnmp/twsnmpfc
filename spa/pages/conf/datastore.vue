@@ -300,6 +300,8 @@ export default {
         { text: 'Bluetoothデバイス', value: 'report/BlueDevice/all' },
         { text: '環境センサー', value: 'report/EnvMonitor/all' },
         { text: 'センサー', value: 'report/sensor/all' },
+        { text: 'FDBテーブル', value: 'report/fdbTable/all' },
+        { text: 'Portテーブル', value: 'report/ifPortTable/all' },
         { text: 'OpenTelemetryデータ', value: 'otel/alldata' },
       ],
       cleanupDialog: false,

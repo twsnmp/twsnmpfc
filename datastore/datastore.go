@@ -303,7 +303,7 @@ func initDB() error {
 		"winEventID", "winLogon", "winAccount", "winKerberos",
 		"winPrivilege", "winProcess", "winTask",
 		"wifiAP", "blueDevice", "envMonitor", "powerMonitor",
-		"sdrPower", "motionSensor",
+		"sdrPower", "motionSensor", "ifPortTable", "fdbTable",
 	}
 	initConf()
 	return db.Update(func(tx *bbolt.Tx) error {
