@@ -1,6 +1,10 @@
 package datastore
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/gosnmp/gosnmp"
+)
 
 func TestPrintHintedMIBIntVal(t *testing.T) {
 	tests := []struct {
@@ -23,5 +27,19 @@ func TestPrintHintedMIBIntVal(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("PrintHintedMIBIntVal(%d, %q, %v) = %q, want %q", tt.val, tt.hint, tt.us, got, tt.want)
 		}
+	}
+}
+
+func TestGetMIBValueString(t *testing.T) {
+	// 1 day + 1 second = 86400*100 + 1*100 = 8640000 + 100 = 8640100 ticks
+	ticks := uint32(8640100)
+	pdu := gosnmp.SnmpPDU{
+		Type:  gosnmp.TimeTicks,
+		Value: ticks,
+	}
+	got := GetMIBValueString("test", &pdu, false)
+	want := "8640100(1 days, 1s)"
+	if got != want {
+		t.Errorf("GetMIBValueString(TimeTicks) = %q, want %q", got, want)
 	}
 }

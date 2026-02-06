@@ -897,8 +897,8 @@ func GetMIBValueString(name string, variable *gosnmp.SnmpPDU, raw bool) string {
 		} else {
 			if t > (24 * 3600 * 100) {
 				d := t / (24 * 3600 * 100)
-				t -= d * (24 * 3600 * 100)
-				value = fmt.Sprintf("%d(%d days, %v)", t, d, time.Duration(t*10*uint64(time.Millisecond)))
+				r := t - d*(24*3600*100)
+				value = fmt.Sprintf("%d(%d days, %v)", t, d, time.Duration(r*10*uint64(time.Millisecond)))
 			} else {
 				value = fmt.Sprintf("%d(%v)", t, time.Duration(t*10*uint64(time.Millisecond)))
 			}
