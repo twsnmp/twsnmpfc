@@ -145,7 +145,6 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 	if err == nil && len(n.Ports) > 0 {
 		n.LLDP = true
 		datastore.UpdateNetwork(n)
-		log.Printf("found network %+v", n)
 		return
 	}
 	// LLDP-MIBの未対応の場合
@@ -223,7 +222,6 @@ func getNetworkPorts(n *datastore.NetworkEnt) {
 		}
 	}
 	if len(n.Ports) > 0 {
-		log.Printf("found network %+v", n)
 		datastore.UpdateNetwork(n)
 	}
 }
@@ -316,7 +314,6 @@ func FindNeighborNetworksAndLines(n *datastore.NetworkEnt) *FindNeighborNetworks
 			// 登録済みならラインの候補に
 			for _, rp := range rnr.Ports {
 				for _, frp := range rn.Ports {
-					log.Printf("rp=%+v frp=%+v", rp, frp)
 					if frp.ID == rp.ID {
 						for _, lp := range n.Ports {
 							if lp.Index == frp.Index {
@@ -629,7 +626,6 @@ func checkNetworkIfPorts(n *datastore.NetworkEnt, agent *gosnmp.GoSNMP) {
 				}
 				p.Changed = e.Changed
 				if p.LastChangedTime > e.LastChangedTime+2*1000*1000*1000 || p.LastChangedTime < e.LastChangedTime-2*1000*1000*1000 {
-					log.Printf("lastChange %+v != %+v ", p, e)
 					p.Changed++
 				} else {
 					p.LastChangedTime = e.LastChangedTime
@@ -775,7 +771,6 @@ func indexToMacAddress(a []string) (string, error) {
 }
 
 func checkNetworkArpWatch(agent *gosnmp.GoSNMP) {
-	log.Printf("arp watch")
 	arpMap := make(map[string]string)
 	err := agent.Walk(datastore.MIBDB.NameToOID("ipNetToMediaPhysAddress"), func(variable gosnmp.SnmpPDU) error {
 		a := strings.SplitN(datastore.MIBDB.OIDToName(variable.Name), ".", 2)
