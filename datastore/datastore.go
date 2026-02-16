@@ -377,4 +377,9 @@ func checkImageIcons() {
 			ImageIcons = append(ImageIcons, filepath.Base(p))
 		}
 	}
+	if files, err := filepath.Glob(filepath.Join(dspath, "icons", "*.svg")); err == nil {
+		for _, p := range files {
+			ImageIcons = append(ImageIcons, filepath.Base(p))
+		}
+	}
 }

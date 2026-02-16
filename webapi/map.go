@@ -3,6 +3,7 @@ package webapi
 import (
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -149,6 +150,9 @@ func getImage(c echo.Context) error {
 		return echo.ErrNotFound
 	}
 	ct := http.DetectContentType(img)
+	if strings.HasSuffix(path, ".svg") {
+		ct = "image/svg+xml"
+	}
 	return c.Blob(http.StatusOK, ct, img)
 }
 
@@ -196,5 +200,8 @@ func getImageIcon(c echo.Context) error {
 		return echo.ErrNotFound
 	}
 	ct := http.DetectContentType(img)
+	if strings.HasSuffix(id, ".svg") {
+		ct = "image/svg+xml"
+	}
 	return c.Blob(http.StatusOK, ct, img)
 }

@@ -459,26 +459,28 @@ const mapMain = (p5) => {
       p5.push()
       p5.translate(nodes[k].X, nodes[k].Y)
       if(nodes[k].Image && imageMap[nodes[k].Image]) {
-        const w = 48 + 16
-        const h = imageMap[nodes[k].Image].height + 16 + fontSize
+        const img = imageMap[nodes[k].Image]
+        const imgW = 48
+        const imgH = img.width > 0 ? imgW * (img.height / img.width) : imgW
+        const w = imgW + 16
+        const h = imgH + 16 + fontSize
         if (selectedNodes.includes(nodes[k].ID)) {
           p5.fill('rgba(23,23,23,0.9)')
           p5.stroke(getStateColor(nodes[k].State))
           p5.rect(-w / 2, -h / 2, w, h)
         } else {
-          const w = 40
           p5.fill('rgba(23,23,23,0.9)')
           p5.stroke('rgba(23,23,23,0.9)')
           p5.rect(-w / 2 , -h / 2, w, h)
         }
         p5.tint(getStateColor(nodes[k].State))
-        p5.image(imageMap[nodes[k].Image],-24,-h/2 + 10,48)
+        p5.image(img,-imgW/2,-h/2 + 10,imgW,imgH)
         p5.noTint()
         p5.textAlign(p5.CENTER, p5.CENTER);
         p5.textFont("Roboto")
         p5.textSize(fontSize)
         p5.fill(250)
-        p5.text(nodes[k].Name, 0, imageMap[nodes[k].Image].height - 4)
+        p5.text(nodes[k].Name, 0, imgH / 2 + fontSize / 2)
       } else {
         if (selectedNodes.includes(nodes[k].ID)) {
           const w = iconSize + 16
