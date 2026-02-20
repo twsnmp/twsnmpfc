@@ -18,12 +18,8 @@ func GetLLM(ctx context.Context) (llms.Model, error) {
 		if MapConf.LLMBaseURL != "" {
 			baseURL = MapConf.LLMBaseURL
 		}
-		modelName := "qwen3:latest"
-		if MapConf.LLMModel != "" {
-			modelName = MapConf.LLMModel
-		}
 		return ollama.New(
-			ollama.WithModel(modelName),
+			ollama.WithModel(MapConf.LLMModel),
 			ollama.WithServerURL(baseURL),
 		)
 	case "gemini", "googleai":

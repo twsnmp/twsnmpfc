@@ -66,6 +66,9 @@
           <v-icon small color="red" @click="showSNMPSet(item)">
             mdi-send
           </v-icon>
+          <v-icon small color="orange" @click="askLLMOne(item)">
+            mdi-brain
+          </v-icon>
         </template>
       </v-data-table>
       <v-snackbar v-model="copyError" absolute centered color="error">
@@ -1053,6 +1056,25 @@ export default {
           this.copyError = true
         }
       )
+    },
+    async askLLMOne(e) {
+      this.llmAskMIBDialog = true
+      this.llmAskMIBError = ''
+      this.llmAskMIBWait = true
+      try {
+        const r = await this.$axios.$post('/api/llmAskMIB', {
+          Prompt: e.Name + '=' + e.Value,
+        })
+        if (r.Error) {
+          this.llmAskMIBError = r.Error
+          return
+        }
+        this.llmAskMIBResult = DOMPurify.sanitize(marked(r.Results))
+      } catch (e) {
+        this.llmAskMIBError = e
+      } finally {
+        this.llmAskMIBWait = false
+      }
     },
     showSNMPSet(e) {
       this.mibset.Name = e.Name
