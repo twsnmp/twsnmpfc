@@ -340,6 +340,25 @@
               ></v-switch>
             </v-col>
           </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="mapconf.LLMProvider"
+                :items="llmProviderList"
+                label="LLM プロバイダー"
+              >
+              </v-select>
+            </v-col>
+            <v-col>
+              <v-text-field v-model="mapconf.LLMBaseURL" label="LLM Base URL" />
+            </v-col>
+            <v-col>
+              <v-text-field v-model="mapconf.LLMAPIKey" label="LLM APIキー" />
+            </v-col>
+            <v-col>
+              <v-text-field v-model="mapconf.LLMModel" label="LLM モデル" />
+            </v-col>
+          </v-row>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -645,6 +664,10 @@ export default {
         EnableOTel: false,
         EnableMqtt: false,
         MqttToSyslog: false,
+        LLMProvider: '',
+        LLMBaseURL: '',
+        LLMAPIKey: '',
+        LLMModel: '',
       },
       fontSizeList: [
         { text: '小さい', value: 10 },
@@ -664,6 +687,13 @@ export default {
         { text: '普通', value: 32 },
         { text: '大きい', value: 48 },
         { text: 'すごく大きい', value: 64 },
+      ],
+      llmProviderList: [
+        { text: '使用しない', value: '' },
+        { text: 'ollama', value: 'ollama' },
+        { text: 'Open AI', value: 'openai' },
+        { text: 'Google(Gemini)', value: 'gemini' },
+        { text: 'Anthropic(Claude)', value: 'anthropic' },
       ],
       backImage: {
         X: 0,

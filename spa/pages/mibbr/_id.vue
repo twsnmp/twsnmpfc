@@ -137,6 +137,15 @@
           <v-icon>mdi-file-tree</v-icon>
           結果MIBツリー
         </v-btn>
+        <v-btn
+          v-if="mibs.length > 0 && hasLLM"
+          color="orange"
+          dark
+          @click="askLLM"
+        >
+          <v-icon>mdi-brain</v-icon>
+          AIの解説
+        </v-btn>
         <v-btn color="info" dark @click="mibTreeDialog = true">
           <v-icon>mdi-file-tree</v-icon>
           MIBツリー
@@ -209,6 +218,15 @@
             <v-icon>mdi-file-tree</v-icon>
             {{ mibTreeOpened ? 'MIBツリーを閉じる' : 'MIBツリーを開く' }}
           </v-btn>
+          <v-btn
+            v-if="hasLLM"
+            color="orange"
+            dark
+            @click="llmMIBSearchDialog = true"
+          >
+            <v-icon> mdi-brain</v-icon>
+            AIに聞く
+          </v-btn>
           <v-btn color="primary" dark @click="doMIBGet">
             <v-icon>mdi-file-find</v-icon>
             取得
@@ -216,6 +234,60 @@
           <v-btn color="normal" dark @click="mibTreeDialog = false">
             <v-icon>mdi-cancel</v-icon>
             キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="llmMIBSearchDialog" persistent width="70vw">
+      <v-card max-height="95%">
+        <v-card-title> AIによるMIBオブジェクト名検索 </v-card-title>
+        <v-alert v-if="llmMIBSearchError" color="error" dense dismissible>
+          {{ llmMIBSearchError }}
+        </v-alert>
+        <v-card-text v-if="llmMIBSearchWait">
+          <v-progress-linear indeterminate height="50" color="orange">
+            <small class="text-white">AIが考えています...</small>
+          </v-progress-linear>
+        </v-card-text>
+        <v-card-text v-if="!llmMIBSearchWait">
+          <v-text-field
+            v-model="llmMIBSeach.Prompt"
+            label="オブジェクト名検索のプロンプト"
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="doLLMMIBSearch">
+            <v-icon>mdi-file-find</v-icon>
+            検索
+          </v-btn>
+          <v-btn color="normal" dark @click="llmMIBSearchDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="llmAskMIBDialog" persistent width="70vw">
+      <v-card max-height="95%">
+        <v-card-title> AIの解説 </v-card-title>
+        <v-alert v-if="llmAskMIBError" color="error" dense dismissible>
+          {{ llmAskMIBError }}
+        </v-alert>
+        <v-card-text v-if="llmAskMIBWait">
+          <v-progress-linear indeterminate height="50" color="orange">
+            <small class="text-white">AIが考えています...</small>
+          </v-progress-linear>
+        </v-card-text>
+        <v-card-text v-if="!llmAskMIBWait" class="llm-result-text">
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div class="markdown-body" v-html="llmAskMIBResult"></div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="llmAskMIBDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -528,6 +600,8 @@ import { highlight, languages } from 'prismjs/components/prism-core'
 import 'prismjs/components/prism-clike'
 import 'prismjs/components/prism-javascript'
 import 'prismjs/themes/prism-tomorrow.css'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 export default {
   components: {
     PrismEditor,
@@ -610,6 +684,17 @@ export default {
         { text: 'INTEGER', value: 'integer' },
         { text: 'String', value: 'string' },
       ],
+      hasLLM: false,
+      llmMIBSearchDialog: false,
+      llmMIBSearchWait: false,
+      llmMIBSearchError: '',
+      llmAskMIBDialog: false,
+      llmAskMIBWait: false,
+      llmAskMIBError: '',
+      llmAskMIBResult: '',
+      llmMIBSeach: {
+        Prompt: '',
+      },
     }
   },
   async fetch() {
@@ -621,6 +706,7 @@ export default {
     this.mibget.NodeID = r.Node.ID
     this.mibset.NodeID = r.Node.ID
     this.mibtree = r.MIBTree
+    this.hasLLM = r.HasLLM
     if (this.extractorList.length < 1) {
       this.extractorList = this.$extractorList
       const groks = await this.$axios.$get('/api/conf/grok')
@@ -985,6 +1071,37 @@ export default {
       this.snmpSetError = true
       this.snmpSetErrorMsg = r
     },
+    async doLLMMIBSearch() {
+      this.llmMIBSearchError = ''
+      this.llmMIBSearchWait = true
+      const r = await this.$axios.$post('/api/llmMIBSearch', this.llmMIBSeach)
+      this.llmMIBSearchWait = false
+      if (r.Error) {
+        this.llmMIBSearchError = r.Error
+        return
+      }
+      this.searchMIBTree = r.ObjectName
+      this.mibget.Name = r.ObjectName
+      this.llmMIBSearchDialog = false
+    },
+    async askLLM() {
+      this.llmAskMIBDialog = true
+      const a = []
+      this.mibs.forEach((e) => {
+        a.push(e.Name + '=' + e.Value)
+      })
+      this.llmAskMIBError = ''
+      this.llmAskMIBWait = true
+      const r = await this.$axios.$post('/api/llmAskMIB', {
+        Prompt: a.join('\n'),
+      })
+      this.llmAskMIBWait = false
+      if (r.Error) {
+        this.llmAskMIBError = r.Error
+        return
+      }
+      this.llmAskMIBResult = DOMPurify.sanitize(marked(r.Results))
+    },
     addPolling(e) {
       const n = e.Name.split('.')[0] || ''
       if (n === '') {
@@ -1184,5 +1301,88 @@ export default {
 <style>
 .mibbr td {
   word-wrap: break-word;
+}
+
+.llm-result-text {
+  height: 60vh;
+  overflow-y: auto;
+}
+
+.markdown-body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-size: 16px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  border-bottom: 1px solid #eee;
+}
+
+.markdown-body p {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.markdown-body code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(27, 31, 35, 0.05);
+  border-radius: 3px;
+}
+
+.markdown-body pre {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #f6f8fa;
+  border-radius: 3px;
+}
+
+.markdown-body pre code {
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 2em;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.markdown-body table {
+  display: block;
+  width: 100%;
+  overflow: auto;
+  margin-top: 0;
+  margin-bottom: 16px;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 6px 13px;
+  border: 1px solid #dfe2e5;
+}
+
+.markdown-body table tr {
+  background-color: #fff;
+  border-top: 1px solid #c6cbd1;
+}
+
+.markdown-body table tr:nth-child(2n) {
+  background-color: #f6f8fa;
 }
 </style>

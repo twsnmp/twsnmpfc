@@ -25,23 +25,22 @@ type backImage struct {
 
 // MapConfEnt :  マップ設定
 type MapConfEnt struct {
-	MapName      string
-	BackImage    backImage
-	UserID       string
-	Password     string
-	PollInt      int
-	Timeout      int
-	Retry        int
-	LogDays      int
-	LogDispSize  int
-	LogTimeout   int
-	SnmpMode     string
-	Community    string
-	SnmpUser     string
-	SnmpPassword string
-	PublicKey    string
-	PrivateKey   string
-	//	TLSCert        string
+	MapName         string
+	BackImage       backImage
+	UserID          string
+	Password        string
+	PollInt         int
+	Timeout         int
+	Retry           int
+	LogDays         int
+	LogDispSize     int
+	LogTimeout      int
+	SnmpMode        string
+	Community       string
+	SnmpUser        string
+	SnmpPassword    string
+	PublicKey       string
+	PrivateKey      string
 	EnableSyslogd   bool
 	EnableTrapd     bool
 	EnableNetflowd  bool
@@ -65,6 +64,11 @@ type MapConfEnt struct {
 	ArpWatchRange   string
 	OTelRetention   int
 	OTelFrom        string
+	// LLM
+	LLMProvider string
+	LLMBaseURL  string
+	LLMAPIKey   string
+	LLMModel    string
 }
 
 func initConf() {

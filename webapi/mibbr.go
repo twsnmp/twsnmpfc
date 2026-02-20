@@ -16,6 +16,7 @@ import (
 
 type mibbrWebAPI struct {
 	Node    *datastore.NodeEnt
+	HasLLM  bool
 	MIBTree *[]*datastore.MIBTreeEnt
 }
 
@@ -35,6 +36,7 @@ func getMIBBr(c echo.Context) error {
 		r.Node = datastore.GetNode(id)
 	}
 	r.MIBTree = &datastore.MIBTree
+	r.HasLLM = datastore.MapConf.LLMProvider != ""
 	if r.Node == nil {
 		return echo.ErrBadRequest
 	}

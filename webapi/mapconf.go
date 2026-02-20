@@ -52,6 +52,10 @@ func getMapConf(c echo.Context) error {
 	r.ArpWatchRange = datastore.MapConf.ArpWatchRange
 	r.OTelFrom = datastore.MapConf.OTelFrom
 	r.OTelRetention = datastore.MapConf.OTelRetention
+	r.LLMProvider = datastore.MapConf.LLMProvider
+	r.LLMBaseURL = datastore.MapConf.LLMBaseURL
+	r.LLMAPIKey = datastore.MapConf.LLMAPIKey
+	r.LLMModel = datastore.MapConf.LLMModel
 	if r.IconSize == 0 {
 		r.IconSize = 32
 	}
@@ -109,6 +113,10 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.EnableSflowd = mc.EnableSflowd
 	datastore.MapConf.OTelRetention = mc.OTelRetention
 	datastore.MapConf.OTelFrom = mc.OTelFrom
+	datastore.MapConf.LLMProvider = mc.LLMProvider
+	datastore.MapConf.LLMBaseURL = mc.LLMBaseURL
+	datastore.MapConf.LLMAPIKey = mc.LLMAPIKey
+	datastore.MapConf.LLMModel = mc.LLMModel
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}
