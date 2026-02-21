@@ -1366,7 +1366,7 @@ export default {
   overflow: auto;
   font-size: 85%;
   line-height: 1.45;
-  background-color: #f6f8fa;
+  background-color: #333;
   border-radius: 3px;
 }
 
@@ -1400,11 +1400,6 @@ export default {
 }
 
 .markdown-body table tr {
-  background-color: #fff;
   border-top: 1px solid #c6cbd1;
-}
-
-.markdown-body table tr:nth-child(2n) {
-  background-color: #f6f8fa;
 }
 </style>

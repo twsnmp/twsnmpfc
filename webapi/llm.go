@@ -11,8 +11,13 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
-type llmMIBSearchReq struct {
+type llmReq struct {
 	Prompt string
+}
+
+type llmResp struct {
+	Results string
+	Error   string
 }
 
 type llmMIBSearchResp struct {
@@ -22,7 +27,7 @@ type llmMIBSearchResp struct {
 }
 
 func postLLMMIBSearch(c echo.Context) error {
-	p := new(llmMIBSearchReq)
+	p := new(llmReq)
 	if err := c.Bind(p); err != nil {
 		log.Printf("postLLMMIBSearch err=%v", err)
 		return echo.ErrBadRequest
@@ -66,39 +71,39 @@ func postLLMMIBSearch(c echo.Context) error {
 	return c.JSON(http.StatusOK, r)
 }
 
-type llmAskMIBReq struct {
-	Prompt string
-}
-
-type llmAskMIBResp struct {
-	Results string
-	Error   string
-}
-
 func postLLMAskMIB(c echo.Context) error {
-	p := new(llmAskMIBReq)
+	return llmAsk(c,
+		`あなたはSNMPのMIBに関する専門家です。
+ユーザーの入力したSNMPの取得結果について解説してください。`)
+}
+
+func postLLMAskLog(c echo.Context) error {
+	return llmAsk(c,
+		`あなたはログ分析に関する専門家です。
+ユーザーの入力したログについて解説してください。`)
+}
+
+func llmAsk(c echo.Context, system string) error {
+	p := new(llmReq)
 	if err := c.Bind(p); err != nil {
-		log.Printf("postLLMAskMIB err=%v", err)
+		log.Printf("llmAsk err=%v", err)
 		return echo.ErrBadRequest
 	}
-	r := new(llmAskMIBResp)
+	r := new(llmResp)
 	ctx := c.Request().Context()
 	llm, err := datastore.GetLLM(ctx)
 	if err != nil {
-		log.Printf("postLLMAskMIB err=%v", err)
+		log.Printf("llmAsk err=%v", err)
 		r.Error = err.Error()
 		return c.JSON(http.StatusOK, r)
 	}
 	history := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageTypeSystem,
-			`あなたはSNMPのMIBに関する専門家です。
-ユーザーの入力したSNMPの取得結果について解説してください。
-`),
+		llms.TextParts(llms.ChatMessageTypeSystem, system),
 		llms.TextParts(llms.ChatMessageTypeHuman, p.Prompt),
 	}
 	resp, err := llm.GenerateContent(ctx, history)
 	if err != nil {
-		log.Printf("postLLMAskMIB err=%v", err)
+		log.Printf("llmAsk err=%v", err)
 		r.Error = err.Error()
 		return c.JSON(http.StatusOK, r)
 	}

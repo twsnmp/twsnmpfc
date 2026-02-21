@@ -37,6 +37,7 @@ type syslogWebAPI struct {
 	Process       int
 	Filter        int
 	Limit         int
+	HasLLM        bool
 }
 
 type syslogWebAPILogEnt struct {
@@ -151,6 +152,7 @@ func postSyslog(c echo.Context) error {
 			}
 		}
 	}
+	r.HasLLM = datastore.MapConf.LLMProvider != ""
 	r.NextTime = 0
 	r.Process = 0
 	r.Filter = filter.Filter
