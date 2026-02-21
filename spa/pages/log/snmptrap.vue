@@ -21,6 +21,9 @@
       >
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="editPolling(item)"> mdi-card-plus </v-icon>
+          <v-icon small color="orange" @click="askLLM(item)">
+            mdi-brain
+          </v-icon>
         </template>
         <template #[`body.append`]>
           <tr>
@@ -358,6 +361,30 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="llmAskDialog" persistent width="70vw">
+      <v-card max-height="95%">
+        <v-card-title> AIの解説 </v-card-title>
+        <v-alert v-if="llmAskError" color="error" dense dismissible>
+          {{ llmAskError }}
+        </v-alert>
+        <v-card-text v-if="llmAskWait">
+          <v-progress-linear indeterminate height="50" color="orange">
+            <small class="text-white">AIが考えています...</small>
+          </v-progress-linear>
+        </v-card-text>
+        <v-card-text v-if="!llmAskWait" class="llm-result-text">
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div class="markdown-body" v-html="llmAskResult"></div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="normal" dark @click="llmAskDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -369,6 +396,8 @@ import 'prismjs/components/prism-clike'
 import 'prismjs/components/prism-javascript'
 import 'prismjs/components/prism-regex'
 import 'prismjs/themes/prism-tomorrow.css'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
 export default {
   components: {
@@ -448,6 +477,10 @@ export default {
       polling: {},
       nodeList: [],
       addPollingDone: false,
+      llmAskDialog: false,
+      llmAskWait: false,
+      llmAskError: '',
+      llmAskResult: '',
     }
   },
   async fetch() {
@@ -585,6 +618,33 @@ export default {
         keyword: /\b(?:false|true|up|down)\b/,
       })
     },
+    async askLLM(e) {
+      this.llmAskDialog = true
+      this.llmAskError = ''
+      this.llmAskWait = true
+      try {
+        const r = await this.$axios.$post('/api/llmAskLog', {
+          Prompt:
+            '以下はSNMP TRAPのログです。\n' +
+            e.TimeStr +
+            ' FromAddress=' +
+            e.FromAddress +
+            ' TrapType=' +
+            e.TrapType +
+            ' Variables=' +
+            e.Variables,
+        })
+        if (r.Error) {
+          this.llmAskError = r.Error
+          return
+        }
+        this.llmAskResult = DOMPurify.sanitize(marked(r.Results))
+      } catch (e) {
+        this.llmAskError = e
+      } finally {
+        this.llmAskWait = false
+      }
+    },
   },
 }
 </script>
@@ -601,5 +661,83 @@ export default {
   overflow: auto;
   margin-top: 5px;
   margin-bottom: 5px;
+}
+
+.llm-result-text {
+  height: 60vh;
+  overflow-y: auto;
+}
+
+.markdown-body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial,
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-size: 16px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  border-bottom: 1px solid #eee;
+}
+
+.markdown-body p {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.markdown-body code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(27, 31, 35, 0.05);
+  border-radius: 3px;
+}
+
+.markdown-body pre {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #333;
+  border-radius: 3px;
+}
+
+.markdown-body pre code {
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 2em;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.markdown-body table {
+  display: block;
+  width: 100%;
+  overflow: auto;
+  margin-top: 0;
+  margin-bottom: 16px;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 6px 13px;
+  border: 1px solid #dfe2e5;
+}
+
+.markdown-body table tr {
+  border-top: 1px solid #c6cbd1;
 }
 </style>
