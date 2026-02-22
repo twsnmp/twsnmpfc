@@ -353,7 +353,12 @@
               <v-text-field v-model="mapconf.LLMBaseURL" label="LLM Base URL" />
             </v-col>
             <v-col>
-              <v-text-field v-model="mapconf.LLMAPIKey" label="LLM APIキー" />
+              <v-text-field
+                v-model="mapconf.LLMAPIKey"
+                type="password"
+                autocomplete="new-password"
+                label="LLM APIキー"
+              />
             </v-col>
             <v-col>
               <v-text-field v-model="mapconf.LLMModel" label="LLM モデル" />
