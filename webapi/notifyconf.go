@@ -25,6 +25,7 @@ func getNotifyConf(c echo.Context) error {
 	r.Interval = datastore.NotifyConf.Interval
 	r.Level = datastore.NotifyConf.Level
 	r.Report = datastore.NotifyConf.Report
+	r.ReportLLMSummary = datastore.NotifyConf.ReportLLMSummary
 	r.CheckUpdate = datastore.NotifyConf.CheckUpdate
 	r.NotifyRepair = datastore.NotifyConf.NotifyRepair
 	r.NotifyLowScore = datastore.NotifyConf.NotifyLowScore
@@ -66,6 +67,7 @@ func postNotifyConf(c echo.Context) error {
 	datastore.NotifyConf.Interval = nc.Interval
 	datastore.NotifyConf.Level = nc.Level
 	datastore.NotifyConf.Report = nc.Report
+	datastore.NotifyConf.ReportLLMSummary = nc.ReportLLMSummary
 	datastore.NotifyConf.CheckUpdate = nc.CheckUpdate
 	datastore.NotifyConf.NotifyRepair = nc.NotifyRepair
 	datastore.NotifyConf.NotifyLowScore = nc.NotifyLowScore

@@ -114,6 +114,14 @@
         {{ .Title }}
       </td>
     </tr>
+    {{ if .LLMSummary }}
+    <tr class="content">
+      <td style="padding:5px 20px;">
+        <h3>【AIの要約】</h3>
+        <pre style="font-size: 0.9em; background-color: #f8f8f8; padding: 10px; border-radius: 5px; white-space: pre-wrap; word-break: break-word;">{{ .LLMSummary  }}</pre>
+      </td>
+    </tr>
+    {{ end }}
     <tr class="content">
       <td style="padding:5px 20px;">
         <h3>【マップ情報】</h3>

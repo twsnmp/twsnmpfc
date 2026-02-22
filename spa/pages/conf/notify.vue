@@ -235,6 +235,14 @@
             </v-col>
             <v-col>
               <v-switch
+                v-if="notify.Report"
+                v-model="notify.ReportLLMSummary"
+                label="AIの要約"
+                dense
+              ></v-switch>
+            </v-col>
+            <v-col>
+              <v-switch
                 v-model="notify.CheckUpdate"
                 label="更新版を確認する"
                 dense

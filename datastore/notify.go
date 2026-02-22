@@ -26,6 +26,7 @@ type NotifyConfEnt struct {
 	Interval           int
 	Level              string
 	Report             bool
+	ReportLLMSummary   bool
 	CheckUpdate        bool
 	NotifyRepair       bool
 	NotifyLowScore     bool

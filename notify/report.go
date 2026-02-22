@@ -3,6 +3,7 @@ package notify
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"log"
@@ -10,6 +11,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/tmc/langchaingo/llms"
 
 	"github.com/dustin/go-humanize"
 	"github.com/montanaflynn/stats"
@@ -26,6 +29,10 @@ func sendReport() {
 
 func sendReportPlain() {
 	body := []string{}
+	if datastore.NotifyConf.ReportLLMSummary {
+		body = append(body, "【AIの要約】")
+		body = append(body, getLLMSummary())
+	}
 	body = append(body, "【現在のマップ情報】")
 	body = append(body, getMapInfo(false)...)
 	body = append(body, "")
@@ -37,7 +44,7 @@ func sendReportPlain() {
 	body = append(body, "")
 	logSum, logs, _ := getLastEventLog()
 	body = append(body, "【最新24時間のログ集計】")
-	body = append(body, logSum...)
+	body = append(body, logSum)
 	body = append(body, "")
 	body = append(body, "【センサー情報】")
 	body = append(body, getSensorInfo()...)
@@ -95,8 +102,7 @@ func sendReportPlain() {
 	}
 }
 
-func getLastEventLog() ([]string, []string, []*datastore.EventLogEnt) {
-	sum := []string{}
+func getLastEventLog() (string, []string, []*datastore.EventLogEnt) {
 	slogs := []string{}
 	logs := []*datastore.EventLogEnt{}
 	high := 0
@@ -129,8 +135,7 @@ func getLastEventLog() ([]string, []string, []*datastore.EventLogEnt) {
 		logs = append(logs, l)
 		return true
 	})
-	sum = append(sum,
-		fmt.Sprintf("重度=%d,軽度=%d,注意=%d,正常=%d,その他=%d", high, low, warn, normal, other))
+	sum := fmt.Sprintf("重度=%d,軽度=%d,注意=%d,正常=%d,その他=%d", high, low, warn, normal, other)
 	return sum, slogs, logs
 }
 
@@ -754,7 +759,7 @@ func sendReportHTML() {
 	if len(logSum) > 0 {
 		info = append(info, reportInfoEnt{
 			Name:  "状態別のログ数",
-			Value: logSum[0],
+			Value: logSum,
 			Class: "none",
 		})
 	}
@@ -781,6 +786,10 @@ func sendReportHTML() {
 		log.Printf("send report mail err=%v", err)
 		return
 	}
+	llmSummary := ""
+	if datastore.NotifyConf.ReportLLMSummary {
+		llmSummary = getLLMSummary()
+	}
 	body := new(bytes.Buffer)
 	if err = t.Execute(body, map[string]interface{}{
 		"Title":          title,
@@ -799,6 +808,7 @@ func sendReportHTML() {
 		"AIList":         aiList,
 		"NotifyLowScore": datastore.NotifyConf.NotifyLowScore,
 		"NotifyNewInfo":  datastore.NotifyConf.NotifyNewInfo,
+		"LLMSummary":     llmSummary,
 	}); err != nil {
 		log.Printf("send report mail err=%v", err)
 		datastore.AddEventLog(&datastore.EventLogEnt{
@@ -822,4 +832,92 @@ func sendReportHTML() {
 			Event: "定期レポートメール送信",
 		})
 	}
+}
+
+func getLLMSummary() string {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
+	defer cancel()
+	llm, err := datastore.GetLLM(ctx)
+	if err != nil {
+		return fmt.Sprintf("AIが利用できません。 err=%v", err)
+	}
+	system := `あなたはネットワーク管理の専門家です。
+ユーザーの提供した情報を分析して、わかりやすく要約してください。
+
+【出力形式の厳守事項】
+・メール本文にそのまま貼り付けるため、完全なプレインテキスト形式で作成してください。
+・Markdown形式（「#」による見出し、「*」や「-」による箇条書き、太字装飾など）は一切使用しないでください。
+・特に、強調したい箇所に「**」を使わないでください。
+・項目を分ける場合は、全角の「■」や「・」などの記号、または番号（1. 2.）を使用し、適宜改行を入れてください。
+
+【分析の優先順位】
+・特に問題点について指摘してください。
+・センサーの状態はデータの受信が無い期間が長い順に悪いと判断してください。
+・信用スコアは値が大きいほど信頼度が高いことを示します。
+・AI分析スコアは異常度を示し、高いほど状態が悪いと判断してください。
+
+回答の冒頭に # などの記号を含めないでください。
+`
+	prompts := []string{}
+	prompts = append(prompts, "【現在のマップ情報】")
+	prompts = append(prompts, getMapInfo(false)...)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【データストア情報】")
+	prompts = append(prompts, getDBInfo(false)...)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【システムリソース情報】(Min/Mean/Max)")
+	prompts = append(prompts, getResInfo(false)...)
+	prompts = append(prompts, "")
+	logSum, logs, _ := getLastEventLog()
+	prompts = append(prompts, "【最新24時間のログ集計】")
+	prompts = append(prompts, logSum)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【センサー情報】")
+	prompts = append(prompts, getSensorInfo()...)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【AI分析情報】")
+	prompts = append(prompts, getAIInfo()...)
+	prompts = append(prompts, "")
+	nd, bd := getDeviceReport()
+	nu, bu := getUserReport()
+	nip, bip := getIPReport()
+	prompts = append(prompts, "【48時間以内に新しく発見したデバイス】")
+	prompts = append(prompts, nd...)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【48時間以内に新しく発見したユーザーID】")
+	prompts = append(prompts, nu...)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【24時間以内に新しく発見したIPアドレス】")
+	prompts = append(prompts, nip...)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【24時間以内に新しく発見したWifi AP】")
+	prompts = append(prompts, getWifiAPReport()...)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【24時間以内に新しく発見したBluetooth デバイス】")
+	prompts = append(prompts, getBlueDevcieReport()...)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【最新24時間の障害ログ】")
+	prompts = append(prompts, logs...)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【信用スコアが下位10%のデバイス】")
+	prompts = append(prompts, bd...)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【信用スコアが下位10%のユーザーID】")
+	prompts = append(prompts, bu...)
+	prompts = append(prompts, "")
+	prompts = append(prompts, "【信用スコアが下位1%のIPアドレス】")
+	prompts = append(prompts, bip...)
+	history := []llms.MessageContent{
+		llms.TextParts(llms.ChatMessageTypeSystem, system),
+		llms.TextParts(llms.ChatMessageTypeHuman, strings.Join(prompts, "\n")),
+	}
+	resp, err := llm.GenerateContent(ctx, history)
+	if err != nil {
+		log.Printf("llmAsk err=%v", err)
+		return fmt.Sprintf("AIへの問い合わせがエラーになりました。 err=%v", err)
+	}
+	if len(resp.Choices) < 1 {
+		return "AIから回答がありません。"
+	}
+	return strings.TrimSpace(resp.Choices[0].Content)
 }
