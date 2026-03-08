@@ -78,14 +78,14 @@ func getMap(c echo.Context) error {
 	return c.JSON(http.StatusOK, r)
 }
 
-func setPollingLogValuesForLine(di *datastore.DrawItemEnt) {
+func setPollingLogValuesForLine(di *datastore.DrawItemEnt, varName string, scale float64) {
 	st := time.Now().Add(-time.Hour * 24).UnixNano()
 	et := time.Now().UnixNano()
 	di.Values = []float64{}
 	datastore.ForEachPollingLog(st, et, di.PollingID, func(l *datastore.PollingLogEnt) bool {
-		if v, ok := l.Result[di.VarName]; ok {
+		if v, ok := l.Result[varName]; ok {
 			if val, ok := v.(float64); ok {
-				di.Values = append(di.Values, val)
+				di.Values = append(di.Values, val*scale)
 			}
 		}
 		return true

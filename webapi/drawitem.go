@@ -35,7 +35,8 @@ func checkDrawItem(di *datastore.DrawItemEnt) {
 		default:
 			di.Color = "#1f78b4"
 		}
-		setPollingLogValuesForLine(di)
+		varName, _, scale := autoGetPollingSetting(di, p)
+		setPollingLogValuesForLine(di, varName, scale)
 		return
 	}
 	varName, format, scale := autoGetPollingSetting(di, p)

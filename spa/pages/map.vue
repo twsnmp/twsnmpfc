@@ -353,6 +353,7 @@
           >
           </v-text-field>
           <v-text-field
+            v-if="editItem.Type >= 4"
             v-model="editItem.Scale"
             type="number"
             label="倍率"
