@@ -210,10 +210,10 @@ const setIcon = (e) => {
 }
 
 const delIcon = (icon) => {
-  for( let i = 0; i < iconList.length; i++) {
-    if(iconList[i].value === icon) {
-      iconList.splice(i+1,1)
-      delete(iconMap[icon])
+  for (let i = 0; i < iconList.length; i++) {
+    if (iconList[i].value === icon) {
+      iconList.splice(i, 1)
+      delete iconMap[icon]
       return
     }
   }
@@ -221,9 +221,9 @@ const delIcon = (icon) => {
 
 const timeFormat = (date, format) => {
   if (!format) {
-      format = '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'
+    format = '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}'
   }
-  return echarts.time.format(date,format)
+  return echarts.time.format(date, format)
 }
 
 const getScoreColor = (s) => {
@@ -254,68 +254,68 @@ const getScoreIconName = (s) => {
 
 // Service Name Map
 const serviceNameArray = [
-  ["http/tcp", "WEB"],
-  ["https/tcp", "WEB"],
-  ["ldap/tcp", "LDAP"],
-  ["ldaps/tcp", "LDAP"],
-  ["domain/tcp", "DNS"],
-  ["domain/udp", "DNS"],
-  ["snmp/udp", "SNMP"],
-  ["ntp/udp", "NTP"],
-  ["smtp/tcp", "MAIL"],
-  ["submission/tcp", "MAIL"],
-  ["pop3/tcp", "MAIL"],
-  ["pop3s/tcp", "MAIL"],
-  ["imap/tcp", "MAIL"],
-  ["imap3/tcp", "MAIL"],
-  ["imaps/tcp", "MAIL"],
-  ["ssh/tcp", "SSH"],
-  ["telnet/tcp", "TELNET"],
-  ["ftp/tcp", "FTP"],
-  ["bootps/udp", "DHCP"],
-  ["syslog/udp", "SYSLOG"],
-  ["nfsd/tcp", "NFS"],
-  ["microsoft-ds/tcp", "CIFS"],
-  ["ms-wbt-server/tcp", "RDP"],
-  ["rfb/tcp", "VNC"],
-  ["netbios-ns/udp", "NETBIOS"],
-  ["netbios-dgm/udp", "NETBIOS"],
-  ["kerberos/tcp", "AD"],
-  ["icmp", "ICMP"],
-  ["igmp", "IGMP"],
-  ["wudo/tcp", "WUDO"],
-  ["redis/tcp", "REDIS"],
-  ["radius/udp", "RADIUS"],
-  ["apple-apn/tcp", "APPLE"],
-  ["android/tcp", "ANDROID"],
+  ['http/tcp', 'WEB'],
+  ['https/tcp', 'WEB'],
+  ['ldap/tcp', 'LDAP'],
+  ['ldaps/tcp', 'LDAP'],
+  ['domain/tcp', 'DNS'],
+  ['domain/udp', 'DNS'],
+  ['snmp/udp', 'SNMP'],
+  ['ntp/udp', 'NTP'],
+  ['smtp/tcp', 'MAIL'],
+  ['submission/tcp', 'MAIL'],
+  ['pop3/tcp', 'MAIL'],
+  ['pop3s/tcp', 'MAIL'],
+  ['imap/tcp', 'MAIL'],
+  ['imap3/tcp', 'MAIL'],
+  ['imaps/tcp', 'MAIL'],
+  ['ssh/tcp', 'SSH'],
+  ['telnet/tcp', 'TELNET'],
+  ['ftp/tcp', 'FTP'],
+  ['bootps/udp', 'DHCP'],
+  ['syslog/udp', 'SYSLOG'],
+  ['nfsd/tcp', 'NFS'],
+  ['microsoft-ds/tcp', 'CIFS'],
+  ['ms-wbt-server/tcp', 'RDP'],
+  ['rfb/tcp', 'VNC'],
+  ['netbios-ns/udp', 'NETBIOS'],
+  ['netbios-dgm/udp', 'NETBIOS'],
+  ['kerberos/tcp', 'AD'],
+  ['icmp', 'ICMP'],
+  ['igmp', 'IGMP'],
+  ['wudo/tcp', 'WUDO'],
+  ['redis/tcp', 'REDIS'],
+  ['radius/udp', 'RADIUS'],
+  ['apple-apn/tcp', 'APPLE'],
+  ['android/tcp', 'ANDROID'],
 ]
 
-const serviceNameMap = new Map(serviceNameArray);
+const serviceNameMap = new Map(serviceNameArray)
 
 function getServiceName(s) {
   const ret = serviceNameMap.get(s)
   if (ret) {
     return ret
   }
-  if (s.indexOf("/icmp") > 0) {
-    return "ICMP"
+  if (s.indexOf('/icmp') > 0) {
+    return 'ICMP'
   }
   return 'Other'
 }
 
 function getServiceInfo(services) {
-  const sns = new Map();
+  const sns = new Map()
   for (let i = 0; i < services.length; i++) {
-    const n = getServiceName(services[i]);
+    const n = getServiceName(services[i])
     if (n) {
-      sns.set(n, true);
+      sns.set(n, true)
     }
   }
   const ks = Array.from(sns.keys())
   while (ks.length > 10) {
     ks.pop()
   }
-  return ks.join() + "(" + services.length + ")"
+  return ks.join() + '(' + services.length + ')'
 }
 
 function getLocInfo(l) {
@@ -357,33 +357,33 @@ const tcpFlagFilterList = [
   { text: '一般的(SYN/ACK/FIN)', value: 'FS\\.P*A+' },
 ]
 
-const cmpIP = (a,b) => {
-  if (!a.includes(".") || !b.includes(".") ){
-    return a < b  ? -1 : a > b ? 1 : 0 
+const cmpIP = (a, b) => {
+  if (!a.includes('.') || !b.includes('.')) {
+    return a < b ? -1 : a > b ? 1 : 0
   }
-  const pa = a.split('.').map(function(s) {
-    return parseInt(s); 
-  });
-  const pb = b.split('.').map(function(s) {
-    return parseInt(s); 
-  });
-  for(let i =0;i < pa.length;i++){
-    if (i >= pb.length){
-      return -1;
+  const pa = a.split('.').map(function (s) {
+    return parseInt(s)
+  })
+  const pb = b.split('.').map(function (s) {
+    return parseInt(s)
+  })
+  for (let i = 0; i < pa.length; i++) {
+    if (i >= pb.length) {
+      return -1
     }
-    if (pa[i] === pb[i]){
-      continue;
+    if (pa[i] === pb[i]) {
+      continue
     }
-    if (pa[i] < pb[i]){
-      return -1;
+    if (pa[i] < pb[i]) {
+      return -1
     }
-    return 1;
+    return 1
   }
-  return 0;
+  return 0
 }
 
 const getLogModeName = (m) => {
-  switch(m){
+  switch (m) {
     case 0:
       return 'off'
     case 1:
@@ -394,7 +394,7 @@ const getLogModeName = (m) => {
       return 'ai'
   }
   return ''
-} 
+}
 
 const getRSSIColor = (rssi) => {
   if (rssi >= 0) {
@@ -420,20 +420,42 @@ const getRSSIIconName = (rssi) => {
   return 'mdi-wifi-strength-1'
 }
 
-const  levelNum = (s) => {
-	switch (s) {
-	case "high":
-		return 0;
-	case "low":
-		return 1;
-	case "warn":
-		return 2;
-	case "normal":
-		return 4
-	case "repair":
-		return 3
-	}
-	return 5
+const levelNum = (s) => {
+  switch (s) {
+    case 'high':
+      return 0
+    case 'low':
+      return 1
+    case 'warn':
+      return 2
+    case 'normal':
+      return 4
+    case 'repair':
+      return 3
+  }
+  return 5
+}
+
+const drawItemList = [
+  { text: '矩形', value: 0 },
+  { text: '楕円', value: 1 },
+  { text: 'ラベル', value: 2 },
+  { text: 'イメージ', value: 3 },
+  { text: 'ポーリング結果(テキスト)', value: 4 },
+  { text: 'ポーリング結果(ゲージ)', value: 5 },
+  { text: 'ポーリング結果(新ゲージ)', value: 6 },
+  { text: 'ポーリング結果(バー)', value: 7 },
+  { text: 'ポーリング結果(ライン)', value: 8 },
+]
+
+const drawItemMap = {}
+
+drawItemList.forEach((e) => {
+  drawItemMap[e.value] = e.text
+})
+
+const getDrawItemName = (n) => {
+  return drawItemMap[n] !== undefined ? drawItemMap[n] : 'Unknown'
 }
 
 
@@ -468,4 +490,6 @@ export default (context, inject) => {
   inject('setIcon', setIcon)
   inject('delIcon', delIcon)
   inject('levelNum', levelNum)
+  inject('drawItemList', drawItemList)
+  inject('getDrawItemName', getDrawItemName)
 }

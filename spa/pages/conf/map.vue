@@ -371,6 +371,10 @@
             <v-icon>mdi-image</v-icon>
             背景設定
           </v-btn>
+          <v-btn color="primary" dark @click="showDrawItemList">
+            <v-icon>mdi-list</v-icon>
+            描画アイテムリスト
+          </v-btn>
           <v-btn color="primary" dark @click="geoipDialog = true">
             <v-icon>mdi-database-marker</v-icon>
             GeoIPデータベース
@@ -626,6 +630,60 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="showDrawItemListDialog" persistent>
+      <v-card>
+        <v-card-title>
+          <span class="headline">描画アイテムリスト</span>
+        </v-card-title>
+        <v-data-table
+          v-model="selectedDrawItems"
+          show-select
+          item-key="ID"
+          :headers="headers"
+          :items="drawItemList"
+          dense
+          sort-by="Type"
+        >
+          <template #[`item.Type`]="{ item }">
+            {{ $getDrawItemName(item.Type) }}
+          </template>
+        </v-data-table>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            v-if="selectedDrawItems.length > 0"
+            color="error"
+            @click="deleteDrawItemDialog = true"
+          >
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" @click="showDrawItemListDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            閉じる
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="deleteDrawItemDialog" persistent max-width="50vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">描画アイテム削除</span>
+        </v-card-title>
+        <v-card-text> 選択した描画アイテムを削除しますか？ </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="doDeleteDrawItems">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" @click="deleteDrawItemDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -728,6 +786,47 @@ export default {
       sshPublicKeyDialog: false,
       sshPublicKeyError: false,
       sshPublicKey: '',
+      drawItemList: [],
+      deleteDrawItemDialog: false,
+      showDrawItemListDialog: false,
+      selectedDrawItems: [],
+      headers: [
+        {
+          text: 'アイコン',
+          value: 'ID',
+          width: '20%',
+        },
+        {
+          text: '種類',
+          value: 'Type',
+          width: '20%',
+        },
+        {
+          text: 'X',
+          value: 'X',
+          width: '5%',
+        },
+        {
+          text: 'Y',
+          value: 'Y',
+          width: '5%',
+        },
+        {
+          text: 'テキスト',
+          value: 'Text',
+          width: '20%',
+        },
+        {
+          text: 'パス',
+          value: 'Path',
+          width: '20%',
+        },
+        {
+          text: '色',
+          value: 'Color',
+          width: '10%',
+        },
+      ],
     }
   },
   async fetch() {
@@ -874,6 +973,26 @@ export default {
         .catch((e) => {
           this.sshPublicKeyError = true
         })
+    },
+    async showDrawItemList() {
+      const m = await this.$axios.$get('/api/map')
+      if (m && m.Items) {
+        this.drawItemList = []
+        for (const k in m.Items) {
+          this.drawItemList.push(m.Items[k])
+        }
+        this.showDrawItemListDialog = true
+      }
+    },
+    async doDeleteDrawItems() {
+      const l = []
+      for (const i of this.selectedDrawItems) {
+        l.push(i.ID)
+      }
+      await this.$axios.post('/api/nodes/delete_items', l)
+      this.deleteDrawItemDialog = false
+      this.selectedDrawItems = []
+      this.showDrawItemList()
     },
   },
 }

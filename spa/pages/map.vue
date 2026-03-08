@@ -274,7 +274,7 @@
           <v-row dense>
             <v-select
               v-model="editItem.Type"
-              :items="drawItemList"
+              :items="$drawItemList"
               label="描画アイテムタイプ"
             >
             </v-select>
@@ -1660,17 +1660,6 @@ export default {
         { text: '3', value: 3 },
         { text: '4', value: 4 },
         { text: '5', value: 5 },
-      ],
-      drawItemList: [
-        { text: '矩形', value: 0 },
-        { text: '楕円', value: 1 },
-        { text: 'ラベル', value: 2 },
-        { text: 'イメージ', value: 3 },
-        { text: 'ポーリング結果(テキスト)', value: 4 },
-        { text: 'ポーリング結果(ゲージ)', value: 5 },
-        { text: 'ポーリング結果(新ゲージ)', value: 6 },
-        { text: 'ポーリング結果(バー)', value: 7 },
-        { text: 'ポーリング結果(ライン)', value: 8 },
       ],
       selectedImagePath: '',
       imageFile: '',
