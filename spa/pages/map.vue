@@ -272,15 +272,20 @@
         </v-alert>
         <v-card-text>
           <v-row dense>
-            <v-select
-              v-model="editItem.Type"
-              :items="$drawItemList"
-              label="描画アイテムタイプ"
+            <v-col>
+              <v-select
+                v-model="editItem.Type"
+                :items="$drawItemList"
+                label="描画アイテムタイプ"
+                :readonly="!!editItem.ID"
+              >
+              </v-select>
+            </v-col>
+            <v-col
+              v-if="
+                editItem.Type < 2 || editItem.Type == 3 || editItem.Type == 9
+              "
             >
-            </v-select>
-          </v-row>
-          <v-row dense>
-            <v-col v-if="editItem.Type < 2 || editItem.Type == 3">
               <v-text-field
                 v-model="editItem.W"
                 type="number"
@@ -306,7 +311,9 @@
             </v-col>
             <v-col
               v-if="
-                editItem.Type == 2 || (editItem.Type > 3 && editItem.Type < 6)
+                editItem.Type == 2 ||
+                (editItem.Type > 3 && editItem.Type < 6) ||
+                editItem.Type == 9
               "
             >
               <v-text-field
@@ -319,52 +326,58 @@
               ></v-text-field>
             </v-col>
           </v-row>
-          <v-color-picker v-if="editItem.Type < 3" v-model="editItem.Color">
-          </v-color-picker>
           <v-text-field
-            v-if="editItem.Type == 2"
+            v-if="editItem.Type == 2 || editItem.Type == 9"
             v-model="editItem.Text"
             label="文字列"
           >
           </v-text-field>
-          <v-autocomplete
-            v-if="editItem.Type >= 4"
-            v-model="editItem.PollingID"
-            :items="itemPollingList"
-            label="ポーリング"
+          <v-row v-if="editItem.Type != 9" dense>
+            <v-autocomplete
+              v-if="editItem.Type >= 4"
+              v-model="editItem.PollingID"
+              :items="itemPollingList"
+              label="ポーリング"
+            >
+            </v-autocomplete>
+            <v-text-field
+              v-if="editItem.Type >= 4"
+              v-model="editItem.VarName"
+              label="結果の変数名"
+            >
+            </v-text-field>
+            <v-text-field
+              v-if="editItem.Type == 4"
+              v-model="editItem.Format"
+              label="表示フォーマット"
+            >
+            </v-text-field>
+            <v-text-field
+              v-if="editItem.Type >= 5"
+              v-model="editItem.Text"
+              label="ラベル"
+            >
+            </v-text-field>
+            <v-text-field
+              v-if="editItem.Type >= 4"
+              v-model="editItem.Scale"
+              type="number"
+              label="倍率"
+            ></v-text-field>
+            <v-select
+              v-if="editItem.Type == 3"
+              v-model="editItem.Path"
+              :items="map.Images"
+              label="画像ファイル"
+            >
+            </v-select>
+          </v-row>
+          <v-color-picker
+            v-if="editItem.Type < 3 || editItem.Type == 9"
+            v-model="editItem.Color"
+            show-swatches
           >
-          </v-autocomplete>
-          <v-text-field
-            v-if="editItem.Type >= 4"
-            v-model="editItem.VarName"
-            label="結果の変数名"
-          >
-          </v-text-field>
-          <v-text-field
-            v-if="editItem.Type == 4"
-            v-model="editItem.Format"
-            label="表示フォーマット"
-          >
-          </v-text-field>
-          <v-text-field
-            v-if="editItem.Type >= 5"
-            v-model="editItem.Text"
-            label="ラベル"
-          >
-          </v-text-field>
-          <v-text-field
-            v-if="editItem.Type >= 4"
-            v-model="editItem.Scale"
-            type="number"
-            label="倍率"
-          ></v-text-field>
-          <v-select
-            v-if="editItem.Type == 3"
-            v-model="editItem.Path"
-            :items="map.Images"
-            label="画像ファイル"
-          >
-          </v-select>
+          </v-color-picker>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -1215,6 +1228,18 @@
           <v-list-item-icon><v-icon>mdi-grid</v-icon></v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>グリッド整列</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item v-if="$getLockDrawItem()" @click="$setLockDrawItem(false)">
+          <v-list-item-icon><v-icon>mdi-lock-open</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>描画アイテムの編集を許可</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item v-if="!$getLockDrawItem()" @click="$setLockDrawItem(true)">
+          <v-list-item-icon><v-icon>mdi-lock</v-icon></v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>描画アイテムの編集を禁止</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
       </v-list>

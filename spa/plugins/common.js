@@ -446,6 +446,7 @@ const drawItemList = [
   { text: 'ポーリング結果(新ゲージ)', value: 6 },
   { text: 'ポーリング結果(バー)', value: 7 },
   { text: 'ポーリング結果(ライン)', value: 8 },
+  { text: 'グループ', value: 9 },
 ]
 
 const drawItemMap = {}

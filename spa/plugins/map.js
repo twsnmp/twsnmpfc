@@ -9,6 +9,7 @@ let contextMenu = true
 
 let mapRedraw = true
 let readOnly = false
+let lockDrawItem = true
 
 let mapCallBack
 
@@ -189,6 +190,14 @@ const setCallback = (cb) => {
   mapCallBack = cb
 }
 
+const setLockDrawItem = (l) => {
+  lockDrawItem = l
+}
+
+const getLockDrawItem = () => {
+  return lockDrawItem
+}
+
 const getIconCode = (icon) => {
   return iconCodeMap[icon] ? iconCodeMap[icon] : iconCodeMap.unknown
 }
@@ -362,6 +371,19 @@ const drawItems = (p5) => {
         p5.fill(items[k].Color)
         p5.stroke('rgba(23,23,23,0.9)')
         p5.rect(0, 0, items[k].W, items[k].H)
+        break
+      case 9: // Group
+        p5.fill(items[k].Color)
+        p5.stroke('rgba(23,23,23,0.9)')
+        p5.rect(0, 0, items[k].W, items[k].H)
+        if (items[k].Text) {
+          p5.textSize(items[k].Size || 12)
+          const c = p5.color(items[k].Color)
+          p5.fill(255 - p5.red(c), 255 - p5.green(c), 255 - p5.blue(c), 255)
+          p5.noStroke()
+          p5.textAlign(p5.RIGHT, p5.BOTTOM)
+          p5.text(items[k].Text, items[k].W - 5, items[k].H - 5)
+        }
         break
       case 1: // ellipse
         p5.fill(items[k].Color)
@@ -539,9 +561,9 @@ const mapMain = (p5) => {
     }
     mapRedraw = false
     drawBackImage(p5)
+    drawItems(p5)
     drawNetworks(p5, portImage)
     drawLines(p5)
-    drawItems(p5)
     drawNodes(p5)
     if (dragMode === 1) {
       drawSelectionRect(p5, startMouseX, startMouseY, lastMouseX, lastMouseY)
@@ -938,6 +960,9 @@ const mapMain = (p5) => {
   }
   // 描画アイテムを選択する
   const setSelectItem = () => {
+    if (lockDrawItem) {
+      return
+    }
     const x = p5.mouseX / scale
     const y = p5.mouseY / scale
     for (const k in items) {
@@ -1127,4 +1152,6 @@ export default (context, inject) => {
   inject('refreshMAP', refreshMAP)
   inject('setMapContextMenu', setMapContextMenu)
   inject('setIconToMap', setIconToMap)
+  inject('setLockDrawItem', setLockDrawItem)
+  inject('getLockDrawItem', getLockDrawItem)
 }
