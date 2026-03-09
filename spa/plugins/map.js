@@ -360,7 +360,7 @@ const drawItems = (p5) => {
     p5.push()
     p5.translate(items[k].X, items[k].Y)
     if (selectedItems.includes(items[k].ID)) {
-      p5.fill('rgba(23,23,23,0.9)')
+      p5.fill('rgba(23,23,23,0.2)')
       p5.stroke('#ccc')
       const w = items[k].W + 10
       const h = items[k].H + 10
@@ -470,12 +470,8 @@ const drawNodes = (p5) => {
       const w = imgW + 16
       const h = imgH + 16 + fontSize
       if (selectedNodes.includes(nodes[k].ID)) {
-        p5.fill('rgba(23,23,23,0.9)')
+        p5.fill('rgba(23,23,23,0.2)')
         p5.stroke(getStateColor(nodes[k].State))
-        p5.rect(-w / 2, -h / 2, w, h)
-      } else {
-        p5.fill('rgba(23,23,23,0.9)')
-        p5.stroke('rgba(23,23,23,0.9)')
         p5.rect(-w / 2, -h / 2, w, h)
       }
       p5.tint(getStateColor(nodes[k].State))
@@ -489,13 +485,8 @@ const drawNodes = (p5) => {
     } else {
       if (selectedNodes.includes(nodes[k].ID)) {
         const w = iconSize + 16
-        p5.fill('rgba(23,23,23,0.9)')
+        p5.fill('rgba(23,23,23,0.2)')
         p5.stroke(getStateColor(nodes[k].State))
-        p5.rect(-w / 2, -w / 2, w, w)
-      } else {
-        const w = iconSize - 8
-        p5.fill('rgba(23,23,23,0.9)')
-        p5.stroke('rgba(23,23,23,0.9)')
         p5.rect(-w / 2, -w / 2, w, w)
       }
       p5.textFont('Material Design Icons')
