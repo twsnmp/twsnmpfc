@@ -844,6 +844,16 @@ export default {
     submit() {
       this.saved = false
       this.error = false
+      this.mapconf.PollInt *= 1
+      this.mapconf.Timeout *= 1
+      this.mapconf.Retry *= 1
+      this.mapconf.LogDispSize *= 1
+      this.mapconf.LogTimeout *= 1
+      this.mapconf.LogDays *= 1
+      this.mapconf.AIThreshold *= 1
+      this.mapconf.FontSize *= 1
+      this.mapconf.MapSize *= 1
+      this.mapconf.IconSize *= 1
       this.mapconf.OTelRetention *= 1
       this.$axios
         .post('/api/conf/map', this.mapconf)

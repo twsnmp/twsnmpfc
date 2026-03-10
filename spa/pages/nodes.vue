@@ -240,6 +240,15 @@
               >
               </v-switch>
             </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNode.HPorts"
+                type="number"
+                min="5"
+                max="100"
+                label="横の最大ポート数"
+              ></v-text-field>
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col cols="8">
@@ -766,6 +775,7 @@ export default {
     doUpdateNode() {
       this.updateError = false
       if (this.editIndex > -1) {
+        this.editNode.HPorts *= 1
         Object.assign(this.nodes[this.editIndex], this.editNode)
         this.$axios.post('/api/node/update', this.editNode).catch((e) => {
           this.updateError = true

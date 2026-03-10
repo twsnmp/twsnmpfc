@@ -294,6 +294,10 @@ export default {
       }
       this.error = false
       this.saved = false
+      this.report.DropFlowThTCPPacket *= 1
+      this.report.SensorTimeout *= 1
+      this.report.ReportDays *= 1
+      this.report.Limit *= 1
       this.$axios
         .post('/api/conf/report', this.report)
         .then((r) => {

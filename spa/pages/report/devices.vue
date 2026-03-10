@@ -326,6 +326,15 @@
               <v-switch v-model="node.AutoAck" label="復帰時に自動確認" dense>
               </v-switch>
             </v-col>
+            <v-col>
+              <v-text-field
+                v-model="node.HPorts"
+                type="number"
+                min="5"
+                max="100"
+                label="横の最大ポート数"
+              ></v-text-field>
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col>
@@ -597,12 +606,14 @@ export default {
         Type: '',
         AddrMode: '',
         AutoAck: false,
+        HPorts: 16,
       }
       this.addNodeDialog = true
     },
     addNode() {
       const url = '/api/node/update'
       this.addNodeError = false
+      this.node.HPorts *= 1
       this.$axios
         .post(url, this.node)
         .then(() => {

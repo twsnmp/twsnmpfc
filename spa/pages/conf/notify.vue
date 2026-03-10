@@ -502,6 +502,7 @@ export default {
   methods: {
     submit() {
       this.clearMsg()
+      this.notify.Interval *= 1
       this.$axios
         .post('/api/conf/notify', this.notify)
         .then((r) => {

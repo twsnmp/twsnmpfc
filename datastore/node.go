@@ -34,6 +34,7 @@ type NodeEnt struct {
 	URL          string
 	AddrMode     string
 	AutoAck      bool
+	HPorts       int
 }
 
 func loadMapData() error {

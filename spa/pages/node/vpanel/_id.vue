@@ -312,7 +312,7 @@ export default {
           this.ports.push(p)
         }
       })
-      this.$setVPanel(this.ports, this.power, this.rotate)
+      this.$setVPanel(this.ports, this.power, this.rotate, this.node.HPorts)
     },
     editIFStatePolling(i) {
       this.polling = {
@@ -353,21 +353,16 @@ export default {
       this.editDialog = true
     },
     addPolling() {
-      const tmpScript = this.polling.Script
       this.addError = false
-      if (this.hasTh) {
-        this.polling.Script = this.polling.Script.replace(
-          '$thValue',
-          this.thValue
-        )
-      }
+      this.polling.PollInt *= 1
+      this.polling.Timeout *= 1
+      this.polling.Retry *= 1
       this.$axios
         .post('/api/polling/add', this.polling)
         .then(() => {
           this.editDialog = false
         })
         .catch((e) => {
-          this.polling.Script = tmpScript
           this.addError = true
         })
     },

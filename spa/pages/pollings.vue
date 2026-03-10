@@ -1024,6 +1024,9 @@ export default {
     },
     doUpdatePolling() {
       this.updateError = false
+      this.editPolling.PollInt *= 1
+      this.editPolling.Timeout *= 1
+      this.editPolling.Retry *= 1
       if (this.editIndex > -1) {
         Object.assign(this.pollings[this.editIndex], this.editPolling)
         this.$axios

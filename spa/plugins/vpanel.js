@@ -5,6 +5,7 @@ let cw = 1000
 let ch = 500
 let power = false
 let rotate = false
+let hports = 16
 
 const vpanelMain = (p) => {
   const PORT_SIZE = 150
@@ -29,9 +30,10 @@ const vpanelMain = (p) => {
   }
 
   p.draw = () => {
-    width = (ports.length < 16 ? ports.length : 16) * PORT_SIZE + PORT_SIZE
+    width =
+      (ports.length < hports ? ports.length : hports) * PORT_SIZE + PORT_SIZE
     height =
-      Math.ceil(ports.length / 16) * ((5 * PORT_SIZE) / 4) + PORT_SIZE / 2
+      Math.ceil(ports.length / hports) * ((5 * PORT_SIZE) / 4) + PORT_SIZE / 2
     if (ports.length === 0) {
       height = (5 * PORT_SIZE) / 4
     }
@@ -51,8 +53,8 @@ const vpanelMain = (p) => {
     p.fill(50, 50, 50)
     p.box(width, height, depth)
     for (let i = 0; i < ports.length; i++) {
-      const x = i % 16
-      const y = Math.floor(i / 16)
+      const x = i % hports
+      const y = Math.floor(i / hports)
       p.push()
       // Port
       p.translate(
@@ -123,10 +125,11 @@ const vpanelMain = (p) => {
   }
 }
 
-const setVPanel = (po, pw, r) => {
+const setVPanel = (po, pw, r, hp) => {
   ports = po
   power = pw
   rotate = r
+  hports = hp || 16
 }
 
 const makeVPanel = (div) => {

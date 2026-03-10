@@ -100,6 +100,7 @@ func postNodeUpdate(c echo.Context) error {
 	n.URL = nu.URL
 	n.AddrMode = nu.AddrMode
 	n.AutoAck = nu.AutoAck
+	n.HPorts = nu.HPorts
 	if n.MAC != nu.MAC {
 		if nu.MAC != "" {
 			mac := logger.NormMACAddr(nu.MAC)

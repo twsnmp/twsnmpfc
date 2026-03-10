@@ -425,6 +425,8 @@ export default {
       const y = this.$route.query.y * 1 || 0
       this.discover.Conf.X = Math.floor(x)
       this.discover.Conf.Y = Math.floor(y)
+      this.discover.Conf.Timeout *= 1
+      this.discover.Conf.Retry *= 1
       this.discover.Conf.AutoAddPollings = []
       if (this.basicPolling) {
         this.discover.Conf.AutoAddPollings = ['basic']

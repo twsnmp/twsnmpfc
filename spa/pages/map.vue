@@ -151,6 +151,15 @@
               >
               </v-switch>
             </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNode.HPorts"
+                type="number"
+                min="5"
+                max="100"
+                label="横の最大ポート数"
+              ></v-text-field>
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col cols="8">
@@ -2166,6 +2175,7 @@ export default {
         url += '?from=' + this.copyFrom
       }
       this.editNodeError = false
+      this.editNode.HPorts *= 1
       this.$axios
         .post(url, this.editNode)
         .then(() => {
@@ -2296,6 +2306,7 @@ export default {
         Type: '',
         AddrMode: '',
         AutoAck: false,
+        HPorts: 16,
       }
       this.editNodeDialog = true
     },
