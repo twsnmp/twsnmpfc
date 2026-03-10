@@ -10,6 +10,7 @@ let contextMenu = true
 let mapRedraw = true
 let readOnly = false
 let lockDrawItem = true
+let showNodeInfo = false
 
 let mapCallBack
 
@@ -196,6 +197,14 @@ const setLockDrawItem = (l) => {
 
 const getLockDrawItem = () => {
   return lockDrawItem
+}
+
+const setShowNodeInfo = (s) => {
+  showNodeInfo = s
+}
+
+const getShowNodeInfo = () => {
+  return showNodeInfo
 }
 
 const getIconCode = (icon) => {
@@ -482,6 +491,10 @@ const drawNodes = (p5) => {
       p5.textSize(fontSize)
       p5.fill(250)
       p5.text(nodes[k].Name, 0, imgH / 2 + fontSize / 2)
+      if (showNodeInfo) {
+        p5.textSize(fontSize-2)
+        p5.text(nodes[k].IP, 0, imgH / 2 + fontSize / 2 + fontSize)
+      }
     } else {
       if (selectedNodes.includes(nodes[k].ID)) {
         const w = iconSize + 16
@@ -498,6 +511,10 @@ const drawNodes = (p5) => {
       p5.textSize(fontSize)
       p5.fill(250)
       p5.text(nodes[k].Name, 0, iconSize)
+      if (showNodeInfo) {
+        p5.textSize(fontSize-2)
+        p5.text(nodes[k].IP, 0, iconSize + fontSize)
+      }
     }
     p5.pop()
   }
@@ -1145,4 +1162,6 @@ export default (context, inject) => {
   inject('setIconToMap', setIconToMap)
   inject('setLockDrawItem', setLockDrawItem)
   inject('getLockDrawItem', getLockDrawItem)
+  inject('setShowNodeInfo', setShowNodeInfo)
+  inject('getShowNodeInfo', getShowNodeInfo)
 }
