@@ -100,9 +100,11 @@ const addrModeList = [
 
 const snmpModeList = [
   { text: 'SNMPv2c', value: '' },
-  { text: 'SNMPv3認証', value: 'v3auth' },
-  { text: 'SNMPv3認証暗号化(AES128)', value: 'v3authpriv' },
+  { text: 'SNMPv3認証(SHA-1)', value: 'v3auth' },
+  { text: 'SNMPv3認証暗号化(SHA-1/AES128)', value: 'v3authpriv' },
+  { text: 'SNMPv3認証暗号化(SHA256/AES128)', value: 'v3sha256aes128' },
   { text: 'SNMPv3認証暗号化(SHA256/AES256)', value: 'v3authprivex' },
+  { text: 'SNMPv3認証暗号化(SHA512/AES256)', value: 'v3sha512aes256' },
 ]
 
 const aiThList = [

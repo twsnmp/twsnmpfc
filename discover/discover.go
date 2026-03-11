@@ -315,6 +315,28 @@ func getSnmpInfo(t string, dent *discoverInfoEnt) {
 			PrivacyProtocol:          gosnmp.AES256,
 			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
 		}
+	case "v3sha256aes128":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 datastore.MapConf.SnmpUser,
+			AuthenticationProtocol:   gosnmp.SHA256,
+			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
+			PrivacyProtocol:          gosnmp.AES,
+			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
+		}
+	case "v3sha512aes256":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 datastore.MapConf.SnmpUser,
+			AuthenticationProtocol:   gosnmp.SHA512,
+			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
+			PrivacyProtocol:          gosnmp.AES256,
+			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
+		}
 	}
 	err := agent.Connect()
 	if err != nil {
