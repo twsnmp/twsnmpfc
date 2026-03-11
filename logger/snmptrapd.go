@@ -60,6 +60,28 @@ func snmptrapd(stopCh chan bool) {
 			PrivacyProtocol:          gosnmp.AES256,
 			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
 		}
+	case "v3sha256aes128":
+		tl.Params.Version = gosnmp.Version3
+		tl.Params.SecurityModel = gosnmp.UserSecurityModel
+		tl.Params.MsgFlags = gosnmp.AuthPriv
+		tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 datastore.MapConf.SnmpUser,
+			AuthenticationProtocol:   gosnmp.SHA256,
+			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
+			PrivacyProtocol:          gosnmp.AES,
+			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
+		}
+	case "v3sha512aes256":
+		tl.Params.Version = gosnmp.Version3
+		tl.Params.SecurityModel = gosnmp.UserSecurityModel
+		tl.Params.MsgFlags = gosnmp.AuthPriv
+		tl.Params.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 datastore.MapConf.SnmpUser,
+			AuthenticationProtocol:   gosnmp.SHA512,
+			AuthenticationPassphrase: datastore.MapConf.SnmpPassword,
+			PrivacyProtocol:          gosnmp.AES256,
+			PrivacyPassphrase:        datastore.MapConf.SnmpPassword,
+		}
 	default:
 		// SNMPv2c
 		tl.Params.Version = gosnmp.Version2c
