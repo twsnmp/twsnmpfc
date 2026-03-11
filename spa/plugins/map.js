@@ -381,14 +381,26 @@ const drawItems = (p5) => {
         p5.stroke('rgba(23,23,23,0.9)')
         p5.rect(0, 0, items[k].W, items[k].H)
         break
-      case 9: // Group
-        p5.fill(items[k].Color)
-        p5.stroke('rgba(23,23,23,0.9)')
+      case 9: // Group(枠)
+        p5.fill('rgba(23,23,23,0.01)')
+        p5.strokeWeight(2)
+        p5.stroke(items[k].Color)
         p5.rect(0, 0, items[k].W, items[k].H)
         if (items[k].Text) {
           p5.textSize(items[k].Size || 12)
-          const c = p5.color(items[k].Color)
-          p5.fill(255 - p5.red(c), 255 - p5.green(c), 255 - p5.blue(c), 255)
+          p5.fill(250)
+          p5.noStroke()
+          p5.textAlign(p5.RIGHT, p5.BOTTOM)
+          p5.text(items[k].Text, items[k].W - 5, items[k].H - 5)
+        }
+        break
+      case 10: // Group(塗りつぶし)
+        p5.fill(items[k].Color)
+        p5.noStroke()
+        p5.rect(0, 0, items[k].W, items[k].H)
+        if (items[k].Text) {
+          p5.textSize(items[k].Size || 12)
+          p5.fill(250)
           p5.noStroke()
           p5.textAlign(p5.RIGHT, p5.BOTTOM)
           p5.text(items[k].Text, items[k].W - 5, items[k].H - 5)
@@ -824,6 +836,17 @@ const mapMain = (p5) => {
             }
             items[id].W = items[id].H * 4;
             break;
+          case 9: // Group
+          case 10:
+            items[id].W += add * 5;
+            items[id].H += add * 5;
+            if (items[id].W < 10) {
+              items[id].W = 10;
+            }
+            if (items[id].H < 10) {
+              items[id].H = 10;
+            }
+            break
           default:
             items[id].W += add * 5;
             items[id].H += add * 5;

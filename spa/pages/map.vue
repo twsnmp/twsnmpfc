@@ -292,7 +292,10 @@
             </v-col>
             <v-col
               v-if="
-                editItem.Type < 2 || editItem.Type == 3 || editItem.Type == 9
+                editItem.Type < 2 ||
+                editItem.Type == 3 ||
+                editItem.Type == 9 ||
+                editItem.Type == 10
               "
             >
               <v-text-field
@@ -322,7 +325,8 @@
               v-if="
                 editItem.Type == 2 ||
                 (editItem.Type > 3 && editItem.Type < 6) ||
-                editItem.Type == 9
+                editItem.Type == 9 ||
+                editItem.Type == 10
               "
             >
               <v-text-field
@@ -336,7 +340,9 @@
             </v-col>
           </v-row>
           <v-text-field
-            v-if="editItem.Type == 2 || editItem.Type == 9"
+            v-if="
+              editItem.Type == 2 || editItem.Type == 9 || editItem.Type == 10
+            "
             v-model="editItem.Text"
             label="文字列"
           >
@@ -382,7 +388,9 @@
             </v-select>
           </v-row>
           <v-color-picker
-            v-if="editItem.Type < 3 || editItem.Type == 9"
+            v-if="
+              editItem.Type < 3 || editItem.Type == 9 || editItem.Type == 10
+            "
             v-model="editItem.Color"
             show-swatches
           >
