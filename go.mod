@@ -30,7 +30,7 @@ require (
 	github.com/mdlayher/netx v0.0.0-20230430222610-7e21880baee8
 	github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12
 	github.com/mochi-mqtt/server/v2 v2.7.9
-	github.com/modelcontextprotocol/go-sdk v1.3.1
+	github.com/modelcontextprotocol/go-sdk v1.4.1
 	github.com/montanaflynn/stats v0.7.1
 	github.com/mrichman/godnsbl v1.0.0
 	github.com/openconfig/gnmi v0.13.0
@@ -152,7 +152,7 @@ require (
 	github.com/rs/cors v1.11.1 // indirect
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/segmentio/asm v1.1.3 // indirect
-	github.com/segmentio/encoding v0.5.3 // indirect
+	github.com/segmentio/encoding v0.5.4 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/smallstep/pkcs7 v0.2.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
