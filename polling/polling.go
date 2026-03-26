@@ -21,6 +21,7 @@ import (
 	"github.com/robertkrimen/otto"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/notify"
+	"github.com/twsnmp/twsnmpfc/report"
 	"github.com/twsnmp/twsnmpfc/wol"
 )
 
@@ -515,6 +516,21 @@ func setVMFuncAndValues(pe *datastore.PollingEnt, vm *otto.Otto) {
 		}
 		return otto.Value{}
 	})
+	vm.Set("saveReport", func(call otto.FunctionCall) otto.Value {
+		if len(call.ArgumentList) != 2 ||
+			!call.Argument(0).IsString() ||
+			!call.Argument(1).IsObject() {
+			return otto.FalseValue()
+		}
+		if o, err := call.Argument(1).Export(); err == nil {
+			if m, ok := o.(map[string]interface{}); ok {
+				if saveReportFromJS(pe.ID, call.Argument(0).String(), m) {
+					return otto.TrueValue()
+				}
+			}
+		}
+		return otto.FalseValue()
+	})
 	if len(pe.Result) > 0 {
 		for k, v := range pe.Result {
 			if k != "error" {
@@ -523,6 +539,45 @@ func setVMFuncAndValues(pe *datastore.PollingEnt, vm *otto.Otto) {
 		}
 	}
 	vm.Set("iterval", pe.PollInt)
+}
+
+func saveReportFromJS(id, t string, m map[string]interface{}) bool {
+	switch t {
+	case "env":
+		report.ReportEnvMonitor(id, m)
+		return true
+	case "user":
+		var user string
+		var server string
+		var client string
+		var success bool
+		if v, ok := m["user"].(string); ok {
+			user = v
+		}
+		if v, ok := m["server"].(string); ok {
+			server = v
+		}
+		if v, ok := m["client"].(string); ok {
+			client = v
+		}
+		if v, ok := m["success"].(bool); ok {
+			success = v
+		}
+		report.ReportUser(user, server, client, success, time.Now().UnixNano())
+		return true
+	case "lan":
+		mac, ok := m["mac"].(string)
+		if !ok {
+			return false
+		}
+		ip, ok := m["ip"].(string)
+		if !ok {
+			return false
+		}
+		report.ReportDevice(mac, ip, time.Now().UnixNano())
+		return true
+	}
+	return false
 }
 
 func doNotifyToMQTT(p []string) {

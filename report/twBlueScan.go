@@ -15,6 +15,70 @@ func ReportTWBuleScan(l map[string]interface{}) {
 	twBlueScanCh <- l
 }
 
+func ReportEnvMonitor(id string, m map[string]interface{}) {
+	var temp float64
+	var hum float64
+	var co2 float64
+	var rssi float64
+	var bat float64
+	var name string
+	if v, ok := m["temp"].(float64); ok {
+		temp = v
+	}
+	if v, ok := m["hum"].(float64); ok {
+		hum = v
+	}
+	if v, ok := m["co2"].(float64); ok {
+		co2 = v
+	}
+	if v, ok := m["rssi"].(float64); ok {
+		rssi = v
+	}
+	if v, ok := m["bat"].(float64); ok {
+		bat = v
+	}
+	if v, ok := m["name"].(string); ok {
+		name = v
+	}
+	now := time.Now().UnixNano()
+	e := datastore.GetEnvMonitor(id)
+	if e != nil {
+		e.Count++
+		e.LastTime = now
+		e.EnvData = append(e.EnvData, datastore.EnvDataEnt{
+			Time:     now,
+			RSSI:     int(rssi),
+			Temp:     temp,
+			Humidity: hum,
+			Battery:  int(bat),
+			ECo2:     co2,
+		})
+		if len(e.EnvData) > MaxDataSize {
+			e.EnvData = e.EnvData[1:]
+		}
+		return
+	}
+	datastore.AddEnvMonitor(&datastore.EnvMonitorEnt{
+		ID:      id,
+		Host:    "localhost",
+		Address: "",
+		Name:    name,
+		Count:   1,
+		EnvData: []datastore.EnvDataEnt{
+			{
+				Time:     now,
+				RSSI:     int(rssi),
+				Temp:     temp,
+				Humidity: hum,
+				Battery:  int(bat),
+				ECo2:     co2,
+			},
+		},
+		LastTime:  now,
+		FirstTime: now,
+	})
+}
+
 func checkTWBlueScanReport(l map[string]interface{}) {
 	h, ok := l["hostname"].(string)
 	if !ok {
