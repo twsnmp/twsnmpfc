@@ -43,6 +43,8 @@ func checkTWBlueScanReport(l map[string]interface{}) {
 		checkOMRONEnvReport(h, m)
 	case "SwitchBotEnv":
 		checkSwitchBotEnvReport(h, m)
+	case "InkbirdEnv":
+		checkInkbirdEnvReport(h, m)
 	case "SwitchBotPlugMini":
 		checkSwitchBotPlugMiniReport(h, m)
 	case "SwitchBotMotionSensor":
@@ -65,12 +67,16 @@ func checkBlueDeviceReport(h string, m map[string]string) {
 	lt := getTimeFromTWLog(m["ft"])
 	rssi := getNumberFromTWLog(m["rssi"])
 	id := makeID(h + ":" + addr)
+	info := m["info"]
+	if u, ok := m["uuid"]; ok {
+		info += " UUID:" + u
+	}
 	e := datastore.GetBlueDevice(id)
 	if e != nil {
 		e.Count++
 		e.LastTime = lt
-		if i, ok := m["info"]; ok && i != "" && i != e.Info {
-			e.Info = i
+		if info != "" && info != e.Info {
+			e.Info = info
 		}
 		if v, ok := m["vendor"]; ok && v != "" && v != e.Vendor {
 			e.Vendor = v
@@ -92,7 +98,7 @@ func checkBlueDeviceReport(h string, m map[string]string) {
 			{Value: int(rssi), Time: lt},
 		},
 		Vendor:    m["vendor"],
-		Info:      m["info"],
+		Info:      info,
 		LastTime:  lt,
 		FirstTime: getTimeFromTWLog(m["ft"]),
 	})
@@ -163,7 +169,7 @@ func checkSwitchBotEnvReport(h string, m map[string]string) {
 	e := datastore.GetEnvMonitor(id)
 	if e != nil {
 		e.Count++
-		e.LastTime = time.Now().UnixNano()
+		e.LastTime = now
 		e.EnvData = append(e.EnvData, datastore.EnvDataEnt{
 			Time:     now,
 			RSSI:     int(rssi),
@@ -190,6 +196,53 @@ func checkSwitchBotEnvReport(h string, m map[string]string) {
 				Temp:     getFloatFromTWLog(m["temp"]),
 				Humidity: getFloatFromTWLog(m["hum"]),
 				Battery:  int(getNumberFromTWLog(m["bat"])),
+				ECo2:     float64(getNumberFromTWLog(m["co2"])),
+			},
+		},
+		LastTime:  now,
+		FirstTime: now,
+	})
+}
+
+func checkInkbirdEnvReport(h string, m map[string]string) {
+	addr, ok := m["address"]
+	if !ok {
+		return
+	}
+	rssi := getNumberFromTWLog(m["rssi"])
+	id := makeID(h + ":" + addr)
+	now := time.Now().UnixNano()
+	e := datastore.GetEnvMonitor(id)
+	if e != nil {
+		e.Count++
+		e.LastTime = now
+		e.EnvData = append(e.EnvData, datastore.EnvDataEnt{
+			Time:     now,
+			RSSI:     int(rssi),
+			Temp:     getFloatFromTWLog(m["temp"]),
+			Humidity: getFloatFromTWLog(m["hum"]),
+			Battery:  int(getNumberFromTWLog(m["bat"])),
+			ECo2:     float64(getNumberFromTWLog(m["co2"])),
+		})
+		if len(e.EnvData) > MaxDataSize {
+			e.EnvData = e.EnvData[1:]
+		}
+		return
+	}
+	datastore.AddEnvMonitor(&datastore.EnvMonitorEnt{
+		ID:      id,
+		Host:    h,
+		Address: addr,
+		Name:    m["name"],
+		Count:   1,
+		EnvData: []datastore.EnvDataEnt{
+			{
+				Time:     now,
+				RSSI:     int(rssi),
+				Temp:     getFloatFromTWLog(m["temp"]),
+				Humidity: getFloatFromTWLog(m["hum"]),
+				Battery:  int(getNumberFromTWLog(m["bat"])),
+				ECo2:     float64(getNumberFromTWLog(m["co2"])),
 			},
 		},
 		LastTime:  now,
