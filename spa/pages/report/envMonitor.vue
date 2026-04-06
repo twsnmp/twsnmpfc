@@ -225,6 +225,26 @@
             </tbody>
           </template>
         </v-simple-table>
+        <v-divider></v-divider>
+        <v-card-title>記録データ</v-card-title>
+        <v-data-table
+          :headers="headersData"
+          :items="selected.EnvData"
+          dense
+          fixed-header
+          height="300"
+          hide-default-footer
+          :items-per-page="-1"
+        >
+          <template #[`item.Time`]="{ item }">
+            {{
+              $timeFormat(
+                new Date(item.Time / (1000 * 1000)),
+                '{yyyy}/{MM}/{dd} {HH}:{mm}'
+              )
+            }}
+          </template>
+        </v-data-table>
         <v-card-actions>
           <v-spacer></v-spacer>
           <download-excel
@@ -365,6 +385,17 @@ export default {
         { text: '回数', value: 'Count', width: '10%' },
         { text: '最終', value: 'Last', width: '15%' },
         { text: '操作', value: 'actions', width: '10%' },
+      ],
+      headersData: [
+        { text: '記録日時', value: 'Time', width: '20%' },
+        { text: '気温(℃)', value: 'Temp', width: '10%' },
+        { text: '湿度(%)', value: 'Humidity', width: '10%' },
+        { text: '照度(lx)', value: 'Illuminance', width: '10%' },
+        { text: '気圧(hPa)', value: 'BarometricPressure', width: '10%' },
+        { text: '騒音(dB)', value: 'Sound', width: '10%' },
+        { text: 'ETVOC(ppb)', value: 'ETVOC', width: '10%' },
+        { text: 'CO2(ppm)', value: 'ECo2', width: '10%' },
+        { text: '電池残量(%)', value: 'Battery', width: '10%' },
       ],
       envMonitor: [],
       selected: {},
