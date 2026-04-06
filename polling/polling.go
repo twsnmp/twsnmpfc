@@ -482,7 +482,7 @@ func setVMFuncAndValues(pe *datastore.PollingEnt, vm *otto.Otto) {
 	vm.Set("setResult", func(call otto.FunctionCall) otto.Value {
 		if call.Argument(0).IsString() {
 			n := call.Argument(0).String()
-			if call.Argument(1).IsNumber() {
+			if call.Argument(1).IsNumber() && !call.Argument(1).IsNaN() {
 				if v, err := call.Argument(1).ToFloat(); err == nil {
 					pe.Result[n] = v
 				}
