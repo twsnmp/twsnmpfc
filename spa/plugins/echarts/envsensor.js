@@ -12,7 +12,9 @@ const showEnv3DChart = (div, type, list, filter) => {
     if (!filterEnvMon(i, filter)) {
       return
     }
-    const id = i.Host + ':' + i.Address
+    const id = i.Name
+      ? i.Name + '(' + i.Address + ')'
+      : i.Host + '(' + i.Address + ')'
     i.EnvData.forEach((e) => {
       data.push([
         id,
@@ -155,14 +157,6 @@ const showEnv2DChart = (div, type, list, filter) => {
     if (!i.EnvData || i.EnvData.length < 1) {
       return
     }
-    if (
-      i.Name !== 'Rbt' &&
-      type !== 'Temp' &&
-      type !== 'Humidity' &&
-      type !== 'Battery'
-    ) {
-      return
-    }
     if (!filterEnvMon(i, filter)) {
       return
     }
@@ -172,7 +166,9 @@ const showEnv2DChart = (div, type, list, filter) => {
       const name = echarts.time.format(t, '{yyyy}/{MM}/{dd} {HH}:{mm}:{ss}')
       data.push({ name, value: [t, e[type]] })
     })
-    const id = i.Host + ':' + i.Address
+    const id = i.Name
+      ? i.Name + '(' + i.Address + ')'
+      : i.Host + '(' + i.Address + ')'
     series.push({
       name: id,
       type: 'line',
