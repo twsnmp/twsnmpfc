@@ -62,6 +62,28 @@ func doPollingSnmp(pe *datastore.PollingEnt) {
 			PrivacyProtocol:          gosnmp.AES256,
 			PrivacyPassphrase:        n.Password,
 		}
+	case "v3sha256aes128":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 n.User,
+			AuthenticationProtocol:   gosnmp.SHA256,
+			AuthenticationPassphrase: n.Password,
+			PrivacyProtocol:          gosnmp.AES,
+			PrivacyPassphrase:        n.Password,
+		}
+	case "v3sha512aes256":
+		agent.Version = gosnmp.Version3
+		agent.SecurityModel = gosnmp.UserSecurityModel
+		agent.MsgFlags = gosnmp.AuthPriv
+		agent.SecurityParameters = &gosnmp.UsmSecurityParameters{
+			UserName:                 n.User,
+			AuthenticationProtocol:   gosnmp.SHA512,
+			AuthenticationPassphrase: n.Password,
+			PrivacyProtocol:          gosnmp.AES256,
+			PrivacyPassphrase:        n.Password,
+		}
 	}
 	err := agent.Connect()
 	if err != nil {
