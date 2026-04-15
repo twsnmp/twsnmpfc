@@ -1965,10 +1965,13 @@ export default {
             const n = this.map.Nodes[r.Param]
             if (n.URL) {
               this.urls = n.URL.split(',')
+                .map((u) => u.trim())
+                .filter((u) => u !== '')
               if (this.urls.length === 1) {
                 this.openURL(this.urls[0])
                 return
               } else if (this.urls.length > 1) {
+                this.selectedURL = this.urls[0]
                 this.openURLDialog = true
                 return
               }
@@ -1990,10 +1993,13 @@ export default {
             const n = this.map.Networks[r.Param]
             if (n.URL) {
               this.urls = n.URL.split(',')
+                .map((u) => u.trim())
+                .filter((u) => u !== '')
               if (this.urls.length === 1) {
                 this.openURL(this.urls[0])
                 return
               } else if (this.urls.length > 1) {
+                this.selectedURL = this.urls[0]
                 this.openURLDialog = true
                 return
               }
