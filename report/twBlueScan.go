@@ -3,6 +3,7 @@ package report
 import (
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,30 +17,12 @@ func ReportTWBuleScan(l map[string]interface{}) {
 }
 
 func ReportEnvMonitor(id string, m map[string]interface{}) {
-	var temp float64
-	var hum float64
-	var co2 float64
-	var rssi float64
-	var bat float64
-	var name string
-	if v, ok := m["temp"].(float64); ok {
-		temp = v
-	}
-	if v, ok := m["hum"].(float64); ok {
-		hum = v
-	}
-	if v, ok := m["co2"].(float64); ok {
-		co2 = v
-	}
-	if v, ok := m["rssi"].(float64); ok {
-		rssi = v
-	}
-	if v, ok := m["bat"].(float64); ok {
-		bat = v
-	}
-	if v, ok := m["name"].(string); ok {
-		name = v
-	}
+	temp := getFloat64(m["temp"])
+	hum := getFloat64(m["hum"])
+	co2 := getFloat64(m["co2"])
+	rssi := getFloat64(m["rssi"])
+	bat := getFloat64(m["bat"])
+	name, _ := m["name"].(string)
 	now := time.Now().UnixNano()
 	e := datastore.GetEnvMonitor(id)
 	if e != nil {
@@ -482,4 +465,27 @@ func checkOldMotionSensor() {
 	if len(ids) > 0 {
 		datastore.DeleteReport("motionSensor", ids)
 	}
+}
+
+func getFloat64(i interface{}) float64 {
+	switch v := i.(type) {
+	case string:
+		f, _ := strconv.ParseFloat(v, 64)
+		return f
+	case float64:
+		return v
+	case float32:
+		return float64(v)
+	case int:
+		return float64(v)
+	case int32:
+		return float64(v)
+	case int64:
+		return float64(v)
+	case uint32:
+		return float64(v)
+	case uint64:
+		return float64(v)
+	}
+	return 0.0
 }
