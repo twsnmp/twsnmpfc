@@ -22,6 +22,7 @@ func ReportEnvMonitor(id string, m map[string]interface{}) {
 	co2 := getFloat64(m["co2"])
 	rssi := getFloat64(m["rssi"])
 	bat := getFloat64(m["bat"])
+	press := getFloat64(m["press"])
 	name, _ := m["name"].(string)
 	now := time.Now().UnixNano()
 	e := datastore.GetEnvMonitor(id)
@@ -29,12 +30,13 @@ func ReportEnvMonitor(id string, m map[string]interface{}) {
 		e.Count++
 		e.LastTime = now
 		e.EnvData = append(e.EnvData, datastore.EnvDataEnt{
-			Time:     now,
-			RSSI:     int(rssi),
-			Temp:     temp,
-			Humidity: hum,
-			Battery:  int(bat),
-			ECo2:     co2,
+			Time:               now,
+			RSSI:               int(rssi),
+			Temp:               temp,
+			Humidity:           hum,
+			BarometricPressure: press,
+			Battery:            int(bat),
+			ECo2:               co2,
 		})
 		if len(e.EnvData) > MaxDataSize {
 			e.EnvData = e.EnvData[1:]
