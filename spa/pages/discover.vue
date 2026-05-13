@@ -108,7 +108,7 @@
         停止
       </v-btn>
       <v-btn v-else color="normal" @click="clear">
-        <v-icon>mdi-delete</v-icon>
+        <v-icon>mdi-check</v-icon>
         完了
       </v-btn>
       <v-btn color="normal" to="/map">

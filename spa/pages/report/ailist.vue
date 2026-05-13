@@ -35,7 +35,12 @@
           <v-icon small @click="$router.push({ path: '/polling/' + item.ID })">
             mdi-lan-check
           </v-icon>
-          <v-icon v-if="!readOnly" small @click="openDeleteDialog(item)">
+          <v-icon
+            v-if="!readOnly"
+            small
+            color="red"
+            @click="openDeleteDialog(item)"
+          >
             mdi-delete
           </v-icon>
         </template>

@@ -1411,9 +1411,9 @@
           </v-list-item-content>
         </v-list-item>
         <v-list-item @click="deleteDialog = true">
-          <v-list-item-icon
-            ><v-icon color="red">mdi-delete</v-icon></v-list-item-icon
-          >
+          <v-list-item-icon>
+            <v-icon color="red">mdi-delete</v-icon>
+          </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>削除</v-list-item-title>
           </v-list-item-content>
@@ -1532,9 +1532,9 @@
           </v-list-item-content>
         </v-list-item>
         <v-list-item @click="deleteItemDialog = true">
-          <v-list-item-icon
-            ><v-icon color="red">mdi-delete</v-icon></v-list-item-icon
-          >
+          <v-list-item-icon>
+            <v-icon color="red">mdi-delete</v-icon>
+          </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>削除</v-list-item-title>
           </v-list-item-content>
@@ -1628,9 +1628,9 @@
           </v-list-item-content>
         </v-list-item>
         <v-list-item @click="deleteNetworkDialog = true">
-          <v-list-item-icon
-            ><v-icon color="red">mdi-delete</v-icon></v-list-item-icon
-          >
+          <v-list-item-icon>
+            <v-icon color="red">mdi-delete</v-icon>
+          </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-title>削除</v-list-item-title>
           </v-list-item-content>

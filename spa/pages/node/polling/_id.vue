@@ -54,7 +54,9 @@
             mdi-brain
           </v-icon>
           <v-icon small @click="editPollingFunc(item)"> mdi-pencil </v-icon>
-          <v-icon small @click="deletePollingFunc(item)"> mdi-delete </v-icon>
+          <v-icon small color="red" @click="deletePollingFunc(item)">
+            mdi-delete
+          </v-icon>
           <v-icon small @click="copyPolling(item)"> mdi-content-copy </v-icon>
         </template>
         <template #[`body.append`]>

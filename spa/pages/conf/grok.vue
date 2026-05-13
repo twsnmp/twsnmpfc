@@ -29,7 +29,9 @@
       >
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="editGrok(item)"> mdi-pencil </v-icon>
-          <v-icon small @click="deleteGrok(item)"> mdi-delete </v-icon>
+          <v-icon small color="red" @click="deleteGrok(item)">
+            mdi-delete
+          </v-icon>
           <v-icon small @click="copyGrok(item)"> mdi-content-copy </v-icon>
         </template>
         <template #[`body.append`]>

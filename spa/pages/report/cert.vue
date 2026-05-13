@@ -27,7 +27,12 @@
         <template #[`item.actions`]="{ item }">
           <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
           <v-icon small @click="openEditDialog(item)"> mdi-pencil </v-icon>
-          <v-icon v-if="!readOnly" small @click="openDeleteDialog(item)">
+          <v-icon
+            v-if="!readOnly"
+            small
+            color="red"
+            @click="openDeleteDialog(item)"
+          >
             mdi-delete
           </v-icon>
         </template>
