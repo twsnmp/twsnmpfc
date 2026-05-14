@@ -29,7 +29,9 @@
           {{ item.Score.toFixed(1) }}
         </template>
         <template #[`item.actions`]="{ item }">
-          <v-icon small @click="openPollingChart(item)"> mdi-eye </v-icon>
+          <v-icon small title="情報" @click="openPollingChart(item)">
+            mdi-eye
+          </v-icon>
         </template>
       </v-data-table>
       <v-card-actions>

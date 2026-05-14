@@ -58,15 +58,23 @@
           <v-icon
             v-if="!node.ID.startsWith('NET:')"
             small
+            title="ポーリング追加"
             @click="addPolling(item)"
           >
             mdi-card-plus
           </v-icon>
-          <v-icon small @click="copyOneMIB(item)"> mdi-content-copy </v-icon>
-          <v-icon small color="red" @click="showSNMPSet(item)">
+          <v-icon small title="コピー" @click="copyOneMIB(item)">
+            mdi-content-copy
+          </v-icon>
+          <v-icon small color="red" title="SNMP Set" @click="showSNMPSet(item)">
             mdi-send
           </v-icon>
-          <v-icon small color="orange" @click="askLLMOne(item)">
+          <v-icon
+            small
+            color="orange"
+            title="AIに聞く"
+            @click="askLLMOne(item)"
+          >
             mdi-brain
           </v-icon>
         </template>

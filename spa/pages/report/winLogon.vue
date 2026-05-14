@@ -27,11 +27,14 @@
           {{ item.Score.toFixed(1) }}
         </template>
         <template #[`item.actions`]="{ item }">
-          <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
+          <v-icon small title="情報" @click="openInfoDialog(item)">
+            mdi-eye
+          </v-icon>
           <v-icon
             v-if="!readOnly"
             color="red"
             small
+            title="削除"
             @click="openDeleteDialog(item)"
           >
             mdi-delete

@@ -22,23 +22,30 @@
         <template #[`item.actions`]="{ item }">
           <v-icon
             small
+            title="情報"
             @click="$router.push({ path: '/report/ai/' + item.ID })"
           >
             mdi-eye
           </v-icon>
           <v-icon
             small
+            title="マップ"
             @click="$router.push({ path: '/map?node=' + item.NodeID })"
           >
             mdi-lan
           </v-icon>
-          <v-icon small @click="$router.push({ path: '/polling/' + item.ID })">
+          <v-icon
+            small
+            title="ポーリング"
+            @click="$router.push({ path: '/polling/' + item.ID })"
+          >
             mdi-lan-check
           </v-icon>
           <v-icon
             v-if="!readOnly"
             small
             color="red"
+            title="削除"
             @click="openDeleteDialog(item)"
           >
             mdi-delete

@@ -46,21 +46,36 @@
           {{ item.RepairAction ? 'あり' : '' }}
         </template>
         <template #[`item.actions`]="{ item }">
-          <v-icon small @click="$router.push({ path: '/polling/' + item.ID })">
+          <v-icon
+            small
+            title="情報"
+            @click="$router.push({ path: '/polling/' + item.ID })"
+          >
             mdi-eye
           </v-icon>
           <v-icon
             v-if="item.LogMode > 1"
             small
+            title="AI分析"
+            color="orange"
             @click="$router.push({ path: '/report/ai/' + item.ID })"
           >
             mdi-brain
           </v-icon>
-          <v-icon small @click="editPollingFunc(item)"> mdi-pencil </v-icon>
-          <v-icon small color="red" @click="deletePollingFunc(item)">
+          <v-icon small title="編集" @click="editPollingFunc(item)">
+            mdi-pencil
+          </v-icon>
+          <v-icon
+            small
+            color="red"
+            title="削除"
+            @click="deletePollingFunc(item)"
+          >
             mdi-delete
           </v-icon>
-          <v-icon small @click="copyPolling(item)"> mdi-content-copy </v-icon>
+          <v-icon small title="コピー" @click="copyPolling(item)">
+            mdi-content-copy
+          </v-icon>
         </template>
         <template #[`body.append`]>
           <tr>

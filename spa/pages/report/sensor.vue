@@ -34,19 +34,32 @@
           {{ formatCount(item.Send) }}
         </template>
         <template #[`item.actions`]="{ item }">
-          <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
+          <v-icon small title="情報" @click="openInfoDialog(item)">
+            mdi-eye
+          </v-icon>
           <v-icon
             v-if="!readOnly"
             small
             color="red"
+            title="削除"
             @click="openDeleteDialog(item)"
           >
             mdi-delete
           </v-icon>
-          <v-icon v-if="item.Ignore" small @click="toggleSensor(item.ID)">
+          <v-icon
+            v-if="item.Ignore"
+            small
+            title="有効化"
+            @click="toggleSensor(item.ID)"
+          >
             mdi-play
           </v-icon>
-          <v-icon v-if="!item.Ignore" small @click="toggleSensor(item.ID)">
+          <v-icon
+            v-if="!item.Ignore"
+            small
+            title="無効化"
+            @click="toggleSensor(item.ID)"
+          >
             mdi-stop
           </v-icon>
         </template>

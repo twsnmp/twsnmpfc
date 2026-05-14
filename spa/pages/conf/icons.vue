@@ -28,7 +28,9 @@
           0x{{ item.Code.toString(16) }}
         </template>
         <template #[`item.actions`]="{ item }">
-          <v-icon small @click="editIcon(item)"> mdi-pencil </v-icon>
+          <v-icon small title="編集" @click="editIcon(item)">
+            mdi-pencil
+          </v-icon>
         </template>
       </v-data-table>
       <v-card-actions>

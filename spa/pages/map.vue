@@ -577,20 +577,27 @@
               {{ $getStateName(item.State) }}
             </template>
             <template #[`item.actions`]="{ item }">
-              <v-icon small @click="topNetworkPort(item)">
+              <v-icon small title="最上位" @click="topNetworkPort(item)">
                 mdi-arrow-collapse-up
               </v-icon>
-              <v-icon small @click="upNetworkPort(item)"> mdi-arrow-up </v-icon>
-              <v-icon small @click="downNetworkPort(item)">
+              <v-icon small title="上" @click="upNetworkPort(item)">
+                mdi-arrow-up
+              </v-icon>
+              <v-icon small title="下" @click="downNetworkPort(item)">
                 mdi-arrow-down
               </v-icon>
-              <v-icon small @click="bottomNetworkPort(item)">
+              <v-icon small title="最下位" @click="bottomNetworkPort(item)">
                 mdi-arrow-collapse-down
               </v-icon>
-              <v-icon small @click="editNetworkPortFunc(item)">
+              <v-icon small title="編集" @click="editNetworkPortFunc(item)">
                 mdi-pencil
               </v-icon>
-              <v-icon small color="red" @click="deleteNetworkPort(item)">
+              <v-icon
+                small
+                color="red"
+                title="削除"
+                @click="deleteNetworkPort(item)"
+              >
                 mdi-delete
               </v-icon>
             </template>
@@ -743,8 +750,15 @@
               {{ getPollingName(item.NodeID2, item.PollingID2) }}
             </template>
             <template #[`item.actions`]="{ item }">
-              <v-icon small @click="editNetworkLine(item)"> mdi-pencil </v-icon>
-              <v-icon small color="red" @click="deleteNetworkLine(item)">
+              <v-icon small title="編集" @click="editNetworkLine(item)">
+                mdi-pencil
+              </v-icon>
+              <v-icon
+                small
+                color="red"
+                title="削除"
+                @click="deleteNetworkLine(item)"
+              >
                 mdi-delete
               </v-icon>
             </template>

@@ -371,7 +371,12 @@
           </v-row>
           <v-data-table :headers="schedulesHeaders" :items="schedules" dense>
             <template #[`item.actions`]="{ item }">
-              <v-icon color="error" small @click="delSchedule(item.ID)">
+              <v-icon
+                color="error"
+                small
+                title="削除"
+                @click="delSchedule(item.ID)"
+              >
                 mdi-delete
               </v-icon>
             </template>

@@ -52,7 +52,9 @@
           </tr>
         </template>
         <template #[`item.actions`]="{ item }">
-          <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
+          <v-icon small title="情報" @click="openInfoDialog(item)">
+            mdi-eye
+          </v-icon>
         </template>
       </v-data-table>
       <v-card-actions>

@@ -127,13 +127,25 @@
                 {{ formatBytes(item.Mem * 1024) }}
               </template>
               <template #[`item.actions`]="{ item }">
-                <v-icon small @click="editProcessStatusPolling(item)">
+                <v-icon
+                  small
+                  title="プロセス監視を追加"
+                  @click="editProcessStatusPolling(item)"
+                >
                   mdi-eye
                 </v-icon>
-                <v-icon small @click="editProcessCPUPolling(item)">
+                <v-icon
+                  small
+                  title="CPU監視を追加"
+                  @click="editProcessCPUPolling(item)"
+                >
                   mdi-cpu-64-bit
                 </v-icon>
-                <v-icon small @click="editProcessMemPolling(item)">
+                <v-icon
+                  small
+                  title="メモリー監視を追加"
+                  @click="editProcessMemPolling(item)"
+                >
                   mdi-memory
                 </v-icon>
               </template>

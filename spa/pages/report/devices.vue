@@ -28,6 +28,7 @@
           <v-icon
             v-if="item.NodeID"
             small
+            title="LAN"
             @click="$router.push({ path: '/map?node=' + item.NodeID })"
           >
             mdi-lan
@@ -38,11 +39,14 @@
           >
             mdi-file-find
           </v-icon>
-          <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
+          <v-icon small title="情報" @click="openInfoDialog(item)">
+            mdi-eye
+          </v-icon>
           <v-icon
             v-if="!readOnly"
             small
             color="red"
+            title="削除"
             @click="openDeleteDialog(item)"
           >
             mdi-delete

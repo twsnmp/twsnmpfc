@@ -52,12 +52,15 @@
           <v-icon
             v-if="!node.ID.startsWith('NET:')"
             small
+            title="ポーリング追加"
             @click="addPolling(item)"
           >
             mdi-card-plus
           </v-icon>
-          <v-icon small @click="copyOne(item)"> mdi-content-copy </v-icon>
-          <v-icon small @click="setPath(item)">
+          <v-icon small title="コピー" @click="copyOne(item)">
+            mdi-content-copy
+          </v-icon>
+          <v-icon small title="パス設定" @click="setPath(item)">
             mdi-arrow-up-thin-circle-outline
           </v-icon>
         </template>

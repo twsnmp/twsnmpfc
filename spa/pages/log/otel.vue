@@ -35,10 +35,10 @@
                 {{ formatTime(item.Last) }}
               </template>
               <template #[`item.actions`]="{ item }">
-                <v-icon small @click="showMetric(item.ID)">
+                <v-icon small title="メトリック" @click="showMetric(item.ID)">
                   mdi-file-chart
                 </v-icon>
-                <v-icon small @click="showMetricInfo(item.ID)">
+                <v-icon small title="情報" @click="showMetricInfo(item.ID)">
                   mdi-information
                 </v-icon>
               </template>

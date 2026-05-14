@@ -42,11 +42,14 @@
           {{ formatTime(item.Revoked) }}
         </template>
         <template #[`item.actions`]="{ item }">
-          <v-icon small @click="exportCert(item.ID)"> mdi-download </v-icon>
+          <v-icon small title="エクスポート" @click="exportCert(item.ID)">
+            mdi-download
+          </v-icon>
           <v-icon
             v-if="item.Type != 'system' && item.Status == 'valid'"
             color="red"
             small
+            title="削除"
             @click="showRevokeCert(item.ID)"
           >
             mdi-delete

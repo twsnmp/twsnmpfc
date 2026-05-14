@@ -45,10 +45,12 @@
             {{ $getStateName(item.State) }}
           </template>
           <template #[`item.actions`]="{ item }">
-            <v-icon small @click="editIFStatePolling(item)">
+            <v-icon small title="ポーリング" @click="editIFStatePolling(item)">
               mdi-lan-check
             </v-icon>
-            <v-icon small @click="editTrafPolling(item)"> mdi-gauge </v-icon>
+            <v-icon small title="ホストリソース" @click="editTrafPolling(item)">
+              mdi-gauge
+            </v-icon>
           </template>
         </v-data-table>
       </v-card-text>

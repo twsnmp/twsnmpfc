@@ -30,19 +30,29 @@
         <template #[`item.actions`]="{ item }">
           <v-icon
             small
+            title="ポーリング"
             @click="$router.push({ path: '/node/polling/' + item.ID })"
           >
             mdi-lan-check
           </v-icon>
-          <v-icon small @click="$router.push({ path: '/node/log/' + item.ID })">
+          <v-icon
+            small
+            title="ログ"
+            @click="$router.push({ path: '/node/log/' + item.ID })"
+          >
             mdi-calendar-check
           </v-icon>
-          <v-icon small @click="$router.push({ path: '/ping/' + item.IP })">
+          <v-icon
+            small
+            title="Ping"
+            @click="$router.push({ path: '/ping/' + item.IP })"
+          >
             mdi-check-network
           </v-icon>
           <v-icon
             v-if="item.Community || item.User"
             small
+            title="MIBブラウザー"
             @click="$router.push({ path: '/mibbr/' + item.ID })"
           >
             mdi-eye
@@ -50,12 +60,14 @@
           <v-icon
             v-if="item.GNMIUser"
             small
+            title="GNMI"
             @click="$router.push({ path: '/gnmi/' + item.ID })"
           >
             mdi-eye-check
           </v-icon>
           <v-icon
             small
+            title="vPanel"
             @click="$router.push({ path: '/node/vpanel/' + item.ID })"
           >
             mdi-apps-box
@@ -63,6 +75,7 @@
           <v-icon
             v-if="item.Community || item.User"
             small
+            title="ホストリソース"
             @click="$router.push({ path: '/node/hostResource/' + item.ID })"
           >
             mdi-gauge
@@ -70,15 +83,18 @@
           <v-icon
             v-if="item.Community || item.User"
             small
+            title="RMON"
             @click="$router.push({ path: '/node/rmon/' + item.ID })"
           >
             mdi-minus-network
           </v-icon>
-          <v-icon small @click="editNodeFunc(item)"> mdi-pencil </v-icon>
-          <v-icon small color="red" @click="deleteNodeFunc(item)">
+          <v-icon small title="編集" @click="editNodeFunc(item)">
+            mdi-pencil
+          </v-icon>
+          <v-icon small color="red" title="削除" @click="deleteNodeFunc(item)">
             mdi-delete
           </v-icon>
-          <v-icon v-if="item.MAC" small @click="doWOL(item.ID)">
+          <v-icon v-if="item.MAC" small title="WOL" @click="doWOL(item.ID)">
             mdi-alarm
           </v-icon>
         </template>

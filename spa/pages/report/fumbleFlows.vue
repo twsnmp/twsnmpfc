@@ -29,6 +29,7 @@
             v-if="!readOnly"
             small
             color="red"
+            title="削除"
             @click="openDeleteDialog(item)"
           >
             mdi-delete

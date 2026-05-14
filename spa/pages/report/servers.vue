@@ -35,24 +35,33 @@
           <v-icon
             v-if="item.ServerNodeID"
             small
+            title="マップ"
             @click="$router.push({ path: '/map?node=' + item.ServerNodeID })"
           >
             mdi-lan
           </v-icon>
           <v-icon
             small
+            title="アドレス分析"
             @click="$router.push({ path: '/report/address/' + item.Server })"
           >
             mdi-file-find
           </v-icon>
-          <v-icon small @click="$router.push({ path: '/ping/' + item.Server })">
+          <v-icon
+            small
+            title="Ping"
+            @click="$router.push({ path: '/ping/' + item.Server })"
+          >
             mdi-check-network
           </v-icon>
-          <v-icon small @click="openInfoDialog(item)"> mdi-eye </v-icon>
+          <v-icon small title="情報" @click="openInfoDialog(item)">
+            mdi-eye
+          </v-icon>
           <v-icon
             v-if="!readOnly"
             small
             color="red"
+            title="削除"
             @click="openDeleteDialog(item)"
           >
             mdi-delete
