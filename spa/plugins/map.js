@@ -11,6 +11,7 @@ let mapRedraw = true
 let readOnly = false
 let lockDrawItem = true
 let showNodeInfo = false
+let nodeLock     = false
 
 let mapCallBack
 
@@ -67,6 +68,7 @@ const showMAP = (div, m, url, ro) => {
   backImage = m.MapConf.BackImage
   fontSize = m.MapConf.FontSize || 12
   iconSize = m.MapConf.IconSize || 24
+  nodeLock = m.MapConf.NodeLock || false
   backImage.Image = null
   if (backImage.Path && mapP5) {
     mapP5.loadImage(url + '/backimage', (img) => {
@@ -686,7 +688,7 @@ const mapMain = (p5) => {
         })
       }
     }
-    if (p5.mouseButton === p5.RIGHT && selectedNodes.length > 1) {
+    if (p5.mouseButton === p5.RIGHT && selectedNodes.length > 1 && !nodeLock) {
       if (mapCallBack) {
         mapCallBack({
           Cmd: 'formatNodes',
@@ -901,16 +903,18 @@ const mapMain = (p5) => {
     }
   }
   const dragMoveNodes = () => {
-    selectedNodes.forEach((id) => {
-      if (nodes[id]) {
-        nodes[id].X += Math.trunc(p5.mouseX / scale - lastMouseX)
-        nodes[id].Y += Math.trunc(p5.mouseY / scale - lastMouseY)
-        checkNodePos(nodes[id])
-        if (!draggedNodes.includes(id)) {
-          draggedNodes.push(id)
+    if (!nodeLock) {
+      selectedNodes.forEach((id) => {
+        if (nodes[id]) {
+          nodes[id].X += Math.trunc(p5.mouseX / scale - lastMouseX)
+          nodes[id].Y += Math.trunc(p5.mouseY / scale - lastMouseY)
+          checkNodePos(nodes[id])
+          if (!draggedNodes.includes(id)) {
+            draggedNodes.push(id)
+          }
         }
-      }
-    })
+      })
+    }
     selectedItems.forEach((id) => {
       if (items[id]) {
         items[id].X += Math.trunc(p5.mouseX / scale - lastMouseX)
@@ -921,7 +925,7 @@ const mapMain = (p5) => {
         }
       }
     })
-    if (selectedNetwork !== "" && networks[selectedNetwork]) {
+    if (!nodeLock && selectedNetwork !== "" && networks[selectedNetwork]) {
       networks[selectedNetwork].X += Math.trunc(p5.mouseX / scale - lastMouseX)
       networks[selectedNetwork].Y += Math.trunc(p5.mouseY / scale - lastMouseY)
       draggedNetwork = selectedNetwork

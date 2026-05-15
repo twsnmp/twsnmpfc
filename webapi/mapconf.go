@@ -56,6 +56,7 @@ func getMapConf(c echo.Context) error {
 	r.LLMBaseURL = datastore.MapConf.LLMBaseURL
 	r.LLMAPIKey = datastore.MapConf.LLMAPIKey
 	r.LLMModel = datastore.MapConf.LLMModel
+	r.NodeLock = datastore.MapConf.NodeLock
 	if r.IconSize == 0 {
 		r.IconSize = 32
 	}
@@ -117,6 +118,7 @@ func postMapConf(c echo.Context) error {
 	datastore.MapConf.LLMBaseURL = mc.LLMBaseURL
 	datastore.MapConf.LLMAPIKey = mc.LLMAPIKey
 	datastore.MapConf.LLMModel = mc.LLMModel
+	datastore.MapConf.NodeLock = mc.NodeLock
 	if err := datastore.SaveMapConf(); err != nil {
 		return echo.ErrBadRequest
 	}

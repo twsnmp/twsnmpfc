@@ -69,6 +69,7 @@ type MapConfEnt struct {
 	LLMBaseURL  string
 	LLMAPIKey   string
 	LLMModel    string
+	NodeLock    bool
 }
 
 func initConf() {

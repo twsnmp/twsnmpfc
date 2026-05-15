@@ -303,6 +303,12 @@
               >
               </v-select>
             </v-col>
+            <v-col>
+              <v-switch
+                v-model="mapconf.NodeLock"
+                label="ノード位置を固定"
+              ></v-switch>
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col>
