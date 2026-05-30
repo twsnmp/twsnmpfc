@@ -453,7 +453,16 @@ export default {
           })
         }
       }
-      const nodeID = this.nodeList.length > 0 ? this.nodeList[0].value : ''
+      let nodeID = ''
+      for (let j = 0; j < this.nodeList.length; j++) {
+        if (this.nodeList[j].ip === item.Remote) {
+          nodeID = this.nodeList[j].value
+          break
+        }
+      }
+      if (!nodeID && this.nodeList.length > 0) {
+        nodeID = this.nodeList[0].value
+      }
       this.polling = {
         ID: '',
         Name: 'mqtt:' + item.Topic,
