@@ -33,9 +33,13 @@
           {{ truncateText(item.Message) }}
         </template>
         <template #[`item.actions`]="{ item }">
-          <v-icon small @click="editPolling(item)"> mdi-card-plus </v-icon>
-          <v-icon small @click="showAddrInfo(item)"> mdi-file-find </v-icon>
-          <v-icon small color="orange" @click="askLLM(item)">
+          <v-icon small title="ポーリンング追加" @click="editPolling(item)">
+            mdi-card-plus
+          </v-icon>
+          <v-icon small title="アドレス分析" @click="showAddrInfo(item)">
+            mdi-file-find
+          </v-icon>
+          <v-icon small title="AIに聞く" color="orange" @click="askLLM(item)">
             mdi-brain
           </v-icon>
         </template>
@@ -1211,13 +1215,13 @@ export default {
         {
           text: 'メッセージ',
           value: 'Message',
-          width: '40%',
+          width: '37%',
           filter: (value) => {
             if (!this.conf.msg) return true
             return value.includes(this.conf.msg)
           },
         },
-        { text: `操作`, value: `actions`, width: '5%' },
+        { text: `操作`, value: `actions`, width: '8%' },
       ],
       logs: [],
       extractDialog: false,

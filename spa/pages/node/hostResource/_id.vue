@@ -57,7 +57,11 @@
                 {{ formatBytes(item.Used) }}
               </template>
               <template #[`item.actions`]="{ item }">
-                <v-icon small @click="editStoragePolling(item)">
+                <v-icon
+                  small
+                  title="ポーリング追加"
+                  @click="editStoragePolling(item)"
+                >
                   mdi-card-plus
                 </v-icon>
               </template>

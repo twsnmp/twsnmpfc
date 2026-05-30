@@ -110,7 +110,11 @@
                 {{ formatDur(item.Dur) }}
               </template>
               <template #[`item.actions`]="{ item }">
-                <v-icon small @click="showTrace(item.Bucket, item.TraceID)">
+                <v-icon
+                  small
+                  title="トレース"
+                  @click="showTrace(item.Bucket, item.TraceID)"
+                >
                   mdi-file-chart
                 </v-icon>
               </template>

@@ -20,8 +20,10 @@
         :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
       >
         <template #[`item.actions`]="{ item }">
-          <v-icon small @click="editPolling(item)"> mdi-card-plus </v-icon>
-          <v-icon small color="orange" @click="askLLM(item)">
+          <v-icon small title="ポーリング追加" @click="editPolling(item)">
+            mdi-card-plus
+          </v-icon>
+          <v-icon small title="AIに聞く" color="orange" @click="askLLM(item)">
             mdi-brain
           </v-icon>
         </template>

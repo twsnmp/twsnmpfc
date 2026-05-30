@@ -398,7 +398,9 @@
           dense
         >
           <template #[`item.actions`]="{ item }">
-            <v-icon small @click="searchExtMIB(item)"> mdi-search-web </v-icon>
+            <v-icon small title="拡張MIB検索" @click="searchExtMIB(item)">
+              mdi-search-web
+            </v-icon>
           </template>
         </v-data-table>
         <v-card-actions>

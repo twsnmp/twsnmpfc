@@ -8,6 +8,15 @@
       <v-alert v-model="deleteError" color="error" dense dismissible>
         MQTT統計の削除に失敗しました
       </v-alert>
+      <v-alert v-model="copyDone" color="success" dense dismissible>
+        コピーしました
+      </v-alert>
+      <v-alert v-model="copyError" color="error" dense dismissible>
+        コピーに失敗しました
+      </v-alert>
+      <v-alert v-model="addPollingDone" color="success" dense dismissible>
+        ポーリングを追加しました
+      </v-alert>
       <v-data-table
         :headers="headers"
         :items="mqttStats"
@@ -31,6 +40,17 @@
           {{ formatBytes(item.Bytes) }}
         </template>
         <template #[`item.actions`]="{ item }">
+          <v-icon small title="トピック名をコピー" @click="copyTopic(item)">
+            mdi-content-copy
+          </v-icon>
+          <v-icon
+            v-if="!readOnly"
+            small
+            title="ポーリング追加"
+            @click="editPolling(item)"
+          >
+            mdi-card-plus
+          </v-icon>
           <v-icon
             v-if="!readOnly"
             small
@@ -151,6 +171,109 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="editPollingDialog" persistent max-width="50vw">
+      <v-card>
+        <v-card-title>MQTTポーリング追加</v-card-title>
+        <v-alert v-model="addPollingError" color="error" dense dismissible>
+          ポーリングを追加できませんでした
+        </v-alert>
+        <v-card-text>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="polling.NodeID"
+                :items="nodeList"
+                label="ノード"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-text-field v-model="polling.Name" label="名前"></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-select
+                v-model="polling.Level"
+                :items="$levelList"
+                label="レベル"
+              ></v-select>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="polling.Type"
+                readonly
+                label="種別"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="polling.Mode"
+                readonly
+                label="モード"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-text-field
+                v-model="polling.Params"
+                label="MQTTサーバーURL (空欄時は tcp://[ノードIP]:1883)"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model="polling.Filter"
+                readonly
+                label="トピック"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-textarea
+                v-model="polling.Script"
+                label="判定スクリプト"
+                rows="3"
+              ></v-textarea>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-slider
+                v-model="polling.PollInt"
+                label="ポーリング間隔(Sec)"
+                class="align-center"
+                max="86400"
+                min="5"
+                hide-details
+              >
+                <template #append>
+                  <v-text-field
+                    v-model="polling.PollInt"
+                    class="mt-0 pt-0"
+                    hide-details
+                    single-line
+                    type="number"
+                    style="width: 60px"
+                  ></v-text-field>
+                </template>
+              </v-slider>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" dark @click="doAddPolling">
+            <v-icon>mdi-content-save</v-icon>
+            保存
+          </v-btn>
+          <v-btn color="normal" dark @click="editPollingDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-row>
 </template>
 
@@ -173,7 +296,7 @@ export default {
         {
           text: '接続元',
           value: 'Remote',
-          width: '12%',
+          width: '10%',
           filter: (value) => {
             if (!this.filter.remote) return true
             return value.includes(this.filter.remote)
@@ -182,17 +305,17 @@ export default {
         {
           text: 'トピック',
           value: 'Topic',
-          width: '21%',
+          width: '20%',
           filter: (value) => {
             if (!this.filter.topic) return true
             return value.includes(this.filter.topic)
           },
         },
-        { text: '回数', value: 'Count', width: '6%' },
+        { text: '回数', value: 'Count', width: '5%' },
         { text: 'バイト数', value: 'Bytes', width: '8%' },
-        { text: '初回', value: 'First', width: '13%' },
-        { text: '最終', value: 'Last', width: '13%' },
-        { text: '操作', value: 'actions', width: '8%', sortable: false },
+        { text: '初回', value: 'First', width: '12%' },
+        { text: '最終', value: 'Last', width: '12%' },
+        { text: '操作', value: 'actions', width: '10%', sortable: false },
       ],
       filter: {
         clientID: '',
@@ -204,6 +327,13 @@ export default {
       deleteDialog: false,
       deleteAllDialog: false,
       deleteError: false,
+      editPollingDialog: false,
+      addPollingError: false,
+      addPollingDone: false,
+      copyDone: false,
+      copyError: false,
+      polling: {},
+      nodeList: [],
     }
   },
   async fetch() {
@@ -296,6 +426,65 @@ export default {
         return false
       }
       return true
+    },
+    copyTopic(item) {
+      if (!navigator.clipboard) {
+        this.copyError = true
+        return
+      }
+      navigator.clipboard.writeText(item.Topic).then(
+        () => {
+          this.copyDone = true
+          setTimeout(() => {
+            this.copyDone = false
+          }, 3000)
+        },
+        () => {
+          this.copyError = true
+        }
+      )
+    },
+    async editPolling(item) {
+      if (this.nodeList.length < 1) {
+        const r = await this.$axios.$get('/api/nodes')
+        if (r) {
+          r.forEach((n) => {
+            this.nodeList.push({ text: n.Name, value: n.ID, ip: n.IP })
+          })
+        }
+      }
+      const nodeID = this.nodeList.length > 0 ? this.nodeList[0].value : ''
+      this.polling = {
+        ID: '',
+        Name: 'mqtt:' + item.Topic,
+        NodeID: nodeID,
+        Type: 'mqtt',
+        Mode: 'subscribe',
+        Params: '',
+        Filter: item.Topic,
+        Extractor: '',
+        Script: '',
+        Level: 'low',
+        PollInt: 600,
+        Timeout: 5,
+        Retry: 0,
+        LogMode: 0,
+      }
+      this.editPollingDialog = true
+    },
+    doAddPolling() {
+      this.$axios
+        .post('/api/polling/add', this.polling)
+        .then(() => {
+          this.editPollingDialog = false
+          this.addPollingDone = true
+          setTimeout(() => {
+            this.addPollingDone = false
+          }, 3000)
+        })
+        .catch((e) => {
+          this.addPollingError = true
+        })
     },
   },
 }

@@ -308,7 +308,7 @@
                 <td>IPアドレス</td>
                 <td>
                   {{ selected.IP }}
-                  <v-icon small @click="doCopy(selected.IP)">
+                  <v-icon small title="コピー" @click="doCopy(selected.IP)">
                     mdi-content-copy
                   </v-icon>
                 </td>
@@ -325,7 +325,7 @@
                 <td>MACアドレス</td>
                 <td>
                   {{ selected.MAC }}
-                  <v-icon small @click="doCopy(selected.MAC)">
+                  <v-icon small title="コピー" @click="doCopy(selected.MAC)">
                     mdi-content-copy
                   </v-icon>
                 </td>
