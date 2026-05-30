@@ -8,15 +8,15 @@
       <v-alert v-model="deleteError" color="error" dense dismissible>
         MQTT統計の削除に失敗しました
       </v-alert>
-      <v-alert v-model="copyDone" color="success" dense dismissible>
-        コピーしました
-      </v-alert>
-      <v-alert v-model="copyError" color="error" dense dismissible>
+      <v-snackbar v-model="copyError" absolute centered color="error">
         コピーに失敗しました
-      </v-alert>
-      <v-alert v-model="addPollingDone" color="success" dense dismissible>
+      </v-snackbar>
+      <v-snackbar v-model="copyDone" absolute centered color="primary">
+        コピーしました
+      </v-snackbar>
+      <v-snackbar v-model="addPollingDone" absolute centered color="primary">
         ポーリングを追加しました
-      </v-alert>
+      </v-snackbar>
       <v-data-table
         :headers="headers"
         :items="mqttStats"
