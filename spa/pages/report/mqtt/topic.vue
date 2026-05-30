@@ -1,0 +1,302 @@
+<template>
+  <v-row justify="center">
+    <v-card min-width="1000px" width="100%">
+      <v-card-title>
+        MQTTトピック
+        <v-spacer></v-spacer>
+      </v-card-title>
+      <v-alert v-model="deleteError" color="error" dense dismissible>
+        MQTT統計の削除に失敗しました
+      </v-alert>
+      <v-data-table
+        :headers="headers"
+        :items="mqttStats"
+        :items-per-page="15"
+        sort-by="ClientID"
+        dense
+        :loading="$fetchState.pending"
+        loading-text="Loading... Please wait"
+        :footer-props="{ 'items-per-page-options': [10, 20, 30, 50, 100, -1] }"
+      >
+        <template #[`item.State`]="{ item }">
+          <v-icon :color="$getStateColor(item.State)">{{
+            $getStateIconName(item.State)
+          }}</v-icon>
+          {{ $getStateName(item.State) }}
+        </template>
+        <template #[`item.Count`]="{ item }">
+          {{ formatCount(item.Count) }}
+        </template>
+        <template #[`item.Bytes`]="{ item }">
+          {{ formatBytes(item.Bytes) }}
+        </template>
+        <template #[`item.actions`]="{ item }">
+          <v-icon
+            v-if="!readOnly"
+            small
+            color="red"
+            title="削除"
+            @click="openDeleteDialog(item)"
+          >
+            mdi-delete
+          </v-icon>
+        </template>
+        <template #[`body.append`]>
+          <tr>
+            <td></td>
+            <td>
+              <v-text-field
+                v-model="filter.clientID"
+                label="Client ID"
+              ></v-text-field>
+            </td>
+            <td>
+              <v-text-field
+                v-model="filter.remote"
+                label="Remote"
+              ></v-text-field>
+            </td>
+            <td>
+              <v-text-field v-model="filter.topic" label="Topic"></v-text-field>
+            </td>
+            <td colspan="5"></td>
+          </tr>
+        </template>
+      </v-data-table>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <download-excel
+          :fetch="makeExports"
+          type="csv"
+          name="TWSNMP_FC_MQTT_Topic_List.csv"
+          header="TWSNMP FCのMQTTトピックリスト"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeExports"
+          type="csv"
+          :escape-csv="false"
+          name="TWSNMP_FC_MQTT_Topic_List.csv"
+          header="TWSNMP FCのMQTTトピックリスト"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-file-delimited</v-icon>
+            CSV(NO ESC)
+          </v-btn>
+        </download-excel>
+        <download-excel
+          :fetch="makeExports"
+          type="xls"
+          name="TWSNMP_FC_MQTT_Topic_List.xls"
+          header="TWSNMP FCのMQTTトピックリスト"
+          worksheet="MQTTトピック"
+          class="v-btn"
+        >
+          <v-btn color="primary" dark>
+            <v-icon>mdi-microsoft-excel</v-icon>
+            Excel
+          </v-btn>
+        </download-excel>
+        <v-btn v-if="!readOnly" color="error" dark @click="openDeleteAllDialog">
+          <v-icon>mdi-delete</v-icon>
+          全て削除
+        </v-btn>
+        <v-btn color="normal" dark @click="$fetch()">
+          <v-icon>mdi-cached</v-icon>
+          更新
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+    <v-dialog v-model="deleteDialog" persistent max-width="50vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">MQTT統計削除</span>
+        </v-card-title>
+        <v-card-text> 選択したトピックの統計情報を削除しますか？ </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="doDelete">
+            <v-icon>mdi-delete</v-icon>
+            削除
+          </v-btn>
+          <v-btn color="normal" @click="deleteDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="deleteAllDialog" persistent max-width="50vw">
+      <v-card>
+        <v-card-title>
+          <span class="headline">MQTT統計全削除</span>
+        </v-card-title>
+        <v-card-text> 全てのMQTTトピック統計情報を削除しますか？ </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="error" @click="doDeleteAll">
+            <v-icon>mdi-delete</v-icon>
+            全て削除
+          </v-btn>
+          <v-btn color="normal" @click="deleteAllDialog = false">
+            <v-icon>mdi-cancel</v-icon>
+            キャンセル
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-row>
+</template>
+
+<script>
+import * as numeral from 'numeral'
+export default {
+  data() {
+    return {
+      headers: [
+        { text: '状態', value: 'State', width: '8%' },
+        {
+          text: 'クライアントID',
+          value: 'ClientID',
+          width: '15%',
+          filter: (value) => {
+            if (!this.filter.clientID) return true
+            return value.includes(this.filter.clientID)
+          },
+        },
+        {
+          text: '接続元',
+          value: 'Remote',
+          width: '12%',
+          filter: (value) => {
+            if (!this.filter.remote) return true
+            return value.includes(this.filter.remote)
+          },
+        },
+        {
+          text: 'トピック',
+          value: 'Topic',
+          width: '21%',
+          filter: (value) => {
+            if (!this.filter.topic) return true
+            return value.includes(this.filter.topic)
+          },
+        },
+        { text: '回数', value: 'Count', width: '6%' },
+        { text: 'バイト数', value: 'Bytes', width: '8%' },
+        { text: '初回', value: 'First', width: '13%' },
+        { text: '最終', value: 'Last', width: '13%' },
+        { text: '操作', value: 'actions', width: '8%', sortable: false },
+      ],
+      filter: {
+        clientID: '',
+        remote: '',
+        topic: '',
+      },
+      mqttStats: [],
+      selected: {},
+      deleteDialog: false,
+      deleteAllDialog: false,
+      deleteError: false,
+    }
+  },
+  async fetch() {
+    const r = await this.$axios.$get('/api/report/mqtt')
+    if (!r) {
+      return
+    }
+    this.mqttStats = r
+    this.mqttStats.forEach((s) => {
+      s.First = this.$timeFormat(
+        new Date(s.First / (1000 * 1000)),
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
+      )
+      s.Last = this.$timeFormat(
+        new Date(s.Last / (1000 * 1000)),
+        '{yyyy}/{MM}/{dd} {HH}:{mm}'
+      )
+    })
+  },
+  computed: {
+    readOnly() {
+      return this.$store.state.map.readOnly
+    },
+  },
+  methods: {
+    doDelete() {
+      this.$axios
+        .delete('/api/report/mqtt/' + this.selected.ID)
+        .then((r) => {
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.deleteError = true
+          this.$fetch()
+        })
+      this.deleteDialog = false
+    },
+    doDeleteAll() {
+      this.$axios
+        .delete('/api/report/mqtt/all')
+        .then((r) => {
+          this.$fetch()
+        })
+        .catch((e) => {
+          this.deleteError = true
+          this.$fetch()
+        })
+      this.deleteAllDialog = false
+    },
+    openDeleteDialog(item) {
+      this.selected = item
+      this.deleteDialog = true
+    },
+    openDeleteAllDialog() {
+      this.deleteAllDialog = true
+    },
+    formatCount(n) {
+      return numeral(n).format('0,0')
+    },
+    formatBytes(n) {
+      return numeral(n).format('0.000b')
+    },
+    makeExports() {
+      const exports = []
+      this.mqttStats.forEach((e) => {
+        if (!this.filterMqtt(e)) {
+          return
+        }
+        exports.push({
+          状態: e.State,
+          クライアントID: e.ClientID,
+          接続元: e.Remote,
+          トピック: e.Topic,
+          回数: e.Count,
+          バイト数: e.Bytes,
+          初回日時: e.First,
+          最終日時: e.Last,
+        })
+      })
+      return exports
+    },
+    filterMqtt(e) {
+      if (this.filter.clientID && !e.ClientID.includes(this.filter.clientID)) {
+        return false
+      }
+      if (this.filter.remote && !e.Remote.includes(this.filter.remote)) {
+        return false
+      }
+      if (this.filter.topic && !e.Topic.includes(this.filter.topic)) {
+        return false
+      }
+      return true
+    },
+  },
+}
+</script>

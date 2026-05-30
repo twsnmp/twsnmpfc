@@ -26,11 +26,13 @@ var MqttFrom = ""
 
 func mqttd(stopCh chan bool) {
 	log.Printf("start mqttd")
+	datastore.LoadMqttStat()
 	s := startMqttServer()
 	<-stopCh
 	if s != nil {
 		s.Close()
 	}
+	datastore.SaveMqttStats()
 	log.Printf("stop mqttd")
 }
 
@@ -190,6 +192,7 @@ func (h *mqttHook) OnUnsubscribed(cl *mqtt.Client, pk packets.Packet) {
 }
 
 func (h *mqttHook) OnPublished(cl *mqtt.Client, pk packets.Packet) {
+	datastore.UpdateMqttStat(cl.ID, getMqttRemoteIP(cl.Net.Remote), pk.TopicName, len(pk.Payload))
 	report.UpdateSensor(cl.ID, "mqtt", 1)
 	if datastore.MapConf.MqttToSyslog && datastore.MapConf.EnableSyslogd {
 		logMap := make(map[string]any)
@@ -207,3 +210,14 @@ func (h *mqttHook) OnPublished(cl *mqtt.Client, pk packets.Packet) {
 		}
 	}
 }
+
+func getMqttRemoteIP(remote string) string {
+	a := strings.Split(remote, ":")
+	if len(a) > 2 {
+		remote = strings.Join(a[:len(a)-1], ":")
+	} else if len(a) == 2 {
+		remote = a[0]
+	}
+	return remote
+}
+

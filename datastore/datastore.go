@@ -295,7 +295,7 @@ func openDB(path string) error {
 func initDB() error {
 	buckets := []string{"config", "nodes", "items", "lines", "networks", "pollings", "logs", "pollingLogs",
 		"syslog", "trap", "netflow", "ipfix", "arplog", "arp", "ai", "report", "grok", "images",
-		"sflow", "sflowCounter", "certs", "memo", "otelTrace", "otelMetric",
+		"sflow", "sflowCounter", "certs", "memo", "otelTrace", "otelMetric", "mqttStat",
 	}
 	reports := []string{"devices", "users", "flows", "fumbleFlows", "servers", "ips",
 		"ether", "dns", "radius", "tls", "cert",

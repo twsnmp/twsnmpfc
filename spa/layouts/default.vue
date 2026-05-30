@@ -179,6 +179,25 @@
               </v-list-item-content>
             </v-list-item>
           </v-list-group>
+          <v-list-group no-action sub-group>
+            <template #activator>
+              <v-list-item-title>MQTT</v-list-item-title>
+            </template>
+            <v-list-item
+              v-for="(item, i) in mqttMenus"
+              :key="i"
+              :to="item.to"
+              router
+              exact
+            >
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title>{{ item.title }} </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
         </v-list-group>
         <v-list-group no-action prepend-icon="mdi-view-list" :value="false">
           <template #activator>
@@ -528,6 +547,18 @@ export default {
           icon: 'mdi-radio-tower',
           title: '電波強度',
           to: '/report/sdrpower',
+        },
+      ],
+      mqttMenus: [
+        {
+          icon: 'mdi-format-list-bulleted',
+          title: 'トピック',
+          to: '/report/mqtt/topic',
+        },
+        {
+          icon: 'mdi-account-check',
+          title: 'クライアント',
+          to: '/report/mqtt/client',
         },
       ],
       logMenus: [
