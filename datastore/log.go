@@ -324,6 +324,9 @@ func deleteOldLogs() {
 		}
 	}
 	log.Printf("deleteOldLogs delLogs=%d done=%d dur=%s", delCount, doneCount, time.Since(s))
+	if delMqtt := DeleteOldMqttStats(MapConf.LogDays); delMqtt > 0 {
+		log.Printf("delete old mqtt stats count=%d", delMqtt)
+	}
 }
 
 func DeleteAllLogs() {
