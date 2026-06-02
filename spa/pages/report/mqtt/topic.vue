@@ -460,6 +460,21 @@ export default {
           break
         }
       }
+      if (!nodeID) {
+        for (let j = 0; j < this.nodeList.length; j++) {
+          const ip = this.nodeList[j].ip
+          const name = this.nodeList[j].text.toLowerCase()
+          if (
+            ip === '127.0.0.1' ||
+            ip === 'localhost' ||
+            name === 'localhost' ||
+            name.includes('twsnmp')
+          ) {
+            nodeID = this.nodeList[j].value
+            break
+          }
+        }
+      }
       if (!nodeID && this.nodeList.length > 0) {
         nodeID = this.nodeList[0].value
       }
@@ -469,7 +484,7 @@ export default {
         NodeID: nodeID,
         Type: 'mqtt',
         Mode: 'subscribe',
-        Params: '',
+        Params: 'tcp://127.0.0.1:1883',
         Filter: item.Topic,
         Extractor: '',
         Script: '',
