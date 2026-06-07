@@ -297,6 +297,15 @@
                 label="Community"
               ></v-text-field>
             </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNode.SnmpPort"
+                type="number"
+                min="0"
+                max="65535"
+                label="SNMPポート (0でデフォルト161)"
+              ></v-text-field>
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col>
@@ -792,6 +801,7 @@ export default {
       this.updateError = false
       if (this.editIndex > -1) {
         this.editNode.HPorts *= 1
+        this.editNode.SnmpPort *= 1
         Object.assign(this.nodes[this.editIndex], this.editNode)
         this.$axios.post('/api/node/update', this.editNode).catch((e) => {
           this.updateError = true

@@ -193,6 +193,8 @@ type NodeEnt struct {
 	URL          string
 	AddrMode     string
 	AutoAck      bool
+	HPorts       int
+	SnmpPort     int
 }
 
 type EventLogEnt struct {

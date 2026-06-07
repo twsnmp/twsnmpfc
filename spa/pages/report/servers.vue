@@ -460,6 +460,15 @@
                 label="Community"
               ></v-text-field>
             </v-col>
+            <v-col>
+              <v-text-field
+                v-model="node.SnmpPort"
+                type="number"
+                min="0"
+                max="65535"
+                label="SNMPポート (0でデフォルト161)"
+              ></v-text-field>
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col>
@@ -752,6 +761,7 @@ export default {
         MAC: '',
         SnmpMode: '',
         Community: '',
+        SnmpPort: 0,
         User: '',
         Password: '',
         PublicKey: '',
@@ -767,6 +777,7 @@ export default {
       const url = '/api/node/update'
       this.addNodeError = false
       this.node.HPorts *= 1
+      this.node.SnmpPort *= 1
       this.$axios
         .post(url, this.node)
         .then(() => {

@@ -33,6 +33,7 @@ type NetworkEnt struct {
 	Unmanaged bool
 	PortWatch bool
 	HPorts    int
+	SnmpPort  int
 	X         int
 	Y         int
 	W         int

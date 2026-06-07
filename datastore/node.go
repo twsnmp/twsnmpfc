@@ -35,6 +35,7 @@ type NodeEnt struct {
 	AddrMode     string
 	AutoAck      bool
 	HPorts       int
+	SnmpPort     int
 }
 
 func loadMapData() error {

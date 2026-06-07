@@ -426,6 +426,7 @@ func mcpSnmpWalk(ctx context.Context, req *mcp.CallToolRequest, args mcpSnmpWalk
 	if target == "" {
 		return nil, nil, fmt.Errorf("no target")
 	}
+	port := uint16(161)
 	if n := datastore.FindNodeFromName(target); n != nil {
 		if community == "" {
 			community = n.Community
@@ -439,6 +440,9 @@ func mcpSnmpWalk(ctx context.Context, req *mcp.CallToolRequest, args mcpSnmpWalk
 		if snmpMode == "" {
 			snmpMode = n.SnmpMode
 		}
+		if n.SnmpPort > 0 {
+			port = uint16(n.SnmpPort)
+		}
 		target = n.IP
 	} else {
 		target = getTargetIP(target)
@@ -448,7 +452,7 @@ func mcpSnmpWalk(ctx context.Context, req *mcp.CallToolRequest, args mcpSnmpWalk
 	}
 	agent := &gosnmp.GoSNMP{
 		Target:    target,
-		Port:      161,
+		Port:      port,
 		Transport: "udp",
 		Community: community,
 		Version:   gosnmp.Version2c,
@@ -564,6 +568,7 @@ func mcpSnmpSet(ctx context.Context, req *mcp.CallToolRequest, args mcpSnmpSetPa
 	if target == "" {
 		return nil, nil, fmt.Errorf("no target")
 	}
+	port := uint16(161)
 	if n := datastore.FindNodeFromName(target); n != nil {
 		if community == "" {
 			community = n.Community
@@ -577,6 +582,9 @@ func mcpSnmpSet(ctx context.Context, req *mcp.CallToolRequest, args mcpSnmpSetPa
 		if snmpMode == "" {
 			snmpMode = n.SnmpMode
 		}
+		if n.SnmpPort > 0 {
+			port = uint16(n.SnmpPort)
+		}
 		target = n.IP
 	} else {
 		target = getTargetIP(target)
@@ -586,7 +594,7 @@ func mcpSnmpSet(ctx context.Context, req *mcp.CallToolRequest, args mcpSnmpSetPa
 	}
 	agent := &gosnmp.GoSNMP{
 		Target:    target,
-		Port:      161,
+		Port:      port,
 		Transport: "udp",
 		Community: community,
 		Version:   gosnmp.Version2c,

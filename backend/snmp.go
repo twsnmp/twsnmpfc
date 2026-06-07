@@ -519,9 +519,13 @@ func getSNMPAgent(n *datastore.NodeEnt) *gosnmp.GoSNMP {
 	} else if n.Community == "" {
 		return nil
 	}
+	port := uint16(161)
+	if n.SnmpPort > 0 {
+		port = uint16(n.SnmpPort)
+	}
 	agent := &gosnmp.GoSNMP{
 		Target:    n.IP,
-		Port:      161,
+		Port:      port,
 		Transport: "udp",
 		Community: n.Community,
 		Version:   gosnmp.Version2c,

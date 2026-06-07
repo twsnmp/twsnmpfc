@@ -192,6 +192,15 @@
                 label="Community"
               ></v-text-field>
             </v-col>
+            <v-col>
+              <v-text-field
+                v-model="editNode.SnmpPort"
+                type="number"
+                min="0"
+                max="65535"
+                label="SNMPポート (0でデフォルト161)"
+              ></v-text-field>
+            </v-col>
           </v-row>
           <v-row dense>
             <v-col>
@@ -532,15 +541,28 @@
                 label="Community"
               ></v-text-field>
             </v-col>
-            <v-col v-if="editNetwork.SnmpMode == ''"></v-col>
-            <v-col v-if="editNetwork.SnmpMode != ''">
+            <v-col>
+              <v-text-field
+                v-model="editNetwork.SnmpPort"
+                type="number"
+                min="0"
+                max="65535"
+                label="SNMPポート (0でデフォルト161)"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row
+            v-if="!editNetwork.Unmanaged && editNetwork.SnmpMode != ''"
+            dense
+          >
+            <v-col>
               <v-text-field
                 v-model="editNetwork.User"
                 autocomplete="username"
                 label="ユーザー"
               ></v-text-field>
             </v-col>
-            <v-col v-if="editNetwork.SnmpMode != ''">
+            <v-col>
               <v-text-field
                 v-model="editNetwork.Password"
                 autocomplete="new-password"
@@ -2204,6 +2226,7 @@ export default {
       }
       this.editNodeError = false
       this.editNode.HPorts *= 1
+      this.editNode.SnmpPort *= 1
       this.$axios
         .post(url, this.editNode)
         .then(() => {
@@ -2263,6 +2286,7 @@ export default {
       this.editNetwork.H *= 1
       this.editNetwork.W *= 1
       this.editNetwork.HPorts *= 1
+      this.editNetwork.SnmpPort *= 1
       this.$axios
         .post('/api/network/update', this.editNetwork)
         .then(() => {
@@ -2283,6 +2307,7 @@ export default {
       this.editNetwork.Error = '' // エラーをクリア
       this.editNetwork.LLDP = false // LLDPをクリア
       this.editNetwork.HPorts *= 1
+      this.editNetwork.SnmpPort *= 1
       this.$axios
         .post('/api/network/update', this.editNetwork)
         .then(() => {
@@ -2327,6 +2352,7 @@ export default {
         MAC: '',
         SnmpMode: '',
         Community: '',
+        SnmpPort: 0,
         User: '',
         Password: '',
         PublicKey: '',
@@ -2375,6 +2401,7 @@ export default {
         Descr: '',
         SnmpMode: this.map.MapConf.SnmpMode,
         Community: this.map.MapConf.Community,
+        SnmpPort: 0,
         User: this.map.MapConf.User,
         Password: '',
         URL: '',

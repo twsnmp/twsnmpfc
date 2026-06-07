@@ -193,11 +193,16 @@ func getSNMPAgent(nodeID string) (*gosnmp.GoSNMP, error) {
 			Community: nt.Community,
 			User:      nt.User,
 			Password:  nt.Password,
+			SnmpPort:  nt.SnmpPort,
 		}
+	}
+	port := uint16(161)
+	if n.SnmpPort > 0 {
+		port = uint16(n.SnmpPort)
 	}
 	agent := &gosnmp.GoSNMP{
 		Target:    n.IP,
-		Port:      161,
+		Port:      port,
 		Transport: "udp",
 		Community: n.Community,
 		Version:   gosnmp.Version2c,

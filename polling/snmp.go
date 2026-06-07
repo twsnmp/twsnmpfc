@@ -20,9 +20,13 @@ func doPollingSnmp(pe *datastore.PollingEnt) {
 	if n == nil {
 		return
 	}
+	port := uint16(161)
+	if n.SnmpPort > 0 {
+		port = uint16(n.SnmpPort)
+	}
 	agent := &gosnmp.GoSNMP{
 		Target:    n.IP,
-		Port:      161,
+		Port:      port,
 		Transport: "udp",
 		Community: n.Community,
 		Version:   gosnmp.Version2c,
@@ -512,9 +516,13 @@ func autoAddSnmpPolling(n *datastore.NodeEnt, pt *datastore.PollingTemplateEnt) 
 
 func getSnmpIndex(n *datastore.NodeEnt, name string) map[string]string {
 	ret := make(map[string]string)
+	port := uint16(161)
+	if n.SnmpPort > 0 {
+		port = uint16(n.SnmpPort)
+	}
 	agent := &gosnmp.GoSNMP{
 		Target:    n.IP,
-		Port:      161,
+		Port:      port,
 		Transport: "udp",
 		Community: n.Community,
 		Version:   gosnmp.Version2c,
