@@ -13,6 +13,7 @@ import (
 	"github.com/davidebianchi/go-jsonclient"
 	"github.com/robertkrimen/otto"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/notify"
 )
 
 func doPollingPiHole(pe *datastore.PollingEnt) {
@@ -24,9 +25,14 @@ func doPollingPiHole(pe *datastore.PollingEnt) {
 	if url == "" {
 		url = fmt.Sprintf("http://%s", n.IP)
 	}
+	var err error
+	url, err = notify.ValidateURL(url)
+	if err != nil {
+		setPollingError("pihole", pe, fmt.Errorf("invalid url: %w", err))
+		return
+	}
 	vm := otto.New()
 	setVMFuncAndValues(pe, vm)
-	var err error
 	var sid string
 	var rTime int64
 	for i := 0; ; i++ {

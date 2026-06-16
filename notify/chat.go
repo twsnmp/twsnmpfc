@@ -28,7 +28,7 @@ func SendChat(c *datastore.NotifyConfEnt, title, level, message string) error {
 	if !strings.Contains(c.ChatType, "discord") || c.ChatWebhookURL == "" {
 		return fmt.Errorf("invalid chat params")
 	}
-	webhookURL, err := validateURL(c.ChatWebhookURL)
+	webhookURL, err := ValidateURL(c.ChatWebhookURL)
 	if err != nil {
 		return fmt.Errorf("invalid chat url: %w", err)
 	}

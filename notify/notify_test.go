@@ -99,12 +99,12 @@ func TestValidateURL(t *testing.T) {
 		{"", true},
 	}
 	for _, tc := range tests {
-		got, err := validateURL(tc.input)
+		got, err := ValidateURL(tc.input)
 		if (err != nil) != tc.wantErr {
-			t.Errorf("validateURL(%q) err = %v, wantErr = %v", tc.input, err, tc.wantErr)
+			t.Errorf("ValidateURL(%q) err = %v, wantErr = %v", tc.input, err, tc.wantErr)
 		}
 		if err == nil && got != tc.input {
-			t.Errorf("validateURL(%q) got = %q, want = %q", tc.input, got, tc.input)
+			t.Errorf("ValidateURL(%q) got = %q, want = %q", tc.input, got, tc.input)
 		}
 	}
 }

@@ -5,8 +5,8 @@ import (
 	"net/url"
 )
 
-// validateURL parses the raw URL and checks if it uses http or https scheme and has a non-empty host.
-func validateURL(rawURL string) (string, error) {
+// ValidateURL parses the raw URL and checks if it uses http or https scheme and has a non-empty host.
+func ValidateURL(rawURL string) (string, error) {
 	u, err := url.Parse(rawURL)
 	if err != nil {
 		return "", err

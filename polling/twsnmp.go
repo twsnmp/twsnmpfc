@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/notify"
 )
 
 // API
@@ -80,7 +81,11 @@ func doTWSNMPGet(n *datastore.NodeEnt, pe *datastore.PollingEnt) (string, error)
 			}
 		}
 	}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	validatedURL, err := notify.ValidateURL(url)
+	if err != nil {
+		return "", fmt.Errorf("invalid url: %w", err)
+	}
+	req, err := http.NewRequest(http.MethodGet, validatedURL, nil)
 	if err != nil {
 		return "", err
 	}

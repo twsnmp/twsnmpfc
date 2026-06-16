@@ -20,6 +20,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/robertkrimen/otto"
 	"github.com/twsnmp/twsnmpfc/datastore"
+	"github.com/twsnmp/twsnmpfc/notify"
 	"github.com/vjeantet/grok"
 )
 
@@ -27,6 +28,12 @@ func doPollingHTTP(pe *datastore.PollingEnt) {
 	var ok bool
 	var err error
 	url := pe.Params
+	url, err = notify.ValidateURL(url)
+	if err != nil {
+		pe.Result["error"] = fmt.Sprintf("invalid url: %v", err)
+		setPollingState(pe, pe.Level)
+		return
+	}
 	ok = false
 	var rTime int64
 	body := ""
