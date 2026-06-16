@@ -18,11 +18,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/rakyll/statik/fs"
+	"github.com/twsnmp/twsnmpfc/embedded"
 	"github.com/twsnmp/twsnmpfc/logger"
 	"github.com/twsnmp/twsnmpfc/notify"
 	"github.com/twsnmp/twsnmpfc/pki"
-	_ "github.com/twsnmp/twsnmpfc/statik"
 
 	"github.com/twsnmp/twsnmpfc/backend"
 	"github.com/twsnmp/twsnmpfc/datastore"
@@ -240,10 +239,8 @@ func main() {
 	}
 	log.SetFlags(0)
 	log.SetOutput(new(logWriter))
-	statikFS, err := fs.New()
-	if err != nil {
-		log.Fatalf("no statik fs err=%v", err)
-	}
+	var err error
+	statikFS := embedded.FS()
 	log.Println("call datastore.Init")
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())

@@ -80,13 +80,8 @@
 
 - go 1.24
 - node.js npm
-- statik
 - docker(Docker版をビルドする場合)
 
-statikは
-https://github.com/rakyll/statik
-
-です。
 私はMac OSでビルドしていますが、実行ファイルだけならばLinxu(Debian/Ubuntu)や
 Docker環境でビルドできます。
 

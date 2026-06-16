@@ -12,8 +12,11 @@
 *.out
 
 # Dist and Test dir
-dist/
-statik/
+/dist/
+/spa/dist/
+/embedded/dist/*
+!/embedded/dist/placeholder.txt
+/embedded/embedded_dist
 tmp/
 Docker/twsnmpfc
 

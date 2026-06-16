@@ -45,15 +45,15 @@ dockerarm: Docker/Dockerfile dist/twsnmpfc.arm dist/twsnmpfc.arm64
 	cd Docker && docker buildx build --platform linux/arm64/v8 -t twsnmp/twsnmpfc:arm64_$(VERSION) --push .
 
 ### 実行ファイルのビルドルール
-$(DIST)/twsnmpfc.exe: statik/statik.go $(SRC)
+$(DIST)/twsnmpfc.exe: embedded/embedded_dist $(SRC)
 	env GO111MODULE=on GOOS=windows GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
-$(DIST)/twsnmpfc.app: statik/statik.go $(SRC)
+$(DIST)/twsnmpfc.app: embedded/embedded_dist $(SRC)
 	env GO111MODULE=on GOOS=darwin GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
-$(DIST)/twsnmpfc.arm: statik/statik.go $(SRC)
+$(DIST)/twsnmpfc.arm: embedded/embedded_dist $(SRC)
 	env GO111MODULE=on GOOS=linux GOARCH=arm GOARM=7 $(GO_BUILD) $(GO_LDFLAGS) -o $@
-$(DIST)/twsnmpfc.arm64: statik/statik.go $(SRC)
+$(DIST)/twsnmpfc.arm64: embedded/embedded_dist $(SRC)
 	env GO111MODULE=on GOOS=linux GOARCH=arm64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
-$(DIST)/twsnmpfc: statik/statik.go $(SRC)
+$(DIST)/twsnmpfc: embedded/embedded_dist $(SRC)
 	env GO111MODULE=on GOOS=linux GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
 
 ### pwaのビルド
@@ -68,12 +68,16 @@ spa/dist/index.html: spa/*.js* spa/pages/* spa/pages/report/* spa/pages/conf/*  
 	cd spa && npm install
 	cd spa && npm run generate
 
-statik/statik.go:  spa/dist/index.html pwa/public/build/bundle.js conf/*
+embedded/embedded_dist:  spa/dist/index.html pwa/public/build/bundle.js conf/*
 	cp -a conf  spa/dist
 	rm -rf spa/dist/pwa
 	mkdir spa/dist/pwa
 	cp -a pwa/public/* spa/dist/pwa/
-	statik -src spa/dist
+	rm -rf embedded/dist
+	mkdir -p embedded/dist
+	cp -a spa/dist/* embedded/dist/
+	touch embedded/dist/placeholder.txt
+	touch embedded/embedded_dist
 spa/dist/pwa: pwa/public/build/bundle.js
 	rm -rf spa/dist/pwa
 	mkdir spa/dist/pwa

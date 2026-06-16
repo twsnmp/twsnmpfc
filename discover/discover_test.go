@@ -7,10 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rakyll/statik/fs"
+	"net/http"
 	"github.com/twsnmp/twsnmpfc/datastore"
 	"github.com/twsnmp/twsnmpfc/ping"
-	_ "github.com/twsnmp/twsnmpfc/statik"
 )
 
 func TestDiscover(t *testing.T) {
@@ -18,10 +17,7 @@ func TestDiscover(t *testing.T) {
 	ping.Start(ctx, &sync.WaitGroup{}, "")
 	defer cancel()
 	time.Sleep(time.Second * 1)
-	statikFS, err := fs.New()
-	if err != nil {
-		t.Fatal(err)
-	}
+	statikFS := http.Dir("../")
 	td, err := os.MkdirTemp("", "twsnmpfc_test")
 	if err != nil {
 		t.Fatal(err)

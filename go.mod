@@ -36,7 +36,6 @@ require (
 	github.com/openconfig/gnmi v0.13.0
 	github.com/openconfig/gnmic/pkg/api v0.1.9
 	github.com/oschwald/geoip2-golang v1.11.0
-	github.com/rakyll/statik v0.1.7
 	github.com/robertkrimen/otto v0.5.1
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/signalsciences/ipv4 v1.4.0

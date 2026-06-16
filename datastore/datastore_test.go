@@ -7,8 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rakyll/statik/fs"
-	_ "github.com/twsnmp/twsnmpfc/statik"
+	"net/http"
 )
 
 func getTmpDBFile() (string, error) {
@@ -21,10 +20,7 @@ func getTmpDBFile() (string, error) {
 
 func TestDataStore(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	statikFS, err := fs.New()
-	if err != nil {
-		t.Fatal(err)
-	}
+	statikFS := http.Dir("../")
 	td, err := os.MkdirTemp("", "twsnmpfc_test")
 	if err != nil {
 		t.Fatal(err)
@@ -61,10 +57,7 @@ func TestDataStore(t *testing.T) {
 
 func TestMqttStatAutoCleanup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	statikFS, err := fs.New()
-	if err != nil {
-		t.Fatal(err)
-	}
+	statikFS := http.Dir("../")
 	td, err := os.MkdirTemp("", "twsnmpfc_test")
 	if err != nil {
 		t.Fatal(err)
