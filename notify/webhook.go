@@ -199,7 +199,11 @@ func webhookReport(title string, info []reportInfoEnt, sensors []*datastore.Sens
 }
 
 func PostWebhook(url string, j []byte) error {
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(j))
+	validatedURL, err := validateURL(url)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", validatedURL, bytes.NewBuffer(j))
 	if err != nil {
 		return err
 	}

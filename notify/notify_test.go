@@ -83,3 +83,28 @@ func TestNotifySchedule(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateURL(t *testing.T) {
+	tests := []struct {
+		input   string
+		wantErr bool
+	}{
+		{"https://discord.com/api/webhooks/123", false},
+		{"http://localhost:8080/webhook", false},
+		{"http://192.168.1.100/webhook", false},
+		{"https://example.com", false},
+		{"ftp://example.com", true},
+		{"javascript:alert(1)", true},
+		{"/relative/path", true},
+		{"", true},
+	}
+	for _, tc := range tests {
+		got, err := validateURL(tc.input)
+		if (err != nil) != tc.wantErr {
+			t.Errorf("validateURL(%q) err = %v, wantErr = %v", tc.input, err, tc.wantErr)
+		}
+		if err == nil && got != tc.input {
+			t.Errorf("validateURL(%q) got = %q, want = %q", tc.input, got, tc.input)
+		}
+	}
+}
