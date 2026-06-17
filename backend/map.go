@@ -175,7 +175,7 @@ func updateLineState() {
 				}
 			}
 			if !hit {
-				log.Printf("delete invalid line node=%+v line=%+v", n, l)
+				log.Printf("delete invalid line node id=%s line id=%s", l.NodeID1, l.ID)
 				datastore.DeleteLine(l.ID)
 				return true
 			}
@@ -197,7 +197,7 @@ func updateLineState() {
 				}
 			}
 			if !hit {
-				log.Printf("delete invalid line node=%+v line=%+v", n, l)
+				log.Printf("delete invalid line node id=%s line id=%s", l.NodeID2, l.ID)
 				datastore.DeleteLine(l.ID)
 				return true
 			}

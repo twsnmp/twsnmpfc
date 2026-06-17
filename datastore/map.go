@@ -422,7 +422,7 @@ func ResetPassword(ds string) error {
 
 // GetImageIcon returns the image icon for the given id.
 func GetImageIcon(id string) ([]byte, error) {
-	return os.ReadFile(filepath.Join(dspath, "icons", id))
+	return os.ReadFile(filepath.Join(dspath, "icons", filepath.Base(id)))
 }
 
 // ARP監視のIP範囲をネットワークインターフェースから取得する

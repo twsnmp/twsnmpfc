@@ -21,7 +21,11 @@ func GetNotifyOAuth2TokenStep1() (string, error) {
 	if config == nil {
 		return "", fmt.Errorf("no oauth2 config")
 	}
-	lastState = randCryptoString(32)
+	var err error
+	lastState, err = randCryptoString(32)
+	if err != nil {
+		return "", err
+	}
 	url := config.AuthCodeURL(lastState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 	return url, nil
 }
@@ -89,10 +93,10 @@ func getNotifyOAuth2Token() *oauth2.Token {
 	return newToken
 }
 
-func randCryptoString(length int) string {
+func randCryptoString(length int) (string, error) {
 	b := make([]byte, length)
 	if _, err := io.ReadFull(rand.Reader, b); err != nil {
-		return "randamu_twsnmp"
+		return "", err
 	}
-	return base64.RawURLEncoding.EncodeToString(b)
+	return base64.RawURLEncoding.EncodeToString(b), nil
 }

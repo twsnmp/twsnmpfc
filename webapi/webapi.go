@@ -318,7 +318,7 @@ func setup(p *WebAPI) {
 			log.Printf("auth ok user=%s", username)
 			return true, nil
 		}
-		log.Printf("auth failed user=%s password=%s", username, password)
+		log.Printf("auth failed user=%s", username)
 		return false, nil
 	}))
 	m.GET("/api/mapstatus", getMobileMapStatus)

@@ -233,7 +233,7 @@ func pkiOperation(c echo.Context, req request) error {
 	csr := msg.CSR
 	transactionID := string(msg.TransactionID)
 	challengePassword := msg.ChallengePassword
-	log.Printf("transactionID=%v  challengePassword=%v fromIP=%s", transactionID, challengePassword, c.RealIP())
+	log.Printf("transactionID=%v fromIP=%s", transactionID, c.RealIP())
 	crtBytes, _, err := createCertificateFromCSR(csr.Raw, "scep",
 		map[string]string{"RemoteAddr": c.RealIP(), "TransactionID": transactionID, "ChallengePassword": challengePassword})
 	if err != nil {
