@@ -275,6 +275,7 @@ func openDB(path string) error {
 		db.Close()
 		return err
 	}
+	migrateMapSize()
 	log.Println("setupInfluxdb")
 	err = setupInfluxdb()
 	if err != nil {

@@ -471,3 +471,139 @@ func checkArpWatchRange() bool {
 	MapConf.ArpWatchRange = strings.Join(cidrs, ",")
 	return MapConf.ArpWatchRange != ""
 }
+
+func migrateMapSize() {
+	if MapConf.MapSize == 2 || MapConf.MapSize == 3 {
+		log.Printf("Start migrate map size: %d -> 1", MapConf.MapSize)
+
+		targetSizeX := 5000.0
+		targetSizeY := 5000.0
+
+		// 現在の座標の最大値を見つける
+		maxX := 0.0
+		maxY := 0.0
+
+		nodes.Range(func(key, value interface{}) bool {
+			if n, ok := value.(*NodeEnt); ok {
+				if float64(n.X) > maxX {
+					maxX = float64(n.X)
+				}
+				if float64(n.Y) > maxY {
+					maxY = float64(n.Y)
+				}
+			}
+			return true
+		})
+
+		items.Range(func(key, value interface{}) bool {
+			if di, ok := value.(*DrawItemEnt); ok {
+				rX := float64(di.X + di.W)
+				bY := float64(di.Y + di.H)
+				if rX > maxX {
+					maxX = rX
+				}
+				if bY > maxY {
+					maxY = bY
+				}
+			}
+			return true
+		})
+
+		networks.Range(func(key, value interface{}) bool {
+			if net, ok := value.(*NetworkEnt); ok {
+				if float64(net.X) > maxX {
+					maxX = float64(net.X)
+				}
+				if float64(net.Y) > maxY {
+					maxY = float64(net.Y)
+				}
+			}
+			return true
+		})
+
+		// マップ内に収まっている場合は縮小しない
+		if maxX <= targetSizeX && maxY <= targetSizeY {
+			log.Printf("Map objects already fit within 5000x5000. No scale down needed. (maxX=%.1f, maxY=%.1f)", maxX, maxY)
+			MapConf.MapSize = 1
+			if err := SaveMapConf(); err != nil {
+				log.Printf("migrateMapSize SaveMapConf err=%v", err)
+			}
+			return
+		}
+
+		// 縮尺率の計算 (32pxの余白を設ける)
+		scaleX := 1.0
+		scaleY := 1.0
+		if maxX > targetSizeX {
+			scaleX = (targetSizeX - 32.0) / maxX
+		}
+		if maxY > targetSizeY {
+			scaleY = (targetSizeY - 32.0) / maxY
+		}
+
+		log.Printf("Scale down map objects: scaleX=%.4f, scaleY=%.4f (maxX=%.1f, maxY=%.1f)", scaleX, scaleY, maxX, maxY)
+
+		// Nodes 座標縮小
+		nodes.Range(func(key, value interface{}) bool {
+			if n, ok := value.(*NodeEnt); ok {
+				n.X = int(float64(n.X) * scaleX)
+				n.Y = int(float64(n.Y) * scaleY)
+				if n.X < 16 {
+					n.X = 16
+				}
+				if n.Y < 16 {
+					n.Y = 16
+				}
+			}
+			return true
+		})
+
+		// DrawItems 座標とサイズ縮小
+		items.Range(func(key, value interface{}) bool {
+			if di, ok := value.(*DrawItemEnt); ok {
+				di.X = int(float64(di.X) * scaleX)
+				di.Y = int(float64(di.Y) * scaleY)
+				di.W = int(float64(di.W) * scaleX)
+				di.H = int(float64(di.H) * scaleY)
+				if di.W < 10 {
+					di.W = 10
+				}
+				if di.H < 10 {
+					di.H = 10
+				}
+				minScale := scaleX
+				if scaleY < minScale {
+					minScale = scaleY
+				}
+				di.Size = int(float64(di.Size) * minScale)
+				if di.Size < 8 {
+					di.Size = 8
+				}
+			}
+			return true
+		})
+
+		// Networks 座標縮小
+		networks.Range(func(key, value interface{}) bool {
+			if net, ok := value.(*NetworkEnt); ok {
+				net.X = int(float64(net.X) * scaleX)
+				net.Y = int(float64(net.Y) * scaleY)
+			}
+			return true
+		})
+
+		// 設定を 1 (5000x5000) に更新して保存
+		MapConf.MapSize = 1
+		if err := SaveMapConf(); err != nil {
+			log.Printf("migrateMapSize SaveMapConf err=%v", err)
+		}
+
+		// DBに保存
+		if err := saveAllNodes(); err != nil {
+			log.Printf("migrateMapSize saveAllNodes err=%v", err)
+		}
+		log.Printf("End migrate map size successfully")
+	}
+}
+
+
