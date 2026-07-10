@@ -124,7 +124,11 @@ func sendMailSMTP(subject, body string) error {
 		opts = append(opts, mail.WithTLSPortPolicy(mail.TLSOpportunistic))
 	}
 	if datastore.NotifyConf.User != "" {
-		opts = append(opts, mail.WithUsername(datastore.NotifyConf.User), mail.WithPassword(datastore.NotifyConf.Password))
+		opts = append(opts,
+			mail.WithSMTPAuth(mail.SMTPAuthAutoDiscover),
+			mail.WithUsername(datastore.NotifyConf.User),
+			mail.WithPassword(datastore.NotifyConf.Password),
+		)
 	}
 
 	client, err := mail.NewClient(host, opts...)
@@ -206,7 +210,11 @@ func sendTestMailSMTP(testConf *datastore.NotifyConfEnt) error {
 		opts = append(opts, mail.WithTLSPortPolicy(mail.TLSOpportunistic))
 	}
 	if testConf.User != "" {
-		opts = append(opts, mail.WithUsername(testConf.User), mail.WithPassword(testConf.Password))
+		opts = append(opts,
+			mail.WithSMTPAuth(mail.SMTPAuthAutoDiscover),
+			mail.WithUsername(testConf.User),
+			mail.WithPassword(testConf.Password),
+		)
 	}
 
 	client, err := mail.NewClient(host, opts...)
