@@ -115,13 +115,13 @@ func sendMailSMTP(subject, body string) error {
 	opts := []mail.Option{
 		mail.WithTLSConfig(tlsconfig),
 	}
-	if port > 0 {
-		opts = append(opts, mail.WithPort(port))
-	}
 	if strings.HasSuffix(datastore.NotifyConf.MailServer, ":465") {
 		opts = append(opts, mail.WithSSL())
 	} else {
 		opts = append(opts, mail.WithTLSPortPolicy(mail.TLSOpportunistic))
+	}
+	if port > 0 {
+		opts = append(opts, mail.WithPort(port))
 	}
 	if datastore.NotifyConf.User != "" {
 		opts = append(opts,
@@ -201,13 +201,13 @@ func sendTestMailSMTP(testConf *datastore.NotifyConfEnt) error {
 	opts := []mail.Option{
 		mail.WithTLSConfig(tlsconfig),
 	}
-	if port > 0 {
-		opts = append(opts, mail.WithPort(port))
-	}
 	if strings.HasSuffix(testConf.MailServer, ":465") {
 		opts = append(opts, mail.WithSSL())
 	} else {
 		opts = append(opts, mail.WithTLSPortPolicy(mail.TLSOpportunistic))
+	}
+	if port > 0 {
+		opts = append(opts, mail.WithPort(port))
 	}
 	if testConf.User != "" {
 		opts = append(opts,
