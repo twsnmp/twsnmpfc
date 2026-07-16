@@ -7,6 +7,7 @@ RUN  chmod +x /twsnmpfc && mkdir /datastore
 
 FROM alpine:latest
 COPY --from=builder /twsnmpfc /
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/timezone /etc/
 COPY --from=builder /etc/localtime /etc/
 COPY --from=builder /datastore/ /datastore/
