@@ -17,7 +17,7 @@
     "@nuxtjs/auth-next": "^5.0.0-1648802546.c9880dc",
     "@nuxtjs/axios": "^5.13.6",
     "core-js": "^3.25.3",
-    "dompurify": "^3.4.8",
+    "dompurify": "^3.4.12",
     "echarts": "^5.4.0",
     "echarts-gl": "^2.0.9",
     "echarts-stat": "^1.2.0",
@@ -55,13 +55,20 @@
   },
   "overrides": {
     "axios": "^1.7.4",
-    "body-parser": "^1.20.3",
-    "brace-expansion": "^2.0.1",
-    "fast-uri": "^3.0.1",
-    "js-yaml": "^4.1.0",
-    "postcss": "^8.4.38",
-    "svgo": "^3.0.5",
-    "tar": "^7.4.3",
-    "tmp": "^0.2.3"
+    "body-parser": "^1.20.6",
+    "brace-expansion": "^2.1.2",
+    "fast-uri": "^3.1.4",
+    "js-yaml": "^4.3.0",
+    "postcss": "^8.5.18",
+    "svgo": "^3.3.4",
+    "tar": "^7.5.21",
+    "tmp": "^0.2.3",
+    "**/body-parser": "^1.20.6",
+    "**/brace-expansion": "^2.1.2",
+    "**/fast-uri": "^3.1.4",
+    "**/js-yaml": "^4.3.0",
+    "**/postcss": "^8.5.18",
+    "**/svgo": "^3.3.4",
+    "**/tar": "^7.5.21"
   }
 }
