@@ -68,7 +68,7 @@ func checkIPTOMACReport(twpcap map[string]string) {
 	if !ok {
 		return
 	}
-	lt := getTimeFromTWLog("lt")
+	lt := getTimeFromTWLog(twpcap["lt"])
 	mac = normMACAddr(mac)
 	// Device Report
 	if !strings.Contains(ip, ":") {

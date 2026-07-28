@@ -113,7 +113,7 @@ func checkBlueDeviceReport(h string, m map[string]string) {
 	if !ok {
 		return
 	}
-	lt := getTimeFromTWLog(m["ft"])
+	lt := getTimeFromTWLog(m["lt"])
 	rssi := getNumberFromTWLog(m["rssi"])
 	id := makeID(h + ":" + addr)
 	info := m["info"]
