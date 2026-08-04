@@ -93,7 +93,7 @@
             </v-col>
             <v-col v-if="notify.Provider == 'microsoft'">
               <v-text-field
-                v-model="notify.MSTenat"
+                v-model="notify.MSTenant"
                 label="テナント名"
                 required
               />
@@ -422,8 +422,8 @@ export default {
         ExecCmd: '',
         Provider: '',
         ClientID: '',
-        ClientSercret: '',
-        MSTenat: '',
+        ClientSecret: '',
+        MSTenant: '',
       },
       error: false,
       saved: false,
