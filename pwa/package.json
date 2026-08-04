@@ -1,6 +1,6 @@
 {
   "name": "svelte-app",
-  "version": "1.71.1",
+  "version": "1.71.2",
   "private": true,
   "scripts": {
     "build": "rollup -c",
@@ -35,8 +35,6 @@
   },
   "overrides": {
     "brace-expansion": "^2.1.2",
-    "js-yaml": "^4.3.0",
-    "**/brace-expansion": "^2.1.2",
-    "**/js-yaml": "^4.3.0"
+    "js-yaml": "^4.3.0"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "spa",
-  "version": "1.71.1",
+  "version": "1.71.2",
   "private": true,
   "scripts": {
     "dev": "NODE_OPTIONS='--openssl-legacy-provider' nuxt",
@@ -62,13 +62,6 @@
     "postcss": "^8.5.18",
     "svgo": "^3.3.4",
     "tar": "^7.5.21",
-    "tmp": "^0.2.3",
-    "**/body-parser": "^1.20.6",
-    "**/brace-expansion": "^2.1.2",
-    "**/fast-uri": "^3.1.4",
-    "**/js-yaml": "^4.3.0",
-    "**/postcss": "^8.5.18",
-    "**/svgo": "^3.3.4",
-    "**/tar": "^7.5.21"
+    "tmp": "^0.2.3"
   }
 }
