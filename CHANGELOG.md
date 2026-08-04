@@ -4,6 +4,28 @@ twsnmpfc のリリース変更履歴です。
 
 ---
 
+## [v1.71.2] - 2026-08-05
+
+### 🐛 バグ修正
+
+- **Bluetoothレポート**: デバイスレポートで最終時間 (Last Time) として最初の時間 (First Time) をパースしていた不具合を修正
+- **twpcapレポート**: IP-MAC対応レポートにおいて、最終時間のパースが正しく行われない不具合を修正
+- **通知設定**: Microsoft OAuth2通知設定におけるパラメータ名（`MSTenant`、`ClientSecret`）のタイポを修正
+
+### 🔒 セキュリティ修正
+
+- `google.golang.org/grpc` を v1.82.1 にアップグレード
+- フロントエンド（spa / pwa）のnpm依存関係におけるセキュリティ脆弱性への対応
+  - `dompurify` を v3.4.12 にアップグレード（spa）
+  - `axios` の override 設定を v1.7.4 に変更（spa）
+  - `body-parser`, `fast-uri`, `postcss`, `svgo`, `tar`, `brace-expansion`, `js-yaml` などの overrides 設定を追加・更新
+
+### 🔧 内部改善
+
+- **Docker**: Dockerfileにおいて、finalイメージにタイムゾーンデータベース（`zoneinfo`）をコピーするように改善
+
+---
+
 ## [v1.71.1] - 2026-07-13
 
 ### 🐛 バグ修正
