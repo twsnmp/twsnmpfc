@@ -849,7 +849,7 @@ func PassiveDiscover() error {
 			for ip, dent := range foundNodeMap {
 				if dent.HostName == "" {
 					r := &net.Resolver{}
-					ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
+					ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*1000)
 					defer cancel()
 					if names, err := r.LookupAddr(ctx, ip); err == nil && len(names) > 0 {
 						dent.HostName = names[0]

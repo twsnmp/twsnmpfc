@@ -300,7 +300,7 @@ func findNodeInfoFromIP(ip string) (string, string) {
 		return n.Name, n.ID
 	}
 	r := &net.Resolver{}
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*500)
 	defer cancel()
 	if names, err := r.LookupAddr(ctx, ip); err == nil && len(names) > 0 {
 		addIPToNameChache(ip, names[0], "")

@@ -386,7 +386,7 @@ func checkFixMACMode(n *datastore.NodeEnt) {
 
 func checkFixHostMode(n *datastore.NodeEnt) {
 	r := &net.Resolver{}
-	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*50)
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*3)
 	defer cancel()
 	ips, err := r.LookupHost(ctx, n.Name)
 	if err != nil {
