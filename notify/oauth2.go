@@ -57,7 +57,7 @@ func getNotifyOAuth2Config() *oauth2.Config {
 			RedirectURL:  redirectURL,
 			Scopes:       []string{"https://mail.google.com/"},
 		}
-	case "microsoft":
+	case "microsoft", "mscustom":
 		return &oauth2.Config{
 			ClientID:     datastore.NotifyConf.ClientID,
 			ClientSecret: datastore.NotifyConf.ClientSecret,

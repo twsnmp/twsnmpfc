@@ -24,6 +24,11 @@ func canSendMail() bool {
 	switch datastore.NotifyConf.Provider {
 	case "google", "microsoft":
 		return datastore.HasValidNotifyOAuth2Token(&datastore.NotifyConf)
+	case "mscustom":
+		if datastore.NotifyConf.MailServer == "" {
+			return false
+		}
+		return datastore.HasValidNotifyOAuth2Token(&datastore.NotifyConf)
 	default:
 		if datastore.NotifyConf.MailServer == "" {
 			return false
@@ -87,6 +92,8 @@ func sendMail(subject, body string) error {
 		return sendMailOAuth2("smtp.gmail.com", subject, body)
 	case "microsoft":
 		return sendMailOAuth2("smtp-mail.outlook.com", subject, body)
+	case "mscustom":
+		return sendMailOAuth2(datastore.NotifyConf.MailServer, subject, body)
 	default:
 		return sendMailSMTP(subject, body)
 	}
@@ -173,6 +180,8 @@ func SendTestMail(testConf *datastore.NotifyConfEnt) error {
 		return sendTestMailOAuth2("smtp.gmail.com", testConf)
 	case "microsoft":
 		return sendTestMailOAuth2("smtp-mail.outlook.com", testConf)
+	case "mscustom":
+		return sendTestMailOAuth2(testConf.MailServer, testConf)
 	default:
 		return sendTestMailSMTP(testConf)
 	}
@@ -269,10 +278,23 @@ func sendMailOAuth2(server, subject, body string) error {
 	if token == nil {
 		return fmt.Errorf("oauth2 token not found")
 	}
-	client, err := mail.NewClient(server,
+	host, portStr, err := net.SplitHostPort(server)
+	var port int
+	if err != nil {
+		host = server
+	} else {
+		port, _ = strconv.Atoi(portStr)
+	}
+	opts := []mail.Option{
 		mail.WithTLSPortPolicy(mail.TLSMandatory),
 		mail.WithSMTPAuth(mail.SMTPAuthXOAUTH2),
-		mail.WithUsername(datastore.NotifyConf.User), mail.WithPassword(token.AccessToken))
+		mail.WithUsername(datastore.NotifyConf.User),
+		mail.WithPassword(token.AccessToken),
+	}
+	if port > 0 {
+		opts = append(opts, mail.WithPort(port))
+	}
+	client, err := mail.NewClient(host, opts...)
 	if err != nil {
 		return err
 	}
@@ -304,10 +326,23 @@ func sendTestMailOAuth2(server string, testConf *datastore.NotifyConfEnt) error 
 		return fmt.Errorf("oauth2 token not found")
 	}
 	log.Printf("send test mail token=%v", token.Expiry)
-	client, err := mail.NewClient(server,
+	host, portStr, err := net.SplitHostPort(server)
+	var port int
+	if err != nil {
+		host = server
+	} else {
+		port, _ = strconv.Atoi(portStr)
+	}
+	opts := []mail.Option{
 		mail.WithTLSPortPolicy(mail.TLSMandatory),
 		mail.WithSMTPAuth(mail.SMTPAuthXOAUTH2),
-		mail.WithUsername(testConf.User), mail.WithPassword(token.AccessToken))
+		mail.WithUsername(testConf.User),
+		mail.WithPassword(token.AccessToken),
+	}
+	if port > 0 {
+		opts = append(opts, mail.WithPort(port))
+	}
+	client, err := mail.NewClient(host, opts...)
 	if err != nil {
 		return err
 	}

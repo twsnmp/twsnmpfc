@@ -46,7 +46,11 @@
           >
           </v-select>
           <v-row
-            v-if="notify.Provider == '' || notify.Provider == 'smtp'"
+            v-if="
+              notify.Provider == '' ||
+              notify.Provider == 'smtp' ||
+              notify.Provider == 'mscustom'
+            "
             dense
           >
             <v-col>
@@ -72,7 +76,11 @@
             </v-col>
           </v-row>
           <v-row
-            v-if="notify.Provider == 'microsoft' || notify.Provider == 'google'"
+            v-if="
+              notify.Provider == 'microsoft' ||
+              notify.Provider == 'mscustom' ||
+              notify.Provider == 'google'
+            "
             dense
           >
             <v-col>
@@ -91,7 +99,11 @@
                 required
               />
             </v-col>
-            <v-col v-if="notify.Provider == 'microsoft'">
+            <v-col
+              v-if="
+                notify.Provider == 'microsoft' || notify.Provider == 'mscustom'
+              "
+            >
               <v-text-field
                 v-model="notify.MSTenant"
                 label="テナント名"
@@ -100,7 +112,11 @@
             </v-col>
           </v-row>
           <v-row
-            v-if="notify.Provider == 'microsoft' || notify.Provider == 'google'"
+            v-if="
+              notify.Provider == 'microsoft' ||
+              notify.Provider == 'mscustom' ||
+              notify.Provider == 'google'
+            "
             dense
           >
             <v-col>
@@ -457,6 +473,7 @@ export default {
         { text: '', value: '' },
         { text: 'Google', value: 'google' },
         { text: 'Microsoft', value: 'microsoft' },
+        { text: 'Microsoft (サーバー指定)', value: 'mscustom' },
       ],
       hasNotifyValidOAuth2Token: false,
       waitOAuth2: false,
@@ -482,6 +499,8 @@ export default {
         case 'microsoft':
         case 'google':
           return this.hasNotifyValidOAuth2Token
+        case 'mscustom':
+          return this.hasNotifyValidOAuth2Token && this.notify.MailServer !== ''
         default:
           return this.notify.MailServer !== ''
       }
@@ -489,6 +508,7 @@ export default {
     canGetOAuth2Token() {
       switch (this.notify.Provider) {
         case 'microsoft':
+        case 'mscustom':
         case 'google':
           return (
             !this.hasNotifyValidOAuth2Token &&
