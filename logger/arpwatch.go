@@ -35,12 +35,13 @@ func arpWatch(stopCh chan bool) {
 	})
 	checkArpTable()
 	timer := time.NewTicker(time.Second * 300)
-	pinger := time.NewTicker(time.Second * 5)
+	pinger := time.NewTicker(time.Millisecond * 200)
+	defer timer.Stop()
+	defer pinger.Stop()
 	lastArpWatchRange := ""
 	for {
 		select {
 		case <-stopCh:
-			timer.Stop()
 			log.Println("stop arp")
 			return
 		case <-pinger.C:
@@ -50,17 +51,11 @@ func arpWatch(stopCh chan bool) {
 				lastArpWatchRange = datastore.MapConf.ArpWatchRange
 				makeLoacalCheckAddrs()
 			}
-			i := 0
-			st := time.Now().Unix()
-			for len(localCheckAddrs) > 0 {
-				i++
+			if len(localCheckAddrs) > 0 {
 				a := localCheckAddrs[0]
-				ping.DoPing(a, 1, 0, 64, 0)
 				localCheckAddrs[0] = ""
 				localCheckAddrs = localCheckAddrs[1:]
-				if i > 50 || time.Now().Unix()-st >= 4 {
-					break
-				}
+				ping.SendPing(a, 64, 0)
 			}
 		case <-timer.C:
 			checkArpTable()

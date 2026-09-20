@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"strings"
 	"sync"
@@ -111,9 +112,18 @@ func ActiveDiscover() error {
 	X = (1 + datastore.DiscoverConf.X/GRID) * GRID
 	Y = (1 + datastore.DiscoverConf.Y/GRID) * GRID
 	var mu sync.Mutex
-	sem := make(chan bool, 256)
+	sem := make(chan bool, 16)
+	portScanSem := make(chan bool, 2)
+	pacer := time.NewTicker(time.Millisecond * 80)
 	go func() {
+		defer pacer.Stop()
 		for ; sip <= eip && !Stop; sip++ {
+			select {
+			case <-pacer.C:
+			}
+			if Stop {
+				break
+			}
 			sem <- true
 			Stat.Sent++
 			Stat.Now = time.Now().Unix()
@@ -141,7 +151,9 @@ func ActiveDiscover() error {
 						dent.HostName = names[0]
 					}
 					getSnmpInfo(ipstr, &dent)
+					portScanSem <- true
 					checkServer(&dent)
+					<-portScanSem
 					mu.Lock()
 					dent.X = X
 					dent.Y = Y
@@ -509,6 +521,14 @@ func updateNode(n *datastore.NodeEnt, dent *discoverInfoEnt) {
 	autoAddPollings(n)
 }
 
+func getStaggeredNextTime(pollInt int) int64 {
+	if pollInt < 10 {
+		pollInt = 10
+	}
+	offset := 5 + rand.Intn(pollInt-4)
+	return time.Now().UnixNano() + int64(offset)*1e9
+}
+
 func autoAddPollings(n *datastore.NodeEnt) {
 	for _, id := range datastore.DiscoverConf.AutoAddPollings {
 		pt := datastore.GetPollingTemplate(id)
@@ -538,7 +558,7 @@ func autoAddPollings(n *datastore.NodeEnt) {
 		p.Timeout = datastore.MapConf.Timeout
 		p.Retry = datastore.MapConf.Timeout
 		p.LogMode = 0
-		p.NextTime = 0
+		p.NextTime = getStaggeredNextTime(p.PollInt)
 		p.State = "unknown"
 		if err := datastore.AddPollingWithDupCheck(p); err != nil {
 			log.Printf("discover err=%v", err)
@@ -549,14 +569,15 @@ func autoAddPollings(n *datastore.NodeEnt) {
 
 func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 	p := &datastore.PollingEnt{
-		NodeID:  n.ID,
-		Name:    "PING監視",
-		Type:    "ping",
-		Level:   "low",
-		State:   "unknown",
-		PollInt: datastore.MapConf.PollInt,
-		Timeout: datastore.MapConf.Timeout,
-		Retry:   datastore.MapConf.Retry,
+		NodeID:   n.ID,
+		Name:     "PING監視",
+		Type:     "ping",
+		Level:    "low",
+		State:    "unknown",
+		PollInt:  datastore.MapConf.PollInt,
+		Timeout:  datastore.MapConf.Timeout,
+		Retry:    datastore.MapConf.Retry,
+		NextTime: getStaggeredNextTime(datastore.MapConf.PollInt),
 	}
 	if err := datastore.AddPollingWithDupCheck(p); err != nil {
 		log.Printf("discover err=%v", err)
@@ -625,16 +646,17 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 			continue
 		}
 		p = &datastore.PollingEnt{
-			NodeID:  n.ID,
-			Name:    name,
-			Type:    ptype,
-			Mode:    mode,
-			Params:  params,
-			Level:   "off",
-			State:   "unknown",
-			PollInt: datastore.MapConf.PollInt,
-			Timeout: datastore.MapConf.Timeout,
-			Retry:   datastore.MapConf.Retry,
+			NodeID:   n.ID,
+			Name:     name,
+			Type:     ptype,
+			Mode:     mode,
+			Params:   params,
+			Level:    "off",
+			State:    "unknown",
+			PollInt:  datastore.MapConf.PollInt,
+			Timeout:  datastore.MapConf.Timeout,
+			Retry:    datastore.MapConf.Retry,
+			NextTime: getStaggeredNextTime(datastore.MapConf.PollInt),
 		}
 		if err := datastore.AddPollingWithDupCheck(p); err != nil {
 			log.Printf("discover err=%v", err)
@@ -645,15 +667,16 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 		return
 	}
 	p = &datastore.PollingEnt{
-		NodeID:  n.ID,
-		Name:    "sysUptime監視",
-		Type:    "snmp",
-		Mode:    "sysUpTime",
-		Level:   "off",
-		State:   "unknown",
-		PollInt: datastore.MapConf.PollInt,
-		Timeout: datastore.MapConf.Timeout,
-		Retry:   datastore.MapConf.Retry,
+		NodeID:   n.ID,
+		Name:     "sysUptime監視",
+		Type:     "snmp",
+		Mode:     "sysUpTime",
+		Level:    "off",
+		State:    "unknown",
+		PollInt:  datastore.MapConf.PollInt,
+		Timeout:  datastore.MapConf.Timeout,
+		Retry:    datastore.MapConf.Retry,
+		NextTime: getStaggeredNextTime(datastore.MapConf.PollInt),
 	}
 	if err := datastore.AddPollingWithDupCheck(p); err != nil {
 		log.Printf("discover err=%v", err)
@@ -661,16 +684,17 @@ func addBasicPolling(dent *discoverInfoEnt, n *datastore.NodeEnt) {
 	}
 	for index, name := range dent.IfMap {
 		p = &datastore.PollingEnt{
-			NodeID:  n.ID,
-			Type:    "snmp",
-			Name:    fmt.Sprintf("IF %s(%s) 監視", name, index),
-			Mode:    "ifOperStatus",
-			Params:  index,
-			Level:   "off",
-			State:   "unknown",
-			PollInt: datastore.MapConf.PollInt,
-			Timeout: datastore.MapConf.Timeout,
-			Retry:   datastore.MapConf.Retry,
+			NodeID:   n.ID,
+			Type:     "snmp",
+			Name:     fmt.Sprintf("IF %s(%s) 監視", name, index),
+			Mode:     "ifOperStatus",
+			Params:   index,
+			Level:    "off",
+			State:    "unknown",
+			PollInt:  datastore.MapConf.PollInt,
+			Timeout:  datastore.MapConf.Timeout,
+			Retry:    datastore.MapConf.Retry,
+			NextTime: getStaggeredNextTime(datastore.MapConf.PollInt),
 		}
 		if err := datastore.AddPollingWithDupCheck(p); err != nil {
 			log.Printf("discover err=%v", err)
@@ -697,7 +721,10 @@ func checkServer(dent *discoverInfoEnt) {
 		"kerberos": "88",
 	}
 	for s, p := range checkList {
-		time.Sleep(time.Second)
+		if Stop {
+			return
+		}
+		time.Sleep(time.Millisecond * 100)
 		if doTCPConnect(dent.IP + ":" + p) {
 			dent.ServerList[s] = true
 		}
@@ -705,11 +732,15 @@ func checkServer(dent *discoverInfoEnt) {
 }
 
 func doTCPConnect(dst string) bool {
-	conn, err := net.DialTimeout("tcp", dst, time.Duration(datastore.DiscoverConf.Timeout)*time.Second)
+	timeout := time.Duration(datastore.DiscoverConf.Timeout) * time.Second
+	if timeout <= 0 || timeout > time.Second {
+		timeout = time.Second
+	}
+	conn, err := net.DialTimeout("tcp", dst, timeout)
 	if err != nil {
 		return false
 	}
-	defer conn.Close()
+	_ = conn.Close()
 	return true
 }
 

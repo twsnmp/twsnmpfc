@@ -22,6 +22,9 @@ func doPollingTCP(pe *datastore.PollingEnt) {
 	ok := false
 	var rTime int64
 	for i := 0; !ok && i <= pe.Retry; i++ {
+		if i > 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
 		startTime := time.Now().UnixNano()
 		conn, err := net.DialTimeout("tcp", n.IP+":"+pe.Params, time.Duration(pe.Timeout)*time.Second)
 		endTime := time.Now().UnixNano()
@@ -29,7 +32,7 @@ func doPollingTCP(pe *datastore.PollingEnt) {
 			pe.Result["error"] = fmt.Sprintf("%v", err)
 			continue
 		}
-		defer conn.Close()
+		_ = conn.Close()
 		rTime = endTime - startTime
 		ok = true
 	}

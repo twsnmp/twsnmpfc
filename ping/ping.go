@@ -74,9 +74,10 @@ type PingEnt struct {
 	Tracker  int64
 	Stat     PingStat
 	Time     int64
-	lastSend int64
+	lastSend time.Time
 	Error    error
 	RecvSrc  string
+	NoWait   bool
 	done     chan bool
 }
 
@@ -84,6 +85,13 @@ type packet struct {
 	bytes  []byte
 	nbytes int
 	ttl    int
+}
+
+type recvPacket struct {
+	bytes []byte
+	n     int
+	ttl   int
+	src   net.Addr
 }
 
 func Start(ctx context.Context, wg *sync.WaitGroup, mode string) error {
@@ -96,7 +104,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, mode string) error {
 	}
 	pingMode = mode
 	log.Printf("ping mode=%s", pingMode)
-	pingSendCh = make(chan *PingEnt, 100)
+	pingSendCh = make(chan *PingEnt, 500)
 	randGen = rand.New(rand.NewSource(time.Now().UnixNano()))
 	wg.Add(1)
 	go pingBackend(ctx, wg)
@@ -116,6 +124,21 @@ func DoPing(ip string, timeout, retry, size, ttl int) *PingEnt {
 	return pe
 }
 
+// SendPing : 応答待ちをせず、PINGパケットを1発送信する（ARP解決等の用途向け）
+func SendPing(ip string, size, ttl int) {
+	var err error
+	var pe = newPingEnt(ip, 0, 0, size, ttl)
+	pe.NoWait = true
+	if pe.ipaddr, err = net.ResolveIPAddr("ip", ip); err != nil {
+		return
+	}
+	select {
+	case pingSendCh <- pe:
+	default:
+		// 送信キューが満杯の場合は無理にブロックせずドロップ
+	}
+}
+
 func newPingEnt(ip string, timeout, retry, size, ttl int) *PingEnt {
 	pingMutex.Lock()
 	defer pingMutex.Unlock()
@@ -129,12 +152,13 @@ func newPingEnt(ip string, timeout, retry, size, ttl int) *PingEnt {
 		sequence: 0,
 		id:       randGen.Intn(math.MaxInt16),
 		Tracker:  randGen.Int63n(math.MaxInt64),
-		done:     make(chan bool),
+		lastSend: time.Now(),
+		done:     make(chan bool, 1),
 	}
 }
 
 func (p *PingEnt) sendICMP(conn *icmp.PacketConn) error {
-	p.lastSend = time.Now().Unix()
+	p.lastSend = time.Now()
 	var dst net.Addr = p.ipaddr
 	if pingMode == "udp" {
 		dst = &net.UDPAddr{IP: p.ipaddr.IP, Zone: p.ipaddr.Zone}
@@ -183,6 +207,7 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Println("start ping")
 	timer := time.NewTicker(time.Millisecond * 500)
+	defer timer.Stop()
 	pingMap := make(map[int64]*PingEnt)
 	netProto := "ip4:icmp"
 	if pingMode == "udp" {
@@ -195,17 +220,81 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 	}
 	defer conn.Close()
 	conn.IPv4PacketConn().SetControlMessage(ipv4.FlagTTL, true)
+
+	recvCh := make(chan *recvPacket, 1000)
+	go func() {
+		for {
+			bytes := make([]byte, 2048)
+			_ = conn.SetReadDeadline(time.Now().Add(time.Second))
+			var n, ttl int
+			var err error
+			var cm *ipv4.ControlMessage
+			var src net.Addr
+			n, cm, src, err = conn.IPv4PacketConn().ReadFrom(bytes)
+			if err != nil {
+				if ctx.Err() != nil {
+					return
+				}
+				continue
+			}
+			if cm != nil {
+				ttl = cm.TTL
+			}
+			select {
+			case recvCh <- &recvPacket{bytes: bytes[:n], n: n, ttl: ttl, src: src}:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	handleRecv := func(rp *recvPacket) {
+		if tracker, tm, te, err := processPacket(&packet{bytes: rp.bytes, nbytes: rp.n, ttl: rp.ttl}); err == nil {
+			if p, ok := pingMap[tracker]; ok {
+				sa := strings.Split(rp.src.String(), ":")
+				if p.Target != sa[0] && !te {
+					log.Printf("ping target=%s src=%s", p.Target, rp.src.String())
+					return
+				}
+				delete(pingMap, tracker)
+				if te {
+					p.Stat = PingTimeExceeded
+				} else {
+					p.Stat = PingOK
+				}
+				p.Time = tm
+				p.RecvTTL = rp.ttl
+				p.RecvSrc = sa[0]
+				p.Error = nil
+				if p.done != nil {
+					select {
+					case p.done <- true:
+					default:
+					}
+				}
+			}
+		}
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
-			timer.Stop()
 			for _, p := range pingMap {
-				close(p.done)
+				if p.done != nil {
+					select {
+					case p.done <- false:
+					default:
+					}
+				}
 			}
 			log.Println("stop ping")
 			return
 		case p := <-pingSendCh:
 			if p != nil {
+				if p.NoWait {
+					_ = p.sendICMP(conn)
+					continue
+				}
 				_, ok := pingMap[p.Tracker]
 				for ok {
 					p.Tracker++
@@ -217,9 +306,23 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 				}
 			}
 		case <-timer.C:
-			now := time.Now().Unix()
+			// タイムアウト判定の前に、受信キュー内のパケットを先行処理（ドレイン）する
+			for {
+				select {
+				case rp := <-recvCh:
+					handleRecv(rp)
+				default:
+					goto drained
+				}
+			}
+		drained:
+			now := time.Now()
 			for k, p := range pingMap {
-				if p.lastSend+int64(p.Timeout) < now {
+				timeoutDur := time.Duration(p.Timeout) * time.Second
+				if p.Timeout <= 0 {
+					timeoutDur = time.Second
+				}
+				if now.Sub(p.lastSend) >= timeoutDur {
 					p.sequence++
 					if p.sequence > p.Retry {
 						delete(pingMap, k)
@@ -227,7 +330,12 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 							p.Error = fmt.Errorf("Timeout")
 						}
 						p.Stat = PingTimeout
-						p.done <- true
+						if p.done != nil {
+							select {
+							case p.done <- true:
+							default:
+							}
+						}
 						continue
 					}
 					if err := p.sendICMP(conn); err != nil {
@@ -236,46 +344,8 @@ func pingBackend(ctx context.Context, wg *sync.WaitGroup) {
 					}
 				}
 			}
-		default:
-			bytes := make([]byte, 2048)
-			_ = conn.SetReadDeadline(time.Now().Add(time.Millisecond * 100))
-			var n, ttl int
-			var err error
-			var cm *ipv4.ControlMessage
-			var src net.Addr
-			n, cm, src, err = conn.IPv4PacketConn().ReadFrom(bytes)
-			if cm != nil {
-				ttl = cm.TTL
-			}
-			if err != nil {
-				if neterr, ok := err.(*net.OpError); ok {
-					if neterr.Timeout() {
-						// Read timeout
-						continue
-					}
-				}
-				continue
-			}
-			if tracker, tm, te, err := processPacket(&packet{bytes: bytes, nbytes: n, ttl: ttl}); err == nil {
-				if p, ok := pingMap[tracker]; ok {
-					sa := strings.Split(src.String(), ":")
-					if p.Target != sa[0] && !te {
-						log.Printf("ping target=%s src=%s", p.Target, src.String())
-						continue
-					}
-					delete(pingMap, tracker)
-					if te {
-						p.Stat = PingTimeExceeded
-					} else {
-						p.Stat = PingOK
-					}
-					p.Time = tm
-					p.RecvTTL = ttl
-					p.RecvSrc = sa[0]
-					p.Error = nil
-					p.done <- true
-				}
-			}
+		case rp := <-recvCh:
+			handleRecv(rp)
 		}
 	}
 }

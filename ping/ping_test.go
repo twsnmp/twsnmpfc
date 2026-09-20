@@ -30,5 +30,6 @@ func TestPing(t *testing.T) {
 	if r.Stat == PingOK {
 		t.Errorf("ping stat = %d", r.Stat)
 	}
+	SendPing(ip, 64, 0)
 	t.Log("Done")
 }

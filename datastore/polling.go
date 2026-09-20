@@ -180,11 +180,15 @@ func AddPollingLog(p *PollingEnt) error {
 	if db == nil {
 		return ErrDBNotOpen
 	}
+	resCopy := make(map[string]interface{}, len(p.Result))
+	for k, v := range p.Result {
+		resCopy[k] = v
+	}
 	pollingLogCh <- &PollingLogEnt{
 		Time:      time.Now().UnixNano(),
 		PollingID: p.ID,
 		State:     p.State,
-		Result:    p.Result,
+		Result:    resCopy,
 	}
 	return nil
 }
