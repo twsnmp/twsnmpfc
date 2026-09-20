@@ -9,6 +9,8 @@ GO          = go
 GO_BUILD    = $(GO) build
 GO_TEST     = $(GO) test -v
 GO_LDFLAGS  = -ldflags="-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT)"
+DARWIN_INFO_PLIST = build/darwin/Info.plist
+GO_DARWIN_LDFLAGS = -ldflags="-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -linkmode=external -extldflags '-Wl,-sectcreate,__TEXT,__info_plist,$(DARWIN_INFO_PLIST)'"
 ZIP          = zip
 
 ### ターゲットパラメータ
@@ -47,8 +49,8 @@ dockerarm: Docker/Dockerfile dist/twsnmpfc.arm dist/twsnmpfc.arm64
 ### 実行ファイルのビルドルール
 $(DIST)/twsnmpfc.exe: embedded/embedded_dist $(SRC)
 	env GO111MODULE=on GOOS=windows GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
-$(DIST)/twsnmpfc.app: embedded/embedded_dist $(SRC)
-	env GO111MODULE=on GOOS=darwin GOARCH=amd64 $(GO_BUILD) $(GO_LDFLAGS) -o $@
+$(DIST)/twsnmpfc.app: embedded/embedded_dist $(SRC) $(DARWIN_INFO_PLIST)
+	env GO111MODULE=on GOOS=darwin GOARCH=amd64 $(GO_BUILD) $(GO_DARWIN_LDFLAGS) -o $@
 $(DIST)/twsnmpfc.arm: embedded/embedded_dist $(SRC)
 	env GO111MODULE=on GOOS=linux GOARCH=arm GOARM=7 $(GO_BUILD) $(GO_LDFLAGS) -o $@
 $(DIST)/twsnmpfc.arm64: embedded/embedded_dist $(SRC)
