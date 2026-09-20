@@ -9,9 +9,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
-    <string>1.71.3</string>
+    <string>1.72.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.71.3</string>
+    <string>1.72.0</string>
     <key>NSLocalNetworkUsageDescription</key>
     <string>TWSNMP FCがローカルネットワーク上のノードの監視、ポーリング、検知を行うためにローカルネットワークへのアクセスが必要です。</string>
 </dict>

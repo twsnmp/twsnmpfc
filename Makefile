@@ -1,7 +1,7 @@
 .PHONY: all test clean zip mac clean_spa docker trivy
 
 ### バージョンの定義
-VERSION     := "v1.71.3"
+VERSION     := "v1.72.0"
 COMMIT      := $(shell git rev-parse --short HEAD)
 
 ### コマンドの定義
