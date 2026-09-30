@@ -370,6 +370,57 @@
               <v-text-field v-model="mapconf.LLMModel" label="LLM モデル" />
             </v-col>
           </v-row>
+          <v-divider class="my-4"></v-divider>
+          <v-row dense align="center">
+            <v-col cols="12" sm="3">
+              <v-switch
+                v-model="mapconf.EnablePublicDashboard"
+                label="公開ダッシュボード"
+                dense
+              ></v-switch>
+            </v-col>
+            <v-col cols="12" sm="5">
+              <v-text-field
+                v-model="mapconf.PublicDashboardKey"
+                label="公開キー"
+                :disabled="!mapconf.EnablePublicDashboard"
+                dense
+                append-icon="mdi-refresh"
+                hint="URLに含まれるランダムキー（右のアイコンで自動生成）"
+                persistent-hint
+                @click:append="generatePublicDashboardKey"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" sm="4" class="d-flex align-center">
+              <v-btn
+                v-if="
+                  mapconf.EnablePublicDashboard && mapconf.PublicDashboardKey
+                "
+                small
+                color="info"
+                class="mr-2"
+                @click="copyPublicDashboardURL"
+              >
+                <v-icon left small>mdi-content-copy</v-icon>
+                URLコピー
+              </v-btn>
+              <v-btn
+                v-if="
+                  mapconf.EnablePublicDashboard && mapconf.PublicDashboardKey
+                "
+                small
+                color="primary"
+                outlined
+                @click="openPublicDashboard"
+              >
+                <v-icon left small>mdi-open-in-new</v-icon>
+                プレビュー
+              </v-btn>
+            </v-col>
+          </v-row>
+          <v-snackbar v-model="copySuccess" color="info" timeout="2000">
+            公開URLをクリップボードにコピーしました
+          </v-snackbar>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -737,7 +788,10 @@ export default {
         LLMBaseURL: '',
         LLMAPIKey: '',
         LLMModel: '',
+        EnablePublicDashboard: false,
+        PublicDashboardKey: '',
       },
+      copySuccess: false,
       fontSizeList: [
         { text: '小さい', value: 10 },
         { text: '普通', value: 12 },
@@ -1009,6 +1063,34 @@ export default {
       this.deleteDrawItemDialog = false
       this.selectedDrawItems = []
       this.showDrawItemList()
+    },
+    generatePublicDashboardKey() {
+      const array = new Uint8Array(24)
+      window.crypto.getRandomValues(array)
+      this.mapconf.PublicDashboardKey = Array.from(array, (byte) =>
+        byte.toString(16).padStart(2, '0')
+      ).join('')
+    },
+    getPublicDashboardURL() {
+      if (!this.mapconf.PublicDashboardKey) {
+        return ''
+      }
+      return (
+        window.location.origin + '/dashboard/' + this.mapconf.PublicDashboardKey
+      )
+    },
+    async copyPublicDashboardURL() {
+      const url = this.getPublicDashboardURL()
+      if (url && navigator.clipboard) {
+        await navigator.clipboard.writeText(url)
+        this.copySuccess = true
+      }
+    },
+    openPublicDashboard() {
+      const url = this.getPublicDashboardURL()
+      if (url) {
+        window.open(url, '_blank')
+      }
     },
   },
 }

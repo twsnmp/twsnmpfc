@@ -82,6 +82,7 @@ func setup(p *WebAPI) {
 	e.GET("/image/:path", getImage)
 	e.GET("/version", getVersion)
 	e.GET("/imageIcon/:id", getImageIcon)
+	e.GET("/public/api/map/:key", getPublicMap)
 	if p.EnableMCP {
 		startMCPServer(e, p)
 	}

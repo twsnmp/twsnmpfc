@@ -20,6 +20,7 @@ type mapWebAPI struct {
 	Pollings   map[string][]*datastore.PollingEnt
 	Logs       []*datastore.EventLogEnt
 	Images     []string
+	Icons      []*datastore.IconEnt
 }
 
 func getMap(c echo.Context) error {
@@ -31,6 +32,7 @@ func getMap(c echo.Context) error {
 		Lines:    []*datastore.LineEnt{},
 		Pollings: make(map[string][]*datastore.PollingEnt),
 		Images:   datastore.GetImageList(),
+		Icons:    datastore.GetIcons(),
 	}
 	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
 		r.Nodes[n.ID] = n
@@ -73,6 +75,99 @@ func getMap(c echo.Context) error {
 		r.Logs = append(r.Logs, e)
 		i++
 		return i < 100
+	})
+	r.LastUpdate = time.Now().Unix()
+	return c.JSON(http.StatusOK, r)
+}
+
+func getPublicMap(c echo.Context) error {
+	key := c.Param("key")
+	if !datastore.MapConf.EnablePublicDashboard || key == "" || key != datastore.MapConf.PublicDashboardKey {
+		return echo.ErrForbidden
+	}
+	safeConf := datastore.MapConf
+	safeConf.UserID = ""
+	safeConf.Password = ""
+	safeConf.Community = ""
+	safeConf.SnmpUser = ""
+	safeConf.SnmpPassword = ""
+	safeConf.PublicKey = ""
+	safeConf.PrivateKey = ""
+	safeConf.LLMAPIKey = ""
+	safeConf.PublicDashboardKey = ""
+	safeConf.ArpWatchRange = ""
+	safeConf.GeoIPInfo = ""
+	safeConf.OTelFrom = ""
+
+	r := &mapWebAPI{
+		MapConf:  &safeConf,
+		Nodes:    make(map[string]*datastore.NodeEnt),
+		Items:    make(map[string]*datastore.DrawItemEnt),
+		Networks: make(map[string]*datastore.NetworkEnt),
+		Lines:    []*datastore.LineEnt{},
+		Pollings: make(map[string][]*datastore.PollingEnt),
+		Images:   datastore.GetImageList(),
+		Icons:    datastore.GetIcons(),
+		Logs:     []*datastore.EventLogEnt{},
+	}
+	datastore.ForEachNodes(func(n *datastore.NodeEnt) bool {
+		// マップ描画に必要な最小限の情報のみホワイトリストで渡す（IPやMAC、認証情報などは除外）
+		safeNode := datastore.NodeEnt{
+			ID:    n.ID,
+			Name:  n.Name,
+			Icon:  n.Icon,
+			Image: n.Image,
+			State: n.State,
+			X:     n.X,
+			Y:     n.Y,
+		}
+		r.Nodes[n.ID] = &safeNode
+		return true
+	})
+	datastore.ForEachItems(func(di *datastore.DrawItemEnt) bool {
+		checkDrawItem(di)
+		r.Items[di.ID] = di
+		return true
+	})
+	datastore.ForEachNetworks(func(n *datastore.NetworkEnt) bool {
+		ports := []datastore.PortEnt{}
+		if n.Ports != nil {
+			for _, p := range n.Ports {
+				ports = append(ports, datastore.PortEnt{
+					ID:    p.ID,
+					Name:  p.Name,
+					Index: p.Index,
+					X:     p.X,
+					Y:     p.Y,
+					State: p.State,
+				})
+			}
+		}
+		safeNetwork := datastore.NetworkEnt{
+			ID:    n.ID,
+			Name:  n.Name,
+			X:     n.X,
+			Y:     n.Y,
+			W:     n.W,
+			H:     n.H,
+			Ports: ports,
+		}
+		r.Networks[n.ID] = &safeNetwork
+		return true
+	})
+	datastore.ForEachLines(func(l *datastore.LineEnt) bool {
+		r.Lines = append(r.Lines, l)
+		return true
+	})
+	datastore.ForEachPollings(func(p *datastore.PollingEnt) bool {
+		r.Pollings[p.NodeID] = append(r.Pollings[p.NodeID], &datastore.PollingEnt{
+			ID:     p.ID,
+			Name:   p.Name,
+			NodeID: p.NodeID,
+			Type:   p.Type,
+			State:  p.State,
+		})
+		return true
 	})
 	r.LastUpdate = time.Now().Unix()
 	return c.JSON(http.StatusOK, r)

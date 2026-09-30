@@ -5,6 +5,7 @@ let mapSize = 0
 let mapSizeX = 2500
 let mapSizeY = 5000
 let mapP5
+let currentDiv = ''
 let contextMenu = true
 
 let mapRedraw = true
@@ -53,8 +54,9 @@ const setIconToMap = (e) => {
 
 const showMAP = (div, m, url, ro) => {
   const ms = m.MapConf.MapSize || 0
-  if (!mapP5 || ms !== mapSize) {
+  if (!mapP5 || ms !== mapSize || currentDiv !== div) {
     mapSize = m.MapConf.MapSize
+    currentDiv = div
     initMap(div, ms)
   }
   if (!url || url === '/') {
@@ -159,6 +161,7 @@ const initMap = (div, ms) => {
   if (mapP5) {
     mapP5.remove()
   }
+  scale = 1.0
   mapRedraw = true
   contextMenu = false
   document.oncontextmenu = (e) => {
@@ -1178,6 +1181,34 @@ const selectNode = (id) => {
   }
 }
 
+const saveMapImage = (filename) => {
+  if (mapP5) {
+    mapP5.saveCanvas(filename || 'TWSNMPFC-MAP.png')
+  }
+}
+
+const zoomMap = (delta) => {
+  scale += delta
+  if (scale > 3.0) {
+    scale = 3.0
+  }
+  if (scale < 0.2) {
+    scale = 0.2
+  }
+  mapRedraw = true
+  return Math.round(scale * 100)
+}
+
+const resetMapZoom = () => {
+  scale = 1.0
+  mapRedraw = true
+  return 100
+}
+
+const getMapScale = () => {
+  return Math.round(scale * 100)
+}
+
 export default (context, inject) => {
   inject('showMAP', showMAP)
   inject('setIconCodeMap', setIconCodeMap)
@@ -1191,4 +1222,8 @@ export default (context, inject) => {
   inject('getLockDrawItem', getLockDrawItem)
   inject('setShowNodeInfo', setShowNodeInfo)
   inject('getShowNodeInfo', getShowNodeInfo)
+  inject('saveMapImage', saveMapImage)
+  inject('zoomMap', zoomMap)
+  inject('resetMapZoom', resetMapZoom)
+  inject('getMapScale', getMapScale)
 }

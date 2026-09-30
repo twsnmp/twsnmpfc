@@ -70,6 +70,8 @@ type MapConfEnt struct {
 	LLMAPIKey   string
 	LLMModel    string
 	NodeLock    bool
+	EnablePublicDashboard bool
+	PublicDashboardKey    string
 }
 
 func initConf() {
