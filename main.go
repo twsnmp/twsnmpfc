@@ -305,6 +305,7 @@ func main() {
 	log.Println("call webapi.Start")
 	w := &webapi.WebAPI{
 		Statik:        http.FileServer(statikFS),
+		FS:            statikFS,
 		Port:          port,
 		UseTLS:        tls,
 		Local:         local,

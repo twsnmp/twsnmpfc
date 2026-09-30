@@ -23,6 +23,7 @@ import (
 
 type WebAPI struct {
 	Statik        http.Handler
+	FS            http.FileSystem
 	Port          string
 	UseTLS        bool
 	Host          string
@@ -324,7 +325,63 @@ func setup(p *WebAPI) {
 	}))
 	m.GET("/api/mapstatus", getMobileMapStatus)
 	m.GET("/api/mapdata", getMobileMapData)
-	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
+	if p.FS != nil {
+		e.GET("/*", spaHandler(p.FS))
+	} else {
+		e.GET("/*", echo.WrapHandler(http.StripPrefix("/", p.Statik)))
+	}
+}
+
+func spaHandler(fsys http.FileSystem) echo.HandlerFunc {
+	fileServer := http.FileServer(fsys)
+	return func(c echo.Context) error {
+		p := c.Request().URL.Path
+		// ファイルまたはディレクトリを検索
+		f, err := fsys.Open(p)
+		if err == nil {
+			fi, err := f.Stat()
+			if err == nil {
+				if !fi.IsDir() {
+					_ = f.Close()
+					fileServer.ServeHTTP(c.Response(), c.Request())
+					return nil
+				}
+				// ディレクトリの場合は index.html があるか確認
+				indexPath := filepath.Join(p, "index.html")
+				if indexFile, err := fsys.Open(indexPath); err == nil {
+					_ = indexFile.Close()
+					_ = f.Close()
+					fileServer.ServeHTTP(c.Response(), c.Request())
+					return nil
+				}
+			}
+			_ = f.Close()
+		}
+
+		// ファイルが存在しない場合、拡張子なしまたは .html なら SPA フォールバックとして index.html を返す
+		ext := filepath.Ext(p)
+		if ext == "" || ext == ".html" {
+			indexFile, err := fsys.Open("/index.html")
+			if err != nil {
+				indexFile, err = fsys.Open("/200.html")
+			}
+			if err == nil {
+				defer indexFile.Close()
+				fi, _ := indexFile.Stat()
+				modTime := time.Now()
+				if fi != nil {
+					modTime = fi.ModTime()
+				}
+				c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
+				http.ServeContent(c.Response(), c.Request(), "index.html", modTime, indexFile)
+				return nil
+			}
+		}
+
+		// それ以外の静的リソース（.js, .css, 画像等）が存在しない場合は 404
+		fileServer.ServeHTTP(c.Response(), c.Request())
+		return nil
+	}
 }
 
 func getMonitor(c echo.Context) error {
