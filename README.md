@@ -72,6 +72,7 @@
 - Webhook通知(v1.58.0)
 - MQTTポーリング機能(v1.58.0)
 - MQTTサーバー(v1.61.0)
+- マップダッシュボード公開機能(v1.72.0)
 
 ![2021-04-10_11-56-00](https://user-images.githubusercontent.com/5225950/114256371-cc61db80-99f3-11eb-8631-c1917554ce26.png)
 
