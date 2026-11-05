@@ -17,7 +17,7 @@ require (
 	github.com/emersion/go-imap/v2 v2.0.0-beta.7
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-acme/lego/v4 v4.34.0
-	github.com/go-jose/go-jose/v4 v4.1.4
+	github.com/go-jose/go-jose/v4 v4.1.6
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/gopacket v1.1.19
